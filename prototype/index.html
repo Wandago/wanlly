@@ -3,12 +3,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Geist:wght@400..600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: app shell — quiet sidebar, one centered working column, tangerine reserved for "credits & action" */
+/* Layout: app shell. Quiet sidebar, one working column, one composer shared by every tool.
+   Every job follows the same rhythm: prompt → working card (sponsor slot) → result → sponsor folds to one line. */
 :root{
   --bg:#FBFBFC; --surface:#FFFFFF; --side:#F3F4F7; --line:#E3E5EB; --hover:#E9EBF0;
   --fg:#15171C; --muted:#636A78; --faint:#9AA0AC;
   --accent:#FF5A1F; --accent-ink:#FFFFFF; --accent-soft:#FFEEE6; --accent-line:#FFD2BF;
-  --good:#11955A; --code:#F4F5F8;
+  --good:#11955A; --bad:#E5484D; --code:#F4F5F8;
   --shadow:0 1px 2px rgba(20,24,35,.04),0 8px 24px rgba(20,24,35,.06);
   --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
   --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -18,49 +19,47 @@
   --bg:#111216; --surface:#17181D; --side:#0C0D10; --line:#272930; --hover:#1F2127;
   --fg:#ECEDF1; --muted:#979DAA; --faint:#686E7A;
   --accent:#FF6A33; --accent-ink:#140802; --accent-soft:#2C160D; --accent-line:#5A2A16;
-  --good:#3CCB85; --code:#0E0F13; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+  --good:#3CCB85; --bad:#FF6B6F; --code:#0E0F13; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111216; --surface:#17181D; --side:#0C0D10; --line:#272930; --hover:#1F2127;
   --fg:#ECEDF1; --muted:#979DAA; --faint:#686E7A;
   --accent:#FF6A33; --accent-ink:#140802; --accent-soft:#2C160D; --accent-line:#5A2A16;
-  --good:#3CCB85; --code:#0E0F13; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+  --good:#3CCB85; --bad:#FF6B6F; --code:#0E0F13; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
 
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+button:disabled{cursor:default}
 button:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
 svg{flex:none}
 .ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sm{width:15px;height:15px}
 
-.app{display:grid;grid-template-columns:268px minmax(0,1fr);height:100%}
+.app{display:grid;grid-template-columns:260px minmax(0,1fr);height:100%}
 
 /* Sidebar */
 .side{background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;padding:14px 12px;min-height:0}
 .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 12px}
 .mark{width:26px;height:26px;border-radius:8px;background:var(--fg);display:grid;place-items:center}
-.mark span{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:6px 0 0 -2px var(--bg)}
+.mark span{width:10px;height:10px;border-radius:50%;background:var(--accent)}
 .brand b{font-family:var(--f-display);font-weight:650;font-size:20px;letter-spacing:-.02em}
 .new{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-weight:500}
 .new:hover{border-color:var(--faint)}
 .new kbd{margin-left:auto;font-family:var(--f-mono);font-size:11px;color:var(--faint)}
-.nav{display:flex;flex-direction:column;gap:2px;margin-top:6px}
-.nav button{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;color:var(--muted);text-align:left}
-.nav button:hover{background:var(--hover);color:var(--fg)}
-.nav button[aria-current="page"]{background:var(--hover);color:var(--fg);font-weight:500}
 .label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:14px 10px 4px;font-weight:500}
 .recents{display:flex;flex-direction:column;gap:1px;overflow:auto;min-height:0;flex:1}
-.recents button{padding:7px 10px;border-radius:8px;text-align:left;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.recents button{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;text-align:left;color:var(--muted);font-size:14px;min-width:0}
+.recents button span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.recents button svg{color:var(--faint)}
 .recents button:hover{background:var(--hover);color:var(--fg)}
-
 .meter{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
 .meter-top{display:flex;align-items:baseline;justify-content:space-between}
 .meter-top span{font-size:13px;color:var(--muted)}
 .meter-top b{font-family:var(--f-mono);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums}
 .bar{height:6px;border-radius:99px;background:var(--hover);overflow:hidden}
-.bar i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .8s cubic-bezier(.2,.8,.2,1)}
 .earn{display:flex;align-items:center;justify-content:center;gap:8px;padding:8px;border-radius:10px;background:var(--accent-soft);color:var(--accent);font-weight:550;font-size:14px;border:1px solid var(--accent-line)}
-.earn:hover{filter:brightness(1.03)}
 .me{display:flex;align-items:center;gap:10px;padding:8px 6px 2px}
 .av{width:30px;height:30px;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center;font-weight:600;font-size:13px}
 .me div{display:flex;flex-direction:column;line-height:1.25;font-size:14px}
@@ -74,7 +73,8 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
 .picker{position:relative}
 .picker>button{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:10px;font-weight:550;font-size:15px}
 .picker>button:hover,.picker>button[aria-expanded="true"]{background:var(--hover)}
-.tag{font-family:var(--f-mono);font-size:11px;padding:2px 7px;border-radius:99px;background:var(--hover);color:var(--muted);font-weight:500}
+.picker>button:disabled{background:none}
+.tag{font-family:var(--f-mono);font-size:11px;padding:2px 7px;border-radius:99px;background:var(--hover);color:var(--muted);font-weight:500;white-space:nowrap}
 .tag.free{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
 .menu-pop{position:absolute;top:calc(100% + 6px);left:0;width:330px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:6px;z-index:20}
 .menu-pop h6{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);padding:10px 10px 4px;font-weight:500}
@@ -91,121 +91,127 @@ main{display:flex;flex-direction:column;min-width:0;min-height:0;height:100%}
 .pill.bump{animation:bump .6s ease}
 @keyframes bump{40%{transform:scale(1.08);border-color:var(--accent)}}
 
-.view{flex:1;overflow:auto;min-height:0;padding-inline:16px}
-.col{max-width:760px;margin:0 auto;width:100%}
-
-/* Home */
-.home{min-height:100%;display:flex;flex-direction:column;justify-content:center;padding-block:24px 56px;gap:28px}
-.hello{font-family:var(--f-display);font-weight:600;font-size:clamp(30px,5vw,42px);letter-spacing:-.03em;line-height:1.1;text-align:center;margin:0;text-wrap:balance}
+/* Stage + shared dock */
+.stage{flex:1;overflow:auto;min-height:0;padding-inline:16px}
+.col{max-width:800px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:30px;padding-block:20px 12px}
+.dock{padding:6px 16px calc(14px + env(safe-area-inset-bottom,0px))}
+.dock .inner{max-width:800px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+main.empty .stage{flex:0 1 auto;margin-top:auto}
+main.empty .dock{margin-bottom:auto;padding-bottom:12vh}
+.hello{font-family:var(--f-display);font-weight:600;font-size:clamp(30px,5vw,42px);letter-spacing:-.03em;line-height:1.1;text-align:center;margin:0;text-wrap:balance;padding-top:8px}
 .hello em{font-style:normal;color:var(--accent)}
-.composer{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:14px 14px 10px;display:flex;flex-direction:column;gap:10px}
+.try{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.try button{padding:6px 12px;border-radius:99px;border:1px solid var(--line);font-size:13px;color:var(--muted);background:var(--surface);max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.try button:hover{color:var(--fg);border-color:var(--faint)}
+
+.composer{background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px}
 .composer:focus-within{border-color:var(--faint)}
-.composer textarea{width:100%;border:0;outline:0;resize:none;background:transparent;font:inherit;font-size:16px;color:var(--fg);min-height:52px;padding:2px 4px}
+.composer textarea{width:100%;border:0;outline:0;resize:none;background:transparent;font:inherit;font-size:16px;color:var(--fg);min-height:28px;max-height:200px;padding:2px 4px}
 .composer textarea::placeholder{color:var(--faint)}
-.crow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.chip{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:99px;border:1px solid var(--line);color:var(--muted);font-size:13px}
-.chip:hover{color:var(--fg);border-color:var(--faint)}
-.chip[aria-pressed="true"]{color:var(--fg);background:var(--hover);border-color:transparent}
-.chip svg{width:15px;height:15px}
+.crow{display:flex;align-items:center;gap:6px}
 .round{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--muted)}
 .round:hover{background:var(--hover);color:var(--fg)}
-.send{margin-left:auto;width:36px;height:36px;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center}
-.send:disabled{opacity:.25;cursor:default}
-.costline{font-size:13px;color:var(--faint);text-align:center;margin:-14px 0 0}
-.costline b{color:var(--muted);font-weight:500}
-.ideas{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
-.ideas button{padding:8px 13px;border-radius:12px;border:1px solid var(--line);font-size:14px;color:var(--muted);background:var(--surface)}
-.ideas button:hover{color:var(--fg);border-color:var(--faint)}
+.seg{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--hover);min-width:0}
+.seg button{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:9px;font-size:13px;color:var(--muted)}
+.seg button:hover{color:var(--fg)}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08);font-weight:500}
+.est{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--faint);white-space:nowrap}
+.est.free{color:var(--good)}
+.send{width:36px;height:36px;border-radius:50%;background:var(--fg);color:var(--bg);display:grid;place-items:center;flex:none}
+.send:disabled{opacity:.25}
 
-/* Chat */
-.thread{display:flex;flex-direction:column;gap:26px;padding-block:20px 24px}
+/* Out-of-credits gate, inside the composer */
+.gate{display:flex;flex-direction:column;gap:10px;padding:12px;border-radius:14px;background:var(--accent-soft);border:1px solid var(--accent-line);font-size:14px}
+.gate p{margin:0}
+.gate .acts2{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Jobs */
 .u{align-self:flex-end;max-width:min(560px,85%);background:var(--hover);padding:10px 15px;border-radius:18px 18px 6px 18px}
-.a{display:flex;flex-direction:column;gap:12px;min-width:0}
-.a p{margin:0}
-.a h4{margin:6px 0 0;font-size:15px;font-weight:600}
-.a ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.job{display:flex;flex-direction:column;gap:14px}
+.out{display:flex;flex-direction:column;gap:12px;min-width:0}
+.out p{margin:0}
+.out h4{margin:4px 0 0;font-size:15px;font-weight:600}
+.out ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.out.in{animation:rise .35s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}}
 pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:12px;padding:14px 16px;overflow-x:auto;font-family:var(--f-mono);font-size:13px;line-height:1.6}
-.k{color:var(--accent)} .c{color:var(--faint)}
-.acts{display:flex;align-items:center;gap:2px;color:var(--faint);font-size:12px;font-family:var(--f-mono)}
-.acts button{padding:6px;border-radius:8px;color:var(--faint)}
-.acts button:hover{background:var(--hover);color:var(--fg)}
-.acts span{margin-left:8px}
-.sponsor{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1px dashed var(--line);font-size:14px;color:var(--muted)}
-.sponsor .logo{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-weight:700;font-size:12px;color:#fff;flex:none}
-.sponsor div{min-width:0;flex:1}
-.sponsor b{color:var(--fg);font-weight:550}
-.sponsor small{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
-.sponsor a{color:var(--fg);font-weight:500;text-decoration:none;white-space:nowrap;font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid var(--line)}
-.sponsor a:hover{border-color:var(--faint)}
-.dock{position:sticky;bottom:0;padding-block:8px 16px;background:linear-gradient(to bottom,transparent,var(--bg) 30%)}
-.dock .composer{padding:10px 10px 8px 14px}
-.dock textarea{min-height:26px}
+.k{color:var(--accent)} .c{color:var(--faint)} .add{color:var(--good)} .del{color:var(--bad)}
+.meta{display:flex;align-items:center;gap:2px;color:var(--faint);font-size:12px;font-family:var(--f-mono);flex-wrap:wrap}
+.meta button{padding:6px;border-radius:8px;color:var(--faint)}
+.meta button:hover{background:var(--hover);color:var(--fg)}
+.meta span{margin-left:8px}
 
-/* Code agent */
-.agent{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:20px;padding-block:20px 32px;max-width:1080px;margin:0 auto}
-.repo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:14px;color:var(--muted)}
-.repo b{color:var(--fg);font-family:var(--f-mono);font-weight:500;font-size:13px}
-.ok{display:inline-flex;align-items:center;gap:6px;color:var(--good);font-size:13px}
-.ok i{width:7px;height:7px;border-radius:50%;background:currentColor}
-.task{font-family:var(--f-display);font-weight:600;font-size:24px;letter-spacing:-.02em;line-height:1.2;margin:12px 0 18px;text-wrap:balance}
-.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.steps li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:12px;padding:11px 0;border-top:1px solid var(--line);align-items:start}
-.steps li:first-child{border-top:0}
-.dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;margin-top:2px}
-.done .dot{background:var(--fg);color:var(--bg)}
-.done .dot svg{width:11px;height:11px;stroke-width:3}
-.run .dot{border:2px solid var(--accent-line);border-top-color:var(--accent);animation:spin 1s linear infinite}
-.todo .dot{border:1.5px dashed var(--faint)}
+/* Working status (same in every tool) */
+.status{display:flex;flex-direction:column;gap:8px}
+.status .row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--muted)}
+.spin{width:16px;height:16px;border-radius:50%;border:2px solid var(--accent-line);border-top-color:var(--accent);animation:spin 1s linear infinite;flex:none}
 @keyframes spin{to{transform:rotate(1turn)}}
-.steps p{margin:0}
-.steps small{display:block;color:var(--muted);font-size:13px;font-family:var(--f-mono)}
-.steps time{font-family:var(--f-mono);font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
-.todo p{color:var(--faint)}
-.diff{margin-top:14px}
-.add{color:var(--good)} .del{color:#E5484D}
-.rail{display:flex;flex-direction:column;gap:14px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
-.card h5{margin:0;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);font-weight:500}
-.stat{display:flex;justify-content:space-between;font-size:14px;color:var(--muted)}
-.stat b{font-family:var(--f-mono);font-weight:500;color:var(--fg);font-variant-numeric:tabular-nums}
-.while{border-color:var(--accent-line);background:linear-gradient(180deg,var(--accent-soft),var(--surface) 70%)}
-.while .who{display:flex;align-items:center;gap:10px}
-.while .who b{font-size:15px}
-.while p{margin:0;font-size:14px;color:var(--muted)}
-.while .btn{display:flex;justify-content:center;padding:9px;border-radius:10px;background:var(--fg);color:var(--bg);font-weight:550;font-size:14px;text-decoration:none}
-.fine{font-size:12px;color:var(--faint)}
+.status time{margin-left:auto;font-family:var(--f-mono);font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+.status .bar{height:3px}
 
-/* Images */
-.gal{padding-block:20px 32px;max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
-.gal .composer{flex-direction:row;align-items:center;padding:8px 8px 8px 16px;border-radius:16px}
-.gal textarea{min-height:24px;height:26px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+/* Sponsor slot: one component, two sizes */
+.wait{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden;animation:rise .35s ease both}
+.wait-b{display:flex;gap:12px;padding:14px;align-items:flex-start}
+.logo{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-weight:700;font-size:14px;color:#fff;flex:none}
+.wait-b div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.eyebrow{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint)}
+.wait-b b{font-weight:550}
+.wait-b p{margin:0;font-size:14px;color:var(--muted)}
+.wait-a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--line);flex-wrap:wrap}
+.ghost{font-size:13px;font-weight:500;padding:7px 11px;border-radius:9px;border:1px solid var(--line);text-decoration:none;color:var(--fg);background:var(--surface)}
+.ghost:hover{border-color:var(--faint)}
+.watch{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:550;padding:7px 12px;border-radius:9px;background:var(--fg);color:var(--bg)}
+.watch .g{font-family:var(--f-mono);color:var(--accent);font-weight:500}
+.watch:disabled{background:var(--hover);color:var(--good)}
+.line{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);padding:2px 0;animation:rise .35s ease both;min-width:0;flex-wrap:wrap}
+.line .logo{width:20px;height:20px;border-radius:6px;font-size:10px}
+.line b{color:var(--fg);font-weight:550}
+.line a{color:var(--fg);text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.line .earned{font-family:var(--f-mono);font-size:11px;color:var(--good);padding:2px 7px;border-radius:99px;background:color-mix(in srgb,var(--good) 12%,transparent)}
+
+/* Inline rewarded spot */
+.spot{aspect-ratio:16/7;max-width:100%;background:linear-gradient(135deg,#0F3D2E,#1E7A55);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:16px 18px;gap:2px;position:relative}
+.spot b{font-family:var(--f-display);font-size:clamp(20px,3.4vw,26px);letter-spacing:-.02em;line-height:1.05}
+.spot small{opacity:.8;font-size:13px}
+.spot .ad{position:absolute;top:12px;left:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:6px}
+.ptrack{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;color:var(--muted);font-family:var(--f-mono)}
+.ptrack .bar{flex:1;height:4px}
+.ptrack .bar i{transition:none}
+
+/* Tool results */
+.ctx{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:var(--muted);padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface)}
+.ctx b{color:var(--fg);font-family:var(--f-mono);font-weight:500;font-size:12px}
+.ok{display:inline-flex;align-items:center;gap:6px;color:var(--good)}
+.ok i{width:7px;height:7px;border-radius:50%;background:currentColor}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.steps li{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;padding:10px 14px;border-top:1px solid var(--line);align-items:start;font-size:14px}
+.steps li:first-child{border-top:0}
+.dot{width:18px;height:18px;border-radius:50%;display:grid;place-items:center;margin-top:1px;background:var(--fg);color:var(--bg)}
+.dot svg{width:11px;height:11px;stroke-width:3}
+.steps small{display:block;color:var(--muted);font-size:12px;font-family:var(--f-mono)}
+.steps time{font-family:var(--f-mono);font-size:12px;color:var(--faint)}
+.primary{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:10px;background:var(--fg);color:var(--bg);font-weight:550;font-size:14px;align-self:flex-start}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .tile{aspect-ratio:1;border-radius:14px;overflow:hidden;position:relative;max-width:100%;background:var(--hover)}
 .tile canvas{width:100%;height:100%;display:block}
-.tile span{position:absolute;left:10px;bottom:10px;font-size:12px;padding:4px 8px;border-radius:8px;background:rgba(10,10,14,.55);color:#fff;backdrop-filter:blur(6px);font-family:var(--f-mono)}
-.tile.gen::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.25),transparent 70%);animation:sheen 1.4s infinite}
-@keyframes sheen{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
-
-/* Design */
-.studio{display:grid;grid-template-columns:320px minmax(0,1fr);gap:18px;padding-block:20px 32px;max-width:1080px;margin:0 auto}
-.board{background:var(--code);border:1px solid var(--line);border-radius:16px;min-height:460px;display:grid;place-items:center;padding:24px;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:16px 16px}
-.phone{width:230px;max-width:100%;aspect-ratio:9/18;background:#0F1014;border-radius:30px;padding:10px;box-shadow:var(--shadow)}
+.tile span{position:absolute;left:10px;bottom:10px;font-size:12px;padding:4px 8px;border-radius:8px;background:rgba(10,10,14,.55);color:#fff;font-family:var(--f-mono)}
+.board{background:var(--code);border:1px solid var(--line);border-radius:16px;display:grid;place-items:center;padding:28px 16px;background-image:radial-gradient(var(--line) 1px,transparent 1px);background-size:16px 16px}
+.phone{width:220px;max-width:100%;aspect-ratio:9/18;background:#0F1014;border-radius:30px;padding:10px;box-shadow:var(--shadow)}
 .screen{height:100%;border-radius:22px;background:#FFF7F2;padding:18px 14px;display:flex;flex-direction:column;gap:10px;color:#1B1310}
-.screen h3{margin:6px 0 0;font-family:var(--f-display);font-size:22px;letter-spacing:-.02em;line-height:1.1}
+.screen h3{margin:6px 0 0;font-family:var(--f-display);font-size:21px;letter-spacing:-.02em;line-height:1.1}
 .screen .blk{height:64px;border-radius:14px;background:#FF5A1F}
-.screen .row{height:12px;border-radius:6px;background:#EADFD8}
-.screen .row.s{width:60%}
+.screen .r{height:11px;border-radius:6px;background:#EADFD8}
+.screen .cta{height:40px;border-radius:12px;background:#1B1310;color:#FFF7F2;display:grid;place-items:center;font-weight:600;font-size:13px;margin-top:auto}
 
-/* Earn modal */
-.scrim{position:fixed;inset:0;background:rgba(8,9,12,.45);backdrop-filter:blur(3px);display:grid;place-items:center;padding:16px;z-index:50}
-.modal{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:22px;display:flex;flex-direction:column;gap:16px}
+/* Earn modal (account-level; jobs use the inline slot) */
+.scrim{position:fixed;inset:0;background:rgba(8,9,12,.45);display:grid;place-items:center;padding:16px;z-index:50}
+.modal{width:440px;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:14px}
 .modal header{display:flex;align-items:flex-start;gap:12px}
 .modal h3{margin:0;font-family:var(--f-display);font-weight:600;font-size:22px;letter-spacing:-.02em}
 .modal header p{margin:2px 0 0;color:var(--muted);font-size:14px}
 .modal header button{margin-left:auto}
-.quests{display:flex;flex-direction:column;gap:8px}
 .quest{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border-radius:14px;border:1px solid var(--line);text-align:left;width:100%}
-.quest:hover{border-color:var(--faint)}
+button.quest:hover{border-color:var(--faint)}
 .quest .qi{width:40px;height:40px;border-radius:12px;background:var(--hover);display:grid;place-items:center}
 .quest b{font-weight:550;display:block}
 .quest small{color:var(--muted);font-size:13px}
@@ -213,30 +219,18 @@ pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:1
 .streak{display:flex;gap:6px;margin-top:6px}
 .streak i{flex:1;height:5px;border-radius:99px;background:var(--hover)}
 .streak i.on{background:var(--accent)}
-.player{border-radius:14px;overflow:hidden;border:1px solid var(--line)}
-.spot{aspect-ratio:16/9;background:linear-gradient(135deg,#0F3D2E,#1E7A55);color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:18px;gap:4px;position:relative}
-.spot b{font-family:var(--f-display);font-size:26px;letter-spacing:-.02em;line-height:1.05}
-.spot small{opacity:.8}
-.spot .ad{position:absolute;top:12px;left:12px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.35);padding:3px 8px;border-radius:6px}
-.ring{position:absolute;top:12px;right:12px;width:34px;height:34px}
-.ring circle{fill:none;stroke-width:3}
-.ptrack{display:flex;align-items:center;gap:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
-.ptrack .bar{flex:1}
-.reward{text-align:center;padding:10px 0 4px;display:flex;flex-direction:column;gap:6px;align-items:center}
-.reward b{font-family:var(--f-display);font-size:40px;color:var(--accent);letter-spacing:-.03em;line-height:1}
+.mplayer{border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .policy{font-size:12px;color:var(--faint);border-top:1px solid var(--line);padding-top:12px;margin:0}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;box-shadow:var(--shadow);max-width:calc(100vw - 32px)}
 
-/* Toast */
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;z-index:60;box-shadow:var(--shadow)}
-
-/* Responsive */
-@media (max-width:980px){.agent,.studio{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){
   .app{grid-template-columns:minmax(0,1fr)}
   .side{position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;transform:translateX(-102%);transition:transform .25s ease;padding-top:calc(14px + env(safe-area-inset-top,0px))}
   .side.open{transform:none;box-shadow:var(--shadow)}
   .menu{display:grid}
   .pill .lbl{display:none}
+  .seg button:not([aria-pressed="true"]) span{display:none}
+  .grid{gap:8px}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
@@ -247,7 +241,6 @@ pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:1
   <symbol id="i-code" viewBox="0 0 24 24"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"/></symbol>
   <symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4"/></symbol>
   <symbol id="i-img" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="m21 16-5-5-9 9"/></symbol>
-  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
   <symbol id="i-gh" viewBox="0 0 24 24"><path d="M9 19c-4 1.3-4-2-6-2.5M15 21v-3.5a3 3 0 0 0-.9-2.4c3-.3 6-1.5 6-6.6a5 5 0 0 0-1.4-3.6 4.7 4.7 0 0 0-.1-3.6s-1.1-.3-3.6 1.4a12.4 12.4 0 0 0-6.5 0C6 1 4.9 1.3 4.9 1.3a4.7 4.7 0 0 0-.1 3.6A5 5 0 0 0 3.4 8.5c0 5.1 3 6.3 6 6.6a3 3 0 0 0-.9 2.3V21"/></symbol>
   <symbol id="i-clip" viewBox="0 0 24 24"><path d="m20 11.5-8 8a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7l-8.5 8.5a1.7 1.7 0 0 1-2.4-2.4L15 7"/></symbol>
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
@@ -261,53 +254,64 @@ pre{margin:0;background:var(--code);border:1px solid var(--line);border-radius:1
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 5v14l12-7z"/></symbol>
   <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 21a6 6 0 0 0 6-6c0-4-3-6-4-9-1 2-2 3-3.5 3.5C9 7 9 5 9 4 6.5 6 6 9.5 6 15a6 6 0 0 0 6 6z"/></symbol>
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8S10.5 3.5 8 4.5 9 8 12 8zm0 0s1.5-4.5 4-3.5S15 8 12 8z"/></symbol>
+  <symbol id="i-pr" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M6 8.5v7M18 15.5V9a3 3 0 0 0-3-3h-4m2-2.5L10.5 6 13 8.5"/></symbol>
 </svg>
 
 <div class="app">
   <aside class="side" id="side">
     <div class="brand"><div class="mark"><span></span></div><b>Wanlly</b></div>
-    <button class="new" data-go="home"><svg class="ico"><use href="#i-plus"/></svg>New chat<kbd>⌘K</kbd></button>
-    <nav class="nav" aria-label="Modes">
-      <button data-go="home" aria-current="page"><svg class="ico"><use href="#i-chat"/></svg>Chat</button>
-      <button data-go="code"><svg class="ico"><use href="#i-code"/></svg>Code</button>
-      <button data-go="design"><svg class="ico"><use href="#i-pen"/></svg>Design</button>
-      <button data-go="images"><svg class="ico"><use href="#i-img"/></svg>Images</button>
-    </nav>
+    <button class="new" data-new><svg class="ico"><use href="#i-plus"/></svg>New chat<kbd>⌘K</kbd></button>
     <div class="label">Recent</div>
     <div class="recents">
-      <button data-go="chat">Ad-supported pricing model</button>
-      <button data-go="code">Add credit ledger to API</button>
-      <button data-go="images">Logo directions, warm palette</button>
-      <button data-go="chat">Postgres schema for usage</button>
-      <button data-go="design">Onboarding screens v2</button>
-      <button data-go="chat">Explain prompt caching</button>
+      <button data-mode="chat" data-sample><svg class="ico sm"><use href="#i-chat"/></svg><span>Pricing a free AI app</span></button>
+      <button data-mode="code"><svg class="ico sm"><use href="#i-code"/></svg><span>Add credit ledger to API</span></button>
+      <button data-mode="images"><svg class="ico sm"><use href="#i-img"/></svg><span>Mug product shots</span></button>
+      <button data-mode="design"><svg class="ico sm"><use href="#i-pen"/></svg><span>Habit app onboarding</span></button>
+      <button data-mode="chat" data-sample><svg class="ico sm"><use href="#i-chat"/></svg><span>Explain prompt caching</span></button>
     </div>
     <div class="meter">
-      <div class="meter-top"><span>Today's credits</span><b id="mNum">26 / 40</b></div>
-      <div class="bar"><i id="mBar" style="width:65%"></i></div>
-      <button class="earn" data-earn><svg class="ico" style="width:16px;height:16px"><use href="#i-bolt"/></svg>Earn more credits</button>
+      <div class="meter-top"><span>Today's credits</span><b id="mNum"></b></div>
+      <div class="bar"><i id="mBar"></i></div>
+      <button class="earn" data-earn><svg class="ico sm"><use href="#i-bolt"/></svg>Earn more credits</button>
     </div>
     <div class="me"><div class="av">L</div><div>Louis<small>Free plan</small></div></div>
   </aside>
 
-  <main>
+  <main id="main">
     <header class="top">
       <button class="menu" id="menuBtn" aria-label="Open sidebar"><svg class="ico"><use href="#i-menu"/></svg></button>
       <div class="picker">
-        <button id="pickBtn" aria-haspopup="menu" aria-expanded="false"><span id="pickName">Sonnet 5.5</span><span class="tag" id="pickTag">2 cr</span><svg class="ico" style="width:16px;height:16px;color:var(--faint)"><use href="#i-down"/></svg></button>
+        <button id="pickBtn" aria-haspopup="menu" aria-expanded="false"></button>
         <div class="menu-pop" id="pickPop" role="menu" hidden></div>
       </div>
       <div class="spacer"></div>
-      <button class="pill" id="pill" data-earn aria-label="Credits"><svg class="ico"><use href="#i-bolt"/></svg><span id="pNum">26</span><span class="lbl">credits</span></button>
+      <button class="pill" id="pill" data-earn aria-label="Credits"><svg class="ico"><use href="#i-bolt"/></svg><span id="pNum"></span><span class="lbl">credits</span></button>
     </header>
 
-    <div class="view" id="view"></div>
+    <div class="stage" id="stage"></div>
+
+    <div class="dock"><div class="inner">
+      <div class="try" id="try"></div>
+      <div class="composer">
+        <div class="gate" id="gate" hidden></div>
+        <textarea id="ta" rows="1" aria-label="Message"></textarea>
+        <div class="crow">
+          <button class="round" aria-label="Attach files"><svg class="ico"><use href="#i-clip"/></svg></button>
+          <div class="seg" role="group" aria-label="Tool">
+            <button data-mode="chat"><svg class="ico sm"><use href="#i-chat"/></svg><span>Chat</span></button>
+            <button data-mode="code"><svg class="ico sm"><use href="#i-code"/></svg><span>Code</span></button>
+            <button data-mode="design"><svg class="ico sm"><use href="#i-pen"/></svg><span>Design</span></button>
+            <button data-mode="images"><svg class="ico sm"><use href="#i-img"/></svg><span>Images</span></button>
+          </div>
+          <span class="est" id="est"></span>
+          <button class="send" id="send" aria-label="Send" disabled><svg class="ico"><use href="#i-up"/></svg></button>
+        </div>
+      </div>
+    </div></div>
   </main>
 </div>
 
-<div class="scrim" id="scrim" hidden>
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div>
-</div>
+<div class="scrim" id="scrim" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle" id="modal"></div></div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -319,212 +323,215 @@ const MODELS=[
   {g:"Other providers",id:"gpt",n:"GPT",d:"OpenAI, chat and Codex",c:2},
   {g:"Other providers",id:"grok",n:"Grok",d:"xAI, fast with live web",c:2}
 ];
-const S={view:"home",model:"sonnet",credits:26,max:40};
+/* Each tool shares one flow; only its words, timing, sponsor and result differ. */
+const MODES={
+  chat:{ph:"Message Wanlly",mult:1,dur:3200,steps:["Thinking","Writing the answer"],
+    try:["Explain prompt caching simply","Compare Sonnet and Opus for coding"],
+    sp:{n:"Northbeam DB",l:"N",c:"#0E7C66",t:"Usage-based Postgres with a free tier. Good fit for a credits table.",cta:"Learn more"}},
+  code:{ph:"Describe a change to wandago/wanlly",mult:3,dur:7000,steps:["Reading 14 files","Planning the change","Editing files","Running tests"],
+    try:["Add dark mode to settings","Write tests for the ledger"],
+    sp:{n:"Railhouse",l:"R",c:"#2747D8",t:"Your repo is a Next.js app. Deploy this branch to a preview URL with $5 of hosting credit.",cta:"Deploy preview"}},
+  design:{ph:"Describe a screen or page",mult:2,dur:5200,steps:["Reading the brief","Laying out the screen","Choosing type and color"],
+    try:["Pricing page with three plans","Settings screen, mobile"],
+    sp:{n:"Typecase",l:"T",c:"#3A3340",t:"The display face in this mock is free for your first project.",cta:"Get the font"}},
+  images:{ph:"Describe an image",fixed:3,dur:4800,steps:["Composing","Rendering 4 images","Upscaling"],
+    try:["Mug on a sunlit counter, film grain","Flat-lay of a desk setup"],
+    sp:{n:"Printwell",l:"P",c:"#B4235A",t:"Turn any of these into a poster or a mug. First print ships free.",cta:"See prints"}}
+};
+const S={mode:"chat",model:"sonnet",credits:9,max:40};
 const $=s=>document.querySelector(s);
-const ic=(n,st="")=>`<svg class="ico" ${st?`style="${st}"`:""}><use href="#i-${n}"/></svg>`;
-const cost=m=>m.c===0?'<span class="tag free">Free</span>':`<span class="tag">${m.c} cr</span>`;
+const ic=(n,c="")=>`<svg class="ico ${c}"><use href="#i-${n}"/></svg>`;
+const esc=s=>s.replace(/[<>&"]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;",'"':"&quot;"}[c]));
 const cur=()=>MODELS.find(m=>m.id===S.model);
+const price=(mode=S.mode)=>MODES[mode].fixed??cur().c*MODES[mode].mult;
+const tag=c=>c===0?'<span class="tag free">Free</span>':`<span class="tag">${c} cr</span>`;
 
-function renderPicker(){
-  const m=cur(); $("#pickName").textContent=m.n;
-  $("#pickTag").outerHTML=cost(m).replace('class="tag','id="pickTag" class="tag');
-  let h="",g="";
-  MODELS.forEach(x=>{ if(x.g!==g){g=x.g;h+=`<h6>${g}</h6>`}
-    h+=`<button class="opt" role="menuitemradio" aria-checked="${x.id===S.model}" data-model="${x.id}"><b>${x.n}</b><small>${x.d}</small>${cost(x)}</button>`});
+/* Stages persist per tool, so a running job keeps going when you switch tools */
+const stages={};
+function stageFor(mode){
+  if(stages[mode])return stages[mode];
+  const el=document.createElement("div");el.className="col";stages[mode]=el;
+  if(mode==="chat")el.innerHTML=`<h1 class="hello">What are we <em>making</em> today?</h1>`;
+  else runJob(mode,SAMPLE[mode],{instant:true});
+  return el;
+}
+const SAMPLE={code:"Add a credit ledger that charges each model call in half-cents",images:"A ceramic mug on a sunlit kitchen counter, morning light",design:"Onboarding screen for a habit app. Warm, confident, one clear action."};
+
+function setMode(mode,opts={}){
+  S.mode=mode;
+  const st=$("#stage");st.innerHTML="";st.appendChild(stageFor(mode));
+  if(opts.sample&&mode==="chat"&&!stages.chat.querySelector(".job"))runJob("chat","How should I price an AI app that's free for most people but still profitable?",{instant:true,sample:true});
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===mode));
+  $("#ta").placeholder=MODES[mode].ph;
+  $("#try").innerHTML=MODES[mode].try.map(t=>`<button data-fill>${t}</button>`).join("");
+  $("#gate").hidden=true;
+  refresh(); $("#side").classList.remove("open");
+  st.scrollTop=st.scrollHeight;
+}
+function refresh(){
+  const empty=S.mode==="chat"&&!stages.chat?.querySelector(".job");
+  $("#main").classList.toggle("empty",empty); $("#try").hidden=!empty&&S.mode==="chat";
+  const m=cur(),img=S.mode==="images";
+  $("#pickBtn").disabled=img;
+  $("#pickBtn").innerHTML=img?`Wanlly Image <span class="tag">3 cr</span>`:`${m.n} ${tag(m.c)}${ic("down","sm")}`;
+  let h="",g="";MODELS.forEach(x=>{if(x.g!==g){g=x.g;h+=`<h6>${g}</h6>`}
+    h+=`<button class="opt" role="menuitemradio" aria-checked="${x.id===S.model}" data-model="${x.id}"><b>${x.n}</b><small>${x.d}</small>${tag(x.c)}</button>`});
   $("#pickPop").innerHTML=h;
-}
-function renderMeter(bump){
-  $("#mNum").textContent=`${S.credits} / ${S.max}`; $("#pNum").textContent=S.credits;
+  const p=price(),e=$("#est");e.textContent=p===0?"Free":`${p} cr`;e.classList.toggle("free",p===0);
+  $("#mNum").textContent=`${S.credits} / ${S.max}`;$("#pNum").textContent=S.credits;
   $("#mBar").style.width=Math.min(100,S.credits/S.max*100)+"%";
-  if(bump){const p=$("#pill");p.classList.remove("bump");void p.offsetWidth;p.classList.add("bump")}
+  $("#send").disabled=!$("#ta").value.trim();
+}
+function earn(n,why){S.credits+=n;refresh();const p=$("#pill");p.classList.remove("bump");void p.offsetWidth;p.classList.add("bump");toast(`+${n} credits${why?" · "+why:""}`)}
+
+/* Sponsor slot: card while working, one line after */
+const card=sp=>`<div class="wait"><div class="wait-b"><div class="logo" style="background:${sp.c}">${sp.l}</div>
+  <div><span class="eyebrow">While you wait · Sponsored</span><b>${sp.n}</b><p>${sp.t}</p></div></div>
+  <div class="wait-a"><a class="ghost" href="#" data-noop>${sp.cta}</a><button class="watch" data-watch>${ic("play","sm")}Watch 20s <span class="g">+4</span></button></div></div>`;
+const line=(sp,earned)=>`<div class="line"><div class="logo" style="background:${sp.c}">${sp.l}</div><span class="eyebrow">Sponsored</span><span><b>${sp.n}</b> · <a href="#" data-noop>${sp.cta}</a></span>${earned?`<span class="earned">+${earned} earned</span>`:""}</div>`;
+
+/* Rewarded spot that plays in place, wherever it's started */
+function playIn(box,done){
+  const T=5;let t=0;
+  box.innerHTML=`<div class="spot"><span class="ad">Sponsored</span><small>Fieldnote</small><b>Notes that organize themselves.</b><small>Free for students</small></div>
+  <div class="ptrack"><span class="pt">0:00</span><div class="bar"><i></i></div><span>+4</span></div>`;
+  const bar=box.querySelector(".bar i"),pt=box.querySelector(".pt");
+  const iv=setInterval(()=>{t+=.1;const f=Math.min(1,t/T);bar.style.width=f*100+"%";pt.textContent="0:0"+Math.floor(t);
+    if(f>=1){clearInterval(iv);done()}},100);
 }
 
-const composer=(ph,cls="")=>`
-<div class="composer ${cls}">
-  <textarea id="ta" rows="1" placeholder="${ph}" aria-label="Message"></textarea>
-  <div class="crow">
-    <button class="round" aria-label="Attach files">${ic("clip")}</button>
-    <button class="chip" aria-pressed="false" data-toggle>${ic("search")}Search</button>
-    <button class="chip" data-go="code">${ic("gh")}GitHub</button>
-    <button class="chip" data-go="images">${ic("img")}Image</button>
-    <button class="send" id="send" aria-label="Send" disabled>${ic("up")}</button>
-  </div>
-</div>`;
+let jid=0;
+function runJob(mode,prompt,{instant=false,sample=false}={}){
+  const M=MODES[mode],col=stageFor(mode),id=++jid;
+  col.querySelector(".hello")?.remove();
+  const job=document.createElement("div");job.className="job";
+  job.innerHTML=`<div class="u">${esc(prompt)}</div><div class="out"></div><div class="slot"></div>`;
+  col.appendChild(job);
+  const out=job.querySelector(".out"),slot=job.querySelector(".slot");
+  const model=mode==="images"?"Wanlly Image":cur().n, cost=price(mode);
+  if(instant){out.innerHTML=RESULT[mode](prompt,sample,model,cost);slot.innerHTML=line(M.sp);paint(out);return}
+  // working state
+  let step=0,secs=0;
+  out.innerHTML=`<div class="status"><div class="row"><span class="spin"></span><span class="st">${M.steps[0]}</span><time>0:00</time></div><div class="bar"><i></i></div></div>`;
+  slot.innerHTML=card(M.sp);
+  requestAnimationFrame(()=>{const b=out.querySelector(".bar i");b.style.transition=`width ${M.dur}ms linear`;b.style.width="100%"});
+  const tick=setInterval(()=>{secs++;const t=out.querySelector("time");if(t)t.textContent="0:"+String(secs).padStart(2,"0")},1000);
+  const stepper=setInterval(()=>{step=Math.min(step+1,M.steps.length-1);const s=out.querySelector(".st");if(s)s.textContent=M.steps[step]},M.dur/M.steps.length);
+  job._sp=M.sp;
+  setTimeout(()=>{clearInterval(tick);clearInterval(stepper);
+    out.innerHTML=RESULT[mode](prompt,false,model,cost);out.classList.add("in");paint(out);
+    job._done=true; if(!job._playing)slot.innerHTML=line(M.sp,job._earned);
+    if(S.mode===mode)$("#stage").scrollTop=$("#stage").scrollHeight;
+  },M.dur);
+  refresh(); $("#stage").scrollTop=$("#stage").scrollHeight;
+}
 
-const V={
-home:()=>`<div class="col home">
-  <h1 class="hello">What are we <em>making</em> today?</h1>
-  ${composer("Ask anything, or describe what to build")}
-  <p class="costline">${cur().c===0?`<b>${cur().n}</b> is free`:`<b>${cur().n}</b> uses ${cur().c} credits per message · Haiku 5.5 is always free`}</p>
-  <div class="ideas">
-    <button data-go="code">Fix a bug in my repo</button>
-    <button data-go="design">Design a landing page</button>
-    <button data-go="images">Generate a product shot</button>
-    <button data-go="chat">Explain a concept</button>
-  </div></div>`,
-chat:(q)=>`<div class="col"><div class="thread">
-  <div class="u">${q||"How should I price an AI app that's free for most people but still profitable?"}</div>
-  ${q?`<div class="a"><p>This is a design prototype, so replies aren't connected to a model yet. When the backend is in, this answer will stream here from <b>${cur().n}</b>.</p>
-    <div class="acts"><button aria-label="Copy">${ic("copy")}</button><button aria-label="Retry">${ic("redo")}</button><span>${cur().n} · ${cur().c||"free"}${cur().c?" cr":""}</span></div></div>`:`
-  <div class="a">
+const meta=(model,cost)=>`<div class="meta"><button aria-label="Copy">${ic("copy","sm")}</button><button aria-label="Retry">${ic("redo","sm")}</button><span>${model} · ${cost?cost+" cr":"free"}</span></div>`;
+const RESULT={
+  chat:(q,sample,model,cost)=>sample?`
     <p>Treat ads as something that <b>earns credits</b>, and models as something that <b>spends</b> them. Then every user has a balance you can measure in real cents.</p>
     <h4>A setup that holds up</h4>
-    <ol>
-      <li>A free daily allowance that covers light use on a small model.</li>
-      <li>Opt-in sponsor spots that top up credits for bigger models.</li>
-      <li>A paid plan for people who go past what ads can cover.</li>
-    </ol>
+    <ol><li>A free daily allowance that covers light use on a small model.</li><li>Opt-in sponsor spots that top up credits for bigger models.</li><li>A paid plan for people who go past what ads can cover.</li></ol>
     <pre><span class="c">// credits are integer half-cents</span>
 <span class="k">const</span> cost = usage.input * rate.in + usage.output * rate.out;
 ledger.debit(user, Math.ceil(cost / 0.005));</pre>
-    <p>Keep the answer itself free of sponsors. Put them beside the work, never inside it.</p>
-    <div class="acts"><button aria-label="Copy">${ic("copy")}</button><button aria-label="Retry">${ic("redo")}</button><span>Sonnet 5.5 · 2 cr</span></div>
-    <div class="sponsor"><div class="logo" style="background:#0E7C66">N</div>
-      <div><small>Sponsored</small><b>Northbeam DB</b>: usage-based Postgres with a free tier that fits a credit ledger.</div>
-      <a href="#" onclick="return false">Learn more</a></div>
-  </div>`}
-  </div><div class="dock">${composer("Reply to Wanlly")}</div></div>`,
-code:()=>`<div class="agent">
-  <section style="min-width:0">
-    <div class="repo">${ic("gh","width:16px;height:16px")}<b>wandago/wanlly</b><span>on</span><b>main</b><span class="ok"><i></i>Connected</span></div>
-    <h2 class="task">Add a credit ledger that charges each model call in half-cents</h2>
+    <p>Keep sponsors beside the work, never inside the answer.</p>${meta("Sonnet 5.5",2)}`
+    :`<p>This is a design prototype, so replies aren't connected to a model yet. Once the backend is in, <b>${model}</b> streams its answer here, in the same spot the working card held.</p>${meta(model,cost)}`,
+  code:(q,s,model,cost)=>`
+    <div class="ctx">${ic("gh","sm")}<b>wandago/wanlly</b> on <b>main</b><span class="ok"><i></i>Connected</span></div>
     <ol class="steps">
-      <li class="done"><span class="dot">${ic("check")}</span><div><p>Read the project</p><small>14 files · package.json, app/api/chat/route.ts</small></div><time>0:12</time></li>
-      <li class="done"><span class="dot">${ic("check")}</span><div><p>Planned the change</p><small>ledger table, debit on stream end, refund on error</small></div><time>0:31</time></li>
-      <li class="done"><span class="dot">${ic("check")}</span><div><p>Edited 3 files</p><small>+86 −4 · lib/ledger.ts, db/schema.ts, route.ts</small></div><time>1:48</time></li>
-      <li class="run"><span class="dot"></span><div><p>Running tests</p><small>vitest · 23 of 31 passed so far</small></div><time id="clock">2:06</time></li>
-      <li class="todo"><span class="dot"></span><div><p>Open a pull request</p></div><time></time></li>
+      <li><span class="dot">${ic("check")}</span><div>Read the project<small>14 files · app/api/chat/route.ts</small></div><time>0:12</time></li>
+      <li><span class="dot">${ic("check")}</span><div>Planned the change<small>ledger table, debit on stream end, refund on error</small></div><time>0:31</time></li>
+      <li><span class="dot">${ic("check")}</span><div>Edited 3 files<small>+86 −4 · lib/ledger.ts, db/schema.ts, route.ts</small></div><time>1:48</time></li>
+      <li><span class="dot">${ic("check")}</span><div>Tests pass<small>vitest · 31 of 31</small></div><time>2:20</time></li>
     </ol>
-    <pre class="diff"><span class="c">lib/ledger.ts</span>
+    <pre><span class="c">lib/ledger.ts</span>
 <span class="add">+ export async function debit(userId: string, halfCents: number) {</span>
 <span class="add">+   const bal = await db.balance(userId);</span>
 <span class="add">+   if (bal &lt; halfCents) throw new OutOfCredits(bal);</span>
 <span class="add">+   return db.insert(entries).values({ userId, delta: -halfCents });</span>
 <span class="add">+ }</span>
 <span class="del">- // TODO: track usage</span></pre>
-  </section>
-  <aside class="rail">
-    <div class="card"><h5>This run</h5>
-      <div class="stat"><span>Model</span><b>Haiku 5.5</b></div>
-      <div class="stat"><span>Steps</span><b>4 of 5</b></div>
-      <div class="stat"><span>Credits used</span><b>0 · free</b></div>
-    </div>
-    <div class="card while"><h5>While you wait · Sponsored</h5>
-      <div class="who"><div class="sponsor" style="border:0;padding:0"><div class="logo" style="background:#2747D8">R</div></div><b>Railhouse</b></div>
-      <p>Your repo is a Next.js app. Deploy this branch to a preview URL in one click, with $5 of hosting credit.</p>
-      <a class="btn" href="#" onclick="return false">Deploy preview</a>
-      <span class="fine">Picked because of your stack. It never changes the agent's work.</span>
-    </div>
-    <button class="card" data-earn style="text-align:left;cursor:pointer">
-      <h5>Run this on Opus 5.5</h5>
-      <span style="font-size:14px;color:var(--muted)">Watch one 20s spot to run the next task on Opus for free.</span>
-    </button>
-  </aside></div>`,
-images:()=>`<div class="gal">
-  <div class="composer"><textarea id="ta" rows="1" placeholder="Describe an image" aria-label="Image prompt">A ceramic mug on a sunlit kitchen counter, morning light, film grain</textarea><button class="send" id="send" aria-label="Generate">${ic("up")}</button></div>
-  <div class="grid" id="grid"></div></div>`,
-design:()=>`<div class="studio">
-  <section class="card"><h5>Brief</h5>
-    <p style="margin:0">Onboarding screen for a habit app. Warm, confident, one clear action.</p>
-    <h5 style="margin-top:8px">Versions</h5>
-    <div class="ideas" style="justify-content:flex-start"><button aria-pressed="true">v2 · current</button><button>v1</button></div>
-    ${composer("Ask for a change")}
-  </section>
-  <section class="board"><div class="phone"><div class="screen">
+    <button class="primary" data-noop>${ic("pr","sm")}Open pull request</button>${meta(model,cost)}`,
+  images:(q,s,model,cost)=>`<div class="grid">${["Sunlit","Moody","Wide","Close-up"].map(n=>`<div class="tile"><canvas width="400" height="400"></canvas><span>${n}</span></div>`).join("")}</div>${meta(model,cost)}`,
+  design:(q,s,model,cost)=>`<div class="board"><div class="phone"><div class="screen">
     <small style="font-family:var(--f-mono);opacity:.6">Day 1</small><h3>Small steps, every single day.</h3>
-    <div class="blk"></div><div class="row"></div><div class="row s"></div><div style="flex:1"></div>
-    <div style="height:42px;border-radius:12px;background:#1B1310;color:#FFF7F2;display:grid;place-items:center;font-weight:600;font-size:14px">Start my streak</div>
-  </div></div></section></div>`
+    <div class="blk"></div><div class="r"></div><div class="r" style="width:60%"></div><div class="cta">Start my streak</div></div></div></div>${meta(model,cost)}`
 };
-
-function go(v,q){
-  S.view=v;
-  document.querySelectorAll(".nav button").forEach(b=>b.setAttribute("aria-current",(b.dataset.go===v||(v==="chat"&&b.dataset.go==="home"))?"page":"false"));
-  $("#view").innerHTML=V[v](q); $("#view").scrollTop=0;
-  $("#side").classList.remove("open");
-  wireComposer(); if(v==="images")paintGrid(); if(v==="chat"&&q)$("#view").scrollTop=1e6;
-}
-function wireComposer(){
-  const ta=$("#ta"),send=$("#send"); if(!ta)return;
-  const fit=()=>{ta.style.height="auto";ta.style.height=Math.min(200,ta.scrollHeight)+"px"; if(S.view!=="images")send.disabled=!ta.value.trim()};
-  ta.addEventListener("input",fit);
-  ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit()}});
-  send.addEventListener("click",submit);
-}
-function submit(){
-  const ta=$("#ta"); if(!ta)return;
-  if(S.view==="images"){paintGrid(true);return}
-  const q=ta.value.trim(); if(!q)return;
-  const m=cur();
-  if(m.c>S.credits){openEarn(`${m.n} needs ${m.c} credits. Top up, or switch to Haiku 5.5 for free.`);return}
-  S.credits-=m.c; renderMeter();
-  go("chat",q.replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c])));
-}
-
-/* Image tiles: generated abstract art as stand-ins */
-function paintGrid(regen){
-  const g=$("#grid"); if(!g)return;
+let seed=0;
+function paint(out){
   const pals=[["#F2B48A","#E06A3B","#3B2A22"],["#BFD8D2","#5E8C7F","#1E2B28"],["#F4E3B5","#D99A2B","#4A3418"],["#D7C9F0","#7D62C4","#24193D"],["#F7C9C9","#D9525E","#3A1519"],["#C9DDF7","#3E78C9","#14233A"]];
-  g.innerHTML=pals.map((_,i)=>`<div class="tile ${regen?"gen":""}"><canvas width="400" height="400"></canvas><span>${["Sunlit","Moody","Wide","Close-up","Studio","Overhead"][i]}</span></div>`).join("");
-  g.querySelectorAll("canvas").forEach((cv,i)=>{
-    const x=cv.getContext("2d"),p=pals[(i+(regen?2:0))%pals.length],gr=x.createLinearGradient(0,0,400,400);
+  out.querySelectorAll("canvas").forEach((cv,i)=>{
+    const x=cv.getContext("2d"),p=pals[(i+seed)%pals.length],gr=x.createLinearGradient(0,0,400,400);
     gr.addColorStop(0,p[0]);gr.addColorStop(1,p[1]);x.fillStyle=gr;x.fillRect(0,0,400,400);
     x.fillStyle=p[2];x.globalAlpha=.85;x.beginPath();x.ellipse(200,330,130,26,0,0,7);x.fill();
     x.globalAlpha=1;x.fillStyle=p[0];x.fillRect(150,170,100,150);x.beginPath();x.ellipse(200,170,50,12,0,0,7);x.fill();
     x.strokeStyle=p[0];x.lineWidth=14;x.beginPath();x.arc(258,240,30,-1.3,1.3);x.stroke();
-    x.globalAlpha=.18;x.fillStyle="#fff";x.beginPath();x.moveTo(0,0);x.lineTo(180,0);x.lineTo(400,260);x.lineTo(400,400);x.fill();
+    x.globalAlpha=.18;x.fillStyle="#fff";x.beginPath();x.moveTo(0,0);x.lineTo(180,0);x.lineTo(400,260);x.lineTo(400,400);x.fill();x.globalAlpha=1;
   });
-  if(regen)setTimeout(()=>g.querySelectorAll(".tile").forEach(t=>t.classList.remove("gen")),1600);
+  if(out.querySelector("canvas"))seed+=2;
 }
 
-/* Earn flow */
-const scrim=$("#scrim"),modal=$("#modal");
-function openEarn(note){
-  modal.innerHTML=`<header><div><h3 id="mTitle">Earn credits</h3><p>${note||"Pick one. Every option is labeled and optional."}</p></div><button class="round" data-close aria-label="Close">${ic("x")}</button></header>
-  <div class="quests">
-    <button class="quest" data-watch><span class="qi">${ic("play")}</span><span><b>Watch a 20s spot</b><small>Skippable after 5s, still counts</small></span><span class="gain">+4</span></button>
-    <button class="quest" data-try><span class="qi">${ic("gift")}</span><span><b>Try a sponsor's tool</b><small>Northbeam DB · create a free database</small></span><span class="gain">+25</span></button>
-    <div class="quest" style="cursor:default"><span class="qi">${ic("flame")}</span><span><b>Daily streak · 3 of 5</b><small>Come back 2 more days for a free Fable 5.1 answer</small><span class="streak"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></span><span class="gain">+10</span></div>
-  </div>
-  <p class="policy">Sponsors never appear inside an answer and never change what a model says. Need more than ads can cover? Plus is $8/month.</p>`;
-  scrim.hidden=false; modal.querySelector("[data-close]").focus();
+function submit(){
+  const ta=$("#ta"),q=ta.value.trim();if(!q)return;
+  const cost=price();
+  if(cost>S.credits){showGate(cost);return}
+  S.credits-=cost; ta.value="";ta.style.height="auto";$("#gate").hidden=true;
+  runJob(S.mode,q);
 }
-function play(){
-  let t=0;const T=5,C=2*Math.PI*14;
-  modal.innerHTML=`<div class="player"><div class="spot"><span class="ad">Sponsored</span>
-    <svg class="ring" viewBox="0 0 34 34"><circle cx="17" cy="17" r="14" stroke="rgba(255,255,255,.25)"/><circle id="rg" cx="17" cy="17" r="14" stroke="#fff" stroke-dasharray="${C}" stroke-dashoffset="${C}" transform="rotate(-90 17 17)"/></svg>
-    <small>Fieldnote</small><b>Notes that organize themselves.</b><small>Free for students · fieldnote.app</small></div>
-    <div class="ptrack"><span id="pt">0:00</span><div class="bar"><i id="pb" style="width:0%"></i></div><span>+4 credits</span></div></div>
-    <p class="policy" style="border:0;padding:0">Demo spot runs 5 seconds here. Real spots are 15 to 20 seconds.</p>`;
-  const iv=setInterval(()=>{t+=.1;const f=Math.min(1,t/T);
-    const rg=$("#rg");if(!rg){clearInterval(iv);return}
-    rg.setAttribute("stroke-dashoffset",C*(1-f));$("#pb").style.width=f*100+"%";$("#pt").textContent="0:0"+Math.floor(t);
-    if(f>=1){clearInterval(iv);reward(4)}},100);
+function showGate(cost){
+  const g=$("#gate"),m=cur(),img=S.mode==="images",need=cost-S.credits;
+  g.innerHTML=`<p><b>${img?"Images":m.n}</b> needs ${cost} credits here and you have ${S.credits}. Watch ${Math.ceil(need/4)>1?Math.ceil(need/4)+" short spots":"one short spot"}${img?"":", or switch to Haiku 5.5 for free"}.</p>
+    <div class="acts2"><button class="watch" style="margin:0" data-gatewatch>${ic("play","sm")}Watch 20s <span class="g">+4</span></button>${img?"":`<button class="ghost" data-haiku>Use Haiku 5.5 free</button>`}</div>`;
+  g.hidden=false;
 }
-function reward(n){
-  S.credits+=n; renderMeter(true);
-  modal.innerHTML=`<div class="reward"><b>+${n}</b><span>credits added. You have ${S.credits}.</span></div>
-  <button class="earn" data-close style="padding:11px">Back to work</button>`;
-  modal.querySelector("[data-close]").focus();
+
+function openEarn(){
+  const M=$("#modal");
+  M.innerHTML=`<header><div><h3 id="mTitle">Earn credits</h3><p>Every option is optional and labeled.</p></div><button class="round" data-close aria-label="Close">${ic("x")}</button></header>
+  <button class="quest" data-mwatch><span class="qi">${ic("play")}</span><span><b>Watch a 20s spot</b><small>Or press Watch on any working card</small></span><span class="gain">+4</span></button>
+  <button class="quest" data-try><span class="qi">${ic("gift")}</span><span><b>Try a sponsor's tool</b><small>Northbeam DB · create a free database</small></span><span class="gain">+25</span></button>
+  <div class="quest"><span class="qi">${ic("flame")}</span><span><b>Daily streak · 3 of 5</b><small>Two more days for a free Fable 5.1 answer</small><span class="streak"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></span><span class="gain">+10</span></div>
+  <p class="policy">Sponsors never appear inside an answer and never change what a model says. Need more than ads cover? Plus is $8/month.</p>`;
+  $("#scrim").hidden=false;M.querySelector("[data-close]").focus();
 }
 function toast(t){const el=$("#toast");el.textContent=t;el.hidden=false;clearTimeout(el._t);el._t=setTimeout(()=>el.hidden=true,2200)}
 
 document.addEventListener("click",e=>{
-  const t=e.target.closest("button,[data-go]"); if(!t)return;
+  const t=e.target.closest("button,a");if(!t)return;
+  if(t.hasAttribute("data-noop")){e.preventDefault();toast("Opens the sponsor in a new tab");return}
   if(t.id==="pickBtn"){const p=$("#pickPop"),o=p.hidden;p.hidden=!o;t.setAttribute("aria-expanded",o);return}
-  if(t.dataset.model){S.model=t.dataset.model;$("#pickPop").hidden=true;$("#pickBtn").setAttribute("aria-expanded","false");renderPicker();if(S.view==="home")go("home");toast(`Switched to ${cur().n}`);return}
-  if(t.dataset.go){go(t.dataset.go);return}
+  if(t.dataset.model){S.model=t.dataset.model;$("#pickPop").hidden=true;$("#pickBtn").setAttribute("aria-expanded","false");$("#gate").hidden=true;refresh();return}
+  if(t.dataset.mode){setMode(t.dataset.mode,{sample:t.hasAttribute("data-sample")});return}
+  if(t.hasAttribute("data-new")){delete stages.chat;setMode("chat");$("#ta").focus();return}
+  if(t.hasAttribute("data-fill")){const ta=$("#ta");ta.value=t.textContent;refresh();ta.focus();return}
   if(t.hasAttribute("data-earn")){openEarn();return}
-  if(t.hasAttribute("data-close")){scrim.hidden=true;return}
-  if(t.hasAttribute("data-watch")){play();return}
-  if(t.hasAttribute("data-try")){reward(25);return}
-  if(t.hasAttribute("data-toggle")){t.setAttribute("aria-pressed",t.getAttribute("aria-pressed")!=="true");return}
+  if(t.hasAttribute("data-close")){$("#scrim").hidden=true;return}
+  if(t.hasAttribute("data-watch")){
+    const job=t.closest(".job"),slot=job.querySelector(".slot"),box=slot.querySelector(".wait");
+    job._playing=true;
+    playIn(box,()=>{job._playing=false;job._earned=4;earn(4,"thanks for watching");
+      slot.innerHTML=job._done?line(job._sp,4):card(job._sp);
+      if(!job._done){const w=slot.querySelector("[data-watch]");w.disabled=true;w.innerHTML=`${ic("check","sm")}+4 earned`}});
+    return}
+  if(t.hasAttribute("data-gatewatch")){
+    const g=$("#gate");g.innerHTML=`<div class="mplayer"></div>`;
+    playIn(g.firstChild,()=>{earn(4);const c=price();
+      if(c<=S.credits){g.innerHTML=`<p><b>You're set.</b> Press send to run it.</p>`;setTimeout(()=>g.hidden=true,2500)}else showGate(c)});
+    return}
+  if(t.hasAttribute("data-haiku")){S.model="haiku";$("#gate").hidden=true;refresh();toast("Switched to Haiku 5.5, free");return}
+  if(t.hasAttribute("data-mwatch")){const M=$("#modal");M.innerHTML=`<div class="mplayer"></div>`;
+    playIn(M.firstChild,()=>{earn(4);$("#scrim").hidden=true});return}
+  if(t.hasAttribute("data-try")){earn(25,"sponsor trial");$("#scrim").hidden=true;return}
   if(t.id==="menuBtn"){$("#side").classList.toggle("open");return}
+  if(t.id==="send"){submit();return}
 });
 document.addEventListener("click",e=>{if(!e.target.closest(".picker"))$("#pickPop").hidden=true});
-scrim.addEventListener("click",e=>{if(e.target===scrim)scrim.hidden=true});
-document.addEventListener("keydown",e=>{if(e.key==="Escape"){scrim.hidden=true;$("#pickPop").hidden=true}});
-setInterval(()=>{const c=$("#clock");if(!c)return;let[m,s]=c.textContent.split(":").map(Number);s++;if(s>59){m++;s=0}c.textContent=m+":"+String(s).padStart(2,"0")},1000);
+$("#scrim").addEventListener("click",e=>{if(e.target.id==="scrim")$("#scrim").hidden=true});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){$("#scrim").hidden=true;$("#pickPop").hidden=true}});
+const ta=$("#ta");
+ta.addEventListener("input",()=>{ta.style.height="auto";ta.style.height=ta.scrollHeight+"px";refresh()});
+ta.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();submit()}});
 
-renderPicker(); renderMeter(); go("home");
+setMode("chat");
 </script>
