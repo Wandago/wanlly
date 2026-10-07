@@ -1,3 +1,5 @@
+import type { VideoAspect } from "./ads";
+
 export type ToolId = "chat" | "code" | "design" | "images";
 
 export type Model = {
@@ -13,6 +15,8 @@ export type Sponsor = {
   name: string;
   initial: string;
   color: string;
+  /** Short line for display banners and video. */
+  headline: string;
   text: string;
   cta: string;
 };
@@ -28,6 +32,10 @@ export type Tool = {
   steps: string[];
   suggestions: string[];
   sponsor: Sponsor;
+  /** Shape of the rewarded spot this tool's demo plays. Real spots arrive in any of the three. */
+  spotAspect: VideoAspect;
+  /** Which kind of ad this tool's demo shows while working. */
+  adFormat: "native" | "display";
   sample: string;
 };
 
@@ -48,6 +56,16 @@ export const SPONSOR_TRIAL_REWARD = 25;
 /** Demo spots are short; real ones run 15 to 20 seconds. */
 export const SPOT_SECONDS = 5;
 
+/** House sponsor for spots started outside a job (the earn sheet and the out-of-credits gate). */
+export const SPOT_SPONSOR: Sponsor = {
+  name: "Fieldnote",
+  initial: "F",
+  color: "#1e7a55",
+  headline: "Notes that organize themselves.",
+  text: "Free for students.",
+  cta: "Try it",
+};
+
 export const TOOL_ORDER: ToolId[] = ["chat", "code", "design", "images"];
 
 export const TOOLS: Record<ToolId, Tool> = {
@@ -61,11 +79,14 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Explain prompt caching simply", "Compare Sonnet and Opus for coding"],
     sponsor: {
       name: "Northbeam DB",
+      headline: "Postgres that bills by the query.",
       initial: "N",
       color: "#0e7c66",
       text: "Usage-based Postgres with a free tier. Good fit for a credits table.",
       cta: "Learn more",
     },
+    spotAspect: "16:9",
+    adFormat: "native",
     sample: "How should I price an AI app that's free for most people but still profitable?",
   },
   code: {
@@ -78,11 +99,14 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Add dark mode to settings", "Write tests for the ledger"],
     sponsor: {
       name: "Railhouse",
+      headline: "Ship every branch to its own URL.",
       initial: "R",
       color: "#2747d8",
       text: "Your repo is a Next.js app. Deploy this branch to a preview URL with $5 of hosting credit.",
       cta: "Deploy preview",
     },
+    spotAspect: "16:9",
+    adFormat: "native",
     sample: "Add a credit ledger that charges each model call in half-cents",
   },
   design: {
@@ -95,11 +119,14 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Pricing page with three plans", "Settings screen, mobile"],
     sponsor: {
       name: "Typecase",
+      headline: "Type that makes the mock.",
       initial: "T",
       color: "#3a3340",
       text: "The display face in this mock is free for your first project.",
       cta: "Get the font",
     },
+    spotAspect: "1:1",
+    adFormat: "display",
     sample: "Onboarding screen for a habit app. Warm, confident, one clear action.",
   },
   images: {
@@ -112,11 +139,14 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Mug on a sunlit counter, film grain", "Flat-lay of a desk setup"],
     sponsor: {
       name: "Printwell",
+      headline: "Your images, printed.",
       initial: "P",
       color: "#b4235a",
       text: "Turn any of these into a poster or a mug. First print ships free.",
       cta: "See prints",
     },
+    spotAspect: "9:16",
+    adFormat: "display",
     sample: "A ceramic mug on a sunlit kitchen counter, morning light",
   },
 };

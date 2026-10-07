@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FREE_MODEL_ID, SPOT_REWARD, TOOLS, TOOL_ORDER } from "@/lib/catalog";
+import { FREE_MODEL_ID, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
-import { RewardedSpot, WatchButton } from "./sponsor";
+import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 
 /** Out-of-credits message, shown inside the composer instead of a pop-up. */
 function Gate() {
@@ -26,6 +26,9 @@ function Gate() {
       {phase === "playing" ? (
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <RewardedSpot
+            aspect="16:9"
+            sponsor={SPOT_SPONSOR}
+            maxHeight={220}
             onDone={() => {
               dispatch({ type: "earn", amount: SPOT_REWARD });
               setPhase(credits + SPOT_REWARD >= price ? "ready" : "offer");

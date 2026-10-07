@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { SPOT_REWARD, TOOLS } from "@/lib/catalog";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
-import { SponsorCard, SponsorLine } from "./sponsor";
+import { SponsorCard, SponsorLine } from "./ads/ad-slot";
 
 function WorkingStatus({ job }: { job: Job }) {
   const tool = TOOLS[job.tool];
@@ -46,7 +46,7 @@ function WorkingStatus({ job }: { job: Job }) {
  */
 export function JobView({ job }: { job: Job }) {
   const { dispatch } = useWorkspace();
-  const sponsor = TOOLS[job.tool].sponsor;
+  const { sponsor, adFormat, spotAspect } = TOOLS[job.tool];
   const showCard = job.status === "working" || job.spot === "playing";
 
   return (
@@ -58,6 +58,8 @@ export function JobView({ job }: { job: Job }) {
       {showCard ? (
         <SponsorCard
           sponsor={sponsor}
+          format={adFormat}
+          spotAspect={spotAspect}
           spot={job.spot}
           onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
           onSpotDone={() => {
@@ -66,7 +68,7 @@ export function JobView({ job }: { job: Job }) {
           }}
         />
       ) : (
-        <SponsorLine sponsor={sponsor} earned={job.spot === "earned"} />
+        <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
       )}
     </div>
   );

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
+import { TOOLS } from "@/lib/catalog";
+import { RailAd } from "./ads/ad-slot";
 import { Composer } from "./composer";
 import { EarnDialog } from "./earn-dialog";
 import { JobView } from "./job-view";
@@ -24,19 +26,30 @@ function Stage() {
     <main className="flex h-full min-h-0 min-w-0 flex-col">
       <TopBar />
       <div ref={scroller} className={`min-h-0 overflow-auto px-4 ${empty ? "mt-auto flex-[0_1_auto]" : "flex-1"}`}>
-        <div className="mx-auto flex w-full max-w-[800px] flex-col gap-[30px] pt-5 pb-3">
-          {empty ? (
-            <h1 className="pt-2 text-center font-display text-[clamp(30px,5vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
-              What are we <em className="text-accent not-italic">making</em> today?
-            </h1>
-          ) : (
-            visible.map((job) => <JobView key={job.id} job={job} />)
+        <div className={`mx-auto flex w-full justify-center gap-8 ${tool === "code" ? "min-[1440px]:max-w-[1132px]" : ""}`}>
+          <div className="flex w-full max-w-[800px] min-w-0 flex-col gap-[30px] pt-5 pb-3">
+            {empty ? (
+              <h1 className="pt-2 text-center font-display text-[clamp(30px,5vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
+                What are we <em className="text-accent not-italic">making</em> today?
+              </h1>
+            ) : (
+              visible.map((job) => <JobView key={job.id} job={job} />)
+            )}
+          </div>
+          {tool === "code" && !empty && (
+            <div className="hidden w-[300px] shrink-0 pt-5 min-[1440px]:block">
+              <RailAd sponsor={TOOLS.code.sponsor} />
+            </div>
           )}
         </div>
       </div>
       <div className={`px-4 pt-1.5 pb-[calc(14px+env(safe-area-inset-bottom,0px))] ${empty ? "mb-auto pb-[12vh]" : ""}`}>
-        <div className="mx-auto max-w-[800px]">
-          <Composer showSuggestions={empty || tool !== "chat"} />
+        {/* Mirrors the stage's columns so the composer stays under the work when the rail shows. */}
+        <div className="mx-auto flex w-full justify-center gap-8">
+          <div className="w-full max-w-[800px] min-w-0">
+            <Composer showSuggestions={empty || tool !== "chat"} />
+          </div>
+          {tool === "code" && !empty && <div className="hidden w-[300px] shrink-0 min-[1440px]:block" />}
         </div>
       </div>
       {toast && (

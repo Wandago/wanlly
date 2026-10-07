@@ -2,10 +2,10 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, type ReactNode } from "react";
-import { SPONSOR_TRIAL_REWARD, SPOT_REWARD } from "@/lib/catalog";
+import { SPONSOR_TRIAL_REWARD, SPOT_REWARD, SPOT_SPONSOR } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
-import { RewardedSpot } from "./sponsor";
+import { RewardedSpot } from "./ads/ad-slot";
 
 function Option({ icon, title, detail, gain, onClick, children }: { icon: IconName; title: string; detail: string; gain: number; onClick?: () => void; children?: ReactNode }) {
   const body = (
@@ -53,6 +53,8 @@ export function EarnDialog() {
               <Dialog.Title className="sr-only">Sponsor spot</Dialog.Title>
               <div className="overflow-hidden rounded-[14px] border border-line">
                 <RewardedSpot
+                  aspect="16:9"
+                  sponsor={SPOT_SPONSOR}
                   onDone={() => {
                     dispatch({ type: "earn", amount: SPOT_REWARD });
                     setPlaying(false);
