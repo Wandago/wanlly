@@ -8,6 +8,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 - Launch plan, beta process and tracking: [`docs/LAUNCH.md`](LAUNCH.md); pages `/beta` and `/admin` (design previews)
 - Every screen, start to finish: [`docs/journey.html`](journey.html) (clickable storyboard)
 - Legal and compliance checklist: [`docs/LEGAL.md`](LEGAL.md)
+- Deploying to Cloudflare and the Clerk webhook: [`docs/DEPLOY.md`](DEPLOY.md)
 - Ad partners, by stage, and how to choose them: [`docs/AD-PARTNERS.md`](AD-PARTNERS.md)
 - System architecture and flowcharts: [`docs/architecture.html`](architecture.html)
 - Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
