@@ -5,6 +5,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 - Cost and revenue model, by region and model: [`docs/ad-economics.html`](ad-economics.html) (also published as an interactive page)
 - UI reference: the running app on `feature/ui-shell`, and `/dev/ads` for every ad format
 - Anti-abuse architecture: [`docs/SECURITY.md`](SECURITY.md)
+- Launch plan, beta process and tracking: [`docs/LAUNCH.md`](LAUNCH.md); pages `/beta` and `/admin` (design previews)
 - Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
 
 ---
