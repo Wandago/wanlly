@@ -22,12 +22,12 @@ const PAGES: { href: string; label: string; icon: IconName }[] = [
   { href: "/coworkers", label: "Coworkers", icon: "users" },
 ];
 
-const row = "flex min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-left text-sm";
+const row = "flex min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px]";
 
 function Mark() {
   // The app icon (public/brand/wanlly-app-icon.svg), drawn inline so it follows the theme.
   return (
-    <svg viewBox="0 0 64 64" className="size-[26px]" aria-hidden="true">
+    <svg viewBox="0 0 64 64" className="size-[22px]" aria-hidden="true">
       <defs>
         <mask id="sidebar-node" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
           <rect width="64" height="64" fill="#fff" />
@@ -66,7 +66,7 @@ function TodayCard() {
       <button
         type="button"
         onClick={() => dispatch({ type: "setEarnOpen", open: true })}
-        className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-sm font-semibold text-accent"
+        className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
       >
         <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
         {floorUnlocked ? "Earn more credits" : `Watch to unlock · +${FLOOR_CREDITS}`}
@@ -92,10 +92,10 @@ function Account({ onNavigate, active }: { onNavigate: () => void; active: boole
   if (!isSignedIn || !user) {
     return (
       <div className="mt-1 flex gap-2">
-        <Link href="/sign-in" className="flex-1 rounded-[10px] bg-fg px-3 py-2 text-center text-sm font-semibold text-bg">
+        <Link href="/sign-in" className="flex-1 rounded-[10px] bg-fg px-3 py-2 text-center text-[13px] font-semibold text-bg">
           Sign in
         </Link>
-        <Link href="/sign-up" className="flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-center text-sm font-medium hover:border-faint">
+        <Link href="/sign-up" className="flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-center text-[13px] font-medium hover:border-faint">
           Sign up
         </Link>
       </div>
@@ -108,7 +108,7 @@ function Account({ onNavigate, active }: { onNavigate: () => void; active: boole
       <Link href="/profile" onClick={onNavigate} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg hover:opacity-80">
         {/* eslint-disable-next-line @next/next/no-img-element -- Clerk serves the avatar */}
         <img src={user.imageUrl} alt="" className="size-[30px] shrink-0 rounded-full bg-hover object-cover" />
-        <span className="flex min-w-0 flex-1 flex-col text-sm leading-tight">
+        <span className="flex min-w-0 flex-1 flex-col text-[13px] leading-tight">
           <span className="truncate">{name}</span>
           <small className="truncate text-xs text-faint">{user.primaryEmailAddress?.emailAddress ?? "Signed in"}</small>
         </span>
@@ -140,7 +140,7 @@ export function Sidebar() {
       >
         <Link href="/" onClick={close} className="flex items-center gap-2.5 px-2 pt-1 pb-3">
           <Mark />
-          <b className="font-display text-xl font-semibold tracking-[-0.02em]">Wanlly</b>
+          <b className="font-display text-lg font-semibold tracking-[-0.02em]">Wanlly</b>
         </Link>
         <Link
           href="/"

@@ -17,15 +17,15 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
             <path d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#auth-node)" fill="none" strokeWidth={6.5} strokeLinecap="round" strokeLinejoin="round" className="stroke-fg" />
             <circle cx="32" cy="26" r="6.2" className="fill-accent" />
           </svg>
-          <b className="font-display text-2xl font-semibold tracking-[-0.02em]">Wanlly</b>
+          <b className="font-display text-xl font-semibold tracking-[-0.02em]">Wanlly</b>
         </Link>
         <div className="flex max-w-[460px] flex-col gap-4">
-          <h1 className="font-display text-[44px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">
+          <h1 className="font-display text-[36px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">
             Build the thing you keep thinking about.
           </h1>
           <p className="text-lg opacity-70">Claude&apos;s best models for chat, code and design. One short video a day pays for it, wherever you live.</p>
         </div>
-        <p className="text-sm opacity-50">Sponsors never see your prompts or your work.</p>
+        <p className="text-[13px] opacity-50">Sponsors never see your prompts or your work.</p>
       </section>
       <section className="grid place-items-center px-4 py-10">{children}</section>
     </main>

@@ -182,7 +182,7 @@ function Avatars({ people }: { people: string[] }) {
 function ProjectCard({ p, onOpen }: { p: Project; onOpen: () => void }) {
   return (
     <button type="button" onClick={onOpen} className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface text-left hover:border-faint hover:shadow-soft">
-      <div className="h-[132px] overflow-hidden border-b border-line">
+      <div className="h-[112px] overflow-hidden border-b border-line">
         <Thumb p={p} />
       </div>
       <div className="flex flex-col gap-1.5 p-3.5">
@@ -209,7 +209,7 @@ function Row({ icon, title, detail, right }: { icon: IconName; title: string; de
       <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-hover text-muted">
         <Icon name={icon} size={15} />
       </span>
-      <div className="min-w-0 flex-1 text-sm">
+      <div className="min-w-0 flex-1 text-[13px]">
         <span className="block truncate">{title}</span>
         {detail && <small className="block truncate text-xs text-muted">{detail}</small>}
       </div>
@@ -243,7 +243,7 @@ function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4">
           <Panel title="Instructions" note="Every chat and coworker in this project follows these.">
-            <p className="rounded-xl border border-line bg-code px-3.5 py-3 text-sm">{p.instructions}</p>
+            <p className="rounded-xl border border-line bg-code px-3.5 py-3 text-[13px]">{p.instructions}</p>
           </Panel>
           <Panel title="Conversations" note={`${p.chats} in this project`}>
             <div className="flex flex-col">
@@ -270,7 +270,7 @@ function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
           </Panel>
           <Panel title="Coworkers" note="AI teammates assigned to this project.">
             <div className="flex flex-wrap gap-2">
-              {p.coworkers.length ? p.coworkers.map((c) => <span key={c} className={chip}>{c}</span>) : <span className="text-sm text-muted">None yet</span>}
+              {p.coworkers.length ? p.coworkers.map((c) => <span key={c} className={chip}>{c}</span>) : <span className="text-[13px] text-muted">None yet</span>}
             </div>
           </Panel>
           <Panel title="People" note="Invite teammates to build with you. Each person uses their own credits.">
@@ -282,11 +282,11 @@ function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
             </div>
           </Panel>
           <Panel title="This week">
-            <div className="flex items-baseline justify-between text-sm">
+            <div className="flex items-baseline justify-between text-[13px]">
               <span className="text-muted">Credits used</span>
               <b className="font-mono tabular-nums">{p.credits}</b>
             </div>
-            <div className="flex items-baseline justify-between text-sm">
+            <div className="flex items-baseline justify-between text-[13px]">
               <span className="text-muted">Usual model</span>
               <b className="font-medium">{p.model}</b>
             </div>

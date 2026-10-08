@@ -16,7 +16,7 @@ function Toast() {
   return (
     <div
       role="status"
-      className="fixed bottom-[calc(20px+env(safe-area-inset-bottom,0px))] left-1/2 z-[60] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl bg-fg px-4 py-2.5 text-sm text-bg shadow-soft"
+      className="fixed bottom-[calc(20px+env(safe-area-inset-bottom,0px))] left-1/2 z-[60] max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-xl bg-fg px-4 py-2.5 text-[13px] text-bg shadow-soft"
     >
       {toast.text}
     </div>
@@ -61,7 +61,7 @@ function PhoneBanner() {
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <WorkspaceProvider>
-      <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[260px_minmax(0,1fr)] md:grid-rows-1 xl:grid-cols-[260px_minmax(0,1fr)_344px]">
+      <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 xl:grid-cols-[240px_minmax(0,1fr)_344px]">
         <Sidebar />
         <div className="min-h-0 min-w-0">{children}</div>
         <AdRail />

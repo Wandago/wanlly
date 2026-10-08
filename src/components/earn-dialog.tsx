@@ -84,8 +84,8 @@ export function EarnDialog() {
             <>
               <header className="flex items-start gap-3">
                 <div>
-                  <Dialog.Title className="font-display text-[22px] font-semibold tracking-[-0.02em]">Earn credits</Dialog.Title>
-                  <Dialog.Description className="mt-0.5 text-sm text-muted">No free credits: every one is paid for by a sponsor you chose to see.</Dialog.Description>
+                  <Dialog.Title className="font-display text-lg font-semibold tracking-[-0.02em]">Earn credits</Dialog.Title>
+                  <Dialog.Description className="mt-0.5 text-[13px] text-muted">No free credits: every one is paid for by a sponsor you chose to see.</Dialog.Description>
                 </div>
                 <Dialog.Close aria-label="Close" className="ml-auto grid size-[34px] place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">
                   <Icon name="x" />

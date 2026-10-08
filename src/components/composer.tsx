@@ -24,7 +24,7 @@ function Gate() {
   const cheapest = getModel(CHEAPEST_MODEL_ID);
 
   return (
-    <div className="flex flex-col gap-2.5 overflow-hidden rounded-[14px] border border-accent-line bg-accent-soft p-3 text-sm">
+    <div className="flex flex-col gap-2.5 overflow-hidden rounded-[14px] border border-accent-line bg-accent-soft p-3 text-[13px]">
       {phase === "playing" ? (
         <div className="overflow-hidden rounded-xl border border-line bg-surface">
           <RewardedSpot
@@ -130,7 +130,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
               submit();
             }
           }}
-          className="max-h-[200px] min-h-7 w-full resize-none bg-transparent px-1 py-0.5 text-base text-fg outline-none placeholder:text-faint focus-visible:outline-none"
+          className="max-h-[200px] min-h-7 w-full resize-none bg-transparent px-1 py-0.5 text-base text-fg md:text-sm outline-none placeholder:text-faint focus-visible:outline-none"
         />
         <div className="flex items-center gap-1.5">
           <button type="button" aria-label="Attach files" className="grid size-[34px] place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">

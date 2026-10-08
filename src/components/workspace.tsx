@@ -23,15 +23,15 @@ function UnlockCard() {
             <Icon name="play" size={20} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <b className="font-display text-[19px] font-semibold tracking-[-0.01em]">Start today with one video</b>
-            <p className="text-sm text-muted">
+            <b className="font-display text-base font-semibold tracking-[-0.01em]">Start today with one video</b>
+            <p className="text-[13px] text-muted">
               Watch 20 seconds to unlock today&apos;s floor: {FLOOR_CREDITS} credits, about an hour of Haiku. Everyone gets the same floor, wherever they live.
             </p>
           </div>
           <button
             type="button"
             onClick={() => setPlaying(true)}
-            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-fg px-4 py-2.5 text-sm font-semibold text-bg"
+            className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-fg px-4 py-2.5 text-[13px] font-semibold text-bg"
           >
             <Icon name="play" size={15} />
             Watch and unlock
@@ -60,7 +60,7 @@ export function Workspace() {
       <div ref={scroller} className={`min-h-0 overflow-auto px-4 ${empty ? "mt-auto flex-[0_1_auto]" : "flex-1"}`}>
         <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-[30px] pt-5 pb-3">
           {empty ? (
-            <h1 className="pt-2 text-center font-display text-[clamp(30px,5vw,42px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
+            <h1 className="pt-2 text-center font-display text-[clamp(24px,3vw,30px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
               What are we <em className="text-accent not-italic">making</em> today?
             </h1>
           ) : (

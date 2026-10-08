@@ -18,12 +18,12 @@ const SECTIONS = [
   ["data", "Your data"],
 ] as const;
 
-const input = "w-full rounded-[10px] border border-line bg-surface px-3 py-2 text-sm outline-none focus:border-faint";
+const input = "w-full rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] outline-none focus:border-faint";
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
-    <label className="grid gap-1.5 sm:grid-cols-[200px_minmax(0,1fr)] sm:gap-4">
-      <span className="pt-2 text-sm font-medium">
+    <label className="grid gap-1.5 sm:grid-cols-[180px_minmax(0,1fr)] sm:gap-4">
+      <span className="pt-2 text-[13px] font-medium">
         {label}
         {hint && <small className="block text-xs font-normal text-muted">{hint}</small>}
       </span>
@@ -36,7 +36,7 @@ function Switch({ label, detail, initial = false }: { label: string; detail?: st
   const [on, setOn] = useState(initial);
   return (
     <div className="flex items-start gap-4 border-t border-line py-3 first:border-t-0 first:pt-0">
-      <div className="min-w-0 flex-1 text-sm">
+      <div className="min-w-0 flex-1 text-[13px]">
         <span className="font-medium">{label}</span>
         {detail && <small className="block text-xs text-muted">{detail}</small>}
       </div>
@@ -79,7 +79,7 @@ function Line({ icon, title, detail, children }: { icon: IconName; title: string
       <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-hover text-muted">
         <Icon name={icon} size={16} />
       </span>
-      <div className="min-w-0 flex-1 basis-[200px] text-sm">
+      <div className="min-w-0 flex-1 basis-[200px] text-[13px]">
         <b className="block font-medium">{title}</b>
         <small className="block text-xs text-muted">{detail}</small>
       </div>
@@ -101,7 +101,7 @@ function Standing() {
     <div className="flex flex-col gap-3 rounded-xl border border-line p-3.5">
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full bg-good/12 px-2 py-0.5 text-xs font-medium text-good">✓ Good standing</span>
-        <span className="text-sm">Every model and tool is open to you: Haiku, Sonnet, Opus, Fable, Code and coworkers.</span>
+        <span className="text-[13px]">Every model and tool is open to you: Haiku, Sonnet, Opus, Fable, Code and coworkers.</span>
       </div>
       <ul className="grid gap-2 sm:grid-cols-3">
         {checks.map(([t, d]) => (
@@ -128,7 +128,7 @@ export function ProfileView() {
       <div className="grid gap-6 lg:grid-cols-[180px_minmax(0,1fr)]">
         <nav aria-label="Settings sections" className="flex gap-1 overflow-x-auto lg:sticky lg:top-0 lg:flex-col lg:self-start">
           {SECTIONS.map(([id, label]) => (
-            <a key={id} href={`#${id}`} className="rounded-lg px-2.5 py-1.5 text-sm whitespace-nowrap text-muted hover:bg-hover hover:text-fg">
+            <a key={id} href={`#${id}`} className="rounded-lg px-2.5 py-1.5 text-[13px] whitespace-nowrap text-muted hover:bg-hover hover:text-fg">
               {label}
             </a>
           ))}
@@ -137,7 +137,7 @@ export function ProfileView() {
         <div className="flex min-w-0 flex-col gap-4">
           <Panel title="Profile" className="scroll-mt-4" note="Shown on projects you share and in the public gallery, if you opt in.">
             <div id="profile" className="flex items-center gap-4">
-              <span className="grid size-16 place-items-center rounded-full bg-fg font-display text-2xl font-semibold text-bg">L</span>
+              <span className="grid size-11 place-items-center rounded-full bg-fg font-display text-base font-semibold text-bg">L</span>
               <button type="button" className={btnGhost}>
                 Change photo
               </button>
@@ -210,7 +210,7 @@ export function ProfileView() {
 
           <Panel title="Ads and privacy" note="Ads keep Wanlly free. You choose what they're about; sponsors never see your prompts or your work.">
             <div id="ads" className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Topics you&apos;d like ads about</span>
+              <span className="text-[13px] font-medium">Topics you&apos;d like ads about</span>
               <div className="flex flex-wrap gap-2">
                 {TOPICS.map((t) => {
                   const on = topics.includes(t);
@@ -302,7 +302,7 @@ export function ProfileView() {
               </Line>
               <Line icon="clock" title="How long we keep things" detail="Chats 90 days unless saved in a project · security logs 12 months" />
               <Line icon="x" title="Delete my account" detail="Removes your projects, chats and credits within 30 days. This can't be undone.">
-                <button type="button" className="inline-flex items-center rounded-[10px] border border-bad/40 px-3.5 py-2 text-sm font-medium text-bad">
+                <button type="button" className="inline-flex items-center rounded-[10px] border border-bad/40 px-3.5 py-2 text-[13px] font-medium text-bad">
                   Delete account
                 </button>
               </Line>

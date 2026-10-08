@@ -12,7 +12,7 @@ const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 function Logo({ sponsor, small = false }: { sponsor: Sponsor; small?: boolean }) {
   return (
     <span
-      className={`grid shrink-0 place-items-center font-bold text-white ${small ? "size-5 rounded-md text-[10px]" : "size-[34px] rounded-[10px] text-sm"}`}
+      className={`grid shrink-0 place-items-center font-bold text-white ${small ? "size-5 rounded-md text-[10px]" : "size-[34px] rounded-[10px] text-[13px]"}`}
       style={{ background: sponsor.color }}
       aria-hidden="true"
     >
@@ -169,7 +169,7 @@ export function SponsorCard({
           <div className="flex min-w-0 flex-col gap-0.5">
             <span className={eyebrow}>While you wait · Sponsored</span>
             <b className="font-semibold">{sponsor.name}</b>
-            <p className="text-sm text-muted">{sponsor.text}</p>
+            <p className="text-[13px] text-muted">{sponsor.text}</p>
           </div>
         </div>
       ) : (

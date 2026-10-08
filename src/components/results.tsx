@@ -79,7 +79,7 @@ function CodeResult({ job }: { job: Job }) {
       </div>
       <ol className="flex flex-col rounded-[14px] border border-line bg-surface">
         {STEPS.map(([title, detail, time]) => (
-          <li key={title} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-start gap-3 border-t border-line px-3.5 py-2.5 text-sm first:border-t-0">
+          <li key={title} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-start gap-3 border-t border-line px-3.5 py-2.5 text-[13px] first:border-t-0">
             <span className="mt-px grid size-[18px] place-items-center rounded-full bg-fg text-bg">
               <Icon name="check" size={11} className="[stroke-width:3]" />
             </span>
@@ -103,7 +103,7 @@ function CodeResult({ job }: { job: Job }) {
         </span>
         <span className="text-bad">{"\n- // TODO: track usage"}</span>
       </pre>
-      <button type="button" className="inline-flex items-center gap-2 self-start rounded-[10px] bg-fg px-3.5 py-2 text-sm font-semibold text-bg">
+      <button type="button" className="inline-flex items-center gap-2 self-start rounded-[10px] bg-fg px-3.5 py-2 text-[13px] font-semibold text-bg">
         <Icon name="pr" size={15} />
         Open pull request
       </button>

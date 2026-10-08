@@ -16,7 +16,7 @@ function ModelPicker() {
 
   if (tool === "images") {
     return (
-      <div className="flex items-center gap-2 px-2.5 py-[7px] text-[15px] font-semibold">
+      <div className="flex items-center gap-2 px-2.5 py-[7px] text-sm font-semibold">
         {IMAGE_MODEL_NAME} <CreditTag credits={TOOLS.images.flatCredits ?? 0} />
       </div>
     );
@@ -25,7 +25,7 @@ function ModelPicker() {
   const groups = [...new Set(MODELS.map((m) => m.group))];
   return (
     <Menu.Root>
-      <Menu.Trigger className="flex items-center gap-2 rounded-[10px] px-2.5 py-[7px] text-[15px] font-semibold outline-none hover:bg-hover focus-visible:outline-2 data-[state=open]:bg-hover">
+      <Menu.Trigger className="flex items-center gap-2 rounded-[10px] px-2.5 py-[7px] text-sm font-semibold outline-none hover:bg-hover focus-visible:outline-2 data-[state=open]:bg-hover">
         {model.name} <CreditTag credits={model.credits} />
         <Icon name="down" size={15} className="text-faint" />
       </Menu.Trigger>

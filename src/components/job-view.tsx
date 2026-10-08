@@ -25,7 +25,7 @@ function WorkingStatus({ job }: { job: Job }) {
 
   return (
     <div className="flex flex-col gap-2" role="status" aria-live="polite">
-      <div className="flex items-center gap-2.5 text-sm text-muted">
+      <div className="flex items-center gap-2.5 text-[13px] text-muted">
         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
         <span>{tool.steps[step]}</span>
         <time className="ml-auto font-mono text-xs text-faint tabular-nums">0:{String(secs).padStart(2, "0")}</time>

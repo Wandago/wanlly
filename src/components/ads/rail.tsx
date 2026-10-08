@@ -63,7 +63,7 @@ export function CoverCard({ sponsor }: { sponsor: Sponsor }) {
             <SponsoredLabel sponsor={sponsor} />
           </span>
         </div>
-        <h3 className="font-display text-[17px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
+        <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
         <p className="text-[13px] leading-snug text-muted">{sponsor.text}</p>
         <Cta sponsor={sponsor} className="mt-1 self-start" />
       </div>

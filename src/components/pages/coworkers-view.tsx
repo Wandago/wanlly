@@ -213,13 +213,13 @@ export function CoworkersView() {
               </span>
               <div className="min-w-0 flex-1 basis-[260px]">
                 <small className="text-xs text-faint">{a.who}</small>
-                <b className="block text-sm font-semibold">{a.title}</b>
+                <b className="block text-[13px] font-semibold">{a.title}</b>
                 <small className="block text-xs text-muted">
                   {a.detail} · {a.cost}
                 </small>
               </div>
               {done[i] ? (
-                <span className={`text-sm font-medium ${done[i] === "ok" ? "text-good" : "text-muted"}`}>{done[i] === "ok" ? "Approved" : "Declined"}</span>
+                <span className={`text-[13px] font-medium ${done[i] === "ok" ? "text-good" : "text-muted"}`}>{done[i] === "ok" ? "Approved" : "Declined"}</span>
               ) : (
                 <span className="flex gap-2">
                   <button
@@ -256,7 +256,7 @@ export function CoworkersView() {
                 <Icon name={t.icon} size={16} />
               </span>
               <span className="min-w-0">
-                <b className="block text-sm font-semibold">{t.role}</b>
+                <b className="block text-[13px] font-semibold">{t.role}</b>
                 <small className="block text-xs text-muted">{t.text}</small>
                 <small className="mt-1 block font-mono text-[11px] text-faint">Runs on {t.model}</small>
               </span>
