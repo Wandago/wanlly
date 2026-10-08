@@ -1,15 +1,13 @@
-import { auth } from "@clerk/nextjs/server";
-import type { NextRequest } from "next/server";
 import { ensureUser } from "@/lib/account";
 import { balance, floorUnlockedToday } from "@/lib/ledger";
+import { signedInUserId } from "@/lib/session";
 
 /** The signed-in person's account: created on first call, then their balance and today's floor. */
-export async function GET(req: NextRequest) {
-  const { userId } = await auth();
+export async function GET(req: Request) {
+  const userId = await signedInUserId(req);
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
-    const user = await ensureUser(req.headers.get("cf-ipcountry"));
-    if (!user) return Response.json({ error: "Not signed in" }, { status: 401 });
+    const user = await ensureUser(userId, req.headers.get("cf-ipcountry"));
     const [credits, floorUnlocked] = await Promise.all([balance(user.id), floorUnlockedToday(user.id)]);
     return Response.json({ id: user.id, country: user.country, status: user.status, credits, floorUnlocked });
   } catch (e) {

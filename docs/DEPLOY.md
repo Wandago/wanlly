@@ -32,7 +32,8 @@ Also add the workers.dev address to Clerk's allowed origins if Clerk asks for it
 
 - **`cacheComponents` and `partialPrefetching` are off** in `next.config.ts`: with them on, every page hangs on Cloudflare with `@opennextjs/cloudflare` 1.20.9. Re-test when the adapter updates.
 - **Adapter patch:** `patches/@opennextjs+cloudflare+1.20.9.patch` teaches the adapter about Next 16.4's `preview-props.json`. It's applied automatically by `patch-package` on every `npm install`. Remove it once the adapter includes the fix.
-- **Size:** the worker is about 2.9 MB gzipped. The free plan allows 3 MB. Workers Paid ($5/month) allows 10 MB; plan for it when the Anthropic SDK and ad code are added, or trim dependencies.
+- **No proxy (middleware), on purpose.** On the free plan each request gets about 10 ms of CPU; a Clerk check before every page exceeded it (error 1102). Pages redirect signed-out visitors in the browser; every API route verifies the Clerk session on the server (`src/lib/session.ts`) before touching data. Keep it that way: never trust the browser for data.
+- **Size:** about 1.7 MB gzipped; the free plan allows 3 MB, Workers Paid ($5/month) 10 MB.
 
 ## Local checks
 

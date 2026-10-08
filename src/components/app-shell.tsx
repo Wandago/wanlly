@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
@@ -27,7 +28,12 @@ function Toast() {
  * so nobody depends on the Clerk webhook arriving. Credits on screen are still the demo until Step 3.
  */
 function AccountSync() {
-  const { isSignedIn, userId } = useAuth();
+  const { isLoaded, isSignedIn, userId } = useAuth();
+  const router = useRouter();
+  // Signed-out visitors go to sign-in. Data is protected on the server; this just keeps the UI honest.
+  useEffect(() => {
+    if (isLoaded && !isSignedIn) router.replace(`/sign-in?redirect_url=${encodeURIComponent(window.location.href)}`);
+  }, [isLoaded, isSignedIn, router]);
   useEffect(() => {
     if (!isSignedIn) return;
     fetch("/api/me", { cache: "no-store" })
