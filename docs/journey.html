@@ -1,0 +1,453 @@
+<title>Wanlly Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: storyboard. A screen list on the left, one screen at a time in a frame, notes under it. Brand tokens from the Wanlly design system. */
+:root{
+  --paper:#fbfbfc; --surface:#ffffff; --side:#f3f4f7; --hover:#e9ebf0; --line:#e3e5eb; --code:#f4f5f8;
+  --ink:#15171c; --muted:#636a78; --faint:#9aa0ac;
+  --tang:#ff5a1f; --tang-text:#c2410c; --tang-soft:#ffeee6; --tang-line:#ffd2bf;
+  --good:#11955a; --bad:#e5484d; --shadow:0 1px 2px rgba(20,24,35,.04),0 8px 24px rgba(20,24,35,.06);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111216; --surface:#17181d; --side:#0c0d10; --hover:#1f2127; --line:#272930; --code:#0e0f13;
+  --ink:#ecedf1; --muted:#979daa; --faint:#686e7a; --tang:#ff6a33; --tang-text:#ff8a5c; --tang-soft:#2c160d; --tang-line:#5a2a16;
+  --good:#3ccb85; --bad:#ff6b6f; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111216; --surface:#17181d; --side:#0c0d10; --hover:#1f2127; --line:#272930; --code:#0e0f13;
+  --ink:#ecedf1; --muted:#979daa; --faint:#686e7a; --tang:#ff6a33; --tang-text:#ff8a5c; --tang-soft:#2c160d; --tang-line:#5a2a16;
+  --good:#3ccb85; --bad:#ff6b6f; --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.35); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--side);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--tang);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:-.025em;margin:0;text-wrap:balance}
+p{margin:0}
+
+.board{display:grid;grid-template-columns:260px minmax(0,1fr);height:100%}
+.list{border-right:1px solid var(--line);overflow:auto;padding:18px 12px;display:flex;flex-direction:column;gap:2px;background:var(--paper)}
+.list .brand{display:flex;align-items:center;gap:10px;padding:0 8px 14px}
+.list .brand b{font-family:var(--f-display);font-size:18px;letter-spacing:-.02em}
+.list .brand small{display:block;color:var(--faint);font-size:12px;font-weight:400}
+.group{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 8px 4px;font-weight:500}
+.list button{display:flex;gap:10px;align-items:baseline;text-align:left;padding:6px 8px;border-radius:8px;font-size:14px;color:var(--muted)}
+.list button span{font-family:var(--f-mono);font-size:11px;color:var(--faint);min-width:20px}
+.list button:hover{background:var(--hover);color:var(--ink)}
+.list button[aria-current="true"]{background:var(--hover);color:var(--ink);font-weight:500}
+.mobile-nav{display:none}
+
+.stage{overflow:auto;padding:20px 24px 40px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.topline h1{font-size:22px}
+.topline .crumb{font-size:13px;color:var(--faint)}
+.topline .nav{margin-left:auto;display:flex;gap:6px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:8px 14px;border-radius:10px;font-weight:600;font-size:14px}
+.btn.dark{background:var(--ink);color:var(--paper)}
+.btn.ghost{border:1px solid var(--line);background:var(--surface);font-weight:500}
+.btn.tang{background:var(--tang);color:#15171c}
+.btn.pill{border-radius:999px}
+.frame{flex:none;background:var(--paper);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);min-height:560px;display:flex;flex-direction:column;container-type:inline-size}
+.chrome{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--surface)}
+.chrome i{width:10px;height:10px;border-radius:50%;background:var(--hover)}
+.chrome span{margin-left:10px;font-family:var(--f-mono);font-size:12px;color:var(--faint);background:var(--side);padding:2px 10px;border-radius:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.screen{flex:1;display:flex;flex-direction:column;min-width:0}
+.notes{flex:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.note{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:14px;color:var(--muted)}
+.note b{display:block;color:var(--ink);font-size:13px;margin-bottom:4px}
+
+/* Shared in-screen pieces */
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .mono{font-family:var(--f-mono)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 9px;border-radius:999px;background:var(--hover);color:var(--muted);white-space:nowrap}
+.chip.good{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+.chip.bad{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
+.chip.tang{background:var(--tang-soft);color:var(--tang-text)}
+.chip.soon{background:transparent;border:1px dashed var(--line);color:var(--faint)}
+.field{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 12px;font-size:14px;font-weight:400}
+.mark{display:inline-block;vertical-align:middle}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:500;color:var(--muted);padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tw{overflow-x:auto}
+
+/* App shell inside screens */
+.app{display:grid;grid-template-columns:210px minmax(0,1fr);flex:1;min-height:520px}
+.app aside{background:var(--side);border-right:1px solid var(--line);padding:12px 10px;display:flex;flex-direction:column;gap:4px;font-size:13.5px}
+.app aside .it{padding:6px 8px;border-radius:8px;color:var(--muted);display:flex;gap:8px;align-items:center}
+.app aside .it.on{background:var(--hover);color:var(--ink);font-weight:500}
+.app aside .meter{margin-top:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;font-size:12.5px}
+.bar{height:6px;border-radius:99px;background:var(--hover);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--tang);border-radius:99px}
+.app main{display:flex;flex-direction:column;min-width:0}
+.apptop{display:flex;align-items:center;gap:8px;padding:10px 16px}
+.picker{display:flex;align-items:center;gap:8px;font-weight:600;padding:6px 10px;border-radius:10px;background:var(--hover)}
+.credits{margin-left:auto;font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;background:var(--surface)}
+.work{flex:1;padding:12px 20px;display:flex;flex-direction:column;gap:14px;max-width:760px;width:100%;margin:0 auto}
+.bubble{align-self:flex-end;max-width:80%;background:var(--hover);padding:9px 14px;border-radius:16px 16px 6px 16px}
+.composer{border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:10px 12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px}
+.composer .row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.seg{display:flex;gap:2px;padding:3px;background:var(--hover);border-radius:10px;font-size:12.5px}
+.seg span{padding:4px 9px;border-radius:8px;color:var(--muted)}
+.seg span.on{background:var(--surface);color:var(--ink);font-weight:500}
+.send{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center}
+.sponsor{border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden}
+.sponsor .b{display:flex;gap:10px;padding:12px}
+.logo{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;flex:none}
+.sponsor .a{display:flex;justify-content:flex-end;gap:8px;padding:8px 12px;border-top:1px solid var(--line)}
+.rec{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:12px;background:var(--tang-soft);border:1px solid var(--tang-line);font-size:13.5px}
+
+/* Marketing pages */
+.mkt{display:flex;flex-direction:column}
+.mnav{display:flex;align-items:center;gap:10px;padding:12px 24px;border-bottom:1px solid var(--line)}
+.mnav b{font-family:var(--f-display);font-size:17px;letter-spacing:-.02em}
+.hero{padding:56px 24px 36px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px}
+.hero h1{font-size:clamp(34px,6cqi,64px);line-height:1;letter-spacing:-.04em;max-width:15ch}
+.hero p{max-width:54ch;font-size:16.5px;color:var(--muted)}
+.band{padding:28px 24px;border-top:1px solid var(--line)}
+.center{max-width:880px;margin:0 auto;width:100%}
+
+@media (max-width:860px){
+  .board{grid-template-columns:minmax(0,1fr)}
+  .list{display:none}
+  .mobile-nav{display:block}
+  .stage{padding:16px}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .app aside{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="board">
+  <nav class="list" id="list" aria-label="Screens"></nav>
+  <div class="stage">
+    <div class="mobile-nav"><label class="field" for="jump">Screen<select id="jump"></select></label></div>
+    <div class="topline">
+      <div><span class="crumb" id="crumb"></span><h1 id="title"></h1></div>
+      <div class="nav"><button class="btn ghost" id="prev">← Back</button><button class="btn dark" id="next">Next →</button></div>
+    </div>
+    <div class="frame"><div class="chrome"><i></i><i></i><i></i><span id="url"></span></div><div class="screen" id="screen"></div></div>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+const MARK=(s=24)=>`<svg class="mark" viewBox="0 0 64 64" width="${s}" height="${s}" aria-hidden="true"><defs><mask id="m${s}" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs><rect width="64" height="64" rx="16" fill="var(--ink)"/><path d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m${s})" fill="none" stroke="var(--paper)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="26" r="6.2" fill="var(--tang)"/></svg>`;
+const NAV=(cta="Request early access")=>`<div class="mnav">${MARK(26)}<b>wanlly</b><span style="margin-left:auto" class="muted" >How it works</span><span class="muted" style="margin:0 12px">Models</span><span class="btn dark pill">${cta}</span></div>`;
+const SIDE=(on)=>`<aside><div style="display:flex;gap:8px;align-items:center;padding:4px 6px 10px">${MARK(22)}<b style="font-family:var(--f-display)">Wanlly</b></div>
+${[["New chat"],["Templates"],["Projects"],["Connections"],["Credits"],["Settings"]].map(([t])=>`<div class="it ${t===on?"on":""}">${t}</div>`).join("")}
+<div class="eyebrow" style="padding:12px 8px 2px">Recent</div><div class="it">Salon booking page</div><div class="it">Study planner</div>
+<div class="meter"><div style="display:flex;justify-content:space-between"><span class="muted">This window</span><b class="mono">62%</b></div><div class="bar"><i style="width:62%"></i></div><span class="faint">Resets in 2h 14m</span></div></aside>`;
+const TOP=(model="Haiku 5.5",cr="1 cr",credits="18")=>`<div class="apptop"><span class="picker">${model} <span class="chip">${cr}</span> ▾</span><span class="credits">⚡ ${credits} credits</span></div>`;
+const COMPOSER=(tool="Chat",ph="Describe what you want to make")=>`<div class="composer"><div class="faint">${ph}</div><div class="row">📎<div class="seg">${["Chat","Code","Design","Images","Video"].map(t=>`<span class="${t===tool?"on":""}">${t}${t==="Images"||t==="Video"?" ·soon":""}</span>`).join("")}</div><span class="send">↑</span></div></div>`;
+const APP=(on,inner,top=TOP())=>`<div class="app">${SIDE(on)}<main>${top}<div class="work">${inner}</div></main></div>`;
+
+const S=[];
+const add=(group,id,title,url,html,notes)=>S.push({group,id,title,url,html,notes});
+
+/* ---------- Discover ---------- */
+add("Discover","landing","Landing page","wanlly.com",
+`<div class="mkt">${NAV()}
+<section class="hero"><span class="chip">Early access · new invites every week</span>
+<h1>More ideas than money? Perfect.</h1>
+<p>Wanlly puts the world's most capable AI in your hands to write, code and design whatever you've been dreaming up. A short video now and then is the whole price.</p>
+<span class="btn dark pill" style="padding:12px 22px">Request early access</span>
+<span class="faint" style="font-size:13px">Starting with Claude by Anthropic. ChatGPT, Gemini and more coming soon.</span></section>
+<section class="band"><div class="center grid g3">
+${[["Build the thing you keep thinking about","Describe your app, your shop page, your side project. Watch it take shape in minutes."],["The same AI the pros use","Haiku for quick answers, Sonnet for real builds, Opus for the hard parts. We help you pick."],["Your wallet stays in your pocket","Brands pay to meet ambitious people. You give them twenty seconds. They give you AI time."]].map(([h,p])=>`<div class="card"><h3 style="font-size:18px">${h}</h3><p class="muted">${p}</p></div>`).join("")}
+</div></section>
+<section class="band"><div class="center" style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center"><span class="eyebrow">What will you build?</span>
+<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">${["A booking page for my cousin's salon","An invoice app for my shop","A study planner for exams","A portfolio that gets me hired","A price tracker for farmers"].map(t=>`<span class="chip" style="font-size:13px;padding:6px 12px">${t}</span>`).join("")}</div></div></section></div>`,
+[["Job of this page","Make one feeling land: I could actually build my idea. Then one action: request access."],["Copy approach","Leads with the reader's situation (ideas, no money), turns it into an advantage, and makes the price concrete: a short video."],["Proof","No fake testimonials before launch. Real builds go here as soon as the first group ships something."]]);
+
+add("Discover","how","How it works and why it's free","wanlly.com/#how",
+`<div class="mkt">${NAV()}
+<section class="band" style="border-top:0"><div class="center grid g3">
+${[["1","Tell us your idea","One minute. We read every application."],["2","Get your invite","We open the doors to a new group every week. Friends you invite move you up the line."],["3","Watch, then build","A twenty-second video earns AI time. Spend it on Haiku, Sonnet or Opus."]].map(([n,h,p])=>`<div class="card"><span class="mono" style="color:var(--tang-text)">${n}</span><h3 style="font-size:19px">${h}</h3><p class="muted">${p}</p></div>`).join("")}
+</div></section>
+<section class="band"><div class="center grid g2" style="align-items:center">
+<div style="display:flex;flex-direction:column;gap:10px"><h2 style="font-size:32px;line-height:1.1">Why is it free? Because you're worth meeting.</h2>
+<p class="muted">Brands want to reach curious, ambitious builders. When you choose to watch their twenty-second video, they pay, and most of that money becomes your AI time. Ads sit beside your work. Never inside an answer, and never in the way.</p></div>
+<div class="grid g2">${[["20 s","a video, when you choose"],["~70%","of what it earns becomes your AI time"],["0","cards, subscriptions or hidden fees"],["4","Claude models today, more on the way"]].map(([n,l])=>`<div class="card"><span style="font-family:var(--f-display);font-size:30px;font-weight:600">${n}</span><span class="muted" style="font-size:13px">${l}</span></div>`).join("")}</div>
+</div></section>
+<section class="band"><div class="center" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Models</span>
+<div class="grid g3">${[["Claude Haiku 5.5","Anthropic","Live"],["Claude Sonnet 5.5","Anthropic","Live"],["Claude Opus 5.5","Anthropic","Live"],["Claude Fable 5.1","Anthropic","Live"],["ChatGPT","OpenAI","Coming soon"],["Gemini","Google","Coming soon"],["Image and video models","Several providers","Coming soon"]].map(([n,p,s])=>`<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>${n}</b><div class="faint" style="font-size:12.5px">${p}</div></div><span class="chip ${s==="Live"?"good":"soon"}">${s}</span></div>`).join("")}</div></div></section></div>`,
+[["The honesty section","Answers the question everyone has before they have to ask. Framed around the reader's value, not our business model."],["Multi-model promise","Claude is live at launch. Everything else is labelled Coming soon, never implied to work today."]]);
+
+add("Discover","apply","Request early access","wanlly.com/#apply",
+`<div class="mkt">${NAV()}<section class="band" style="border-top:0"><div class="center" style="max-width:520px;display:flex;flex-direction:column;gap:12px">
+<h2 style="font-size:32px;text-align:center">Tell us what you'd build.</h2><p class="muted" style="text-align:center">We read every one. The more real your idea, the sooner you're in.</p>
+${[["Your name","Amina Wanjiru"],["Email","amina@email.com"]].map(([l,v])=>`<label class="field">${l}<input value="${v}"></label>`).join("")}
+<label class="field">Country<select><option>Kenya</option></select></label>
+<label class="field">What do you want to build?<textarea rows="3">A booking app for my cousin's salon, with M-Pesa reminders.</textarea></label>
+<label class="field">Where did you hear about us?<select><option>A friend invited me</option></select></label>
+<label class="field">Invite code (optional)<input value="kevin-7f3a"></label>
+<label style="display:flex;gap:8px;font-size:13px" class="muted"><input type="checkbox" checked> I'm 18 or older and agree to the Terms and Privacy Policy.</label>
+<span class="btn dark pill" style="padding:12px">Request my invite</span></div></section></div>`,
+[["Friction on purpose","Six fields. The 'what will you build' answer is how you pick builders over freeloaders, and it doubles as your best marketing research."],["Legal","Age confirmation and links to Terms and Privacy at the point of collecting data. Marketing emails are a separate, unticked opt-in (shown on the next screen)."]]);
+
+add("Discover","applied","You're in line","wanlly.com/beta/thanks",
+`<div class="mkt">${NAV()}<section class="hero"><span class="chip good">✓ Request received</span><h1 style="font-size:44px">You're in line, Amina.</h1>
+<p>We open the doors to a new group every Monday. Want in sooner? Every friend who applies with your link moves you up.</p>
+<div class="card" style="flex-direction:row;align-items:center;max-width:460px;width:100%"><span class="mono" style="flex:1;text-align:left">wanlly.com/i/amina-4k2p</span><span class="btn dark">Copy link</span></div>
+<div style="display:flex;gap:8px">${["WhatsApp","X","LinkedIn","Copy"].map(t=>`<span class="btn ghost">${t}</span>`).join("")}</div>
+<label style="display:flex;gap:8px;font-size:13px" class="muted"><input type="checkbox"> Send me build tips and launch news (optional)</label>
+<p class="faint" style="font-size:13px">Your place: <b class="mono">#412</b> · 3 friends would put you in the next group.</p></section></div>`,
+[["Momentum","The moment of highest excitement. Turn it into sharing with one-tap WhatsApp."],["Consent","Marketing emails are opt-in and unticked. Transactional emails (your invite) don't need consent."]]);
+
+/* ---------- Get started ---------- */
+add("Get started","invite","Invite email","Email · inbox",
+`<div style="padding:28px;display:flex;justify-content:center"><div class="card" style="max-width:560px;width:100%;gap:14px;padding:24px">
+<div style="display:flex;gap:10px;align-items:center">${MARK(28)}<b>Wanlly</b><span class="faint" style="margin-left:auto;font-size:12px">Monday 9:00</span></div>
+<h2 style="font-size:26px">Amina, your invite is here.</h2>
+<p class="muted">The idea you told us about, a booking app for your cousin's salon, is exactly why we built Wanlly. Your first 20 credits are waiting. That's enough to have Claude sketch the whole thing tonight.</p>
+<span class="btn dark pill" style="align-self:flex-start;padding:11px 20px">Start building</span>
+<p class="faint" style="font-size:12.5px">This invite is for you and expires in 7 days. You're getting this because you requested early access at wanlly.com.</p></div></div>`,
+[["Personal","Quotes their own idea back to them. Feels like a person wrote it because a person's words are in it."],["Welcome credits","A one-time grant per verified person while rewarded ads are being approved."]]);
+
+add("Get started","signin","Sign in","wanlly.com/sign-in",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:400px;width:100%;gap:12px;padding:24px;text-align:center">
+<div style="display:flex;justify-content:center">${MARK(40)}</div><h2 style="font-size:24px">Welcome to Wanlly</h2><p class="muted">Sign in to claim your invite.</p>
+${["Continue with Google","Continue with GitHub"].map(t=>`<span class="btn ghost" style="padding:11px">${t}</span>`).join("")}
+<div class="faint" style="font-size:12px">or</div><label class="field" style="text-align:left">Email<input value="amina@email.com"></label><span class="btn dark" style="padding:11px">Email me a sign-in link</span>
+<p class="faint" style="font-size:12px">Protected by Cloudflare Turnstile. By continuing you agree to the Terms and Privacy Policy.</p></div></div>`,
+[["Bots","An invisible Turnstile check runs here. No puzzles for real people."],["Accounts","Google, GitHub or email link through Clerk. No passwords to leak."]]);
+
+add("Get started","verify","Verify your phone","wanlly.com/welcome/phone",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:420px;width:100%;gap:12px;padding:24px">
+<span class="eyebrow">Step 1 of 3</span><h2 style="font-size:24px">One person, one account.</h2>
+<p class="muted">We text you a code once. It keeps free AI time for real people, not bots.</p>
+<label class="field">Phone number<div style="display:flex;gap:8px"><select style="width:110px"><option>🇰🇪 +254</option></select><input style="flex:1" value="712 345 678"></div></label>
+<label class="field">6-digit code<input class="mono" value="4 8 1 0 2 7" style="letter-spacing:.2em"></label>
+<span class="btn dark" style="padding:11px">Verify</span>
+<p class="faint" style="font-size:12px">We only use your number to protect your account. We never sell it or use it for ads.</p></div></div>`,
+[["Abuse","The strongest single defence against account farming. The country code is also compared with the network country."],["Privacy copy","Says exactly what the number is for. Required for lawful, transparent processing."]]);
+
+add("Get started","welcome","Welcome and first credits","wanlly.com/welcome",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:520px;width:100%;gap:14px;padding:24px">
+<span class="eyebrow">Step 2 of 3</span><h2 style="font-size:26px">Here's how you'll never pay.</h2>
+<div class="grid g3">${[["⚡ 20","welcome credits, on us"],["▶ 20 s","a video earns about 4 more"],["⏱ 5 h","your window refreshes"]].map(([n,l])=>`<div class="card" style="padding:12px"><b style="font-family:var(--f-display);font-size:22px">${n}</b><span class="muted" style="font-size:12.5px">${l}</span></div>`).join("")}</div>
+<div class="rec"><b style="color:var(--tang-text)">Tip</b><span>Start with Haiku. It's quick, light on credits, and great for most first drafts. We'll suggest a bigger model when your task needs one.</span></div>
+<span class="btn dark" style="padding:11px">Next: what are you building?</span></div></div>`,
+[["Teach the economy once","Three numbers, no jargon. After this screen people understand credits, videos and windows."],["Cheapest first","Haiku is introduced as the smart default, not the budget option."]]);
+
+add("Get started","interests","What are you building?","wanlly.com/welcome/start",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:560px;width:100%;gap:14px;padding:24px">
+<span class="eyebrow">Step 3 of 3</span><h2 style="font-size:26px">Pick a starting point.</h2><p class="muted">You can change direction anytime.</p>
+<div class="grid g2">${[["Website or landing page","Design"],["App with sign-in and a database","Code"],["Help me write something","Chat"],["Learn to code","Chat"],["Product photos","Images · soon"],["Short video ad","Video · soon"]].map(([t,k],i)=>`<div class="card" style="padding:12px;${i===1?"border-color:var(--ink)":""}"><b style="font-size:14px">${t}</b><span class="chip" style="align-self:flex-start">${k}</span></div>`).join("")}</div>
+<span class="btn dark" style="padding:11px">Open my workspace</span></div></div>`,
+[["Personalisation","Sets the first tool, the first template and the first model suggestion."],["Coming soon","Image and video are visible so people know they're coming, and the choice is recorded as demand data."]]);
+
+/* ---------- Create ---------- */
+add("Create","home","Workspace home","app.wanlly.com",
+APP("New chat",`<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:30px 0">
+<h2 style="font-size:36px;text-align:center">What are we making today, Amina?</h2>
+<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">${["Finish my salon booking page","Add M-Pesa reminders","Explain my code","Write my launch post"].map(t=>`<span class="chip" style="font-size:13px;padding:6px 12px">${t}</span>`).join("")}</div>
+${COMPOSER()}<p class="faint" style="text-align:center;font-size:12.5px">AI can make mistakes. Check anything important.</p></div>`),
+[["Feel","Clean like ChatGPT and Claude. One composer, five tools, nothing shouting."],["AI disclosure","A quiet line under the composer meets the AI transparency expectation without nagging."]]);
+
+add("Create","smartpick","Smart pick: the AI recommends a model","app.wanlly.com/chat",
+APP("New chat",`<div class="bubble">Plan the database for a salon booking app with stylists, services and M-Pesa payments</div>
+<div class="rec"><span>✦</span><div style="display:flex;flex-direction:column;gap:6px"><b>This one deserves Sonnet 5.5.</b><span class="muted">Designing a database with payments has a few tricky decisions. Sonnet thinks it through properly. About 6 credits.</span>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn dark">Use Sonnet · 6 cr</span><span class="btn ghost">Stay on Haiku · 1 cr</span><span class="btn ghost">Why?</span></div></div></div>
+${COMPOSER()}`),
+[["How it works","A tiny Haiku call classifies each request (simple, build, hard, creative) before it runs, then suggests the cheapest model that will do it well."],["Always the person's choice","The suggestion never switches models silently. Cheapest is always one tap away."]]);
+
+add("Create","models","Model picker","app.wanlly.com/chat",
+APP("New chat",`<div class="card" style="max-width:420px;padding:8px;gap:2px;box-shadow:var(--shadow)">
+<div class="eyebrow" style="padding:8px">Anthropic · Claude</div>
+${[["Haiku 5.5","Quick and light. Great first drafts.","1 cr","Recommended"],["Sonnet 5.5","Real builds and careful thinking.","2 cr",""],["Opus 5.5","For the hard problems.","4 cr",""],["Fable 5.1","Our most capable. A few big prompts a day.","10 cr",""]].map(([n,d,c,r])=>`<div style="display:flex;gap:10px;padding:8px;border-radius:10px;${r?"background:var(--hover)":""}"><div style="flex:1"><b>${n}</b> ${r?`<span class="chip tang">${r}</span>`:""}<div class="muted" style="font-size:12.5px">${d}</div></div><span class="chip mono">${c}</span></div>`).join("")}
+<div class="eyebrow" style="padding:10px 8px 4px">Coming soon</div>
+${[["ChatGPT","OpenAI"],["Gemini","Google"],["Grok","xAI"]].map(([n,p])=>`<div style="display:flex;padding:8px;opacity:.7"><div style="flex:1"><b>${n}</b><div class="faint" style="font-size:12.5px">${p}</div></div><span class="chip soon">Soon · Notify me</span></div>`).join("")}</div>`),
+[["Cheapest at the top","Order is price, low to high, so the default habit is the economical one."],["Notify me","Tapping a Coming soon model records demand by model and country. That tells you which provider to add next."]]);
+
+add("Create","chat","Chat: working, with a sponsor beside it","app.wanlly.com/chat",
+APP("New chat",`<div class="bubble">Write a friendly SMS reminder for salon appointments</div>
+<div style="display:flex;gap:10px;align-items:center" class="muted"><span style="width:14px;height:14px;border-radius:50%;border:2px solid var(--tang-line);border-top-color:var(--tang)"></span>Writing the answer<span class="mono faint" style="margin-left:auto;font-size:12px">0:03</span></div>
+<div class="sponsor"><div class="b"><span class="logo" style="background:#0e7c66">N</span><div><div class="eyebrow">While you wait · Sponsored</div><b>Northbeam DB</b><div class="muted" style="font-size:13.5px">A free database that grows with your salon app.</div></div></div><div class="a"><span class="btn ghost">Learn more</span><span class="btn dark">▶ Watch 20s <span style="color:var(--tang)" class="mono">+4</span></span></div></div>
+${COMPOSER()}`,TOP("Haiku 5.5","1 cr","19")),
+[["The deal, visible","The sponsor appears only while the AI is working, then shrinks to one line. Watching is always a choice."],["Labels","Every ad carries a Sponsored label. Required by consumer law and every ad network."]]);
+
+add("Create","code","Code: building from GitHub","app.wanlly.com/code",
+APP("Projects",`<div class="card" style="flex-direction:row;align-items:center;gap:10px;padding:10px 12px"><b class="mono" style="font-size:13px">amina/salon-booking</b><span class="faint">on</span><b class="mono" style="font-size:13px">main</b><span class="chip good">● GitHub connected</span></div>
+<h2 style="font-size:22px">Add M-Pesa payment reminders to bookings</h2>
+<div class="card" style="padding:0;gap:0">${[["✓","Read the project","14 files"],["✓","Planned the change","reminder job, SMS template, settings page"],["✓","Edited 4 files","+132 −8"],["◌","Running tests","19 of 24 passed so far"],["·","Open a pull request",""]].map(([s,t,d])=>`<div style="display:flex;gap:10px;padding:10px 12px;border-top:1px solid var(--line)"><b class="mono" style="width:16px">${s}</b><div style="flex:1">${t}<div class="mono faint" style="font-size:12px">${d}</div></div></div>`).join("")}</div>
+<div class="rec"><span>✦</span><span>Haiku did the reading and testing, Sonnet wrote the payment logic. This build used <b>14 credits</b> instead of about 40 on Sonnet alone.</span></div>`,TOP("Sonnet 5.5","mixed","26")),
+[["GitHub","Connected once through the Wanlly GitHub App, limited to the repos the person picks. Changes always arrive as a pull request."],["Model mixing","Cheap models do the bulk work, the stronger model does the hard part, and the saving is shown so people learn why."]]);
+
+add("Create","design","Design: a page in minutes","app.wanlly.com/design",
+APP("Projects",`<div class="bubble">A booking page for Glow Salon. Warm, simple, one big Book now button.</div>
+<div class="card" style="background:var(--code);align-items:center;padding:20px"><div style="width:220px;aspect-ratio:9/16;border-radius:24px;background:#0f1014;padding:8px"><div style="height:100%;border-radius:18px;background:#fff7f2;padding:14px;display:flex;flex-direction:column;gap:8px;color:#1b1310"><small style="opacity:.6">Glow Salon · Kilimani</small><b style="font-family:var(--f-display);font-size:20px;line-height:1.1">Look your best this weekend.</b><div style="height:60px;border-radius:12px;background:#ff5a1f"></div><div style="height:10px;border-radius:6px;background:#eadfd8"></div><div style="height:10px;width:60%;border-radius:6px;background:#eadfd8"></div><div style="margin-top:auto;height:36px;border-radius:10px;background:#1b1310;color:#fff7f2;display:grid;place-items:center;font-size:13px;font-weight:600">Book now</div></div></div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn ghost">Make it bolder</span><span class="btn ghost">Add prices</span><span class="btn ghost">Version 1 ▾</span><span class="btn dark">Publish free preview</span></div>`,TOP("Sonnet 5.5","4 cr","22")),
+[["Output","Real HTML in a locked-down preview, with versions. Publish creates a shareable link."],["Next","Hand a design to Code mode to turn it into a working app."]]);
+
+add("Create","media","Images and video (coming soon)","app.wanlly.com/images",
+APP("New chat",`<div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;text-align:center;padding:30px">
+<span class="chip soon">Coming soon</span><h2 style="font-size:30px">Product photos and short videos.</h2>
+<p class="muted" style="max-width:46ch">Turn one phone photo into a studio shot, or a description into a 15-second ad. We're bringing in the best image and video models, including Gemini.</p>
+<span class="btn dark pill">Tell me when it's ready</span><span class="faint" style="font-size:13px">1,240 people are waiting for this.</span></div>`),
+[["Honest","Claude doesn't make images or video, so these tools say Coming soon until another provider is added."],["Demand signal","The waiting count is real and doubles as social proof."]]);
+
+add("Create","templates","Templates","app.wanlly.com/templates",
+APP("Templates",`<h2 style="font-size:24px">Start from something that works.</h2>
+<div class="grid g3">${[["Booking page","Design","Sonnet"],["Shop with M-Pesa checkout","Code","Sonnet"],["Portfolio that gets you hired","Design","Haiku"],["Invoice generator","Code","Haiku"],["Pitch deck outline","Chat","Haiku"],["Exam study plan","Chat","Haiku"],["Product photo set","Images","Soon"],["15-second video ad","Video","Soon"],["WhatsApp bot with Twilio","Code","Opus"]].map(([t,k,m])=>`<div class="card"><div style="height:70px;border-radius:10px;background:var(--hover)"></div><b>${t}</b><div style="display:flex;gap:6px"><span class="chip">${k}</span><span class="chip ${m==="Soon"?"soon":""}">${m}</span></div></div>`).join("")}</div>`),
+[["Higgsfield for building","Templates are recipes: a prompt, a starting project, the right model and the right connections, in one tap."],["Fewer credits","Starting from a template skips the expensive scaffolding steps."]]);
+
+/* ---------- Credits ---------- */
+add("Credits","earn","Earn credits","app.wanlly.com/credits",
+APP("Credits",`<h2 style="font-size:24px">Earn AI time</h2>
+<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>Watch a 20-second video</b><div class="muted" style="font-size:13px">Skippable after 5 seconds. You choose when.</div></div><span class="btn dark">▶ +4</span></div>
+<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>Invite a friend</b><div class="muted" style="font-size:13px">When they're approved, you both get 20 credits.</div></div><span class="btn ghost">Share link</span></div>
+<div class="card"><b>Build streak · 3 of 5 days</b><div class="bar"><i style="width:60%"></i></div><span class="muted" style="font-size:13px">Two more days and your next Opus prompt is on us.</span></div>
+<p class="faint" style="font-size:12.5px">Rewards depend on what each video pays where you are, so the number can change. Sponsors never see your prompts or your work.</p>`),
+[["Never for clicks","Rewards come only from opt-in video views and referrals. Paying for ad clicks breaks every ad network's rules."],["Transparent","Says plainly why rewards vary. Important for consumer-protection rules on 'free' offers."]]);
+
+add("Credits","limit","Window used up","app.wanlly.com/chat",
+APP("New chat",`<div class="bubble">Now add a staff schedule page</div>
+<div class="card" style="background:var(--tang-soft);border-color:var(--tang-line);gap:10px">
+<b style="font-size:16px">You've used this window's AI time.</b><p>Great session. Your window refreshes in <b class="mono">2h 14m</b>. Want to keep going now?</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn dark">▶ Watch 20s · +4</span><span class="btn ghost">Switch to Haiku · 1 cr</span><span class="btn ghost">Remind me when it's back</span></div></div>
+${COMPOSER()}`),
+[["Tone","Celebrates the work ('great session') instead of scolding. Offers three ways forward, none of them a paywall."],["Limits","5-hour window plus a weekly cap, like Claude. Shown as a countdown, not an error."]]);
+
+add("Credits","usage","Usage and limits","app.wanlly.com/credits/usage",
+APP("Credits",`<h2 style="font-size:24px">Your usage</h2>
+<div class="grid g2">${[["This 5-hour window","62%","Resets in 2h 14m"],["This week","35%","Resets Monday"]].map(([t,v,s])=>`<div class="card"><span class="eyebrow">${t}</span><b style="font-family:var(--f-display);font-size:28px">${v}</b><div class="bar"><i style="width:${v}"></i></div><span class="faint" style="font-size:12.5px">${s}</span></div>`).join("")}</div>
+<div class="card tw"><table><tr><th>Model</th><th>Requests</th><th>Credits</th></tr>${[["Haiku 5.5","142","148"],["Sonnet 5.5","18","96"],["Opus 5.5","2","9"]].map(r=>`<tr>${r.map((c,i)=>`<td class="${i?"mono":""}">${c}</td>`).join("")}</tr>`).join("")}</table></div>
+<div class="card"><b>Credit history</b>${[["+4","Video · Fieldnote","10:42"],["−6","Sonnet · database plan","10:31"],["+20","Welcome credits","Mon"]].map(([a,t,w])=>`<div style="display:flex;gap:10px;font-size:13.5px"><b class="mono" style="width:36px;color:${a[0]==="+"?"var(--good)":"var(--ink)"}">${a}</b><span style="flex:1">${t}</span><span class="faint">${w}</span></div>`).join("")}</div>`),
+[["Trust","Every credit in and out is listed. The same ledger powers abuse checks and support."],["Predictable","People see their limits before they hit them."]]);
+
+/* ---------- Account ---------- */
+add("Account","connections","Connections","app.wanlly.com/connections",
+APP("Connections",`<h2 style="font-size:24px">Connections</h2><p class="muted">Let Wanlly work with the tools you already use. You choose exactly what it can see, and you can disconnect anytime.</p>
+<div class="grid g2">${[["GitHub","Read and update the repos you pick. Changes arrive as pull requests.","Connected","good"],["Google Workspace","Docs, Sheets, Drive and Calendar.","Connect",""],["Twilio","Send SMS and WhatsApp from apps you build.","Connect",""],["Slack","Share builds and get updates.","Coming soon","soon"],["Notion","Use your notes as context.","Coming soon","soon"],["M-Pesa (Daraja)","Add payments to apps you build.","Coming soon","soon"]].map(([n,d,s,k])=>`<div class="card"><div style="display:flex;align-items:center;gap:8px"><b>${n}</b><span class="chip ${k}" style="margin-left:auto">${s==="Connected"?"● ":""}${s}</span></div><p class="muted" style="font-size:13px">${d}</p></div>`).join("")}</div>`),
+[["How it works","Each connection is an MCP server or an API the AI can call, with the person's own permission and credentials."],["Least access","Every connection asks for the smallest set of permissions, explained in plain words on the next screens."]]);
+
+add("Account","github","Connect GitHub","github.com · install Wanlly",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:480px;width:100%;gap:12px;padding:22px">
+<div style="display:flex;gap:10px;align-items:center">${MARK(32)}<span class="faint">→</span><b>GitHub</b></div>
+<h2 style="font-size:22px">Install Wanlly on your GitHub</h2>
+<label style="display:flex;gap:8px"><input type="radio"> All repositories</label><label style="display:flex;gap:8px"><input type="radio" checked> Only selected: <span class="mono">salon-booking</span></label>
+<div class="card" style="background:var(--side);font-size:13px"><b>Wanlly will be able to</b><span>✓ Read the code in selected repos</span><span>✓ Create branches and pull requests</span><span>✕ Never push to your main branch</span><span>✕ Never see your other repos</span></div>
+<span class="btn dark" style="padding:11px">Install and authorize</span></div></div>`,
+[["Mechanism","A GitHub App (not a personal token), scoped per repository, with short-lived tokens. Free to run."],["Plain-language permissions","Listed as can and can't, so nobody has to read GitHub's scope names."]]);
+
+add("Account","google","Connect Google Workspace","accounts.google.com",
+`<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:480px;width:100%;gap:12px;padding:22px">
+<b>Choose what Wanlly can use</b>
+${[["Google Docs","Read and create documents you open with Wanlly",true],["Google Sheets","Read and update sheets you pick",true],["Google Drive","Only files you choose with the picker",true],["Gmail","Draft emails (never sends without you)",false],["Calendar","Read and add events",false]].map(([n,d,c])=>`<label style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" ${c?"checked":""}><span><b style="font-size:14px">${n}</b><br><span class="muted" style="font-size:12.5px">${d}</span></span></label>`).join("")}
+<span class="btn dark" style="padding:11px">Continue with Google</span>
+<p class="faint" style="font-size:12px">Gmail and full Drive access need Google's security review before launch. We start with file-picker access, which doesn't.</p></div></div>`,
+[["Incremental permissions","Ask for each Google scope only when a feature needs it."],["Cost warning","Google's sensitive and restricted scopes (Gmail, full Drive) require app verification and possibly a paid security assessment. Start with the Drive file picker and Docs/Sheets per-file access."]]);
+
+add("Account","twilio","Connect Twilio","app.wanlly.com/connections/twilio",
+APP("Connections",`<div class="card" style="max-width:480px;gap:12px"><h2 style="font-size:22px">Connect Twilio</h2>
+<p class="muted">Paste keys from your own Twilio account. Messages your apps send are billed by Twilio to you, not by Wanlly.</p>
+<label class="field">Account SID<input class="mono" value="AC••••••••••••••••3f2"></label><label class="field">API key secret<input class="mono" value="••••••••••••••••"></label>
+<div class="card" style="background:var(--side);font-size:13px">🔒 Encrypted and stored separately. Only used when you ask the AI to send a message. Remove it anytime.</div>
+<span class="btn dark" style="align-self:flex-start">Save and test</span></div>`),
+[["Pattern for keyed services","Twilio, Stripe, M-Pesa Daraja and similar use the person's own keys, encrypted at rest, never shown again after saving."],["Why their keys","Sending messages costs money. Their account, their bill, no abuse risk to yours."]]);
+
+add("Account","settings","Settings and privacy","app.wanlly.com/settings",
+APP("Settings",`<h2 style="font-size:24px">Settings</h2>
+<div class="card">${[["Name","Amina Wanjiru"],["Email","amina@email.com"],["Phone","+254 712 •••678 · verified"],["Country","Kenya"]].map(([k,v])=>`<div style="display:flex;font-size:14px"><span class="muted" style="width:120px">${k}</span><span>${v}</span></div>`).join("")}</div>
+<div class="card"><b>Privacy</b>
+${[["Personalised ads","Use my activity to show more relevant sponsors",false],["Product analytics","Help improve Wanlly with anonymous usage data",true],["Use my chats to train models","Off, always. We never do this.",false]].map(([t,d,on])=>`<label style="display:flex;gap:10px;align-items:center"><span style="flex:1"><b style="font-size:14px">${t}</b><br><span class="muted" style="font-size:12.5px">${d}</span></span><span class="chip ${on?"good":""}">${on?"On":"Off"}</span></label>`).join("")}
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px"><span class="btn ghost">Download my data</span><span class="btn ghost">Cookie settings</span><span class="btn ghost" style="color:var(--bad)">Delete my account</span></div></div>`),
+[["GDPR rights in the product","Access (download), erasure (delete), and withdrawing consent (toggles) are self-serve, not an email to support."],["Training","State plainly that chats aren't used for training. Anthropic's API doesn't train on API data by default."]]);
+
+add("Account","cookies","Cookie choices (first visit, EU and UK)","wanlly.com",
+`<div class="mkt" style="flex:1;position:relative">${NAV()}<section class="hero" style="opacity:.35"><h1>More ideas than money? Perfect.</h1></section>
+<div class="card" style="position:absolute;left:16px;right:16px;bottom:16px;max-width:620px;margin:0 auto;gap:10px;box-shadow:var(--shadow)">
+<b>Your choice, your data</b><p class="muted" style="font-size:13.5px">We use essential cookies to keep you signed in. With your OK, we'd also like to measure how Wanlly is used and show sponsors that fit you. You can change this anytime.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn dark" style="flex:1">Accept all</span><span class="btn dark" style="flex:1">Reject all</span><span class="btn ghost" style="flex:1">Choose</span></div></div></div>`,
+[["Equal buttons","Reject is exactly as easy as Accept. Regulators fine sites that hide it."],["Before anything loads","Analytics and ad scripts wait for consent (Google Consent Mode v2). A Google-certified consent tool is required to show Google ads in the EU and UK."]]);
+
+/* ---------- Admin ---------- */
+const ADMINSIDE=(on)=>`<aside><div style="display:flex;gap:8px;align-items:center;padding:4px 6px 10px">${MARK(22)}<b style="font-family:var(--f-display)">Admin</b></div>${["Overview","Users","Beta queue","Ads","Models","Connections","Abuse","Settings","Audit log"].map(t=>`<div class="it ${t===on?"on":""}">${t}</div>`).join("")}</aside>`;
+const ADMIN=(on,inner)=>`<div class="app">${ADMINSIDE(on)}<main><div class="work" style="max-width:none;padding:16px 20px">${inner}</div></main></div>`;
+
+add("Admin","a-overview","Overview","admin.wanlly.com",
+ADMIN("Overview",`<div class="grid g3">${[["Ad revenue · 30 days","$710","↑ 18%"],["AI cost","$474","67% of revenue"],["Margin","$236","Ads cover AI"],["Active today","1,026","↑ 9%"],["Waiting for approval","412","Next group Monday"],["Flagged accounts","4","1 frozen"]].map(([t,v,s])=>`<div class="card"><span class="eyebrow">${t}</span><b style="font-family:var(--f-display);font-size:26px">${v}</b><span class="muted" style="font-size:12.5px">${s}</span></div>`).join("")}</div>
+<div class="card"><b>Revenue vs AI cost</b><svg viewBox="0 0 600 140" style="width:100%;height:auto"><path d="M0 120 L60 112 L120 104 L180 98 L240 90 L300 80 L360 70 L420 62 L480 50 L540 40 L600 30" fill="none" stroke="#2a78d6" stroke-width="2"/><path d="M0 126 L60 121 L120 116 L180 112 L240 106 L300 100 L360 94 L420 88 L480 80 L540 74 L600 66" fill="none" stroke="#eb6834" stroke-width="2"/></svg><span class="faint" style="font-size:12px">Blue: ad revenue · Orange: AI cost. Full version: /admin in the app.</span></div>`),
+[["Built","A working version with sample data is already in the app at /admin."]]);
+
+add("Admin","a-users","Users and roles","admin.wanlly.com/users",
+ADMIN("Users",`<div style="display:flex;gap:8px;flex-wrap:wrap"><input placeholder="Search name, email, phone" style="flex:1;min-width:200px;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:var(--surface)"><span class="btn ghost">Country ▾</span><span class="btn ghost">Role ▾</span><span class="btn ghost">Status ▾</span></div>
+<div class="card tw" style="padding:6px"><table><tr><th>User</th><th>Country</th><th>Role</th><th>Credits</th><th>Risk</th><th>Status</th><th></th></tr>
+${[["Louis","Kenya","Owner","∞","—","Active"],["Amina Wanjiru","Kenya","Member","19","Low","Active"],["Tunde A.","Nigeria","Ambassador","142","Low","Active"],["Grace M.","Kenya","Support","—","—","Active"],["user_88213","US","Member","0","High","Frozen"]].map(([n,c,r,cr,risk,s])=>`<tr><td><b style="font-weight:500">${n}</b></td><td>${c}</td><td><span class="chip">${r} ▾</span></td><td class="mono">${cr}</td><td>${risk==="High"?`<span class="chip bad">⚠ High</span>`:risk==="Low"?`<span class="chip good">Low</span>`:"—"}</td><td>${s==="Frozen"?`<span class="chip bad">Frozen</span>`:`<span class="chip good">Active</span>`}</td><td><span class="btn ghost" style="padding:4px 10px">Manage</span></td></tr>`).join("")}</table></div>
+<div class="card"><b>Roles</b><div class="grid g3" style="font-size:13px">${[["Owner","Everything, including billing and roles."],["Admin","Users, beta queue, ads, models, settings."],["Moderator","Abuse queue, freeze and unfreeze."],["Support","View users, adjust credits with a reason."],["Analyst","Read-only dashboards."],["Ambassador","Member with a tracked invite code."]].map(([r,d])=>`<div><b>${r}</b><div class="muted">${d}</div></div>`).join("")}</div></div>`),
+[["Control","Change roles, adjust credits (always with a reason), freeze, ban, reset limits, resend invites."],["Accountability","Every admin action is written to the audit log with who, what, when and why."]]);
+
+add("Admin","a-queue","Beta queue","admin.wanlly.com/beta",
+ADMIN("Beta queue",`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b style="font-size:16px">412 waiting</b><span class="chip">Sorted by priority</span><span class="btn dark" style="margin-left:auto">Approve top 100 →</span></div>
+<div class="card tw" style="padding:6px"><table><tr><th>Applicant</th><th>Wants to build</th><th>Country</th><th>Invites</th><th>Risk</th><th></th></tr>
+${[["Amina W.","Booking app for a salon with M-Pesa","Kenya","6","Low"],["Kofi M.","Farm price tracker","Ghana","3","Low"],["Priya S.","Exam study planner","India","0","Low"],["user_88213","api","US","0","High"]].map(([n,b,c,i,r])=>`<tr><td><b style="font-weight:500">${n}</b></td><td class="muted">${b}</td><td>${c}</td><td class="mono">${i}</td><td><span class="chip ${r==="High"?"bad":"good"}">${r}</span></td><td><span class="btn dark" style="padding:4px 10px">Approve</span></td></tr>`).join("")}</table></div>`),
+[["Priority score","Invites + quality of the build idea + country mix + low risk. You can still approve anyone by hand."]]);
+
+add("Admin","a-ads","Ads in depth","admin.wanlly.com/ads",
+ADMIN("Ads",`<div style="display:flex;gap:6px;flex-wrap:wrap">${["Formats","Networks and bidding","Creatives","Countries","Placements by tool"].map((t,i)=>`<span class="chip ${i===1?"tang":""}" style="font-size:13px;padding:5px 12px">${t}</span>`).join("")}</div>
+<div class="card tw" style="padding:6px"><table><tr><th>Network</th><th>Requests</th><th>Bid rate</th><th>Win rate</th><th>Avg bid</th><th>Timeouts</th><th>Revenue</th></tr>
+${[["Google Ad Manager","182,400","83%","65%","$1.32","2.1%","$130"],["Video network B","61,200","66%","46%","$4.80","4.4%","$88"],["Display network C","140,300","63%","47%","$0.74","3.8%","$31"]].map(r=>`<tr>${r.map((c,i)=>`<td class="${i?"mono":""}">${c}</td>`).join("")}</tr>`).join("")}</table></div>
+<div class="grid g2"><div class="card"><b>Most-clicked creatives</b><span class="muted" style="font-size:13px">Railhouse · Deploy preview · 3.1% CTR in Code</span><span class="muted" style="font-size:13px">Printwell · See prints · 2.4% in Images</span></div><div class="card"><b>Video payout by video number</b><span class="muted" style="font-size:13px">1st video $0.031 → 15th $0.020. Watch for drops: add networks or switch formats.</span></div></div>`),
+[["Depth","Every request, bid, impression, click, completed video and reward is an event, filterable by format, network, creative, tool, country, region and city."]]);
+
+add("Admin","a-models","Models and providers","admin.wanlly.com/models",
+ADMIN("Models",`<div class="card tw" style="padding:6px"><table><tr><th>Model</th><th>Provider</th><th>Status</th><th>Credits / message</th><th>Daily cap</th><th>Smart pick</th></tr>
+${[["Haiku 5.5","Anthropic","Live","1","—","Default"],["Sonnet 5.5","Anthropic","Live","2","—","Builds"],["Opus 5.5","Anthropic","Live","4","—","Hard tasks"],["Fable 5.1","Anthropic","Live","10","300 prompts","Off"],["GPT","OpenAI","Coming soon","—","—","—"],["Gemini","Google","Coming soon","—","—","—"]].map(([m,p,s,c,cap,sp])=>`<tr><td><b style="font-weight:500">${m}</b></td><td>${p}</td><td><span class="chip ${s==="Live"?"good":"soon"}">${s}</span></td><td class="mono">${c}</td><td class="mono">${cap}</td><td>${sp}</td></tr>`).join("")}</table></div>
+<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>New model detected: Claude Haiku 5.5</b><div class="muted" style="font-size:13px">Run the 40-task test set before making it a default.</div></div><span class="btn dark">Run tests</span></div>`),
+[["No code release needed","Prices, caps, status and smart-pick rules live in the database."],["New models","A daily check of provider model lists raises a card like this one."]]);
+
+add("Admin","a-abuse","Abuse","admin.wanlly.com/abuse",
+ADMIN("Abuse",`<div class="card tw" style="padding:6px"><table><tr><th>Account</th><th>Signal</th><th>Score</th><th>Auto action</th><th></th></tr>
+${[["user_88213","9 accounts on one device","92","Frozen"],["kev_dev","Videos finish every 20.0 s exactly","78","Challenged"],["promptshop","Prompts look like another app's API calls","71","Slowed down"]].map(([a,s,sc,ac])=>`<tr><td><b style="font-weight:500">${a}</b></td><td>${s}</td><td class="mono">${sc}</td><td>${ac}</td><td><span class="btn ghost" style="padding:4px 10px">Review</span></td></tr>`).join("")}</table></div>
+<div class="card" style="flex-direction:row;gap:8px;flex-wrap:wrap;align-items:center"><b style="flex:1">Kill switches</b><span class="btn ghost" style="color:var(--bad)">Pause Fable</span><span class="btn ghost" style="color:var(--bad)">Pause sign-ups</span><span class="btn ghost" style="color:var(--bad)">Pause all AI</span></div>`),
+[["Human review","Bans based on automatic scores always get a person's review and an appeal path. EU law limits decisions made purely by automated scoring."]]);
+
+add("Admin","a-audit","Settings and audit log","admin.wanlly.com/audit",
+ADMIN("Audit log",`<div class="grid g2"><div class="card"><b>Global safety cap</b><span class="muted" style="font-size:13px">Pause free usage when AI spend today reaches</span><b class="mono" style="font-size:20px">$25.00</b></div><div class="card"><b>Welcome credits</b><span class="muted" style="font-size:13px">Per verified person, once</span><b class="mono" style="font-size:20px">20</b></div></div>
+<div class="card tw" style="padding:6px"><table><tr><th>When</th><th>Who</th><th>Action</th><th>Reason</th></tr>
+${[["10:42","Louis","Approved 100 applicants","Weekly group 4"],["10:15","Grace","+20 credits to Amina W.","Failed build refunded"],["09:58","System","Froze user_88213","Risk score 92"],["Mon","Louis","Fable daily cap 300 → 400","Revenue up"]].map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?"mono":""}">${c}</td>`).join("")}</tr>`).join("")}</table></div>`),
+[["Audit trail","Required for accountability and useful in disputes. Kept even when other data is deleted, with personal details minimised."]]);
+
+/* ---------- Render ---------- */
+let cur=0;
+const list=document.getElementById("list"), jump=document.getElementById("jump");
+function buildNav(){
+  let h=`<div class="brand">${MARK(28)}<div><b>Wanlly journey</b><small>${S.length} screens, click through</small></div></div>`, g="";
+  let o="";
+  S.forEach((s,i)=>{if(s.group!==g){g=s.group;h+=`<div class="group">${g}</div>`;o+=`<optgroup label="${g}">`}
+    h+=`<button data-i="${i}"><span>${String(i+1).padStart(2,"0")}</span>${s.title}</button>`;o+=`<option value="${i}">${i+1}. ${s.title}</option>`});
+  list.innerHTML=h; jump.innerHTML=o;
+}
+function show(i){
+  cur=Math.max(0,Math.min(S.length-1,i)); const s=S[cur];
+  document.getElementById("screen").innerHTML=s.html;
+  document.getElementById("title").textContent=s.title;
+  document.getElementById("crumb").textContent=`${s.group} · ${cur+1} of ${S.length}`;
+  document.getElementById("url").textContent=s.url;
+  document.getElementById("notes").innerHTML=s.notes.map(([t,d])=>`<div class="note"><b>${t}</b>${d}</div>`).join("");
+  list.querySelectorAll("button").forEach(b=>b.setAttribute("aria-current",+b.dataset.i===cur));
+  jump.value=cur; document.querySelector(".stage").scrollTop=0;
+  try{history.replaceState(null,"","#"+s.id)}catch(e){}
+}
+buildNav();
+list.addEventListener("click",e=>{const b=e.target.closest("button[data-i]");if(b)show(+b.dataset.i)});
+jump.addEventListener("change",e=>show(+e.target.value));
+document.getElementById("prev").onclick=()=>show(cur-1);
+document.getElementById("next").onclick=()=>show(cur+1);
+document.addEventListener("keydown",e=>{if(e.target.closest("input,textarea,select"))return;if(e.key==="ArrowRight")show(cur+1);if(e.key==="ArrowLeft")show(cur-1)});
+const start=S.findIndex(s=>s.id===location.hash.slice(1));
+show(start>=0?start:0);
+</script>

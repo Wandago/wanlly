@@ -99,3 +99,20 @@ This lands alongside the plan's steps, not after them:
 | Step 4: ads | Server-side verification of rewarded views, earning caps, no ads for suspected bots |
 | Before the beta opens | Risk scoring job, alerts, admin page and kill switch, terms and privacy policy |
 | Step 6: Code mode | Sandbox isolation, task budgets, one active session per account |
+
+## Tools, by job
+
+| Job | Tool | Cost |
+|---|---|---|
+| Bot check on sign-up, sign-in and earning | **Cloudflare Turnstile** | Free |
+| Block bad traffic at the edge | **Cloudflare WAF and Bot Fight Mode**, rate-limiting rules | Free tier |
+| Bot detection in sign-in | **Clerk** bot protection and disposable-email blocking | Free tier |
+| Device fingerprint | **FingerprintJS** open-source library (upgrade to Fingerprint Pro if abuse grows) | Free, then paid |
+| VPN, proxy and data-centre IP detection | Cloudflare's network data first; **IPinfo** or **IPQualityScore** free tiers for extra checks | Free tiers |
+| Phone verification | **Clerk** phone codes, or **Twilio Verify** | Per message |
+| Verified ad views | The ad network's **server-side verification** callbacks | Free |
+| Invalid ad traffic | Google Ad Manager's built-in invalid-traffic filtering; never show ads to flagged accounts | Free |
+| Harmful prompts | Provider safety (Claude declines harmful requests and reports a refusal); a cheap Haiku check on flagged accounts | Pennies |
+| Errors and attacks | **Sentry** alerts | Free tier |
+| Session evidence for abuse reviews | **PostHog** session recordings with personal data masked | Free tier |
+| Risk scoring, alerts, kill switches | Our own job every 5 minutes plus the admin Abuse page | Free |

@@ -6,6 +6,8 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 - UI reference: the running app on `feature/ui-shell`, and `/dev/ads` for every ad format
 - Anti-abuse architecture: [`docs/SECURITY.md`](SECURITY.md)
 - Launch plan, beta process and tracking: [`docs/LAUNCH.md`](LAUNCH.md); pages `/beta` and `/admin` (design previews)
+- Every screen, start to finish: [`docs/journey.html`](journey.html) (clickable storyboard)
+- Legal and compliance checklist: [`docs/LEGAL.md`](LEGAL.md)
 - Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
 
 ---
@@ -26,6 +28,17 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 | Ad formats | Native sponsor card while a job runs, a 336×280 / 300×250 rectangle, inline video (16:9, 9:16, 1:1), a result line or 320×50 banner, a side panel that stays up while people work (desktop), a pinned bottom banner (phones), and a Build Pass (a video about every 15 minutes during long builds). |
 | Ad rules | Every ad is labeled. Nothing appears inside an answer. Nothing blocks a finished result. **Never reward clicks**: rewards come from opt-in videos only. |
 | Video rewards | Credits follow what each video actually paid, so a cheap video never loses money. Several ad networks bid, so prices drop more slowly. |
+
+## Product direction: one place for every AI
+
+Wanlly is a hub, like Higgsfield but for building: chat, code, design, images and video, each using the AI that's best at it.
+
+- **Launch with Claude** (Haiku 5.5, Sonnet 5.5, Opus 5.5, Fable 5.1). Everything else shows as **Coming soon** with a Notify me button that records demand.
+- **Next providers:** OpenAI (ChatGPT, Codex, image), Google (Gemini, Imagen, Veo), xAI (Grok), plus specialist image and video models. Images and Video stay Coming soon until one is added, since Claude doesn't generate them.
+- **Smart pick:** a tiny Haiku call sorts each request (simple, build, hard, creative) and suggests the cheapest model that will do it well. The person always decides; cheapest is one tap away.
+- **Templates:** one-tap recipes (prompt, starter project, model and connections), the "Higgsfield presets" of building.
+- **Connections:** GitHub (GitHub App, per repo), Google Workspace (per-file first), Twilio and similar with the person's own encrypted keys; Slack, Notion and M-Pesa Daraja next. Built on MCP where possible.
+- **Admin roles:** Owner, Admin, Moderator, Support, Analyst, Ambassador, with every action in an audit log.
 
 ---
 
