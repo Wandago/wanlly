@@ -21,7 +21,8 @@ export async function GET(req: Request) {
   }
   return Response.json({
     clerkSecretKey: has("CLERK_SECRET_KEY"),
-    clerkPublishableKey: has("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"),
+    // Baked in at build time, so it's read directly rather than by name.
+    clerkPublishableKey: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY),
     clerkWebhookSigningSecret: has("CLERK_WEBHOOK_SIGNING_SECRET"),
     database,
     tables,
