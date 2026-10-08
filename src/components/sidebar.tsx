@@ -1,6 +1,8 @@
 "use client";
 
+import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { FLOOR_CREDITS, TOOLS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
@@ -68,6 +70,57 @@ function TodayCard() {
       >
         <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
         {floorUnlocked ? "Earn more credits" : `Watch to unlock · +${FLOOR_CREDITS}`}
+      </button>
+    </div>
+  );
+}
+
+/** The signed-in person, with sign out; or Sign in and Sign up when signed out. */
+function Account({ onNavigate, active }: { onNavigate: () => void; active: boolean }) {
+  const { isLoaded, isSignedIn, user } = useUser();
+  const { signOut } = useClerk();
+  // If Clerk can't load (blocked script, bad key), stop waiting and offer sign-in after a few seconds.
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    if (isLoaded) return;
+    const t = window.setTimeout(() => setGaveUp(true), 4000);
+    return () => window.clearTimeout(t);
+  }, [isLoaded]);
+
+  if (!isLoaded && !gaveUp) return <div className="mt-1 h-[42px] animate-pulse rounded-xl bg-hover" aria-hidden="true" />;
+
+  if (!isSignedIn || !user) {
+    return (
+      <div className="mt-1 flex gap-2">
+        <Link href="/sign-in" className="flex-1 rounded-[10px] bg-fg px-3 py-2 text-center text-sm font-semibold text-bg">
+          Sign in
+        </Link>
+        <Link href="/sign-up" className="flex-1 rounded-[10px] border border-line bg-surface px-3 py-2 text-center text-sm font-medium hover:border-faint">
+          Sign up
+        </Link>
+      </div>
+    );
+  }
+
+  const name = user.fullName || user.username || user.primaryEmailAddress?.emailAddress || "Your account";
+  return (
+    <div className={`mt-1 flex items-center gap-1 rounded-xl px-1.5 py-1.5 ${active ? "bg-hover" : ""}`}>
+      <Link href="/profile" onClick={onNavigate} aria-current={active ? "page" : undefined} className="flex min-w-0 flex-1 items-center gap-2.5 rounded-lg hover:opacity-80">
+        {/* eslint-disable-next-line @next/next/no-img-element -- Clerk serves the avatar */}
+        <img src={user.imageUrl} alt="" className="size-[30px] shrink-0 rounded-full bg-hover object-cover" />
+        <span className="flex min-w-0 flex-1 flex-col text-sm leading-tight">
+          <span className="truncate">{name}</span>
+          <small className="truncate text-xs text-faint">{user.primaryEmailAddress?.emailAddress ?? "Signed in"}</small>
+        </span>
+      </Link>
+      <button
+        type="button"
+        aria-label="Sign out"
+        title="Sign out"
+        onClick={() => signOut({ redirectUrl: "/sign-in" })}
+        className="grid size-8 shrink-0 place-items-center rounded-lg text-faint hover:bg-hover hover:text-fg"
+      >
+        <Icon name="logout" size={16} />
       </button>
     </div>
   );
@@ -150,19 +203,7 @@ export function Sidebar() {
           <SidebarAd />
           <TodayCard />
         </div>
-        <Link
-          href="/profile"
-          onClick={close}
-          aria-current={path.startsWith("/profile") ? "page" : undefined}
-          className={`mt-1 flex items-center gap-2.5 rounded-xl px-1.5 py-1.5 hover:bg-hover ${path.startsWith("/profile") ? "bg-hover" : ""}`}
-        >
-          <span className="grid size-[30px] place-items-center rounded-full bg-fg text-[13px] font-semibold text-bg">L</span>
-          <span className="flex min-w-0 flex-1 flex-col text-sm leading-tight">
-            Louis
-            <small className="text-xs text-faint">Verified · good standing</small>
-          </span>
-          <Icon name="settings" size={16} className="text-faint" />
-        </Link>
+        <Account onNavigate={close} active={path.startsWith("/profile")} />
       </aside>
     </>
   );

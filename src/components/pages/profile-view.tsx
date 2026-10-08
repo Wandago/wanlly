@@ -1,5 +1,6 @@
 "use client";
 
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useState, type ReactNode } from "react";
 import { FLOOR_CREDITS, MODELS } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
@@ -117,6 +118,8 @@ function Standing() {
 
 export function ProfileView() {
   const { credits, floorUnlocked, dispatch } = useWorkspace();
+  const { isSignedIn, user } = useUser();
+  const { signOut, openUserProfile } = useClerk();
   const [topics, setTopics] = useState<string[]>(["Learning and courses", "Developer tools", "Jobs and internships"]);
   const saved = () => dispatch({ type: "toast", text: "Saved" });
 
@@ -267,25 +270,27 @@ export function ProfileView() {
             </div>
           </Panel>
 
-          <Panel title="Sign-in and security">
+          <Panel title="Sign-in and security" note="Sign-in is handled by Clerk. Passwords, passkeys, connected Google or GitHub, and your devices are all managed there.">
             <div id="security" className="flex flex-col">
-              <Line icon="shield" title="Google sign-in" detail="louis@… · two-step verification on Google" />
-              <Line icon="lock" title="Passkey" detail="Sign in with your fingerprint or face, no password">
-                <button type="button" className={btnGhost}>
-                  Add passkey
-                </button>
-              </Line>
-              <Line icon="chat" title="Phone" detail="+254 7•• ••• 412 · verified" />
-              <Line icon="code" title="Chrome on Windows · Nairobi" detail="This device · active now" />
-              <Line icon="images" title="Android phone · Nairobi" detail="2 days ago">
-                <button type="button" className={btnGhost}>
-                  Sign out
-                </button>
+              <Line icon="shield" title={user?.primaryEmailAddress?.emailAddress ?? "Not signed in"} detail={isSignedIn ? `Signed in${user?.externalAccounts.length ? ` with ${user.externalAccounts.map((a) => a.provider.replace("oauth_", "")).join(" and ")}` : ""}` : "Sign in to manage your account"}>
+                {isSignedIn ? (
+                  <button type="button" className={btnGhost} onClick={() => openUserProfile()}>
+                    Manage sign-in and devices
+                  </button>
+                ) : (
+                  <a href="/sign-in" className={btnDark}>
+                    Sign in
+                  </a>
+                )}
               </Line>
             </div>
-            <button type="button" className={`${btnGhost} self-start`}>
-              Sign out everywhere
-            </button>
+            {isSignedIn && (
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={btnDark} onClick={() => signOut({ redirectUrl: "/sign-in" })}>
+                  <Icon name="logout" size={15} /> Sign out
+                </button>
+              </div>
+            )}
           </Panel>
 
           <Panel title="Your data" note="Wanlly never trains AI on your prompts, files or projects.">
