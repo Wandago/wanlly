@@ -8,6 +8,7 @@ import {
   FUNNEL,
   MODELS_USAGE,
   NETWORKS,
+  POOL,
   QUEUE,
   SOURCES,
   TOP_CLICKED,
@@ -197,6 +198,35 @@ export function AdminDashboard() {
 
         <Card title="Ad revenue vs AI cost" note="Per day. The gap between the lines is what keeps Wanlly running.">
           <RevenueChart days={days} />
+        </Card>
+
+        <Card title="Community pool" note="Everyone gets the same daily floor. Paid only from revenue already received; unlocked by one video a day.">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+            <div className="grid grid-cols-2 content-start gap-x-4 gap-y-3">
+              {[
+                ["Pool balance", money(POOL.balance), `about ${Math.floor(POOL.balance / POOL.spentToday)} days at today's rate`],
+                ["Spent today", money(POOL.spentToday), `${num(POOL.reachedToday)} people topped up`],
+                ["Today's floor", `$${POOL.floorUsd.toFixed(3)}`, POOL.floorLabel],
+                ["Reached", `${POOL.countries} countries`, POOL.floorChange],
+              ].map(([l, v, s]) => (
+                <div key={l} className="flex min-w-0 flex-col gap-0.5">
+                  <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">{l}</span>
+                  <span className="font-display text-[22px] leading-tight font-semibold tabular-nums">{v}</span>
+                  <span className="text-xs text-muted">{s}</span>
+                </div>
+              ))}
+            </div>
+            <Table
+              head={["Paid in this month", "", "Amount"]}
+              align={["l", "l", "r"]}
+              rows={POOL.sources.map((s) => [s.name, <span key="n" className="text-muted">{s.note}</span>, money(s.amount)])}
+            />
+            <Table
+              head={["Where it went", "On the floor", "Spent", ""]}
+              align={["l", "r", "r", "l"]}
+              rows={POOL.regions.map((r) => [r.name, pct(r.onFloor), money(r.spent), <div key="b" className="w-16"><Bar value={r.spent} max={POOL.regions[0].spent} /></div>])}
+            />
+          </div>
         </Card>
 
         <div className="grid gap-4 lg:grid-cols-2">

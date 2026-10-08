@@ -178,8 +178,8 @@ ${[["1","Tell us your idea","One minute. We read every application."],["2","Get 
 </div></section>
 <section class="band"><div class="center grid g2" style="align-items:center">
 <div style="display:flex;flex-direction:column;gap:10px"><h2 style="font-size:32px;line-height:1.1">Why is it free? Because you're worth meeting.</h2>
-<p class="muted">Brands want to reach curious, ambitious builders. When you choose to watch their twenty-second video, they pay, and most of that money becomes your AI time. Ads sit beside your work. Never inside an answer, and never in the way.</p></div>
-<div class="grid g2">${[["20 s","a video, when you choose"],["~70%","of what it earns becomes your AI time"],["0","cards, subscriptions or hidden fees"],["4","Claude models today, more on the way"]].map(([n,l])=>`<div class="card"><span style="font-family:var(--f-display);font-size:30px;font-weight:600">${n}</span><span class="muted" style="font-size:13px">${l}</span></div>`).join("")}</div>
+<p class="muted">Brands want to reach curious, ambitious builders. When you choose to watch their twenty-second video, they pay, and most of that money becomes your AI time. Part of every ad also goes into a community pool, so a student in Lagos starts each day with the same floor as one in Boston. Ads sit beside your work. Never inside an answer, and never in the way.</p></div>
+<div class="grid g2">${[["20 s","a video, when you choose"],["1 floor","the same daily minimum for everyone, everywhere"],["0","cards, subscriptions or hidden fees"],["4","Claude models today, more on the way"]].map(([n,l])=>`<div class="card"><span style="font-family:var(--f-display);font-size:30px;font-weight:600">${n}</span><span class="muted" style="font-size:13px">${l}</span></div>`).join("")}</div>
 </div></section>
 <section class="band"><div class="center" style="display:flex;flex-direction:column;gap:10px"><span class="eyebrow">Models</span>
 <div class="grid g3">${[["Claude Haiku 5.5","Anthropic","Live"],["Claude Sonnet 5.5","Anthropic","Live"],["Claude Opus 5.5","Anthropic","Live"],["Claude Fable 5.1","Anthropic","Live"],["ChatGPT","OpenAI","Coming soon"],["Gemini","Google","Coming soon"],["Image and video models","Several providers","Coming soon"]].map(([n,p,s])=>`<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>${n}</b><div class="faint" style="font-size:12.5px">${p}</div></div><span class="chip ${s==="Live"?"good":"soon"}">${s}</span></div>`).join("")}</div></div></section></div>`,
@@ -237,10 +237,10 @@ add("Get started","verify","Verify your phone","wanlly.com/welcome/phone",
 add("Get started","welcome","Welcome and first credits","wanlly.com/welcome",
 `<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:520px;width:100%;gap:14px;padding:24px">
 <span class="eyebrow">Step 2 of 3</span><h2 style="font-size:26px">Here's how you'll never pay.</h2>
-<div class="grid g3">${[["⚡ 20","welcome credits, on us"],["▶ 20 s","a video earns about 4 more"],["⏱ 5 h","your window refreshes"]].map(([n,l])=>`<div class="card" style="padding:12px"><b style="font-family:var(--f-display);font-size:22px">${n}</b><span class="muted" style="font-size:12.5px">${l}</span></div>`).join("")}</div>
+<div class="grid g2">${[["⚡ 20","welcome credits, on us"],["▶ 1 a day","unlocks your daily floor: about an hour of Haiku"],["+4","for every extra 20-second video"],["⏱ 5 h","your window refreshes"]].map(([n,l])=>`<div class="card" style="padding:12px"><b style="font-family:var(--f-display);font-size:22px">${n}</b><span class="muted" style="font-size:12.5px">${l}</span></div>`).join("")}</div>
 <div class="rec"><b style="color:var(--tang-text)">Tip</b><span>Start with Haiku. It's quick, light on credits, and great for most first drafts. We'll suggest a bigger model when your task needs one.</span></div>
 <span class="btn dark" style="padding:11px">Next: what are you building?</span></div></div>`,
-[["Teach the economy once","Three numbers, no jargon. After this screen people understand credits, videos and windows."],["Cheapest first","Haiku is introduced as the smart default, not the budget option."]]);
+[["Teach the economy once","Four numbers, no jargon. After this screen people understand credits, the daily floor, videos and windows."],["Cheapest first","Haiku is introduced as the smart default, not the budget option."]]);
 
 add("Get started","interests","What are you building?","wanlly.com/welcome/start",
 `<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:560px;width:100%;gap:14px;padding:24px">
@@ -307,11 +307,21 @@ APP("Templates",`<h2 style="font-size:24px">Start from something that works.</h2
 /* ---------- Credits ---------- */
 add("Credits","earn","Earn credits","app.wanlly.com/credits",
 APP("Credits",`<h2 style="font-size:24px">Earn AI time</h2>
+<div class="card" style="flex-direction:row;align-items:center;background:var(--tang-soft);border-color:var(--tang-line)"><div style="flex:1"><b>Today's floor · unlocked ✓</b><div class="muted" style="font-size:13px">About an hour of Haiku or 8 Sonnet messages, the same for everyone. Resets tomorrow.</div></div><span class="chip good">Community pool</span></div>
 <div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>Watch a 20-second video</b><div class="muted" style="font-size:13px">Skippable after 5 seconds. You choose when.</div></div><span class="btn dark">▶ +4</span></div>
 <div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>Invite a friend</b><div class="muted" style="font-size:13px">When they're approved, you both get 20 credits.</div></div><span class="btn ghost">Share link</span></div>
+<div class="card" style="flex-direction:row;align-items:center"><div style="flex:1"><b>Watch to fund a creator</b><div class="muted" style="font-size:13px">Your video goes into the community pool instead. This month: 4,200 builds by students in 61 countries.</div></div><span class="btn ghost">▶ Fund one</span></div>
 <div class="card"><b>Build streak · 3 of 5 days</b><div class="bar"><i style="width:60%"></i></div><span class="muted" style="font-size:13px">Two more days and your next Opus prompt is on us.</span></div>
 <p class="faint" style="font-size:12.5px">Rewards depend on what each video pays where you are, so the number can change. Sponsors never see your prompts or your work.</p>`),
 [["Never for clicks","Rewards come only from opt-in video views and referrals. Paying for ad clicks breaks every ad network's rules."],["Transparent","Says plainly why rewards vary. Important for consumer-protection rules on 'free' offers."]]);
+
+add("Credits","floor","Unlock today's floor","app.wanlly.com",
+APP("New chat",`<div style="flex:1;display:grid;place-items:center;padding:20px 0"><div class="card" style="max-width:460px;width:100%;gap:12px;padding:22px">
+<span class="eyebrow">Good morning, Amina</span><h2 style="font-size:24px">Your daily floor is ready.</h2>
+<p class="muted">Watch one 20-second video and today's floor is yours: about an hour of building with Haiku, or 8 Sonnet messages. Everyone on Wanlly gets the same floor, wherever they live.</p>
+<span class="btn dark" style="padding:11px">▶ Watch and unlock</span>
+<div style="display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:12px"><span class="chip good">Community pool</span><span class="faint" style="font-size:12.5px">Funded by viewers and sponsors in 61 countries.</span></div></div></div>`),
+[["Why one video","It keeps the promise of no free tier, proves a person is there, and stops bots draining the pool."],["Fair everywhere","Ads pay ten times more in some countries than others. The floor means where you live never decides whether you can build."]]);
 
 add("Credits","limit","Window used up","app.wanlly.com/chat",
 APP("New chat",`<div class="bubble">Now add a staff schedule page</div>

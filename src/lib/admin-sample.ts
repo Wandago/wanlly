@@ -106,3 +106,26 @@ export const FLAGGED = [
   { account: "promptshop", signal: "Prompts look like another app's requests", score: 71, action: "Slowed down" },
   { account: "nomad_sam", signal: "Network country ≠ phone country", score: 44, action: "Watching" },
 ];
+
+/** Community pool: funded from revenue already received, spent as a daily floor for everyone. */
+export const POOL = {
+  balance: 1840,
+  spentToday: 84,
+  floorUsd: 0.083,
+  floorLabel: "10 min of Sonnet · about 1 h of Haiku",
+  floorChange: "No change this week (max drop 10% a week)",
+  reachedToday: 6120,
+  countries: 61,
+  sources: [
+    { name: "House share (15% of last month's ads)", note: "Paid in", amount: 1520 },
+    { name: "Sponsor slice", note: "2 campaigns", amount: 240 },
+    { name: "Watch to fund a creator", note: "3,820 videos", amount: 80 },
+  ],
+  regions: [
+    { name: "Africa", onFloor: 0.86, spent: 690 },
+    { name: "South Asia", onFloor: 0.81, spent: 540 },
+    { name: "Southeast Asia", onFloor: 0.64, spent: 260 },
+    { name: "Latin America", onFloor: 0.41, spent: 150 },
+    { name: "Europe and North America", onFloor: 0.05, spent: 20 },
+  ],
+};

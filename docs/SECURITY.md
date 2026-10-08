@@ -33,6 +33,7 @@ New accounts start with **zero credits.** The first credits come from watching a
 ## 3. Earning: making fake ad views worthless
 
 - **Server-side verification (SSV):** rewarded ad networks call our server directly with a signed message when a view completes. We check the signature, that the transaction ID is new, that it matches a view we started for that user in the last few minutes, and that the reward matches what we offered. Only then do credits appear.
+- **Partners without a server callback** (Google's rewarded ads for web have none; that feature is app-only): a single-use view ticket from our server before the ad starts, checks on watch time, caps and risk score when the page reports the reward, then **provisional credits** reconciled against the network's reports and reversed on mismatch. Flagged users only get partners with server callbacks. See `docs/AD-PARTNERS.md`.
 - **Rewards follow real payout:** credits per view are set from what that view actually paid. A fraudulent view that the network later refuses to pay for gets its credits reversed.
 - **Earning caps:** at most N videos per hour and per day per account, device and IP. A minimum gap between views.
 - **No bots get ads:** suspected bots are never shown ads. That protects the AdSense / Ad Manager account from invalid-traffic bans, which would cut off all revenue.

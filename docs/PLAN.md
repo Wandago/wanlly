@@ -8,6 +8,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 - Launch plan, beta process and tracking: [`docs/LAUNCH.md`](LAUNCH.md); pages `/beta` and `/admin` (design previews)
 - Every screen, start to finish: [`docs/journey.html`](journey.html) (clickable storyboard)
 - Legal and compliance checklist: [`docs/LEGAL.md`](LEGAL.md)
+- Ad partners, by stage, and how to choose them: [`docs/AD-PARTNERS.md`](AD-PARTNERS.md)
 - System architecture and flowcharts: [`docs/architecture.html`](architecture.html)
 - Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
 
@@ -144,7 +145,7 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 ### Step 4: Ads, first version (Claude builds, you apply)
 **With no free tier, people can't use Wanlly until rewarded ads work, so this step gates the beta.**
 1. **Before AdSense approves you:** fill the slots with house ads (your own "invite a friend" and launch messages) and **self-serve affiliate programs** from developer tools. Those don't pay for videos, so beta testers need a **small welcome grant from your launch budget** until rewarded ads are approved (for example 20 credits, once per verified phone).
-2. **You:** check which rewarded formats each network allows on a website (Google Ad Manager's rewarded web ads, AdSense's offerwall, and others) and apply for the one that fits.
+2. **You:** open publisher accounts with the Stage 1 partners in `docs/AD-PARTNERS.md`: **AppLixir** (rewarded video for web, with signed server callbacks) and one survey offerwall. Google's rewarded web ads come later through Ad Manager.
 3. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
 4. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
 5. **Community pool:** daily pool sizing job, the floor unlocked by one video a day, a "Watch to fund a creator" option, and the pool on the admin dashboard.
