@@ -1,0 +1,301 @@
+<title>Wanlly Ad Economics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Geist:wght@400..600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column. Controls sit in one row above everything they change; summary first, detail after. */
+:root{
+  --bg:#fbfbfc; --surface:#ffffff; --line:#e3e5eb; --hover:#eef0f4;
+  --fg:#15171c; --muted:#5d6472; --faint:#8d93a0;
+  --brand:#ff5a1f;
+  --rev:#2a78d6; --cost:#eb6834;
+  --good:#0ca30c; --critical:#d03b3b; --good-ink:#0a7a0a; --critical-ink:#b02e2e;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111216; --surface:#18191e; --line:#2a2c33; --hover:#21232a;
+  --fg:#ecedf1; --muted:#a0a6b2; --faint:#757b87;
+  --rev:#3987e5; --cost:#d95926; --good-ink:#3ccb85; --critical-ink:#ff7b7b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111216; --surface:#18191e; --line:#2a2c33; --hover:#21232a;
+  --fg:#ecedf1; --muted:#a0a6b2; --faint:#757b87;
+  --rev:#3987e5; --cost:#d95926; --good-ink:#3ccb85; --critical-ink:#ff7b7b; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:40px 64px;display:flex;flex-direction:column;gap:40px}
+h1,h2{font-family:var(--f-display);font-weight:600;letter-spacing:-.025em;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.05}
+h2{font-size:22px;line-height:1.2}
+p{margin:0}
+.lede{color:var(--muted);max-width:62ch;font-size:16px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.brand{display:flex;align-items:center;gap:8px}
+.brand i{width:10px;height:10px;border-radius:50%;background:var(--brand)}
+section{display:flex;flex-direction:column;gap:16px}
+section>header{display:flex;flex-direction:column;gap:6px}
+section>header p{color:var(--muted);max-width:65ch}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--fg);outline-offset:2px;border-radius:6px}
+
+/* Controls */
+.controls{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.ctl{display:flex;flex-direction:column;gap:6px;min-width:0}
+.ctl label,.ctl .lbl{font-size:12px;color:var(--muted);font-weight:500}
+.seg{display:flex;gap:2px;padding:3px;border-radius:10px;background:var(--hover)}
+.seg button{padding:5px 10px;border-radius:8px;font-size:13px;color:var(--muted);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);font-weight:500;box-shadow:0 1px 2px rgb(0 0 0 / .08)}
+.range{display:flex;align-items:center;gap:10px}
+.range input{width:150px;accent-color:var(--fg)}
+.range output{font-family:var(--f-mono);font-size:13px;min-width:5.5ch}
+.switch{display:flex;align-items:center;gap:8px;font-size:13px}
+.switch input{width:16px;height:16px;accent-color:var(--fg)}
+
+/* Summary */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.stat{padding:16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:4px;min-width:0}
+.stat .v{font-family:var(--f-display);font-size:30px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.stat .s{font-size:13px;color:var(--muted)}
+.key{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:0}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:550;padding:3px 9px;border-radius:99px;align-self:flex-start}
+.chip svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.chip.ok{color:var(--good-ink);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.chip.short{color:var(--critical-ink);background:color-mix(in srgb,var(--critical) 13%,transparent)}
+
+/* Journey */
+.journey{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;list-style:none;margin:0;padding:0;counter-reset:step}
+.journey li{padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;gap:6px;counter-increment:step;min-width:0}
+.journey li::before{content:counter(step);font-family:var(--f-mono);font-size:12px;color:var(--faint)}
+.journey b{font-weight:600}
+.journey p{font-size:13.5px;color:var(--muted)}
+.journey .earns{margin-top:auto;padding-top:8px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px;color:var(--muted)}
+.journey .earns span:last-child{color:var(--fg)}
+.journey li.none{background:transparent;border-style:dashed}
+
+/* Bars */
+.chart{padding:18px;border-radius:16px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.row .name{font-size:14px;min-width:0}
+.row .name small{display:block;color:var(--faint);font-size:12px}
+.track{display:flex;align-items:center;gap:8px;min-width:0}
+.bar{height:14px;border-radius:0 4px 4px 0;min-width:2px;transition:width .4s ease;outline-offset:2px}
+.bar.rev{background:var(--rev)} .bar.cost{background:var(--cost)}
+.val{font-family:var(--f-mono);font-size:12.5px;color:var(--fg);white-space:nowrap}
+.axis{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;font-size:11px;color:var(--faint);font-family:var(--f-mono)}
+.axis div{border-top:1px solid var(--line);padding-top:4px;display:flex;justify-content:space-between}
+
+.types{display:flex;flex-direction:column;gap:0}
+.type{display:grid;grid-template-columns:190px minmax(0,1fr);gap:16px;padding:14px 0;border-top:1px solid var(--line)}
+.type:first-child{border-top:0;padding-top:0}
+.type .who b{font-weight:600}
+.type .who p{font-size:13px;color:var(--muted)}
+.pair{display:flex;flex-direction:column;gap:6px;min-width:0}
+.note{font-size:13px;color:var(--muted)}
+.note b{color:var(--fg);font-weight:550}
+
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.rule{padding:14px;border-radius:14px;border:1px solid var(--line);font-size:14px;color:var(--muted)}
+.rule b{display:block;color:var(--fg);font-weight:600;margin-bottom:2px}
+
+details{border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+summary{padding:14px 16px;cursor:pointer;font-weight:550}
+.tablewrap{overflow-x:auto;padding:0 16px 16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:7px 10px 7px 0;border-top:1px solid var(--line);vertical-align:top}
+th{font-weight:550;color:var(--muted);font-size:12px}
+td.n{font-family:var(--f-mono);white-space:nowrap}
+
+#tip{position:fixed;pointer-events:none;z-index:20;background:var(--fg);color:var(--bg);font-size:12.5px;padding:7px 10px;border-radius:8px;max-width:260px;line-height:1.4}
+
+@media (max-width:640px){
+  .row,.axis{grid-template-columns:96px minmax(0,1fr);gap:10px}
+  .type{grid-template-columns:minmax(0,1fr);gap:8px}
+  .controls{position:static}
+  .range input{width:120px}
+}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+</style>
+
+<div class="wrap">
+  <header style="display:flex;flex-direction:column;gap:12px">
+    <span class="brand eyebrow"><i></i>Wanlly · business model</span>
+    <h1>Can ads pay for the AI?</h1>
+    <p class="lede">Every place a sponsor appears in Wanlly, what each one earns, and whether it covers what each kind of user costs in model usage. Change the settings to see where it holds and where it breaks. All rates are industry ballparks to replace with real data after launch.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Settings">
+    <div class="ctl"><span class="lbl" id="l-region">Where users are</span>
+      <div class="seg" id="region" role="group" aria-labelledby="l-region">
+        <button data-v="us" aria-pressed="true">US / EU</button><button data-v="mixed" aria-pressed="false">Mixed</button><button data-v="low" aria-pressed="false">Lower-rate</button>
+      </div></div>
+    <div class="ctl"><label for="allow">Free credits per day</label>
+      <div class="range"><input id="allow" type="range" min="0" max="40" step="1" value="10"><output id="allowOut" for="allow"></output></div></div>
+    <div class="ctl"><label for="ecpm">Ad rate (per 1,000 views, US)</label>
+      <div class="range"><input id="ecpm" type="range" min="0.5" max="6" step="0.5" value="2.5"><output id="ecpmOut" for="ecpm"></output></div></div>
+    <div class="ctl"><span class="lbl">Video spot rewards</span>
+      <label class="switch"><input id="follow" type="checkbox" checked> Match what the ad paid</label></div>
+    <div class="ctl"><span class="lbl" id="l-users">Monthly users</span>
+      <div class="seg" id="users" role="group" aria-labelledby="l-users">
+        <button data-v="1000" aria-pressed="false">1k</button><button data-v="10000" aria-pressed="true">10k</button><button data-v="100000" aria-pressed="false">100k</button>
+      </div></div>
+  </div>
+
+  <section aria-labelledby="h-sum">
+    <header><h2 id="h-sum">The average user, per month</h2></header>
+    <div class="stats">
+      <div class="stat"><span class="eyebrow"><span class="key" style="background:var(--rev)"></span>Revenue</span><span class="v" id="sRev"></span><span class="s">ads, sponsor trials and Plus</span></div>
+      <div class="stat"><span class="eyebrow"><span class="key" style="background:var(--cost)"></span>AI cost</span><span class="v" id="sCost"></span><span class="s">model usage we pay for</span></div>
+      <div class="stat"><span class="eyebrow">Ads cover</span><span class="v" id="sCov"></span><span id="sChip"></span></div>
+      <div class="stat"><span class="eyebrow" id="sTotLbl">Per month</span><span class="v" id="sTot"></span><span class="s" id="sTotSub"></span></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-j">
+    <header><h2 id="h-j">Where sponsors appear, in the order people meet them</h2>
+      <p>Earnings are per average user per month at the current settings. The first screen stays clean on purpose.</p></header>
+    <ol class="journey" id="journey"></ol>
+  </section>
+
+  <section aria-labelledby="h-src">
+    <header><h2 id="h-src">Revenue by source</h2><p>Per average user per month. Hover or focus a bar for how it's worked out.</p></header>
+    <div class="chart"><div class="rows" id="srcRows"></div><div class="axis" id="srcAxis"></div></div>
+  </section>
+
+  <section aria-labelledby="h-t">
+    <header><h2 id="h-t">Does each kind of user pay for themselves?</h2>
+      <p>Each row has its own scale, because a power user costs over a thousand times more than a light one. Read each row as revenue against cost.</p></header>
+    <div class="chart">
+      <div class="legend"><span><span class="key" style="background:var(--rev)"></span>Revenue</span><span><span class="key" style="background:var(--cost)"></span>AI cost</span></div>
+      <div class="types" id="types"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="h-r">
+    <header><h2 id="h-r">What keeps it balanced</h2></header>
+    <div class="rules">
+      <div class="rule"><b>Free is an allowance, not unlimited</b>Everyone gets daily credits. Past that, people watch a spot, upgrade, or wait until tomorrow.</div>
+      <div class="rule"><b>Rewards follow the payout</b>A video spot gives back about 70% of what it earned. Turn the switch off in a lower-rate region to see the loss.</div>
+      <div class="rule"><b>Heavy users move to Plus or their own key</b>No ad volume pays for building an operating system. Their usage goes through Plus or their own API key.</div>
+      <div class="rule"><b>Sponsors stay beside the work</b>Nothing ever appears inside an answer, and nothing blocks a finished result.</div>
+    </div>
+  </section>
+
+  <details>
+    <summary>Assumptions and the full table</summary>
+    <div class="tablewrap"><table id="assume"></table></div>
+    <div class="tablewrap"><table id="detail"></table></div>
+  </details>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const CREDIT=0.005, PLUS_NET=7.4, PLUS_CAP=6, SPOT_CAP=300, SPOT_PAY_US=0.025, RAIL_SHARE=0.4;
+const REGIONS={us:{m:1,label:"US / EU"},mixed:{m:.55,label:"Mixed"},low:{m:.15,label:"Lower-rate"}};
+const TYPES=[
+  {name:"Light",share:.60,desc:"A few questions a day on Haiku",D:.09,J:32,code:0,trials:.03,plus:.003,usage:"30 Haiku messages, 2 images"},
+  {name:"Regular",share:.30,desc:"Daily chat, some images and designs",D:.62,J:132,code:0,trials:.08,plus:.02,usage:"100 Haiku + 20 Sonnet messages, 8 images, 4 designs"},
+  {name:"Heavy",share:.09,desc:"Codes most days on Haiku",D:4.5,J:410,code:30,trials:.15,plus:.10,usage:"300 Haiku + 60 Sonnet messages, 20 images, 30 code runs"},
+  {name:"Power",share:.01,desc:"Building something huge, like an operating system",D:171,J:1000,code:900,trials:.2,plus:.35,usage:"30 code runs a day plus Sonnet code work"}
+];
+const S={region:"us",allow:10,ecpm:2.5,follow:true,users:10000};
+
+function model(){
+  const m=REGIONS[S.region].m, perView=S.ecpm*m/1000, payout=SPOT_PAY_US*m;
+  const K=S.follow?Math.max(1,Math.floor(.7*payout/CREDIT)):4, spotValue=K*CREDIT, F=S.allow*30*CREDIT;
+  const avg={card:0,line:0,rail:0,spots:0,trials:0,plus:0,costFree:0,costAds:0,costPlus:0};
+  const types=TYPES.map(t=>{
+    const free=Math.min(t.D,F), rem=t.D-free;
+    const spots=Math.min(Math.ceil(rem/spotValue-1e-9),SPOT_CAP), covered=Math.min(rem,spots*spotValue), unserved=rem-covered;
+    const q=1-t.plus, p=t.plus;
+    const r={card:q*t.J*perView, line:t.J*perView, rail:t.code*RAIL_SHARE*perView, spots:q*spots*payout, trials:q*t.trials*Math.sqrt(m), plus:p*PLUS_NET};
+    const c={costFree:q*free, costAds:q*covered, costPlus:p*Math.min(t.D,PLUS_CAP)};
+    const rev=Object.values(r).reduce((a,b)=>a+b,0), cost=c.costFree+c.costAds+c.costPlus;
+    for(const k in r)avg[k]+=t.share*r[k]; for(const k in c)avg[k]+=t.share*c[k];
+    return {...t,r,c,rev,cost,spots,unserved:q*unserved,free};
+  });
+  avg.rev=avg.card+avg.line+avg.rail+avg.spots+avg.trials+avg.plus; avg.cost=avg.costFree+avg.costAds+avg.costPlus;
+  return {types,avg,K,payout,perView,F,m};
+}
+
+const money=v=>{const a=Math.abs(v);return (v<0?"−":"")+"$"+(a>=1000?Math.round(a).toLocaleString("en-US"):a>=10?a.toFixed(0):a>=1?a.toFixed(2):a.toFixed(3))};
+const ICON_OK='<svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>', ICON_BAD='<svg viewBox="0 0 24 24"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>';
+const chip=(ok,text)=>`<span class="chip ${ok?"ok":"short"}">${ok?ICON_OK:ICON_BAD}${text}</span>`;
+
+const SOURCES=[
+  {k:"card",name:"Working card",why:(M)=>`One sponsor view per job, ${money(M.perView*1000)} per 1,000 views. Plus users don't see it.`},
+  {k:"line",name:"Result line",why:(M)=>`One view per finished job, same rate. Everyone sees it, Plus included.`},
+  {k:"rail",name:"Code side rail",why:(M)=>`Only Code runs on wide screens, about ${RAIL_SHARE*100}% of them.`},
+  {k:"spots",name:"Video spots",why:(M)=>`Opt-in. Each pays about ${money(M.payout)} and gives back ${M.K} credit${M.K>1?"s":""} (${money(M.K*CREDIT)} of AI).`},
+  {k:"trials",name:"Sponsor trials",why:()=>`Affiliate signups from the earn sheet, averaged across all users.`},
+  {k:"plus",name:"Plus plan",why:()=>`$8 a month, about ${money(PLUS_NET)} after payment fees. More likely among heavy users.`}
+];
+
+function render(){
+  const M=model(), A=M.avg, cov=A.rev/A.cost;
+  document.getElementById("allowOut").textContent=`${S.allow} cr`;
+  document.getElementById("ecpmOut").textContent=`$${S.ecpm.toFixed(2)}`;
+  document.getElementById("sRev").textContent=money(A.rev);
+  document.getElementById("sCost").textContent=money(A.cost);
+  document.getElementById("sCov").textContent=Math.round(cov*100)+"%";
+  document.getElementById("sChip").innerHTML=cov>=1?chip(true,"Covered"):chip(false,`Short ${money(A.cost-A.rev)} per user`);
+  const tot=(A.rev-A.cost)*S.users;
+  document.getElementById("sTotLbl").textContent=`${S.users.toLocaleString("en-US")} users, per month`;
+  document.getElementById("sTot").textContent=(tot>=0?"+":"")+money(tot);
+  document.getElementById("sTotSub").textContent=`${money(A.rev*S.users)} in, ${money(A.cost*S.users)} out`;
+
+  const J=[
+    {t:"Open the app",d:"No ad on the first screen. People start working straight away.",none:true},
+    {t:"While a job runs",d:"A sponsor card in the working state: native text or a 336×280 / 300×250 rectangle.",k:"card"},
+    {t:"Watch a spot, if they want",d:"A 15 to 20 second video in the card, any shape, for credits.",k:"spots"},
+    {t:"Result is in",d:"The card folds to one sponsor line or a 320×50 banner under the result.",k:"line"},
+    {t:"Code on a wide screen",d:"A 300×600 ad in the empty right side, Code only.",k:"rail"},
+    {t:"Earn sheet",d:"Try a sponsor's tool for a bigger reward, keep a streak going.",k:"trials"},
+    {t:"Out of credits",d:"Watch a spot, wait for tomorrow, or move to Plus or their own key.",k:"plus"}
+  ];
+  document.getElementById("journey").innerHTML=J.map(s=>`<li class="${s.none?"none":""}"><b>${s.t}</b><p>${s.d}</p><div class="earns"><span>Earns</span><span class="num">${s.none?"nothing":money(A[s.k])}</span></div></li>`).join("");
+
+  const max=Math.max(...SOURCES.map(s=>A[s.k]));
+  const sorted=[...SOURCES].sort((a,b)=>A[b.k]-A[a.k]);
+  document.getElementById("srcRows").innerHTML=sorted.map(s=>`<div class="row"><span class="name">${s.name}</span><div class="track"><span class="bar rev" tabindex="0" data-tip="${s.name}: ${money(A[s.k])} per user. ${s.why(M)}" style="width:${A[s.k]/max*85}%"></span><span class="val">${money(A[s.k])}</span></div></div>`).join("");
+  document.getElementById("srcAxis").innerHTML=`<span></span><div><span>$0</span><span>${money(max)}</span></div>`;
+
+  document.getElementById("types").innerHTML=M.types.map(t=>{
+    const mx=Math.max(t.rev,t.cost), ok=t.rev>=t.cost;
+    const extra=t.unserved>0.01?`<p class="note">Past the free credits and the daily spot limit, they'd still want <b>${money(t.unserved)}</b> more AI a month. That has to go through Plus or their own API key.</p>`:
+      t.spots>0?`<p class="note">Uses up the free credits and watches about <b>${Math.round(t.spots/30*10)/10} spots a day</b> to keep going.</p>`:`<p class="note">The free credits cover everything they do.</p>`;
+    return `<div class="type"><div class="who"><b>${t.name}</b> <span class="num" style="color:var(--faint);font-size:12px">${Math.round(t.share*100)}% of users</span><p>${t.desc}</p></div>
+      <div class="pair">
+        <div class="track"><span class="bar rev" tabindex="0" data-tip="${t.name} revenue: ${money(t.rev)} a month" style="width:${t.rev/mx*80}%"></span><span class="val">${money(t.rev)}</span></div>
+        <div class="track"><span class="bar cost" tabindex="0" data-tip="${t.name} AI cost: ${money(t.cost)} a month (${t.usage})" style="width:${t.cost/mx*80}%"></span><span class="val">${money(t.cost)}</span></div>
+        ${chip(ok,ok?"Pays for itself":`Short ${money(t.cost-t.rev)}`)}${extra}
+      </div></div>`}).join("");
+
+  document.getElementById("assume").innerHTML=`<tr><th>Assumption</th><th>Value</th></tr>`+[
+    ["One credit","half a US cent of model cost"],["Free credits","set above, per user per day"],
+    ["Ad rate, US / EU","set above, per 1,000 views"],["Region multiplier",`US / EU 1×, Mixed 0.55×, Lower-rate 0.15× (now ${M.m}×)`],
+    ["Video spot payout, US / EU",money(SPOT_PAY_US)+" per completed view"],["Video spots",`at most 10 a day per person, ${M.K} credit${M.K>1?"s":""} each now`],
+    ["Plus","$8/month, "+money(PLUS_NET)+" after fees, covers up to "+money(PLUS_CAP)+" of AI"],
+    ["Model prices","Haiku 5.5 about $0.001 a message, Sonnet 5.5 about $0.01, an image about $0.03, a Haiku code run about $0.10"]
+  ].map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+  document.getElementById("detail").innerHTML=`<tr><th>User</th><th>Share</th><th>Monthly usage</th><th>Plus</th><th>Revenue</th><th>AI cost</th></tr>`+M.types.map(t=>`<tr><td>${t.name}</td><td class="n">${Math.round(t.share*100)}%</td><td>${t.usage}</td><td class="n">${(t.plus*100).toFixed(1)}%</td><td class="n">${money(t.rev)}</td><td class="n">${money(t.cost)}</td></tr>`).join("");
+}
+
+function seg(id,key,parse){document.getElementById(id).addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+  S[key]=parse(b.dataset.v);document.querySelectorAll(`#${id} button`).forEach(x=>x.setAttribute("aria-pressed",x===b));render()})}
+seg("region","region",v=>v); seg("users","users",Number);
+document.getElementById("allow").addEventListener("input",e=>{S.allow=+e.target.value;render()});
+document.getElementById("ecpm").addEventListener("input",e=>{S.ecpm=+e.target.value;render()});
+document.getElementById("follow").addEventListener("change",e=>{S.follow=e.target.checked;render()});
+
+const tip=document.getElementById("tip");
+function showTip(el,x,y){tip.textContent=el.dataset.tip;tip.hidden=false;const w=tip.offsetWidth;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,x+12))+"px";tip.style.top=(y+14)+"px"}
+document.addEventListener("pointermove",e=>{const b=e.target.closest("[data-tip]");if(b)showTip(b,e.clientX,e.clientY);else tip.hidden=true});
+document.addEventListener("focusin",e=>{const b=e.target.closest("[data-tip]");if(!b)return;const r=b.getBoundingClientRect();showTip(b,r.left,r.bottom)});
+document.addEventListener("focusout",()=>{tip.hidden=true});
+render();
+</script>
