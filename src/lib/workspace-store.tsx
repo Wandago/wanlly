@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 import {
+  FLOOR_CREDITS,
   IMAGE_MODEL_NAME,
   TOOLS,
   getModel,
@@ -27,6 +28,8 @@ export type Job = {
 
 type State = {
   credits: number;
+  /** Today's community floor. Locked until the first video of the day. */
+  floorUnlocked: boolean;
   modelId: string;
   tool: ToolId;
   jobs: Job[];
@@ -46,6 +49,7 @@ type Action =
   | { type: "finishJob"; id: string }
   | { type: "setSpot"; id: string; spot: SpotState }
   | { type: "earn"; amount: number; note?: string }
+  | { type: "unlockFloor" }
   | { type: "openGate"; needed: number }
   | { type: "closeGate" }
   | { type: "setEarnOpen"; open: boolean }
@@ -69,12 +73,14 @@ function sampleJob(tool: ToolId, id: string, modelName: string, credits: number)
   };
 }
 
+/** No free credits: everyone starts at zero and unlocks the day with one video. */
 const initialState: State = {
-  credits: 9,
-  modelId: "sonnet",
+  credits: 0,
+  floorUnlocked: false,
+  modelId: "haiku",
   tool: "chat",
   jobs: [
-    sampleJob("code", "seed-code", "Haiku 5.5", 0),
+    sampleJob("code", "seed-code", "Haiku 5.5", 3),
     sampleJob("design", "seed-design", "Sonnet 5.5", 4),
     sampleJob("images", "seed-images", IMAGE_MODEL_NAME, 3),
   ],
@@ -114,6 +120,16 @@ function reducer(state: State, action: Action): State {
         toast: { id: state.nextId, text: `+${action.amount} credits${action.note ? ` · ${action.note}` : ""}` },
         nextId: state.nextId + 1,
       };
+    case "unlockFloor":
+      return state.floorUnlocked
+        ? state
+        : {
+            ...state,
+            floorUnlocked: true,
+            credits: state.credits + FLOOR_CREDITS,
+            toast: { id: state.nextId, text: `Today's floor unlocked · +${FLOOR_CREDITS} credits` },
+            nextId: state.nextId + 1,
+          };
     case "openGate":
       return { ...state, gate: { needed: action.needed } };
     case "closeGate":

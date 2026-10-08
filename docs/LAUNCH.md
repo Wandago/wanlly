@@ -13,7 +13,7 @@ Pages already built (design preview, not wired up yet):
 1. People apply on `/beta`: name, email, country, what they want to build, how they heard about Wanlly, optional invite code.
 2. **Every applicant gets an invite link.** Each friend who applies with it moves them up.
 3. You approve people in **weekly groups** from the admin page. Start with 50, then 100, then 200, as long as cost and abuse stay under control.
-4. Approved people get an email, sign in, verify their phone, and get their welcome credits.
+4. Approved people get an email, sign in, verify their phone, and watch one video to unlock their first day.
 5. Who goes first: people with invites, people who wrote a real "what I want to build", a mix of countries, and low risk scores.
 
 The applications list is your audience even before people are approved. Email it every week with what you shipped.

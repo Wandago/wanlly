@@ -31,7 +31,7 @@ Score every candidate on these before applying. A "no" on any of the first four 
 | **Developer-tool affiliate programmes**, through PartnerStack and Impact | Affiliate (paid per sign-up or sale) | Sponsor cards and result lines for hosting, databases and design tools that fit what people are building. |
 | **Student Beans**, through the Awin affiliate network | Student discounts, paid per sale | Student offers in the Earn page and sponsor slots. Check UNiDAYS too; its publisher terms weren't confirmed. |
 
-These pay little and don't pay for videos, which is why the beta welcome grant exists.
+These pay little and don't pay for videos. Since there are no free credits, the beta opens only once AppLixir (Stage 1) is live.
 
 ### Stage 1: first real ad revenue (from launch)
 

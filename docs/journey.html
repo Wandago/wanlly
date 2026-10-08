@@ -211,10 +211,10 @@ add("Get started","invite","Invite email","Email · inbox",
 `<div style="padding:28px;display:flex;justify-content:center"><div class="card" style="max-width:560px;width:100%;gap:14px;padding:24px">
 <div style="display:flex;gap:10px;align-items:center">${MARK(28)}<b>Wanlly</b><span class="faint" style="margin-left:auto;font-size:12px">Monday 9:00</span></div>
 <h2 style="font-size:26px">Amina, your invite is here.</h2>
-<p class="muted">The idea you told us about, a booking app for your cousin's salon, is exactly why we built Wanlly. Your first 20 credits are waiting. That's enough to have Claude sketch the whole thing tonight.</p>
+<p class="muted">The idea you told us about, a booking app for your cousin's salon, is exactly why we built Wanlly. Watch one 20-second video and today's floor is yours. That's enough to have Claude sketch the whole thing tonight.</p>
 <span class="btn dark pill" style="align-self:flex-start;padding:11px 20px">Start building</span>
 <p class="faint" style="font-size:12.5px">This invite is for you and expires in 7 days. You're getting this because you requested early access at wanlly.com.</p></div></div>`,
-[["Personal","Quotes their own idea back to them. Feels like a person wrote it because a person's words are in it."],["Welcome credits","A one-time grant per verified person while rewarded ads are being approved."]]);
+[["Personal","Quotes their own idea back to them. Feels like a person wrote it because a person's words are in it."],["No free credits","There is no welcome grant. The first video unlocks the first day, so every credit is paid for by an ad."]]);
 
 add("Get started","signin","Sign in","wanlly.com/sign-in",
 `<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:400px;width:100%;gap:12px;padding:24px;text-align:center">
@@ -237,7 +237,7 @@ add("Get started","verify","Verify your phone","wanlly.com/welcome/phone",
 add("Get started","welcome","Welcome and first credits","wanlly.com/welcome",
 `<div style="flex:1;display:grid;place-items:center;padding:30px"><div class="card" style="max-width:520px;width:100%;gap:14px;padding:24px">
 <span class="eyebrow">Step 2 of 3</span><h2 style="font-size:26px">Here's how you'll never pay.</h2>
-<div class="grid g2">${[["⚡ 20","welcome credits, on us"],["▶ 1 a day","unlocks your daily floor: about an hour of Haiku"],["+4","for every extra 20-second video"],["⏱ 5 h","your window refreshes"]].map(([n,l])=>`<div class="card" style="padding:12px"><b style="font-family:var(--f-display);font-size:22px">${n}</b><span class="muted" style="font-size:12.5px">${l}</span></div>`).join("")}</div>
+<div class="grid g2">${[["0","free credits: ads pay for every one"],["▶ 1 a day","unlocks your daily floor: about an hour of Haiku"],["+4","for every extra 20-second video"],["⏱ 5 h","your window refreshes"]].map(([n,l])=>`<div class="card" style="padding:12px"><b style="font-family:var(--f-display);font-size:22px">${n}</b><span class="muted" style="font-size:12.5px">${l}</span></div>`).join("")}</div>
 <div class="rec"><b style="color:var(--tang-text)">Tip</b><span>Start with Haiku. It's quick, light on credits, and great for most first drafts. We'll suggest a bigger model when your task needs one.</span></div>
 <span class="btn dark" style="padding:11px">Next: what are you building?</span></div></div>`,
 [["Teach the economy once","Four numbers, no jargon. After this screen people understand credits, the daily floor, videos and windows."],["Cheapest first","Haiku is introduced as the smart default, not the budget option."]]);
@@ -335,7 +335,7 @@ add("Credits","usage","Usage and limits","app.wanlly.com/credits/usage",
 APP("Credits",`<h2 style="font-size:24px">Your usage</h2>
 <div class="grid g2">${[["This 5-hour window","62%","Resets in 2h 14m"],["This week","35%","Resets Monday"]].map(([t,v,s])=>`<div class="card"><span class="eyebrow">${t}</span><b style="font-family:var(--f-display);font-size:28px">${v}</b><div class="bar"><i style="width:${v}"></i></div><span class="faint" style="font-size:12.5px">${s}</span></div>`).join("")}</div>
 <div class="card tw"><table><tr><th>Model</th><th>Requests</th><th>Credits</th></tr>${[["Haiku 5.5","142","148"],["Sonnet 5.5","18","96"],["Opus 5.5","2","9"]].map(r=>`<tr>${r.map((c,i)=>`<td class="${i?"mono":""}">${c}</td>`).join("")}</tr>`).join("")}</table></div>
-<div class="card"><b>Credit history</b>${[["+4","Video · Fieldnote","10:42"],["−6","Sonnet · database plan","10:31"],["+20","Welcome credits","Mon"]].map(([a,t,w])=>`<div style="display:flex;gap:10px;font-size:13.5px"><b class="mono" style="width:36px;color:${a[0]==="+"?"var(--good)":"var(--ink)"}">${a}</b><span style="flex:1">${t}</span><span class="faint">${w}</span></div>`).join("")}</div>`),
+<div class="card"><b>Credit history</b>${[["+4","Video · Fieldnote","10:42"],["−6","Sonnet · database plan","10:31"],["+16","Today's floor · unlocked","8:02"]].map(([a,t,w])=>`<div style="display:flex;gap:10px;font-size:13.5px"><b class="mono" style="width:36px;color:${a[0]==="+"?"var(--good)":"var(--ink)"}">${a}</b><span style="flex:1">${t}</span><span class="faint">${w}</span></div>`).join("")}</div>`),
 [["Trust","Every credit in and out is listed. The same ledger powers abuse checks and support."],["Predictable","People see their limits before they hit them."]]);
 
 /* ---------- Account ---------- */
@@ -426,7 +426,7 @@ ${[["user_88213","9 accounts on one device","92","Frozen"],["kev_dev","Videos fi
 [["Human review","Bans based on automatic scores always get a person's review and an appeal path. EU law limits decisions made purely by automated scoring."]]);
 
 add("Admin","a-audit","Settings and audit log","admin.wanlly.com/audit",
-ADMIN("Audit log",`<div class="grid g2"><div class="card"><b>Global safety cap</b><span class="muted" style="font-size:13px">Pause free usage when AI spend today reaches</span><b class="mono" style="font-size:20px">$25.00</b></div><div class="card"><b>Welcome credits</b><span class="muted" style="font-size:13px">Per verified person, once</span><b class="mono" style="font-size:20px">20</b></div></div>
+ADMIN("Audit log",`<div class="grid g2"><div class="card"><b>Global safety cap</b><span class="muted" style="font-size:13px">Pause free usage when AI spend today reaches</span><b class="mono" style="font-size:20px">$25.00</b></div><div class="card"><b>Daily floor</b><span class="muted" style="font-size:13px">Unlocked by one video a day, from the pool</span><b class="mono" style="font-size:20px">16</b></div></div>
 <div class="card tw" style="padding:6px"><table><tr><th>When</th><th>Who</th><th>Action</th><th>Reason</th></tr>
 ${[["10:42","Louis","Approved 100 applicants","Weekly group 4"],["10:15","Grace","+20 credits to Amina W.","Failed build refunded"],["09:58","System","Froze user_88213","Risk score 92"],["Mon","Louis","Fable daily cap 300 → 400","Revenue up"]].map(r=>`<tr>${r.map((c,i)=>`<td class="${i===0?"mono":""}">${c}</td>`).join("")}</tr>`).join("")}</table></div>`),
 [["Audit trail","Required for accountability and useful in disputes. Kept even when other data is deleted, with personal details minimised."]]);

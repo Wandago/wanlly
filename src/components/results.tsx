@@ -14,7 +14,7 @@ function Meta({ job }: { job: Job }) {
         <Icon name="redo" size={15} />
       </button>
       <span className="ml-2">
-        {job.modelName} · {job.credits ? `${job.credits} cr` : "free"}
+        {job.modelName} · {job.credits} cr
       </span>
     </div>
   );
@@ -42,9 +42,9 @@ function ChatResult({ job }: { job: Job }) {
       </p>
       <h4 className="mt-1 font-semibold">A setup that holds up</h4>
       <ol className="flex list-decimal flex-col gap-1 pl-5">
-        <li>A free daily allowance that covers light use on a small model.</li>
-        <li>Opt-in sponsor spots that top up credits for bigger models.</li>
-        <li>A paid plan for people who go past what ads can cover.</li>
+        <li>No free credits: one video a day unlocks a small floor that&apos;s the same for everyone.</li>
+        <li>Opt-in sponsor videos that top up credits for bigger models.</li>
+        <li>A community pool, funded by higher-paying regions, that keeps the floor fair everywhere.</li>
       </ol>
       <pre className={pre}>
         <span className="text-faint">{"// credits are integer half-cents"}</span>

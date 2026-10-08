@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
 import { SPOT_REWARD, SPOT_SECONDS, type Sponsor } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
@@ -101,16 +101,22 @@ export function RewardedSpot({ aspect, sponsor, onDone, maxHeight }: { aspect: V
   return <VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />;
 }
 
+/** The /dev/ads reference turns this on to print each banner's size under it. */
+export const ShowAdSizes = createContext(false);
+
 /** Asks for the largest standard size that fits, the way a network's size mapping does. */
 function FittedDisplay({ sizes, sponsor, align = "center" }: { sizes: (keyof typeof DISPLAY_SIZES)[]; sponsor: Sponsor; align?: "center" | "start" }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const size = width ? pickSize(sizes, width) : null;
+  const showSize = useContext(ShowAdSizes);
   return (
     <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>
       {size ? (
         <div className="flex flex-col gap-1">
-          <DisplayCreative size={size} sponsor={sponsor} />
-          <span className="font-mono text-[10px] text-faint">{size}</span>
+          <div className="overflow-hidden rounded-xl">
+            <DisplayCreative size={size} sponsor={sponsor} />
+          </div>
+          {showSize && <span className="font-mono text-[10px] text-faint">{size}</span>}
         </div>
       ) : (
         <div style={{ height: width ? 0 : DISPLAY_SIZES[sizes[sizes.length - 1]].h }} />

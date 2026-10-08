@@ -1,14 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FREE_MODEL_ID, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER } from "@/lib/catalog";
+import { CHEAPEST_MODEL_ID, FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 
 /** Out-of-credits message, shown inside the composer instead of a pop-up. */
 function Gate() {
-  const { gate, credits, price, tool, modelName, dispatch } = useWorkspace();
+  const { gate, credits, price, tool, modelName, modelId, floorUnlocked, dispatch } = useWorkspace();
   const [phase, setPhase] = useState<"offer" | "playing" | "ready">("offer");
 
   useEffect(() => {
@@ -19,7 +19,9 @@ function Gate() {
 
   if (!gate) return null;
   const images = tool === "images";
-  const spots = Math.ceil((price - credits) / SPOT_REWARD);
+  const gain = floorUnlocked ? SPOT_REWARD : FLOOR_CREDITS;
+  const spots = Math.max(1, Math.ceil((price - credits - gain) / SPOT_REWARD) + 1);
+  const cheapest = getModel(CHEAPEST_MODEL_ID);
 
   return (
     <div className="flex flex-col gap-2.5 overflow-hidden rounded-[14px] border border-accent-line bg-accent-soft p-3 text-sm">
@@ -30,8 +32,8 @@ function Gate() {
             sponsor={SPOT_SPONSOR}
             maxHeight={220}
             onDone={() => {
-              dispatch({ type: "earn", amount: SPOT_REWARD });
-              setPhase(credits + SPOT_REWARD >= price ? "ready" : "offer");
+              dispatch(floorUnlocked ? { type: "earn", amount: SPOT_REWARD } : { type: "unlockFloor" });
+              setPhase(credits + gain >= price ? "ready" : "offer");
             }}
           />
         </div>
@@ -41,23 +43,29 @@ function Gate() {
         </p>
       ) : (
         <>
-          <p>
-            <b>{images ? "Images" : modelName}</b> needs {price} credits here and you have {credits}. Watch{" "}
-            {spots > 1 ? `${spots} short spots` : "one short spot"}
-            {images ? "" : ", or switch to Haiku 5.5 for free"}.
-          </p>
+          {floorUnlocked ? (
+            <p>
+              <b>{images ? "Images" : modelName}</b> needs {price} credits here and you have {credits}. Watch{" "}
+              {spots > 1 ? `${spots} short videos` : "one short video"}
+              {images || modelId === CHEAPEST_MODEL_ID ? "" : `, or switch to ${cheapest.name} for ${cheapest.credits} credit`}.
+            </p>
+          ) : (
+            <p>
+              <b>Unlock today first.</b> One 20-second video adds today&apos;s floor of {FLOOR_CREDITS} credits. There are no free credits; ads pay for every answer.
+            </p>
+          )}
           <div className="flex flex-wrap gap-2">
             <WatchButton onClick={() => setPhase("playing")} />
-            {!images && (
+            {floorUnlocked && !images && modelId !== CHEAPEST_MODEL_ID && (
               <button
                 type="button"
                 onClick={() => {
-                  dispatch({ type: "setModel", modelId: FREE_MODEL_ID });
-                  dispatch({ type: "toast", text: "Switched to Haiku 5.5, free" });
+                  dispatch({ type: "setModel", modelId: CHEAPEST_MODEL_ID });
+                  dispatch({ type: "toast", text: `Switched to ${cheapest.name}` });
                 }}
                 className="rounded-[9px] border border-line bg-surface px-[11px] py-[7px] text-[13px] font-medium hover:border-faint"
               >
-                Use Haiku 5.5 free
+                Use {cheapest.name} · {cheapest.credits} cr
               </button>
             )}
           </div>
@@ -146,9 +154,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
               );
             })}
           </div>
-          <span className={`ml-auto font-mono text-xs whitespace-nowrap ${price === 0 ? "text-good" : "text-faint"}`}>
-            {price === 0 ? "Free" : `${price} cr`}
-          </span>
+          <span className="ml-auto font-mono text-xs whitespace-nowrap text-faint">{price} cr</span>
           <button
             type="submit"
             aria-label="Send"

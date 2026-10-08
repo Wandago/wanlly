@@ -145,7 +145,7 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 
 ### Step 4: Ads, first version (Claude builds, you apply)
 **With no free tier, people can't use Wanlly until rewarded ads work, so this step gates the beta.**
-1. **Before AdSense approves you:** fill the slots with house ads (your own "invite a friend" and launch messages) and **self-serve affiliate programs** from developer tools. Those don't pay for videos, so beta testers need a **small welcome grant from your launch budget** until rewarded ads are approved (for example 20 credits, once per verified phone).
+1. **No free credits, not even a welcome grant.** So a rewarded video partner with server callbacks (AppLixir, see `docs/AD-PARTNERS.md`) must be live before the first beta tester signs in. Until AdSense approves you, fill the display slots with house ads and **self-serve affiliate programs** from developer and student brands.
 2. **You:** open publisher accounts with the Stage 1 partners in `docs/AD-PARTNERS.md`: **AppLixir** (rewarded video for web, with signed server callbacks) and one survey offerwall. Google's rewarded web ads come later through Ad Manager.
 3. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
 4. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
@@ -219,7 +219,7 @@ The Build Pass ad load (side panel on, a video about every 15 minutes) roughly t
 
 **At launch, revenue is close to zero:** ad networks need approval and traffic first, and you have no sponsors yet. So:
 - AI cost during the beta comes from your own budget plus any startup credits. **Pick a monthly number you're comfortable losing** ($20–50) and set it as both the Anthropic spend limit and Wanlly's global safety cap.
-- The only subsidy is the beta welcome grant, once per verified person, while rewarded ads are pending approval.
+- There is no welcome grant: the beta opens only once a rewarded video partner is live, so every credit is paid for by an ad.
 - Keep the beta invite-only until revenue per user is measured.
 
 **Rules that keep it solvent:**

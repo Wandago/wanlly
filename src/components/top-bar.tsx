@@ -7,11 +7,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 
 export function CreditTag({ credits }: { credits: number }) {
-  return credits === 0 ? (
-    <span className="rounded-full bg-good/14 px-[7px] py-0.5 font-mono text-[11px] font-medium whitespace-nowrap text-good">Free</span>
-  ) : (
-    <span className="rounded-full bg-hover px-[7px] py-0.5 font-mono text-[11px] font-medium whitespace-nowrap text-muted">{credits} cr</span>
-  );
+  return <span className="rounded-full bg-hover px-[7px] py-0.5 font-mono text-[11px] font-medium whitespace-nowrap text-muted">{credits} cr</span>;
 }
 
 function ModelPicker() {

@@ -11,8 +11,12 @@ export type Model = {
   credits: number;
 };
 
+/** Which illustration the cover art draws. Real sponsors upload their own cover image. */
+export type CoverKind = "db" | "deploy" | "type" | "print" | "notes" | "laptop" | "course" | "jobs";
+
 export type Sponsor = {
   name: string;
+  cover?: CoverKind;
   initial: string;
   color: string;
   /** Short line for display banners and video. */
@@ -40,7 +44,7 @@ export type Tool = {
 };
 
 export const MODELS: Model[] = [
-  { id: "haiku", name: "Haiku 5.5", group: "Anthropic", description: "Fast everyday answers", credits: 0 },
+  { id: "haiku", name: "Haiku 5.5", group: "Anthropic", description: "Fast everyday answers. Start here", credits: 1 },
   { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 2 },
   { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4 },
   { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10 },
@@ -48,9 +52,10 @@ export const MODELS: Model[] = [
   { id: "grok", name: "Grok", group: "Other providers", description: "xAI, fast with live web", credits: 2 },
 ];
 
-export const FREE_MODEL_ID = "haiku";
+export const CHEAPEST_MODEL_ID = "haiku";
 export const IMAGE_MODEL_NAME = "Wanlly Image";
-export const DAILY_ALLOWANCE = 40;
+/** The community floor: credits everyone unlocks each day by watching one video (about $0.08). */
+export const FLOOR_CREDITS = 16;
 export const SPOT_REWARD = 4;
 export const SPONSOR_TRIAL_REWARD = 25;
 /** Demo spots are short; real ones run 15 to 20 seconds. */
@@ -61,6 +66,7 @@ export const SPOT_SPONSOR: Sponsor = {
   name: "Fieldnote",
   initial: "F",
   color: "#1e7a55",
+  cover: "notes",
   headline: "Notes that organize themselves.",
   text: "Free for students.",
   cta: "Try it",
@@ -79,6 +85,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Explain prompt caching simply", "Compare Sonnet and Opus for coding"],
     sponsor: {
       name: "Northbeam DB",
+      cover: "db",
       headline: "Postgres that bills by the query.",
       initial: "N",
       color: "#0e7c66",
@@ -99,6 +106,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Add dark mode to settings", "Write tests for the ledger"],
     sponsor: {
       name: "Railhouse",
+      cover: "deploy",
       headline: "Ship every branch to its own URL.",
       initial: "R",
       color: "#2747d8",
@@ -119,6 +127,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Pricing page with three plans", "Settings screen, mobile"],
     sponsor: {
       name: "Typecase",
+      cover: "type",
       headline: "Type that makes the mock.",
       initial: "T",
       color: "#3a3340",
@@ -139,6 +148,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     suggestions: ["Mug on a sunlit counter, film grain", "Flat-lay of a desk setup"],
     sponsor: {
       name: "Printwell",
+      cover: "print",
       headline: "Your images, printed.",
       initial: "P",
       color: "#b4235a",
@@ -150,6 +160,38 @@ export const TOOLS: Record<ToolId, Tool> = {
     sample: "A ceramic mug on a sunlit kitchen counter, morning light",
   },
 };
+
+/** Student-friendly sponsors that rotate through the side panels. */
+export const RAIL_SPONSORS: Sponsor[] = [
+  {
+    name: "Lumen Laptops",
+    cover: "laptop",
+    initial: "L",
+    color: "#4f46e5",
+    headline: "Student pricing on every laptop.",
+    text: "Verify your student email and save up to 20% on the machine you'll build on.",
+    cta: "See student prices",
+  },
+  {
+    name: "Courseway",
+    cover: "course",
+    initial: "C",
+    color: "#c2410c",
+    headline: "Ship your first app in 30 days.",
+    text: "A free, project-based course. Build along with Wanlly and get a certificate.",
+    cta: "Start free",
+  },
+  {
+    name: "Internly",
+    cover: "jobs",
+    initial: "I",
+    color: "#0f766e",
+    headline: "Paid internships, remote-first.",
+    text: "Companies hiring students who build. Your Wanlly projects count as a portfolio.",
+    cta: "Browse roles",
+  },
+  SPOT_SPONSOR,
+];
 
 export function getModel(id: string): Model {
   return MODELS.find((m) => m.id === id) ?? MODELS[0];

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { DISPLAY_SIZES, VIDEO_ASPECTS, type DisplaySize, type VideoAspect } from "@/lib/ads";
 import type { Sponsor } from "@/lib/catalog";
+import { Cover } from "./cover";
 
 /* Mock creatives. In production these boxes are filled by the ad network or a sponsor's own file;
    only the frame around them (label, size, spacing) is ours. */
@@ -57,6 +58,24 @@ export function DisplayCreative({ size, sponsor }: { size: DisplaySize; sponsor:
 
   const tall = h >= 600;
   const narrow = w < 200;
+  // Medium and tall banners lead with the sponsor's cover image, like most real creatives.
+  if (!narrow && (tall || h >= 250)) {
+    return (
+      <div className="flex flex-col overflow-hidden rounded-md bg-white text-[#15171c]" style={{ width: w, height: h }}>
+        <Cover sponsor={sponsor} className={tall ? "" : "h-[122px]"} />
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 p-3.5">
+          <span className="text-[11px] font-semibold" style={{ color: sponsor.color }}>
+            {sponsor.name}
+          </span>
+          <div className={`font-display leading-[1.08] font-semibold tracking-[-0.02em] ${tall ? "text-[26px]" : "text-[17px]"}`}>{sponsor.headline}</div>
+          {tall && <p className="text-[13px] leading-snug text-[#5b6170]">{sponsor.text}</p>}
+          <span className="mt-auto self-start rounded-full px-3.5 py-1.5 text-[13px] font-semibold text-white" style={{ background: sponsor.color }}>
+            {sponsor.cta}
+          </span>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-3 overflow-hidden rounded-md p-4 text-white" style={bg}>
       <div className="flex items-center gap-2">

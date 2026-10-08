@@ -1,0 +1,243 @@
+<title>Wanlly Walkthrough</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a product tour. Each channel is a row: what it is and where the ads sit on the left, the real screen on the right. */
+:root {
+  --bg: #fbfbfc;
+  --surface: #ffffff;
+  --side: #f3f4f7;
+  --line: #e3e5eb;
+  --fg: #15171c;
+  --muted: #636a78;
+  --faint: #8a909c;
+  --accent: #ff5a1f;
+  --accent-text: #c2410c;
+  --accent-soft: #ffeee6;
+  --accent-line: #ffd2bf;
+  --shadow: 0 1px 2px rgb(20 24 35 / .05), 0 12px 32px rgb(20 24 35 / .08);
+  --f-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --f-body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111216; --surface: #17181d; --side: #0c0d10; --line: #272930; --fg: #ecedf1; --muted: #979daa; --faint: #747a86;
+    --accent: #ff6a33; --accent-text: #ff8a5c; --accent-soft: #2c160d; --accent-line: #5a2a16;
+    --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 12px 32px rgb(0 0 0 / .4); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111216; --surface: #17181d; --side: #0c0d10; --line: #272930; --fg: #ecedf1; --muted: #979daa; --faint: #747a86;
+  --accent: #ff6a33; --accent-text: #ff8a5c; --accent-soft: #2c160d; --accent-line: #5a2a16;
+  --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 12px 32px rgb(0 0 0 / .4); color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--f-body); margin: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: flex; flex-direction: column; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); letter-spacing: -.02em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(34px, 5vw, 52px); line-height: 1.04; font-weight: 600; }
+h2 { font-size: 26px; line-height: 1.15; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-size: 11px; letter-spacing: .09em; text-transform: uppercase; color: var(--faint); font-weight: 500; }
+.lede { color: var(--muted); font-size: 17px; max-width: 64ch; }
+.brand { display: inline-flex; align-items: center; gap: 8px; }
+.brand svg { width: 26px; height: 26px; }
+header.top { display: flex; flex-direction: column; gap: 16px; }
+nav.jump { display: flex; flex-wrap: wrap; gap: 8px; }
+nav.jump a { font-size: 13px; color: var(--muted); text-decoration: none; border: 1px solid var(--line); background: var(--surface); padding: 5px 12px; border-radius: 999px; }
+nav.jump a:hover { color: var(--fg); border-color: var(--faint); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rule { border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.rule b { font-weight: 600; }
+.rule p { color: var(--muted); font-size: 14px; }
+.rule .k { font-family: var(--f-mono); font-size: 12px; color: var(--accent-text); }
+
+section.ch { display: grid; grid-template-columns: minmax(0, 330px) minmax(0, 1fr); gap: 32px; align-items: start; scroll-margin-top: 20px; }
+.ch .text { display: flex; flex-direction: column; gap: 12px; position: sticky; top: 20px; min-width: 0; }
+.ch .text p { color: var(--muted); }
+.ads { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ads span { font-size: 13.5px; display: flex; gap: 8px; }
+.ads span::before { content: ""; flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-top: 8px; }
+.shots { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+figure { margin: 0; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+figure img { display: block; width: 100%; height: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--side); }
+figcaption { font-size: 13px; color: var(--faint); }
+.phones { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.phones img { border-radius: 22px; }
+.num { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
+footer { color: var(--faint); font-size: 13px; border-top: 1px solid var(--line); padding-top: 20px; }
+
+@media (max-width: 900px) {
+  section.ch { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .ch .text { position: static; }
+}
+@media (max-width: 560px) {
+  .phones { grid-template-columns: minmax(0, 1fr); max-width: 320px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="brand eyebrow">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><defs><mask id="m" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs><rect width="64" height="64" rx="16" fill="var(--fg)"/><path d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m)" fill="none" stroke="var(--bg)" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="32" cy="26" r="6.2" fill="var(--accent)"/></svg>
+      Wanlly · product walkthrough
+    </span>
+    <h1>Every channel, and where the ads live</h1>
+    <p class="lede">Screens from the running app on the <span class="num">feature/ui-shell</span> branch. Nobody gets free credits: the day starts with one video, and sponsor panels run on every page, built into the layout so they never cover the work. Replies, credits and ads are still simulated.</p>
+    <nav class="jump" aria-label="Jump to">
+      <a href="#start">Start of day</a><a href="#chat">Chat</a><a href="#code">Code</a><a href="#design">Design</a><a href="#images">Images</a><a href="#projects">Projects</a><a href="#coworkers">Coworkers</a><a href="#profile">Profile</a><a href="#earn">Earning</a><a href="#phone">Phone</a><a href="#dark">Dark mode</a>
+    </nav>
+  </header>
+
+  <div class="rules" aria-label="Ad placements">
+    <div class="rule"><span class="k">Left sidebar · every page</span><b>Compact sponsor card</b><p>A cover image, the sponsor's name and one line. Sits above the credits meter and refreshes about once a minute.</p></div>
+    <div class="rule"><span class="k">Right panel · 1280px and wider</span><b>Cover card, 300×250 and a Watch button</b><p>Its own column, so the work never shrinks behind it. Taller screens get the 300×250 banner as well.</p></div>
+    <div class="rule"><span class="k">While a job runs</span><b>Working card, then one line</b><p>A native card or banner with "Watch 20s +4", which folds to a single sponsored line when the answer is in.</p></div>
+    <div class="rule"><span class="k">Phones</span><b>320×50 banner in a tray</b><p>Pinned under the page, rounded, never on top of the composer. The sidebar card shows in the menu.</p></div>
+  </div>
+
+  <section class="ch" id="start">
+    <div class="text">
+      <span class="eyebrow">Start of day</span>
+      <h2>One video unlocks the day</h2>
+      <p>Every account starts at 0 credits. The first video of the day unlocks the community floor: 16 credits, about an hour of Haiku, the same in every country. After that, each extra video adds 4.</p>
+      <div class="ads"><span>The unlock card sits above the composer until the floor is unlocked</span><span>The video plays in place, with its own progress bar and the reward shown</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/01-home-locked.webp" alt="Workspace home at 0 credits with a Start today with one video card above the composer" width="1440" height="900" loading="lazy"><figcaption>Home at 0 credits: the floor is locked.</figcaption></figure>
+      <figure><img src="walkthrough/02-unlock-playing.webp" alt="A 16:9 sponsor video playing inside the unlock card" width="1440" height="900" loading="lazy"><figcaption>The unlock video playing in place.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="chat">
+    <div class="text">
+      <span class="eyebrow">Channel · Chat</span>
+      <h2>Chat</h2>
+      <p>Haiku 5.5 is the default at 1 credit a message. Smart pick suggests Sonnet, Opus or Fable only when a task needs it. Every reply shows its model and cost.</p>
+      <div class="ads"><span>While the answer is written: a working card with "Watch 20s +4"</span><span>After: one sponsored line under the answer, never inside it</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/08-chat-working.webp" alt="A chat reply being written, with a sponsor working card and a Watch 20s button" width="1440" height="900" loading="lazy"><figcaption>Working: the sponsor card fills the wait.</figcaption></figure>
+      <figure><img src="walkthrough/04-chat.webp" alt="A finished chat answer with a single sponsored line under it" width="1440" height="900" loading="lazy"><figcaption>Done: the card folds to one line.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="code">
+    <div class="text">
+      <span class="eyebrow">Channel · Code</span>
+      <h2>Code</h2>
+      <p>Works on a connected GitHub repo: reads the project, plans, edits, runs tests and opens a pull request. It never pushes to main. Long builds get a cost check before they start.</p>
+      <div class="ads"><span>A developer-tool sponsor in the working card, such as a hosting preview</span><span>The right panel stays up through the whole build</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/05-code.webp" alt="Code result with steps, a diff and an Open pull request button" width="1440" height="900" loading="lazy"><figcaption>A finished change, ready for a pull request.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="design">
+    <div class="text">
+      <span class="eyebrow">Channel · Design</span>
+      <h2>Design</h2>
+      <p>Describe a screen or page and get a live mock you can keep refining. Pages run in a locked preview with version history.</p>
+      <div class="ads"><span>A 320×50 banner under the result, rounded to match the cards</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/06-design.webp" alt="A phone onboarding screen designed in the Design channel" width="1440" height="900" loading="lazy"><figcaption>A habit-app onboarding screen.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="images">
+    <div class="text">
+      <span class="eyebrow">Channel · Images</span>
+      <h2>Images</h2>
+      <p>Four takes on every prompt, at a flat 3 credits. This channel stays Coming soon at launch until an image provider is added, since Claude doesn't make images.</p>
+      <div class="ads"><span>Print and merch sponsors fit naturally here</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/07-images.webp" alt="Four generated mug images in a grid" width="1440" height="900" loading="lazy"><figcaption>Four variations of a product shot.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="projects">
+    <div class="text">
+      <span class="eyebrow">Projects</span>
+      <h2>Projects</h2>
+      <p>Each project keeps its chats, files, instructions, connected repo, coworkers and teammates together. Instructions apply to every chat and coworker inside it, and the project shows what it cost this week.</p>
+      <div class="ads"><span>Both panels run here too: sidebar card and right panel</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/09-projects.webp" alt="Grid of six project cards with previews" width="1440" height="900" loading="lazy"><figcaption>All projects, filtered by channel.</figcaption></figure>
+      <figure><img src="walkthrough/10-project-detail.webp" alt="Salon booking app project with instructions, conversations, files, coworkers and people" width="1440" height="900" loading="lazy"><figcaption>Inside a project.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="coworkers">
+    <div class="text">
+      <span class="eyebrow">Coworkers</span>
+      <h2>Coworkers</h2>
+      <p>AI teammates that work in the background on a schedule, each inside a project, each with its own daily credit cap. They ask before anything leaves Wanlly: a pull request, an SMS through your Twilio, a post. Unlocks at 7 days old.</p>
+      <div class="ads"><span>The approval list comes first, so nothing waits on you unseen</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/11-coworkers.webp" alt="Coworkers page with approvals and coworker cards" width="1440" height="900" loading="lazy"><figcaption>Approvals, then each coworker's status, schedule and cap.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="profile">
+    <div class="text">
+      <span class="eyebrow">Profile</span>
+      <h2>Profile and settings</h2>
+      <p>One page for everything: name, student check, default model, theme, trust level, ad topics, where extra videos go, connections, notifications, devices and your data. Country comes from the network and can't be edited, because it sets ad rates.</p>
+      <div class="ads"><span>People choose the topics their ads are about, which also makes them pay better</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/12-profile.webp" alt="Profile settings with name, username, building, country and student fields" width="1440" height="900" loading="lazy"><figcaption>Profile and preferences.</figcaption></figure>
+      <figure><img src="walkthrough/13-profile-trust.webp" alt="Trust levels New, Established and Trusted, and ad topic chips" width="1440" height="900" loading="lazy"><figcaption>Trust levels and ad choices.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="earn">
+    <div class="text">
+      <span class="eyebrow">Earning</span>
+      <h2>Earn credits</h2>
+      <p>Open from the credits pill, the sidebar or the right panel. Videos, sponsor trials, surveys once the account is a week old, a streak, and "Watch to fund a creator", which sends the video's value to the community pool.</p>
+      <div class="ads"><span>Every way to earn is opt-in and labelled</span></div>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/14-earn.webp" alt="Earn credits dialog with five options" width="1440" height="900" loading="lazy"><figcaption>All the ways to earn.</figcaption></figure>
+    </div>
+  </section>
+
+  <section class="ch" id="phone">
+    <div class="text">
+      <span class="eyebrow">Phone</span>
+      <h2>On a phone</h2>
+      <p>Same channels, one column. The sidebar opens from the menu with its sponsor card, and a 320×50 banner sits in a tray under the page.</p>
+      <div class="ads"><span>Never over the composer, never inside an answer</span></div>
+    </div>
+    <div class="shots">
+      <div class="phones">
+        <figure><img src="walkthrough/15-phone-home.webp" alt="Phone home screen with the unlock card and a bottom banner" width="780" height="1688" loading="lazy"><figcaption>Home</figcaption></figure>
+        <figure><img src="walkthrough/16-phone-sidebar.webp" alt="Phone sidebar open with navigation, sponsor card and floor" width="780" height="1688" loading="lazy"><figcaption>Menu</figcaption></figure>
+        <figure><img src="walkthrough/17-phone-coworkers.webp" alt="Coworkers page on a phone" width="780" height="1688" loading="lazy"><figcaption>Coworkers</figcaption></figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="ch" id="dark">
+    <div class="text">
+      <span class="eyebrow">Dark mode</span>
+      <h2>Dark mode</h2>
+      <p>Follows the system setting, or the choice in Profile. Sponsor covers keep their own colours and sit in the same rounded frames.</p>
+    </div>
+    <div class="shots">
+      <figure><img src="walkthrough/19-dark-projects.webp" alt="Projects page in dark mode with sponsor panels" width="1440" height="900" loading="lazy"><figcaption>Projects in dark mode.</figcaption></figure>
+    </div>
+  </section>
+
+  <footer>Sponsors shown (Lumen Laptops, Courseway, Internly, Fieldnote, Northbeam DB, Railhouse, Typecase, Printwell) are made up for the design. Real ones come from the ad partners in the plan.</footer>
+</div>

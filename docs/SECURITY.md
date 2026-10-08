@@ -60,7 +60,7 @@ Most abuse comes from fresh accounts, so what an account can do grows with its h
 | Level | How you get there | What it unlocks |
 |---|---|---|
 | **New** | Verified phone, passed bot check, first video | Floor at 25% and growing daily; Haiku and Sonnet; low caps; no offerwall payouts yet |
-| **Established** | 7 days old, videos on at least 4 different days, no flags | Full floor; Opus; offerwalls; referral rewards |
+| **Established** | 7 days old, videos on at least 4 different days, no flags | Full floor; Opus; offerwalls; referral rewards; coworkers (with a daily credit cap each) |
 | **Trusted** | 30 days old, steady normal use, no flags | Fable; Code mode and long builds; higher caps |
 
 Code mode, the most expensive and most abusable tool, is never available to an account under 30 days old.
@@ -77,7 +77,6 @@ Credits can only come from the sources below. Each one has its own check, and **
 | Community floor | Account farming | One per verified person; unlocked by a video each day; New accounts get a fraction; can't be saved up; Haiku and Sonnet only; per-country share capped |
 | Referrals | Inviting your own fake accounts | Paid only when the invitee is verified and has watched videos on 3 different days; no reward when they share a device, network or phone range; monthly cap per referrer |
 | Student bonus | Fake university emails | Known university domain list, disposable domains blocked, one bonus per address, re-checked every year; small bonus |
-| Beta welcome grant | Farming at launch | Once per verified phone and device, during the beta only |
 | Admin grants | A compromised or careless admin | Logged with a reason; above a set amount needs a second admin |
 
 ## 4. Spending: stopping overuse and reselling
