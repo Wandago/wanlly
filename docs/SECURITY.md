@@ -4,6 +4,20 @@ Wanlly gives out access to paid AI models in exchange for ad views. That makes i
 
 No system is impossible to bypass. The goal is that **abuse costs the abuser more than it's worth**, is **spotted within minutes**, and **can never cost more than the daily safety cap.** Every layer below assumes the one before it can fail.
 
+## The guarantee: losses are always capped
+
+"Airtight" here means **the worst case is a known, small number**, not that nobody ever tries.
+
+| Level | Hard limit | Who sets it |
+|---|---|---|
+| One request | `max_tokens` and a task budget; cost reserved before the call | The model router |
+| One account, one day | Its own earned credits plus the community floor; a new account's floor is a fraction of that (see trust levels) | The ledger |
+| The community pool | Only money already received; per-country share capped | The daily pool job |
+| All of Wanlly, one day | The global safety cap, which pauses AI before it's exceeded | You, in the admin page |
+| The Anthropic account | The Console spend limit, the last backstop | You, in the Anthropic Console |
+
+**What a fake account is worth:** a new account's floor is a few US cents a day, usable only on Haiku and Sonnet, and can't be saved up. Getting it needs a real phone number (virtual numbers are blocked), a device we haven't seen, a passed bot check and a watched video every day. A SIM card costs more than weeks of that floor, so farming accounts loses money.
+
 ---
 
 ## 1. The rules that make bypassing pointless
@@ -39,6 +53,33 @@ New accounts start with **zero credits.** The first credits come from watching a
 - **No bots get ads:** suspected bots are never shown ads. That protects the AdSense / Ad Manager account from invalid-traffic bans, which would cut off all revenue.
 - **Never pay for clicks.** Rewards are for opt-in video views only; incentivized clicks break every ad network's rules.
 
+## 3b. Trust levels: new accounts can't do expensive things
+
+Most abuse comes from fresh accounts, so what an account can do grows with its history. Moving up is automatic; any risk flag moves an account back down.
+
+| Level | How you get there | What it unlocks |
+|---|---|---|
+| **New** | Verified phone, passed bot check, first video | Floor at 25% and growing daily; Haiku and Sonnet; low caps; no offerwall payouts yet |
+| **Established** | 7 days old, videos on at least 4 different days, no flags | Full floor; Opus; offerwalls; referral rewards |
+| **Trusted** | 30 days old, steady normal use, no flags | Fable; Code mode and long builds; higher caps |
+
+Code mode, the most expensive and most abusable tool, is never available to an account under 30 days old.
+
+## 3c. Every way credits can be created, and its guard
+
+Credits can only come from the sources below. Each one has its own check, and **every credit source has a daily cap per account.**
+
+| Source | Main risk | Guard |
+|---|---|---|
+| Rewarded video with a server callback (AppLixir and others) | Fake or replayed views | Signature check, new transaction ID, matches a view we started, reward matches the offer |
+| Rewarded video without a callback (Google's web rewarded ads) | Faked "reward granted" event in the browser | Single-use view ticket, realistic watch time, caps, **provisional credits** reconciled with the network's reports and reversed on mismatch; never offered to flagged accounts |
+| Offerwalls and surveys | Fake sign-ups, offer fraud | Only Established accounts; credits **held until the offer network's pending period clears**; their reversals reverse our credits; daily cap |
+| Community floor | Account farming | One per verified person; unlocked by a video each day; New accounts get a fraction; can't be saved up; Haiku and Sonnet only; per-country share capped |
+| Referrals | Inviting your own fake accounts | Paid only when the invitee is verified and has watched videos on 3 different days; no reward when they share a device, network or phone range; monthly cap per referrer |
+| Student bonus | Fake university emails | Known university domain list, disposable domains blocked, one bonus per address, re-checked every year; small bonus |
+| Beta welcome grant | Farming at launch | Once per verified phone and device, during the beta only |
+| Admin grants | A compromised or careless admin | Logged with a reason; above a set amount needs a second admin |
+
 ## 4. Spending: stopping overuse and reselling
 
 - **Rate limits** per user, device and IP on every API route (Cloudflare rate limiting), stricter for expensive models.
@@ -46,6 +87,8 @@ New accounts start with **zero credits.** The first credits come from watching a
 - **Request shape limits:** maximum prompt size, maximum attachment size, maximum agent steps, and a task budget on every agent run.
 - **No raw API access.** Wanlly never exposes an OpenAI-style endpoint. Everything goes through the UI, so it can't be plugged into other tools as a free API.
 - **The API key lives only on the server**, in Cloudflare secrets, with a separate key per environment and a spend limit on each.
+- **Bound sessions:** each sign-in session is tied to its device. A token copied to another machine or script stops working, and bot checks repeat silently during long sessions.
+- **Ads only count when someone can see them:** an ad view counts only while the tab is visible and the ad is on screen. Background tabs and hidden windows earn nothing, which also protects the ad accounts from invalid-traffic bans.
 
 ## 5. Detection: seeing abuse as it happens
 
@@ -72,6 +115,22 @@ Each signal adds to a **risk score**. Actions by score:
 
 You get an alert (email or Slack) for every freeze, and an **admin page** that shows the riskiest accounts, global spend today vs the cap, earnings vs spend by country, and a one-click **kill switch** per model and for the whole app.
 
+## 5b. Code mode, connections and agents
+
+Agents run code and act on connected accounts, so they get their own rules.
+
+- **No free compute:** each session has a dollar budget, a maximum running time, and limits on CPU-heavy work. Crypto mining, scanning the internet, mass scraping and hosting public services are banned and watched for.
+- **Limited network access:** the sandbox reaches only what builds need (package registries, the user's GitHub repo). Check Managed Agents' current networking options when building Step 6.
+- **Prompt injection:** files, repos and documents can contain hidden instructions. The agent never has our secrets, holds only the permissions the user granted, and **asks before any action outside the sandbox**: opening a pull request, sending a Twilio SMS, editing a Google Doc.
+- **Least privilege:** the GitHub App gets the chosen repos only, Google gets per-file access, and user keys (Twilio and similar) are encrypted and used only for the action the user started.
+
+## 5c. Accounts and admins
+
+- Sign-in with Google, GitHub or passkeys; email alert on a new device; a session list where people can sign out everywhere.
+- **Admins:** two-factor sign-in required, roles with least privilege, every action in the audit log, and big credit grants or unbans need a second admin.
+- **Our own bugs are a risk too:** a nightly job checks that every balance equals the sum of its ledger entries, and an alert fires if AI spend in any hour is more than 3× the usual rate. Above 5×, the most expensive models pause automatically until you look.
+- GitHub secret scanning on the repo, so a leaked key is caught at once.
+
 ## 6. Model misuse
 
 - Anthropic's usage policies apply to everything users send through Wanlly, and Wanlly is responsible for its users.
@@ -89,6 +148,22 @@ You get an alert (email or Slack) for every freeze, and an **admin page** that s
 - Design previews run in a sandboxed iframe with no network.
 - Dependencies kept updated; Sentry alerts on errors; a monthly review of the abuse dashboard.
 
+## Testing it before people do
+
+Before the beta opens, and again before each new credit source goes live:
+
+1. **Try to break it yourself** with a checklist: replay an ad callback, fake a reward event in the browser, run two devices on one account, sign up with a virtual number, invite your own second account, send a request with a huge prompt, and copy a session token to another machine. Each must fail and show up on the Abuse page.
+2. **Load test** the reserve-and-settle logic with many requests at once, so the balance can never go below zero.
+3. **Kill-switch drill:** pause a model and the whole app from the admin page and check it takes effect within a minute.
+4. **Reward people who report holes:** a security contact on the site and credits for valid reports.
+
+## When something goes wrong
+
+1. **Contain:** use the kill switch or freeze the accounts involved. Losses stop at once.
+2. **Check:** the ledger and request logs show what happened and to whom.
+3. **Reverse:** fraudulent credits are reversed with new ledger entries; real users are restored.
+4. **Fix and learn:** patch the hole, add the case to the testing checklist, and tell affected users if their data was involved (within 72 hours to regulators where required; see `docs/LEGAL.md`).
+
 ## Build order
 
 This lands alongside the plan's steps, not after them:
@@ -97,9 +172,10 @@ This lands alongside the plan's steps, not after them:
 |---|---|
 | Step 2: sign-in and database | Turnstile, verified sign-in, device hash, country, append-only ledger, per-user query scoping |
 | Step 3: real chat with limits | Reserve-and-settle, all caps, global safety cap, rate limits, request logging, refusal handling |
-| Step 4: ads | Server-side verification of rewarded views, earning caps, no ads for suspected bots |
-| Before the beta opens | Risk scoring job, alerts, admin page and kill switch, terms and privacy policy |
-| Step 6: Code mode | Sandbox isolation, task budgets, one active session per account |
+| Step 4: ads | Server-side verification of rewarded views, view tickets and provisional credits for partners without callbacks, earning caps, visible-only ad counting, no ads for suspected bots, trust levels, community floor rules, referral rules |
+| Before the beta opens | Risk scoring job, alerts, admin page and kill switch, ledger check and spend-spike breaker, admin two-factor, the break-it checklist, terms and privacy policy |
+| Offerwalls and student bonus | Pending-period holds and reversals, university domain list |
+| Step 6: Code mode | Trusted accounts only, session budgets and time limits, limited network access, approval before outside actions, one active session per account |
 
 ## Tools, by job
 
@@ -111,6 +187,8 @@ This lands alongside the plan's steps, not after them:
 | Device fingerprint | **FingerprintJS** open-source library (upgrade to Fingerprint Pro if abuse grows) | Free, then paid |
 | VPN, proxy and data-centre IP detection | Cloudflare's network data first; **IPinfo** or **IPQualityScore** free tiers for extra checks | Free tiers |
 | Phone verification | **Clerk** phone codes, or **Twilio Verify** | Per message |
+| Block virtual and VoIP numbers | **Twilio Lookup** line type check | Per lookup |
+| University emails | A public list of university domains, kept up to date | Free |
 | Verified ad views | The ad network's **server-side verification** callbacks | Free |
 | Invalid ad traffic | Google Ad Manager's built-in invalid-traffic filtering; never show ads to flagged accounts | Free |
 | Harmful prompts | Provider safety (Claude declines harmful requests and reports a refusal); a cheap Haiku check on flagged accounts | Pennies |

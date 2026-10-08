@@ -58,6 +58,7 @@ The goal: a student in Lagos and a student in Boston who watch the same ads get 
 **Guard rails**
 - The global daily safety cap still applies. When the pool is low, the floor shrinks before anything else does.
 - One floor per verified person (phone, device and sign-in checks from `docs/SECURITY.md`). Farmed accounts are the main threat to the pool.
+- New accounts get 25% of the floor, rising to the full floor by day 7. The floor works on Haiku and Sonnet only and can't be saved up, so fake accounts aren't worth making (trust levels in `docs/SECURITY.md`).
 - Pool funding, size, the floor and how many people it reached are on the admin dashboard every day.
 
 **"Watch to fund a creator"**: anyone can choose to watch extra videos into the pool instead of for themselves. The pool's impact is public: "This month, viewers and sponsors funded 4,200 builds by students in 61 countries." It's a growth story, a sponsor story and a grant story at once. Credits still can't be sent to a specific person, so they stay non-transferable.
