@@ -139,8 +139,8 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
       <div class="seg" id="load" role="group" aria-labelledby="l-load">
         <button data-v="light" aria-pressed="false">Quick questions</button><button data-v="std" aria-pressed="true">Daily use</button><button data-v="build" aria-pressed="false">Build Pass</button>
       </div></div>
-    <div class="ctl"><label for="floor">Minimum for everyone</label>
-      <div class="range"><input id="floor" type="range" min="0" max="40" step="5" value="15"><output id="floorOut" for="floor"></output></div></div>
+    <div class="ctl"><label for="floor">Free minimum (off: no free tier)</label>
+      <div class="range"><input id="floor" type="range" min="0" max="40" step="5" value="0"><output id="floorOut" for="floor"></output></div></div>
     <div class="ctl"><span class="lbl">Video partners</span>
       <label class="switch"><input id="multi" type="checkbox" checked> Several networks</label></div>
   </div>
@@ -232,7 +232,7 @@ const MODELS=[
   {name:"Fable 5.1",msg:.06,hour:4.5,note:"One big prompt can use a day"}
 ];
 const RATES={panelPerHour:.09,perJob:.005,videoUS:.03,keep:.7,days:12,users:10000,sonnetHour:.5};
-const S={region:"af",load:"std",floor:15,multi:true};
+const S={region:"af",load:"std",floor:0,multi:true};
 
 function videoPay(n,m,multi){const d=multi?.97:.86;return RATES.videoUS*m*Math.pow(d,n-1)}
 function day(r){

@@ -25,9 +25,26 @@ export function Sidebar() {
         aria-label="Sidebar"
       >
         <div className="flex items-center gap-2.5 px-2 pt-1 pb-3">
-          <span className="grid size-[26px] place-items-center rounded-lg bg-fg">
-            <span className="size-2.5 rounded-full bg-accent" />
-          </span>
+          {/* The app icon (public/brand/wanlly-app-icon.svg), drawn inline so it follows the theme. */}
+          <svg viewBox="0 0 64 64" className="size-[26px]" aria-hidden="true">
+            <defs>
+              <mask id="sidebar-node" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+                <rect width="64" height="64" fill="#fff" />
+                <circle cx="32" cy="26" r="8.8" fill="#000" />
+              </mask>
+            </defs>
+            <rect width="64" height="64" rx="16" className="fill-fg" />
+            <path
+              d="M11 21 L21 44 L32 26 L43 44 L53 21"
+              mask="url(#sidebar-node)"
+              fill="none"
+              strokeWidth={6.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="stroke-bg"
+            />
+            <circle cx="32" cy="26" r="6.2" className="fill-accent" />
+          </svg>
           <b className="font-display text-xl font-semibold tracking-[-0.02em]">Wanlly</b>
         </div>
         <button

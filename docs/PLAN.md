@@ -1,9 +1,11 @@
 # Wanlly build plan
 
-Wanlly is a free AI workspace with four tools (Chat, Code, Design, Images) in one composer, paid for by ads. People get a daily allowance on every model, sized by what their own ads earn, and can extend it by watching video spots. No paywall and no "bring your own API key".
+Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in one composer, paid for by ads. There is no free tier: everyone starts with zero credits and earns them by watching ads, and their allowance on every model is sized by what their own ads earned. No paywall and no "bring your own API key".
 
 - Cost and revenue model, by region and model: [`docs/ad-economics.html`](ad-economics.html) (also published as an interactive page)
 - UI reference: the running app on `feature/ui-shell`, and `/dev/ads` for every ad format
+- Anti-abuse architecture: [`docs/SECURITY.md`](SECURITY.md)
+- Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
 
 ---
 
@@ -12,12 +14,14 @@ Wanlly is a free AI workspace with four tools (Chat, Code, Design, Images) in on
 | Topic | Decision |
 |---|---|
 | Who pays | **Ads only at launch.** Sponsorship deals come later, once there are users to show. |
+| Free tier | **None.** New accounts start at zero credits and earn their first ones by watching a video. Nobody uses AI that their own ads didn't pay for, so there's no subsidy to fund. |
 | Paywall | None for now. A Plus plan is an optional extra for later. |
 | Own API keys | Not offered. The point of Wanlly is free access. |
 | Models | **Haiku 5.5** first for quick work and the bulk steps of every build. **Sonnet 5.5** is the default for building. **Opus 5.5** for the hard parts. **Fable 5.1** for a few big prompts. GPT, Codex and Grok follow the same rules once added. |
 | How usage is counted | **Tokens**, priced per model. Every model draws from the same budget, so bigger models use it faster. |
 | Limits | Like Claude: a **5-hour window** (about 60% of the day's budget), a **weekly cap** (about 5 days' worth), and a **countdown** when either runs out. When it runs out, people wait, watch a video, or switch to Haiku. |
-| Allowance by region | Each person's budget = **70% of what their own ads earned**, measured over time, plus a **minimum for everyone**. Country comes from Cloudflare at sign-up, but measured ad revenue decides, so VPNs don't help. |
+| Allowance by region | Each person's budget = **70% of what their own ads earned**, measured over time. Country comes from Cloudflare at sign-up, but measured ad revenue decides, so VPNs don't help. |
+| Abuse | Layered defences in `docs/SECURITY.md`: the browser is never trusted, credits only from verified ad callbacks, reserve-before-spend, caps at every level, risk scoring with automatic slow-down, freeze and ban, and a kill switch. |
 | Ad formats | Native sponsor card while a job runs, a 336×280 / 300×250 rectangle, inline video (16:9, 9:16, 1:1), a result line or 320×50 banner, a side panel that stays up while people work (desktop), a pinned bottom banner (phones), and a Build Pass (a video about every 15 minutes during long builds). |
 | Ad rules | Every ad is labeled. Nothing appears inside an answer. Nothing blocks a finished result. **Never reward clicks**: rewards come from opt-in videos only. |
 | Video rewards | Credits follow what each video actually paid, so a cheap video never loses money. Several ad networks bid, so prices drop more slowly. |
@@ -57,6 +61,9 @@ Each step says who does it. **You** = Louis, after work and on weekends. **Claud
 5. Send me the **non-secret** values: the Clerk publishable key, the Neon project name and the domain. **Never paste secret keys in chat.** I'll tell you where to put each one.
 6. Apply for startup credits where you qualify (Anthropic, Google for Startups, AWS Activate, Microsoft for Startups, Cloudflare for Startups). They're forms, not negotiations, and can cover months of AI.
 
+### Brand ✅ done
+Logo set (app icon, mark, wordmark, lockups, light and reversed) as vector SVG in `public/brand/`, the favicon, and the brand guidelines in the Wanlly design system.
+
 ### Step 1: UI shell ✅ done
 The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with the tool switch, the shared job flow, inline video spots, the earn sheet, and responsive ad slots in every format (`/dev/ads`). Replies, credits and ads are still simulated.
 
@@ -70,16 +77,18 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 1. Model router with Haiku 5.5, Sonnet 5.5, Opus 5.5 and Fable 5.1, streaming replies.
 2. Prompt caching, and summarizing long chats so requests stay small.
 3. **Token metering:** every reply records the actual tokens and cost the API reports.
-4. **Limits:** daily budget, 5-hour window, weekly cap, the minimum for everyone, a countdown, and a meter showing what's left on each model.
+4. **Limits:** earned balance, 5-hour window, weekly cap, a countdown, and a meter showing what's left on each model.
 5. **A global safety cap:** if total AI spend for the day hits your limit, free usage pauses with a clear message. You can never get a surprise bill.
 6. **You:** use it every day for a week and note anything that feels wrong.
 
 ### Step 4: Ads, first version (Claude builds, you apply)
-1. **Before AdSense approves you:** fill the slots with house ads (your own "invite a friend" and launch messages) and **self-serve affiliate programs** from developer tools. Those are sign-up forms with no negotiation, unlike sponsorship deals.
-2. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
-3. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
-4. Video spots: the server grants credits only after the ad network confirms the view.
-5. Phones: a pinned bottom banner. Desktop: the side panel.
+**With no free tier, people can't use Wanlly until rewarded ads work, so this step gates the beta.**
+1. **Before AdSense approves you:** fill the slots with house ads (your own "invite a friend" and launch messages) and **self-serve affiliate programs** from developer tools. Those don't pay for videos, so beta testers need a **small welcome grant from your launch budget** until rewarded ads are approved (for example 20 credits, once per verified phone).
+2. **You:** check which rewarded formats each network allows on a website (Google Ad Manager's rewarded web ads, AdSense's offerwall, and others) and apply for the one that fits.
+3. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
+4. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
+5. Video spots: the server grants credits only after the ad network confirms the view (server-side verification, see `docs/SECURITY.md`).
+6. Phones: a pinned bottom banner. Desktop: the side panel.
 
 ### Step 5: Images and Design (Claude builds)
 1. Images through an image API, saved to R2, with a flat token-based price.
@@ -124,17 +133,22 @@ The product won't promote itself, so start before it's finished.
 
 Full model: `docs/ad-economics.html`. All numbers are estimates until real data comes in.
 
-**What a free user gets per day** ("Daily use", 15-minute minimum for everyone):
+**What a user can earn per day from their own ads** ("Daily use"). Estimates from `docs/ad-economics.html` with the minimum for everyone turned off. Africa and South Asia earn a few minutes of Sonnet a day, so Haiku 5.5 is the realistic workhorse there.
 
 | Region | Haiku 5.5 | Sonnet 5.5 | Opus 5.5 | Fable 5.1 |
 |---|---|---|---|---|
-| Africa, South and Southeast Asia, Latin America | 1h 34m building / 125 messages | 15 min / 12 | 8 min / 6 | 2 messages |
+| Africa | 27 min building / 36 messages | 4 min / 3 | 2 min / 1 | none |
+| South Asia | 33 min / 44 | 5 min / 4 | 3 min / 2 | none |
+| Southeast Asia | 45 min / 60 | 7 min / 6 | 4 min / 3 | 1 message |
+| Latin America | 1h 08m / 90 | 11 min / 9 | 6 min / 4 | 1 message |
 | Western Europe | 3h 22m / 269 | 32 min / 26 | 18 min / 13 | 4 messages |
 | North America | 4h 45m / 379 | 46 min / 37 | 25 min / 18 | 6 messages |
 
+The Build Pass ad load (side panel on, a video about every 15 minutes) roughly triples these.
+
 **At launch, revenue is close to zero:** ad networks need approval and traffic first, and you have no sponsors yet. So:
 - AI cost during the beta comes from your own budget plus any startup credits. **Pick a monthly number you're comfortable losing** ($20–50) and set it as both the Anthropic spend limit and Wanlly's global safety cap.
-- Start the minimum for everyone small (for example 10 minutes of Sonnet a day) and raise it as ad revenue comes in. It's a setting, not code.
+- The only subsidy is the beta welcome grant, once per verified person, while rewarded ads are pending approval.
 - Keep the beta invite-only until revenue per user is measured.
 
 **Rules that keep it solvent:**
