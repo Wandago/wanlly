@@ -18,14 +18,15 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 | Topic | Decision |
 |---|---|
 | Who it's for | **Students and under-resourced creators anywhere in the world**: people with ideas and no budget for AI subscriptions. Not one region. |
-| Who pays | **Ads only at launch.** Sponsorship deals come later, once there are users to show. |
-| Free tier | **None.** New accounts start at zero credits and earn their first ones by watching a video. Nobody uses AI that their own ads didn't pay for, so there's no subsidy to fund. |
+| Who pays | **Ads only at launch.** Then **student-friendly advertisers** buy directly (see "Student-friendly advertisers" below) once there are users to show. |
+| Free tier | **None.** New accounts start at zero credits. Each day a person unlocks their allowance by watching one video, which is also a bot check. |
+| Community pool | **Everyone gets the same daily floor, wherever they live**, paid from a share of ad revenue already received. Higher-paying regions and sponsors fund it; see "Community pool" below. |
 | Paywall | None for now. A Plus plan is an optional extra for later. |
 | Own API keys | Not offered. The point of Wanlly is free access. |
 | Models | **Haiku 5.5** first for quick work and the bulk steps of every build. **Sonnet 5.5** is the default for building. **Opus 5.5** for the hard parts. **Fable 5.1** for a few big prompts. GPT, Codex and Grok follow the same rules once added. |
 | How usage is counted | **Tokens**, priced per model. Every model draws from the same budget, so bigger models use it faster. |
 | Limits | Like Claude: a **5-hour window** (about 60% of the day's budget), a **weekly cap** (about 5 days' worth), and a **countdown** when either runs out. When it runs out, people wait, watch a video, or switch to Haiku. |
-| Allowance by region | Each person's budget = **70% of what their own ads earned**, measured over time. Country comes from Cloudflare at sign-up, but measured ad revenue decides, so VPNs don't help. |
+| Allowance | **The bigger of:** the community floor, or 70% of what their own ads earned. Watching more always adds more. Measured ad revenue decides, not the country someone claims, so VPNs don't help. |
 | Abuse | Layered defences in `docs/SECURITY.md`: the browser is never trusted, credits only from verified ad callbacks, reserve-before-spend, caps at every level, risk scoring with automatic slow-down, freeze and ban, and a kill switch. |
 | Ad formats | Native sponsor card while a job runs, a 336×280 / 300×250 rectangle, inline video (16:9, 9:16, 1:1), a result line or 320×50 banner, a side panel that stays up while people work (desktop), a pinned bottom banner (phones), and a Build Pass (a video about every 15 minutes during long builds). |
 | Ad rules | Every ad is labeled. Nothing appears inside an answer. Nothing blocks a finished result. **Never reward clicks**: rewards come from opt-in videos only. |
@@ -41,6 +42,49 @@ Wanlly is a hub, like Higgsfield but for building: chat, code, design, images an
 - **Templates:** one-tap recipes (prompt, starter project, model and connections), the "Higgsfield presets" of building.
 - **Connections:** GitHub (GitHub App, per repo), Google Workspace (per-file first), Twilio and similar with the person's own encrypted keys; Slack, Notion and M-Pesa Daraja next. Built on MCP where possible.
 - **Admin roles:** Owner, Admin, Moderator, Support, Analyst, Ambassador, with every action in an audit log.
+
+## Community pool
+
+The goal: a student in Lagos and a student in Boston who watch the same ads get the same daily floor.
+
+**How it works**
+1. Every ad view earns its owner their normal share (70% of what that view paid).
+2. **15% of last month's actual ad revenue** (from the house share, plus a set slice of every direct sponsorship) goes into the pool. The pool is money already in the bank, never a promise against future revenue.
+3. Each morning the pool is divided into a **daily floor** for every active, verified person. Starting target: **about 1 hour of Haiku building, or 8 Sonnet messages** (10 minutes of Sonnet-equivalent, about $0.08). The floor moves with the pool, and can only go down by a set amount per week, so it never collapses overnight.
+4. A person's allowance for the day is the bigger of the floor or what their own ads earned. In Africa and South Asia most people use the floor; in the US and Europe most people's own ads earn more than it.
+5. The floor is **unlocked by watching one video a day.** That keeps "no free tier" true, proves a human is there, and keeps bots from draining the pool.
+
+**Guard rails**
+- The global daily safety cap still applies. When the pool is low, the floor shrinks before anything else does.
+- One floor per verified person (phone, device and sign-in checks from `docs/SECURITY.md`). Farmed accounts are the main threat to the pool.
+- Pool funding, size, the floor and how many people it reached are on the admin dashboard every day.
+
+**"Watch to fund a creator"**: anyone can choose to watch extra videos into the pool instead of for themselves. The pool's impact is public: "This month, viewers and sponsors funded 4,200 builds by students in 61 countries." It's a growth story, a sponsor story and a grant story at once. Credits still can't be sent to a specific person, so they stay non-transferable.
+
+**What it costs** (from `docs/ad-economics.html`, Daily use): with a global student mix (about a third of users in North America, Europe and East Asia), a 10-minute floor leaves about 20% of ad revenue for hosting and margin. With the earlier Africa-heavy mix, the same floor leaves about 7%, so the floor starts at 10 minutes and only rises as the mix and sponsors allow.
+
+## Student-friendly advertisers
+
+Students and early-career creators are an audience advertisers want and pay extra to reach. Wanlly sells to them directly once it has numbers.
+
+| Category | Examples of who to approach |
+|---|---|
+| Learning | Online courses, bootcamps, language apps, exam prep |
+| Developer tools | Hosting, databases, design tools, AI and API companies wanting new developers |
+| Hardware | Laptops, phones, headphones, student offers |
+| Careers | Internship and job boards, freelance marketplaces, remote-work platforms |
+| Money and connectivity | Student bank accounts, mobile money, telecom data bundles (often local, strong in Africa and Asia) |
+
+**Formats they buy:** a sponsor card while jobs run, "Today's Sonnet is brought to you by", a sponsor trial (try their tool for credits), sponsored templates, and sponsored weekend challenges and hackathons.
+
+**How it's sold**
+1. A one-page **media kit** at `/advertise`: monthly users, countries, share of verified students, top skills people build with, and ad formats with prices.
+2. **Verified students:** an optional university-email check. A verified student gets a bonus on their daily allowance, and advertisers pay more to reach verified students.
+3. Pricing starts simple: a flat weekly fee per format, or a fixed price per 1,000 views to verified students. Let advertisers buy directly once the dashboard proves the numbers.
+4. **A set slice of every sponsorship funds the community pool**, and each sponsor gets a report: "Your campaign funded 3,100 builds in 48 countries." Many companies have budgets for exactly this kind of impact.
+5. Rules stay the same: every ad labelled, nothing inside answers, no targeting by sensitive data, 18+ only during the beta.
+
+**When:** start conversations at about 2,000 monthly users; close the first deal by about 5,000. Before then, affiliate programmes from developer tools fill the same slots.
 
 ---
 
@@ -103,8 +147,9 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 2. **You:** check which rewarded formats each network allows on a website (Google Ad Manager's rewarded web ads, AdSense's offerwall, and others) and apply for the one that fits.
 3. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
 4. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
-5. Video spots: the server grants credits only after the ad network confirms the view (server-side verification, see `docs/SECURITY.md`).
-6. Phones: a pinned bottom banner. Desktop: the side panel.
+5. **Community pool:** daily pool sizing job, the floor unlocked by one video a day, a "Watch to fund a creator" option, and the pool on the admin dashboard.
+6. Video spots: the server grants credits only after the ad network confirms the view (server-side verification, see `docs/SECURITY.md`).
+7. Phones: a pinned bottom banner. Desktop: the side panel.
 
 ### Step 5: Images and Design (Claude builds)
 1. Images through an image API, saved to R2, with a flat token-based price.
@@ -130,7 +175,8 @@ Launch with Chat and Design first. Design builds single-page sites that run safe
 3. Open up once ad revenue per user is measured and the limits hold.
 
 ### Later
-- Sponsorship deals (compute pools, "Today's Sonnet is brought to you by", local sponsors) once you have users and numbers to show.
+- Direct deals with student-friendly advertisers (see above): media kit at `/advertise`, university-email verification for students, sponsor impact reports.
+- Grants and access programmes for under-resourced creators, using the pool's public impact numbers.
 - Several video ad networks bidding through Google Ad Manager.
 - GPT, Codex and Grok in the model router.
 - Plugins over MCP (GitHub, Google Drive, Notion).
@@ -156,7 +202,7 @@ The product won't promote itself, so start before it's finished.
 
 Full model: `docs/ad-economics.html`. All numbers are estimates until real data comes in.
 
-**What a user can earn per day from their own ads** ("Daily use"). Estimates from `docs/ad-economics.html` with the minimum for everyone turned off. Africa and South Asia earn a few minutes of Sonnet a day, so Haiku 5.5 is the realistic workhorse there.
+**What a user can earn per day from their own ads** ("Daily use"). Estimates from `docs/ad-economics.html` with the community floor turned off. Africa and South Asia earn a few minutes of Sonnet a day on their own, which is why the community pool exists: with a 10-minute floor, everyone gets at least about 1 hour of Haiku building or 8 Sonnet messages a day.
 
 | Region | Haiku 5.5 | Sonnet 5.5 | Opus 5.5 | Fable 5.1 |
 |---|---|---|---|---|
@@ -176,7 +222,7 @@ The Build Pass ad load (side panel on, a video about every 15 minutes) roughly t
 
 **Rules that keep it solvent:**
 1. Every token is counted. No model is unlimited.
-2. Each person's allowance follows what their own ads actually earned.
+2. Each person's allowance is the community floor or what their own ads earned, whichever is bigger. The floor is paid only from revenue already received.
 3. A global daily safety cap on total AI spend.
 4. Video rewards follow what each video paid.
 5. Verified sign-up (one person, one allowance), rate limits and reward caps. Bots are the fastest way to lose money.

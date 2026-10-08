@@ -130,7 +130,7 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
   <header style="display:flex;flex-direction:column;gap:12px">
     <span class="brand eyebrow"><i></i>Wanlly · business model</span>
     <h1>What a free user gets, everywhere</h1>
-    <p class="lede">Ads pay very different amounts in different countries, so the daily allowance each person gets is set by what their own ads earn, plus a minimum everyone gets that sponsors help fund. Pick a region and a way of using Wanlly to see a realistic day. Rates are industry ballparks to replace with real data after launch.</p>
+    <p class="lede">Ads pay very different amounts in different countries, so the daily allowance each person gets is the bigger of what their own ads earn or the community floor: the same daily minimum for everyone, paid from a share of ad revenue already received. Pick a region and a way of using Wanlly to see a realistic day. Rates are industry ballparks to replace with real data after launch.</p>
   </header>
 
   <div class="controls" role="group" aria-label="Settings">
@@ -139,8 +139,12 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
       <div class="seg" id="load" role="group" aria-labelledby="l-load">
         <button data-v="light" aria-pressed="false">Quick questions</button><button data-v="std" aria-pressed="true">Daily use</button><button data-v="build" aria-pressed="false">Build Pass</button>
       </div></div>
-    <div class="ctl"><label for="floor">Free minimum (off: no free tier)</label>
-      <div class="range"><input id="floor" type="range" min="0" max="40" step="5" value="0"><output id="floorOut" for="floor"></output></div></div>
+    <div class="ctl"><span class="lbl" id="l-mix">Who uses it</span>
+      <div class="seg" id="mix" role="group" aria-labelledby="l-mix">
+        <button data-v="global" aria-pressed="true">Global students</button><button data-v="af" aria-pressed="false">Mostly Africa and Asia</button>
+      </div></div>
+    <div class="ctl"><label for="floor">Community floor (Sonnet minutes a day)</label>
+      <div class="range"><input id="floor" type="range" min="0" max="40" step="5" value="10"><output id="floorOut" for="floor"></output></div></div>
     <div class="ctl"><span class="lbl">Video partners</span>
       <label class="switch"><input id="multi" type="checkbox" checked> Several networks</label></div>
   </div>
@@ -171,7 +175,7 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
 
   <section aria-labelledby="h-world">
     <header><h2 id="h-world">Every region, every model</h2>
-      <p>Minutes of building per day on each model, with chat messages underneath, for the way of using it chosen above. Darker means more. The minimum for everyone is included.</p></header>
+      <p>Minutes of building per day on each model, with chat messages underneath, for the way of using it chosen above. Darker means more. The community floor is included.</p></header>
     <div class="card">
       <div class="tablewrap"><table id="matrix"></table></div>
       <div class="scale" id="scale"></div>
@@ -179,8 +183,8 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
   </section>
 
   <section aria-labelledby="h-fund">
-    <header><h2 id="h-fund">Who pays for the minimum</h2>
-      <p>Most traffic will come from Africa and Asia, where ads pay least. Higher-paying regions and sponsors cover the gap. This is the monthly total at 10,000 monthly users, each active about 12 days a month, in the traffic mix shown in the table.</p></header>
+    <header><h2 id="h-fund">Who pays for the community pool</h2>
+      <p>Students and creators everywhere get the same floor. Views from higher-paying regions, and later student-friendly sponsors, pay for the people whose own ads earn less. This is the monthly total at 10,000 monthly users, each active about 12 days a month, in the user mix chosen above.</p></header>
     <div class="grid2" id="fund"></div>
   </section>
 
@@ -194,7 +198,7 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
     </div>
     <div class="grid2">
       <div class="rule"><b>Several networks bid on every spot</b>Google Ad Manager plus other video exchanges through header bidding on web, and mediation on mobile. More buyers, fewer repeats.</div>
-      <div class="rule"><b>Local sponsors</b>Telecoms, mobile money, banks and schools pay well to reach young builders in Nigeria, Kenya, India or Indonesia, often more than global networks pay there.</div>
+      <div class="rule"><b>Student-friendly sponsors</b>Learning platforms, developer tools, laptop makers, job boards, banks and telecoms pay well to reach students and young builders, often more than global networks pay in low-rate regions.</div>
       <div class="rule"><b>Mix the formats</b>After a few videos, offer a sponsor trial or a playable ad instead. Each format draws from a different advertiser budget.</div>
       <div class="rule"><b>Sponsorships don't decay</b>A flat-fee "Today's Sonnet is brought to you by" deal or a compute pool pays the same no matter how many videos someone watched.</div>
     </div>
@@ -209,15 +213,16 @@ summary{padding:14px 16px;cursor:pointer;font-weight:550}
 
 <script>
 /* All money is US dollars per active day unless noted. */
+/* share: fraction of users in each region, for each user mix. */
 const REGIONS=[
-  {id:"af",name:"Africa",eg:"Nigeria, Kenya, Ghana, Egypt",m:.08,share:.35},
-  {id:"sa",name:"South Asia",eg:"India, Pakistan, Bangladesh",m:.10,share:.23},
-  {id:"sea",name:"Southeast Asia",eg:"Indonesia, Philippines, Vietnam",m:.14,share:.15},
-  {id:"latam",name:"Latin America",eg:"Brazil, Mexico, Colombia",m:.22,share:.10},
-  {id:"gulf",name:"Gulf",eg:"UAE, Saudi Arabia, Qatar",m:.45,share:.03},
-  {id:"eap",name:"East Asia and Oceania",eg:"Japan, Korea, Australia",m:.65,share:.04},
-  {id:"weu",name:"Western Europe",eg:"UK, Germany, France",m:.70,share:.05},
-  {id:"na",name:"North America",eg:"US, Canada",m:1,share:.05}
+  {id:"af",name:"Africa",eg:"Nigeria, Kenya, Ghana, Egypt",m:.08,share:{global:.20,af:.35}},
+  {id:"sa",name:"South Asia",eg:"India, Pakistan, Bangladesh",m:.10,share:{global:.20,af:.23}},
+  {id:"sea",name:"Southeast Asia",eg:"Indonesia, Philippines, Vietnam",m:.14,share:{global:.13,af:.15}},
+  {id:"latam",name:"Latin America",eg:"Brazil, Mexico, Colombia",m:.22,share:{global:.12,af:.10}},
+  {id:"gulf",name:"Gulf",eg:"UAE, Saudi Arabia, Qatar",m:.45,share:{global:.03,af:.03}},
+  {id:"eap",name:"East Asia and Oceania",eg:"Japan, Korea, Australia",m:.65,share:{global:.07,af:.04}},
+  {id:"weu",name:"Western Europe",eg:"UK, Germany, France",m:.70,share:{global:.10,af:.05}},
+  {id:"na",name:"North America",eg:"US, Canada",m:1,share:{global:.15,af:.05}}
 ];
 const LOADS={
   light:{name:"Quick questions",hours:.5,jobs:15,videos:2,sponsor:.02,desc:"about half an hour of chat"},
@@ -232,7 +237,7 @@ const MODELS=[
   {name:"Fable 5.1",msg:.06,hour:4.5,note:"One big prompt can use a day"}
 ];
 const RATES={panelPerHour:.09,perJob:.005,videoUS:.03,keep:.7,days:12,users:10000,sonnetHour:.5};
-const S={region:"af",load:"std",floor:0,multi:true};
+const S={region:"af",load:"std",floor:10,mix:"global",multi:true};
 
 function videoPay(n,m,multi){const d=multi?.97:.86;return RATES.videoUS*m*Math.pow(d,n-1)}
 function day(r){
@@ -260,10 +265,10 @@ function render(){
   ].map(x=>`<div><span>${x[0]}</span><span class="num">${money(x[1])}</span></div>`).join("")+
    `<div class="tot"><span>Their ads earn</span><span class="num">${money(d.earned)}</span></div>
     <div><span>70% goes to their AI</span><span class="num">${money(d.own)}</span></div>
-    ${d.topUp>0?`<div><span>Topped up to the minimum</span><span class="num">+${money(d.topUp)}</span></div>`:""}
+    ${d.topUp>0?`<div><span>Topped up by the community pool</span><span class="num">+${money(d.topUp)}</span></div>`:""}
     <div class="tot"><span>AI budget for the day</span><span class="num">${money(d.budget)}</span></div>`;
   document.getElementById("buys").innerHTML=MODELS.map(mo=>`<div class="model"><b>${mo.name}</b><span class="big">${mins(d.budget/mo.hour)}</span><small>of building, or ${msgs(d.budget/mo.msg)}</small><span class="tag">${mo.note}</span></div>`).join("");
-  document.getElementById("floorNote").textContent=d.topUp>0?`Their own ads cover ${Math.round(d.own/d.budget*100)}% of this. The rest is the minimum everyone gets, funded by higher-paying regions and sponsors.`:`Their own ads cover all of this, above the minimum.`;
+  document.getElementById("floorNote").textContent=d.topUp>0?`Their own ads cover ${Math.round(d.own/d.budget*100)}% of this. The rest comes from the community pool, funded by higher-paying regions and sponsors.`:S.floor?`Their own ads earn more than the community floor, so they need nothing from the pool.`:`The community floor is off: this is only what their own ads earn.`;
 
   // Limits mock: Sonnet window halfway used.
   const win=d.budget*.6, week=d.budget*5;
@@ -279,7 +284,7 @@ function render(){
   const shade=v=>{const t=Math.log10(v+1)/maxH;const i=Math.min(6,Math.max(0,Math.floor(t*7)));return i};
   const cls=["q1","q2","q3","q4","q5","q6","q7"];
   document.getElementById("matrix").innerHTML=`<tr><th class="r">Region<small>share of traffic</small></th>${MODELS.map(mo=>`<th>${mo.name}</th>`).join("")}</tr>`+
-    all.map(a=>`<tr class="${a.x.id===S.region?"sel":""}"><td class="lbl">${a.x.name}<small>${Math.round(a.x.share*100)}% of users</small></td>${MODELS.map(mo=>{
+    all.map(a=>`<tr class="${a.x.id===S.region?"sel":""}"><td class="lbl">${a.x.name}<small>${Math.round(a.x.share[S.mix]*100)}% of users</small></td>${MODELS.map(mo=>{
       const minutes=a.d.budget/mo.hour*60, i=shade(minutes), dark=document.documentElement.matches("[data-theme=dark]")||(!document.documentElement.matches("[data-theme=light]")&&matchMedia("(prefers-color-scheme: dark)").matches);
       const ink=(dark?i>=4:i>=3)?(dark?"#0b0b0b":"#ffffff"):"var(--fg)";
       return `<td tabindex="0" style="background:var(--${cls[i]});color:${ink}" data-tip="${a.x.name}, ${mo.name}: ${mins(minutes/60)} of building or ${msgs(a.d.budget/mo.msg)} a day">${mins(minutes/60)}<small>${msgs(a.d.budget/mo.msg)}</small></td>`}).join("")}</tr>`).join("");
@@ -287,13 +292,13 @@ function render(){
 
   // Funding
   const N=RATES.users*RATES.days;
-  let rev=0,cost=0,topUp=0;all.forEach(a=>{rev+=a.x.share*a.d.earned*N;cost+=a.x.share*a.d.own*N;topUp+=a.x.share*a.d.topUp*N});
-  const margin=rev-cost, gap=topUp-margin;
+  let rev=0,cost=0,topUp=0;all.forEach(a=>{const sh=a.x.share[S.mix];rev+=sh*a.d.earned*N;cost+=sh*a.d.own*N;topUp+=sh*a.d.topUp*N});
+  const margin=rev-cost, gap=topUp-margin, left=Math.round((margin-topUp)/rev*100);
   document.getElementById("fund").innerHTML=`
     <div class="rule"><span class="eyebrow">Ads earn</span><span class="big-num">${money(rev)}</span>across all regions, per month</div>
     <div class="rule"><span class="eyebrow">AI paid by people's own ads</span><span class="big-num">${money(cost)}</span>70% of what each person's ads earn</div>
-    <div class="rule"><span class="eyebrow">The minimum costs</span><span class="big-num">${money(topUp)}</span>extra, mostly for Africa and South Asia</div>
-    <div class="rule"><span class="eyebrow">${gap>0?"Sponsors need to cover":"Left over"}</span><span class="big-num">${money(Math.abs(gap))}</span>${gap>0?`<span class="chip short">${ICON_BAD}Needs compute pools or local sponsors</span>`:`<span class="chip ok">${ICON_OK}Ads cover the minimum</span>`}</div>`;
+    <div class="rule"><span class="eyebrow">The community pool costs</span><span class="big-num">${money(topUp)}</span>${rev?Math.round(topUp/rev*100):0}% of ad revenue, mostly reaching Africa and Asia</div>
+    <div class="rule"><span class="eyebrow">${gap>0?"Sponsors need to cover":"Left for hosting and margin"}</span><span class="big-num">${money(Math.abs(gap))}</span>${gap>0?`<span class="chip short">${ICON_BAD}Floor too high for ads alone: lower it or add sponsors</span>`:left<15?`<span class="chip short">${ICON_BAD}${left}% of revenue: too thin, lower the floor or add sponsors</span>`:`<span class="chip ok">${ICON_OK}${left}% of revenue: ads cover the pool</span>`}</div>`;
 
   drawVideo(r);
   document.getElementById("assume").innerHTML=`<tr><th>Assumption</th><th>Value</th></tr>`+[
@@ -302,10 +307,10 @@ function render(){
     ["Working card and result line","about $0.005 per job in the US, two sponsor views"],
     ["Video spot","about $0.03 for the first one in the US; each later one pays 3% less with several networks, 14% less with one"],
     ["Sponsor trials and building blocks","averaged per active day; varies less by region, scaled by the square root of the regional rate"],
-    ["Split","70% of what a person's ads earn goes to their AI; 30% covers hosting and the minimum for others"],
+    ["Split","70% of what a person's ads earn goes to their AI; the rest covers hosting, margin and the community pool"],
     ["Model costs","per message: Haiku $0.001, Sonnet $0.01, Opus $0.02, Fable $0.06. Per hour of building: Haiku $0.08, Sonnet $0.50, Opus $0.90, Fable $4.50 (with caching and model mixing)"],
-    ["Minimum for everyone","minutes of Sonnet building per day, at $0.50 an hour"],
-    ["Traffic","10,000 monthly users, active about 12 days a month, in the region shares shown"]
+    ["Community floor","minutes of Sonnet building per day, at $0.50 an hour (10 minutes ≈ 1 hour of Haiku building or 8 Sonnet messages); unlocked by one video a day"],
+    ["Traffic","10,000 monthly users, active about 12 days a month. Global students: about a third in North America, Europe and East Asia. Mostly Africa and Asia: 13%"]
   ].map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td></tr>`).join("");
 }
 
@@ -327,6 +332,7 @@ sel.value=S.region;
 sel.addEventListener("change",e=>{S.region=e.target.value;render()});
 document.getElementById("load").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.load=b.dataset.v;document.querySelectorAll("#load button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
 document.getElementById("floor").addEventListener("input",e=>{S.floor=+e.target.value;render()});
+document.getElementById("mix").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.mix=b.dataset.v;document.querySelectorAll("#mix button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
 document.getElementById("multi").addEventListener("change",e=>{S.multi=e.target.checked;render()});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
 
