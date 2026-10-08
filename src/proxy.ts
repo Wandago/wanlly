@@ -14,9 +14,9 @@ const withClerk = clerkMiddleware(async (auth, req) => {
 
 export default function proxy(req: NextRequest, event: NextFetchEvent) {
   // Say exactly what's missing (names only) rather than a bare "Internal Server Error".
-  const missing = ["CLERK_SECRET_KEY", "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"].filter((k) => !process.env[k]);
-  if (missing.length) {
-    return new Response(`Wanlly isn't set up yet. Missing on the server: ${missing.join(", ")}.\nAdd it in Cloudflare: Workers > wanlly > Settings > Variables and secrets (type Secret).`, {
+  // (The publishable key is baked in at build time, so only the runtime secret is checked here.)
+  if (!process.env.CLERK_SECRET_KEY) {
+    return new Response("Wanlly isn't set up yet. Missing on the server: CLERK_SECRET_KEY.\nAdd it in Cloudflare: Workers > wanlly > Settings > Variables and secrets (type Secret).", {
       status: 503,
       headers: { "content-type": "text/plain; charset=utf-8" },
     });
