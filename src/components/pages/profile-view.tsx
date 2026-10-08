@@ -9,7 +9,7 @@ import { PageFrame, Panel, btnDark, btnGhost } from "./page-frame";
 const SECTIONS = [
   ["profile", "Profile"],
   ["preferences", "Preferences"],
-  ["credits", "Credits and trust"],
+  ["credits", "Credits and standing"],
   ["ads", "Ads and privacy"],
   ["connections", "Connections"],
   ["notifications", "Notifications"],
@@ -89,36 +89,29 @@ function Line({ icon, title, detail, children }: { icon: IconName; title: string
 
 const TOPICS = ["Learning and courses", "Developer tools", "Laptops and phones", "Jobs and internships", "Money and banking", "Design tools", "Games", "Travel"];
 
-function TrustLevels() {
-  const levels = [
-    { name: "New", need: "Verified phone and first video", unlocks: "Haiku, Sonnet, a growing floor", done: true },
-    { name: "Established", need: "7 days old, videos on 4 different days", unlocks: "Opus, surveys, referrals, coworkers", done: false, progress: "Day 3 of 7 · videos on 3 of 4 days" },
-    { name: "Trusted", need: "30 days of normal use", unlocks: "Fable, Code mode, long builds", done: false },
+/** No account-age levels: every model is open from day one. Only the risk checks can limit an account. */
+function Standing() {
+  const checks = [
+    ["Phone verified", "+254 7•• ••• 412"],
+    ["Device recognised", "Chrome on Windows"],
+    ["Human check passed", "Today"],
   ];
   return (
-    <ol className="grid gap-3 md:grid-cols-3">
-      {levels.map((l, i) => (
-        <li key={l.name} className={`flex flex-col gap-1.5 rounded-xl border p-3 ${i === 0 ? "border-accent-line bg-accent-soft" : "border-line"}`}>
-          <span className="flex items-center gap-2 text-sm font-semibold">
-            <span className={`grid size-5 place-items-center rounded-full text-[11px] ${l.done ? "bg-accent text-white" : "bg-hover text-muted"}`}>{l.done ? "✓" : i + 1}</span>
-            {l.name}
-            {i === 0 && <span className="ml-auto text-xs font-medium text-accent">You are here</span>}
-          </span>
-          <small className="text-xs text-muted">{l.need}</small>
-          <small className="text-xs">
-            <b className="font-medium">Unlocks:</b> {l.unlocks}
-          </small>
-          {l.progress && (
-            <>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-hover">
-                <i className="block h-full w-[43%] rounded-full bg-accent" />
-              </div>
-              <small className="font-mono text-[11px] text-faint">{l.progress}</small>
-            </>
-          )}
-        </li>
-      ))}
-    </ol>
+    <div className="flex flex-col gap-3 rounded-xl border border-line p-3.5">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-good/12 px-2 py-0.5 text-xs font-medium text-good">✓ Good standing</span>
+        <span className="text-sm">Every model and tool is open to you: Haiku, Sonnet, Opus, Fable, Code and coworkers.</span>
+      </div>
+      <ul className="grid gap-2 sm:grid-cols-3">
+        {checks.map(([t, d]) => (
+          <li key={t} className="flex flex-col rounded-lg bg-code px-3 py-2 text-xs">
+            <b className="font-medium">✓ {t}</b>
+            <span className="text-muted">{d}</span>
+          </li>
+        ))}
+      </ul>
+      <small className="text-xs text-muted">Accounts are only slowed down or paused if our checks spot abuse, and a person reviews every pause.</small>
+    </div>
   );
 }
 
@@ -193,7 +186,7 @@ export function ProfileView() {
             </div>
           </Panel>
 
-          <Panel title="Credits and trust" note="What your account can do grows with its history. Any risk flag moves it back down.">
+          <Panel title="Credits and standing" note="Credits are the only limit. Every one was paid for by an ad or the community pool.">
             <div id="credits" className="grid gap-3 sm:grid-cols-3">
               {[
                 ["Balance", `${credits} credits`],
@@ -206,7 +199,7 @@ export function ProfileView() {
                 </div>
               ))}
             </div>
-            <TrustLevels />
+            <Standing />
             <button type="button" className={`${btnGhost} self-start`}>
               See every credit in and out
             </button>

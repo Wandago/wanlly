@@ -11,12 +11,12 @@ No system is impossible to bypass. The goal is that **abuse costs the abuser mor
 | Level | Hard limit | Who sets it |
 |---|---|---|
 | One request | `max_tokens` and a task budget; cost reserved before the call | The model router |
-| One account, one day | Its own earned credits plus the community floor; a new account's floor is a fraction of that (see trust levels) | The ledger |
+| One account, one day | Its own earned credits plus the community floor | The ledger |
 | The community pool | Only money already received; per-country share capped | The daily pool job |
 | All of Wanlly, one day | The global safety cap, which pauses AI before it's exceeded | You, in the admin page |
 | The Anthropic account | The Console spend limit, the last backstop | You, in the Anthropic Console |
 
-**What a fake account is worth:** a new account's floor is a few US cents a day, usable only on Haiku and Sonnet, and can't be saved up. Getting it needs a real phone number (virtual numbers are blocked), a device we haven't seen, a passed bot check and a watched video every day. A SIM card costs more than weeks of that floor, so farming accounts loses money.
+**What a fake account is worth:** the floor is a few US cents a day and can't be saved up. Getting it needs a real phone number (virtual numbers are blocked), a device we haven't seen, a passed bot check and a watched video every day. A SIM card costs more than weeks of that floor, so farming accounts loses money.
 
 ---
 
@@ -53,17 +53,14 @@ New accounts start with **zero credits.** The first credits come from watching a
 - **No bots get ads:** suspected bots are never shown ads. That protects the AdSense / Ad Manager account from invalid-traffic bans, which would cut off all revenue.
 - **Never pay for clicks.** Rewards are for opt-in video views only; incentivized clicks break every ad network's rules.
 
-## 3b. Trust levels: new accounts can't do expensive things
+## 3b. Every model, for everyone, from day one
 
-Most abuse comes from fresh accounts, so what an account can do grows with its history. Moving up is automatic; any risk flag moves an account back down.
+There are no account-age levels. A new account can use Haiku, Sonnet, Opus, Fable, Code mode and coworkers on its first day, as long as it has the credits. What keeps that safe:
 
-| Level | How you get there | What it unlocks |
-|---|---|---|
-| **New** | Verified phone, passed bot check, first video | Floor at 25% and growing daily; Haiku and Sonnet; low caps; no offerwall payouts yet |
-| **Established** | 7 days old, videos on at least 4 different days, no flags | Full floor; Opus; offerwalls; referral rewards; coworkers (with a daily credit cap each) |
-| **Trusted** | 30 days old, steady normal use, no flags | Fable; Code mode and long builds; higher caps |
-
-Code mode, the most expensive and most abusable tool, is never available to an account under 30 days old.
+- **Credits are the limit.** Every credit was paid for by an ad or the pool, so a new account can only spend what was already earned. An Opus or Fable request reserves its full possible cost first; if the balance can't cover it, it doesn't start.
+- **Per-request and per-session caps** on every model, and one active Code session per account.
+- **Risk, not age, decides restrictions.** An account the risk scorer flags (see section 5) is slowed, challenged or frozen, whether it's one day or one year old.
+- **Payout holds stay where money comes from outside:** survey credits wait for the survey company to confirm; referral rewards wait for the friend to be real. These hold credits, not models.
 
 ## 3c. Every way credits can be created, and its guard
 
@@ -73,8 +70,8 @@ Credits can only come from the sources below. Each one has its own check, and **
 |---|---|---|
 | Rewarded video with a server callback (AppLixir and others) | Fake or replayed views | Signature check, new transaction ID, matches a view we started, reward matches the offer |
 | Rewarded video without a callback (Google's web rewarded ads) | Faked "reward granted" event in the browser | Single-use view ticket, realistic watch time, caps, **provisional credits** reconciled with the network's reports and reversed on mismatch; never offered to flagged accounts |
-| Offerwalls and surveys | Fake sign-ups, offer fraud | Only Established accounts; credits **held until the offer network's pending period clears**; their reversals reverse our credits; daily cap |
-| Community floor | Account farming | One per verified person; unlocked by a video each day; New accounts get a fraction; can't be saved up; Haiku and Sonnet only; per-country share capped |
+| Offerwalls and surveys | Fake sign-ups, offer fraud | Verified accounts only; credits **held until the offer network's pending period clears**; their reversals reverse our credits; daily cap |
+| Community floor | Account farming | One per verified person (phone, device, bot check); unlocked by a video each day; the same amount for everyone; can't be saved up; virtual numbers blocked |
 | Referrals | Inviting your own fake accounts | Paid only when the invitee is verified and has watched videos on 3 different days; no reward when they share a device, network or phone range; monthly cap per referrer |
 | Student bonus | Fake university emails | Known university domain list, disposable domains blocked, one bonus per address, re-checked every year; small bonus |
 | Admin grants | A compromised or careless admin | Logged with a reason; above a set amount needs a second admin |
@@ -171,10 +168,10 @@ This lands alongside the plan's steps, not after them:
 |---|---|
 | Step 2: sign-in and database | Turnstile, verified sign-in, device hash, country, append-only ledger, per-user query scoping |
 | Step 3: real chat with limits | Reserve-and-settle, all caps, global safety cap, rate limits, request logging, refusal handling |
-| Step 4: ads | Server-side verification of rewarded views, view tickets and provisional credits for partners without callbacks, earning caps, visible-only ad counting, no ads for suspected bots, trust levels, community floor rules, referral rules |
+| Step 4: ads | Server-side verification of rewarded views, view tickets and provisional credits for partners without callbacks, earning caps, visible-only ad counting, no ads for suspected bots, community floor rules, referral rules |
 | Before the beta opens | Risk scoring job, alerts, admin page and kill switch, ledger check and spend-spike breaker, admin two-factor, the break-it checklist, terms and privacy policy |
 | Offerwalls and student bonus | Pending-period holds and reversals, university domain list |
-| Step 6: Code mode | Trusted accounts only, session budgets and time limits, limited network access, approval before outside actions, one active session per account |
+| Step 6: Code mode | Session budgets from the user's credits, time limits, limited network access, approval before outside actions, one active session per account |
 
 ## Tools, by job
 

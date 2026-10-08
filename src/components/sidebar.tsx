@@ -159,7 +159,7 @@ export function Sidebar() {
           <span className="grid size-[30px] place-items-center rounded-full bg-fg text-[13px] font-semibold text-bg">L</span>
           <span className="flex min-w-0 flex-1 flex-col text-sm leading-tight">
             Louis
-            <small className="text-xs text-faint">New member · day 3</small>
+            <small className="text-xs text-faint">Verified · good standing</small>
           </span>
           <Icon name="settings" size={16} className="text-faint" />
         </Link>

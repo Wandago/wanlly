@@ -266,7 +266,7 @@ export function CoworkersView() {
       </Panel>
 
       <p className="flex items-center gap-2 text-xs text-faint">
-        <Icon name="lock" size={14} /> Coworkers unlock once your account is 7 days old. They spend your credits, never more than each one&apos;s daily cap.
+        <Icon name="bolt" size={14} /> Coworkers spend your credits, never more than each one&apos;s daily cap. Pause any of them anytime.
       </p>
     </PageFrame>
   );

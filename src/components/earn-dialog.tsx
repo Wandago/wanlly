@@ -106,7 +106,13 @@ export function EarnDialog() {
                   close();
                 }}
               />
-              <Option icon="search" title="Answer a short survey" detail="Offerwall · unlocks when your account is 7 days old" gain="4 days" locked />
+              <Option
+                icon="search"
+                title="Answer a short survey"
+                detail="Pays more than a video · credits arrive when the survey company confirms"
+                gain={30}
+                onClick={() => dispatch({ type: "toast", text: "Opens a survey. Credits arrive once it's confirmed" })}
+              />
               <Option icon="users" title="Watch to fund a creator" detail="Your video goes to the community pool. 4,200 builds funded this month" gain="Pool" onClick={() => setPlaying("pool")} />
               <Option icon="flame" title="Daily streak · 3 of 5" detail="Two more days for a bonus Fable 5.1 answer" gain={10}>
                 <span className="mt-1.5 flex gap-1.5" aria-label="3 of 5 days">
