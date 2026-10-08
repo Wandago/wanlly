@@ -1,6 +1,7 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useAuth } from "@clerk/nextjs";
+import { useEffect, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
 import { AdRail } from "./ads/rail";
@@ -19,6 +20,21 @@ function Toast() {
       {toast.text}
     </div>
   );
+}
+
+/**
+ * Saves the signed-in person to our database on every visit (and their country, the first time),
+ * so nobody depends on the Clerk webhook arriving. Credits on screen are still the demo until Step 3.
+ */
+function AccountSync() {
+  const { isSignedIn, userId } = useAuth();
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch("/api/me", { cache: "no-store" })
+      .then((r) => (r.ok ? null : r.json().then((b) => console.warn("Account sync:", r.status, b?.error))))
+      .catch(() => console.warn("Account sync: network error"));
+  }, [isSignedIn, userId]);
+  return null;
 }
 
 /** Phones have no side panels, so a 320×50 banner sits in a rounded tray at the bottom. */
@@ -47,6 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       <EarnDialog />
       <Toast />
+      <AccountSync />
     </WorkspaceProvider>
   );
 }
