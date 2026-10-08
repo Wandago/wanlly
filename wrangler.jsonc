@@ -1,0 +1,13 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "wanlly",
+	"main": ".open-next/worker.js",
+	"compatibility_date": "2026-06-01",
+	"compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"observability": { "enabled": true }
+	// No R2 cache yet: R2 needs a card on file. Add it with the incremental cache when that's set up.
+}
