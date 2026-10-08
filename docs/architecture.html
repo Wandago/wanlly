@@ -1,0 +1,341 @@
+<title>Wanlly Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column with a sticky contents list on wide screens; each section is a diagram plus "what's here" and "adjust here". */
+:root{
+  --paper:#fbfbfc; --surface:#ffffff; --side:#f3f4f7; --hover:#e9ebf0; --line:#e3e5eb;
+  --ink:#15171c; --muted:#636a78; --faint:#9aa0ac;
+  --tang:#ff5a1f; --tang-text:#c2410c; --tang-soft:#ffeee6; --tang-line:#ffd2bf; --good:#11955a; --bad:#e5484d;
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#111216; --surface:#17181d; --side:#0c0d10; --hover:#1f2127; --line:#272930;
+  --ink:#ecedf1; --muted:#979daa; --faint:#686e7a; --tang:#ff6a33; --tang-text:#ff8a5c; --tang-soft:#2c160d; --tang-line:#5a2a16; --good:#3ccb85; --bad:#ff6b6f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#111216; --surface:#17181d; --side:#0c0d10; --hover:#1f2127; --line:#272930;
+  --ink:#ecedf1; --muted:#979daa; --faint:#686e7a; --tang:#ff6a33; --tang-text:#ff8a5c; --tang-soft:#2c160d; --tang-line:#5a2a16; --good:#3ccb85; --bad:#ff6b6f; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.page{display:grid;grid-template-columns:220px minmax(0,1fr);gap:40px;max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:36px 72px}
+nav{position:sticky;top:20px;align-self:start;display:flex;flex-direction:column;gap:2px;font-size:14px}
+nav b{font-family:var(--f-display);font-size:18px;letter-spacing:-.02em;padding:0 8px 10px}
+nav a{color:var(--muted);text-decoration:none;padding:5px 8px;border-radius:8px}
+nav a:hover{background:var(--hover);color:var(--ink)}
+main{display:flex;flex-direction:column;gap:48px;min-width:0}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;letter-spacing:-.025em;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,5vw,44px);line-height:1.05}
+h2{font-size:24px}
+h3{font-size:16px;letter-spacing:-.01em}
+p{margin:0}
+.lede{color:var(--muted);max-width:66ch;font-size:16px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:500}
+section{display:flex;flex-direction:column;gap:14px;scroll-margin-top:20px}
+section>p{color:var(--muted);max-width:68ch}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;overflow-x:auto}
+.diagram pre.mermaid{margin:0;background:transparent;display:flex;justify-content:center;min-width:560px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.box{border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px;font-size:14px;background:var(--surface)}
+.box ul{margin:0;padding-left:18px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.box.adjust{background:var(--tang-soft);border-color:var(--tang-line)}
+.box.adjust h3{color:var(--tang-text)}
+.box.adjust ul{color:var(--ink)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{text-align:left;font-weight:500;color:var(--muted);padding:8px;border-bottom:1px solid var(--line);font-size:13px}
+td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td:first-child{font-weight:500;white-space:nowrap}
+.tw{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:6px}
+.mono{font-family:var(--f-mono);font-size:13px}
+
+/* Cost-check mock */
+.mock{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;font-size:14px;min-width:0}
+.card.warn{background:var(--tang-soft);border-color:var(--tang-line)}
+.meter{height:10px;border-radius:99px;background:var(--hover);overflow:hidden;position:relative}
+.meter i{position:absolute;inset:0 auto 0 0;border-radius:99px}
+.meter i.have{background:var(--good)}
+.meter i.need{background:repeating-linear-gradient(45deg,var(--tang) 0 6px,transparent 6px 10px);opacity:.9}
+.row{display:flex;justify-content:space-between;gap:10px}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{padding:7px 12px;border-radius:9px;font-weight:600;font-size:13px;border:1px solid var(--line);background:var(--surface)}
+.btn.dark{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.steps li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:8px;align-items:baseline}
+.steps .n{font-family:var(--f-mono);font-size:12px;color:var(--faint)}
+.steps .c{font-family:var(--f-mono);font-size:12.5px;color:var(--muted)}
+
+@media (max-width:900px){.page{grid-template-columns:minmax(0,1fr)}nav{display:none}}
+</style>
+
+<div class="page">
+  <nav aria-label="Contents">
+    <b>Architecture</b>
+    <a href="#overview">1. The whole system</a>
+    <a href="#request">2. One message, start to finish</a>
+    <a href="#earn">3. Earning credits</a>
+    <a href="#build">4. Long builds and the cost check</a>
+    <a href="#money">5. Money and runway</a>
+    <a href="#abuse">6. Abuse defences</a>
+    <a href="#journey">7. A user's journey</a>
+    <a href="#parts">8. Every part, in one table</a>
+  </nav>
+
+  <main>
+    <header style="display:flex;flex-direction:column;gap:12px">
+      <span class="eyebrow">Wanlly · system design</span>
+      <h1>How everything fits together</h1>
+      <p class="lede">Seven flowcharts covering the whole product, from a person opening the site to the money that pays for the AI. Each section ends with the decisions you can change. Nothing here is built yet beyond the interface; this is the map we build from.</p>
+    </header>
+
+    <section id="overview">
+      <span class="eyebrow">1</span><h2>The whole system</h2>
+      <p>People reach Wanlly through Cloudflare, which filters bots before anything else runs. The app checks who they are, what they can afford, and routes their request to the right AI. Every credit in and out is written to one ledger.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  U["Person<br/>browser or phone"] --> CF["Cloudflare edge<br/>firewall, Turnstile, rate limits, country"]
+  CF --> APP["Wanlly app<br/>Next.js on Cloudflare Workers"]
+  APP --> AUTH["Clerk<br/>sign-in, phone check"]
+  APP --> CORE
+  subgraph CORE["Wanlly core"]
+    LIM["Limits and budget<br/>window, week, safety cap"]
+    EST["Cost estimator"]
+    PICK["Smart pick<br/>Haiku classifier"]
+    LED["Credits ledger<br/>reserve, then settle"]
+    ADS["Ad service<br/>slots, bidding, rewards"]
+    RISK["Risk scorer<br/>every 5 minutes"]
+    VAULT["Connections vault<br/>encrypted keys"]
+  end
+  CORE --> ROUTER["Model router"]
+  ROUTER --> ANTH["Anthropic API<br/>Haiku, Sonnet, Opus, Fable"]
+  ROUTER -.backup.-> BED["Claude on Bedrock or Vertex"]
+  ROUTER -.coming soon.-> OTHER["OpenAI, Gemini, Grok<br/>image and video models"]
+  CORE --> AGENTS["Managed Agents<br/>code sandboxes"]
+  ADS <--> NETS["Ad networks<br/>Google Ad Manager and others"]
+  VAULT --> EXT["GitHub, Google, Twilio"]
+  CORE --> DB[("Neon Postgres<br/>users, ledger, jobs, events")]
+  CORE --> KV[("Cloudflare KV<br/>counters")]
+  CORE --> R2[("Cloudflare R2<br/>files and images")]
+  APP --> OBS["PostHog, Sentry"]
+  ADMIN["Admin dashboard"] --> DB
+</pre></div>
+      <div class="cols">
+        <div class="box"><h3>What's here</h3><ul><li>One app on Cloudflare, free until real traffic.</li><li>One ledger is the source of truth for every credit.</li><li>One router decides which AI answers, with a backup route.</li></ul></div>
+        <div class="box adjust"><h3>Adjust here</h3><ul><li>Which providers go live after Claude, and in what order.</li><li>Whether Images and Video launch with a Google model or stay Coming soon.</li></ul></div>
+      </div>
+    </section>
+
+    <section id="request">
+      <span class="eyebrow">2</span><h2>One message, start to finish</h2>
+      <p>Before any AI runs, Wanlly checks the person's limits, estimates the cost and sets aside the maximum it could cost. When the answer finishes, it charges what was actually used and returns the rest.</p>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant P as Person
+  participant E as Cloudflare
+  participant A as Wanlly app
+  participant L as Limits and ledger
+  participant S as Smart pick
+  participant M as Claude
+  participant D as Ad slot
+  P->>E: Sends a message
+  E->>A: Passes bot and rate checks
+  A->>L: Window, weekly cap, global safety cap OK?
+  A->>S: Which model fits? (tiny Haiku call)
+  S-->>P: Suggests a model, person confirms
+  A->>L: Reserve the maximum this could cost
+  A->>D: Show the sponsor card while working
+  A->>M: Send the request (cached history)
+  M-->>P: Answer streams in
+  M-->>A: Real token count
+  A->>L: Charge real cost, release the rest
+  A->>D: Fold sponsor card to one line
+</pre></div>
+      <div class="cols">
+        <div class="box"><h3>Why reserve first</h3><ul><li>A request can't start unless the balance covers its worst case.</li><li>Nobody can overspend, even with several tabs open at once.</li></ul></div>
+        <div class="box adjust"><h3>Adjust here</h3><ul><li>Whether smart pick asks every time or only when it suggests a bigger model.</li><li>How many credits each model costs.</li></ul></div>
+      </div>
+    </section>
+
+    <section id="earn">
+      <span class="eyebrow">3</span><h2>Earning credits</h2>
+      <p>Credits only appear after the ad network's own server confirms a video was watched. The browser never adds credits, so they can't be faked.</p>
+      <div class="diagram"><pre class="mermaid">
+sequenceDiagram
+  participant P as Person
+  participant A as Wanlly app
+  participant N as Ad network
+  participant R as Risk scorer
+  participant L as Ledger
+  P->>A: Taps Watch 20s
+  A->>R: Is this account allowed to earn now?
+  R-->>A: Yes (caps, cooldown, risk OK)
+  A->>N: Request a video, several networks bid
+  N-->>P: Plays the winning video
+  P->>N: Watches to the end
+  N->>A: Signed server confirmation, with payout
+  A->>A: Check signature, new ID, matches our request
+  A->>L: Add credits worth about 70% of the payout
+  L-->>P: Credits appear, pill bumps
+</pre></div>
+      <div class="cols">
+        <div class="box"><h3>What's here</h3><ul><li>Rewards follow what each video actually paid.</li><li>Several networks bid, so later videos still pay well.</li><li>Suspected bots never get ads, which protects the ad account.</li></ul></div>
+        <div class="box adjust"><h3>Adjust here</h3><ul><li>The share of each payout that becomes credits (70% today).</li><li>Videos allowed per hour and per day.</li></ul></div>
+      </div>
+    </section>
+
+    <section id="build">
+      <span class="eyebrow">4</span><h2>Long builds and the cost check</h2>
+      <p>Before a big job starts, the agent writes a plan and Wanlly estimates what it will cost, from the plan's size and from what similar past builds actually used. The person sees the estimate against their balance and decides. If credits run out mid-build anyway, the work pauses and is saved, never lost.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart TD
+  A["Person describes a build"] --> B["Agent writes a plan<br/>milestones, files, steps<br/>cheap Haiku call"]
+  B --> C["Estimate cost per milestone<br/>plan size plus past similar builds"]
+  C --> D{"Estimate vs credits<br/>and window left"}
+  D -- "Covered with room" --> RUN["Start the build"]
+  D -- "Might run short" --> W["Show the cost check"]
+  W --> O1["Top up first<br/>videos or Build Pass"]
+  W --> O2["Lighter mode<br/>more Haiku, fewer checks"]
+  W --> O3["Do milestone 1 now<br/>rest later"]
+  W --> O4["Start anyway<br/>pauses safely if short"]
+  O1 --> RUN
+  O2 --> RUN
+  O3 --> RUN
+  O4 --> RUN
+  RUN --> S["Managed Agents session<br/>budget set to the person's credits"]
+  S --> P["Live progress<br/>milestones done vs credits used"]
+  P --> X{"Credits at 80%?"}
+  X -- "No" --> P
+  X -- "Yes" --> N["Heads-up with options<br/>watch to add, or let it pause"]
+  N --> Y{"Budget reached?"}
+  Y -- "No" --> P
+  Y -- "Yes" --> Z["Pause and save<br/>files kept, last milestone committed"]
+  Z --> R["Resume when credits return<br/>after videos or the next window"]
+  R --> S
+  P --> DONE["Done: pull request or preview"]
+</pre></div>
+
+      <div class="mock">
+        <div class="card warn">
+          <span class="eyebrow">Before it starts</span>
+          <b style="font-size:16px">This build will likely need 180–260 credits.</b>
+          <span>You have <b>90</b>, enough for about the first 2 of 5 milestones.</span>
+          <div class="meter" aria-label="You have 90 of about 220 credits needed"><i class="need" style="width:100%"></i><i class="have" style="width:41%"></i></div>
+          <div class="row" style="font-size:12.5px"><span>You have 90</span><span>Likely need about 220</span></div>
+          <ul class="steps">
+            <li><span class="n">1</span><span>Sign-in and database</span><span class="c">≈ 40</span></li>
+            <li><span class="n">2</span><span>Booking page</span><span class="c">≈ 45</span></li>
+            <li><span class="n">3</span><span>M-Pesa payments</span><span class="c">≈ 70</span></li>
+            <li><span class="n">4</span><span>SMS reminders</span><span class="c">≈ 35</span></li>
+            <li><span class="n">5</span><span>Tests and fixes</span><span class="c">≈ 30</span></li>
+          </ul>
+          <div class="btns"><span class="btn dark">Watch to top up</span><span class="btn">Lighter mode · ≈ 130</span><span class="btn">Do milestones 1–2 now</span><span class="btn">Start anyway</span></div>
+          <span style="font-size:12.5px;color:var(--muted)">If you start anyway and run short, we pause after the last finished milestone and keep everything.</span>
+        </div>
+        <div class="card">
+          <span class="eyebrow">While it runs</span>
+          <b style="font-size:16px">Milestone 3 of 5 · M-Pesa payments</b>
+          <div class="row" style="font-size:13px"><span>Credits used</span><span class="mono">74 of 90</span></div>
+          <div class="meter"><i class="have" style="width:82%;background:var(--tang)"></i></div>
+          <span>You're at 82% of your credits with 2 milestones to go. Add more now and the build keeps going without stopping.</span>
+          <div class="btns"><span class="btn dark">Watch 20s · +4</span><span class="btn">Let it pause</span></div>
+        </div>
+      </div>
+
+      <div class="cols">
+        <div class="box"><h3>How the estimate works</h3><ul><li>The plan's size is counted exactly with Anthropic's token-counting tool.</li><li>Past builds of the same kind give a realistic range, which gets more accurate with every build.</li><li>Shown as a range, never a promise.</li></ul></div>
+        <div class="box"><h3>Why nothing is lost</h3><ul><li>Each session has a hard budget equal to the person's credits.</li><li>At the budget the agent pauses with files kept; work is saved at every finished milestone.</li><li>Raising the budget resumes it where it stopped.</li></ul></div>
+        <div class="box adjust"><h3>Adjust here</h3><ul><li>When the warning appears (estimate above 80% of credits?).</li><li>When the mid-build heads-up fires (80% used?).</li><li>Whether "Start anyway" is allowed for first-time users.</li></ul></div>
+      </div>
+    </section>
+
+    <section id="money">
+      <span class="eyebrow">5</span><h2>Money and runway</h2>
+      <p>Ads pay monthly, a month late. AI must be paid as it's used. A float covers the gap, auto-reload keeps credits topped up, and a budget controller scales usage down gently if the float runs low.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  ADNET["Ad networks<br/>pay monthly, about 30 days late"] --> BANK["Business USD account"]
+  START["Your launch budget<br/>and startup credits"] --> BANK
+  BANK --> CARD["USD business card"]
+  CARD --> RELOAD["Anthropic auto-reload<br/>tops up when credits run low"]
+  RELOAD --> AI["AI usage"]
+  STARTUP["AWS or Google credits"] --> BACKUP["Claude on Bedrock or Vertex<br/>backup route"]
+  BACKUP --> AI
+  GOV["Budget controller<br/>float ÷ days to next payout"] --> AI
+  GOV --> ALERT["Alerts<br/>low float, failed reload, card expiry"]
+  BANK --> TAX["Set aside for tax"]
+</pre></div>
+      <div class="cols">
+        <div class="box"><h3>What's here</h3><ul><li>Payments are automatic once set up.</li><li>Low float means gentler limits, never an outage.</li><li>A backup route covers billing failures.</li></ul></div>
+        <div class="box adjust"><h3>Adjust here</h3><ul><li>Float size (60 days of AI spend suggested).</li><li>Global daily safety cap.</li><li>Tax set-aside percentage.</li></ul></div>
+      </div>
+    </section>
+
+    <section id="abuse">
+      <span class="eyebrow">6</span><h2>Abuse defences</h2>
+      <p>Each layer assumes the one before it can fail. Automatic actions go up to a freeze; bans always get a person's review.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart TD
+  IN["Sign-up or request"] --> L1["Cloudflare firewall and Turnstile"]
+  L1 --> L2["Verified email and phone<br/>device fingerprint, country checks"]
+  L2 --> L3["Server-only money<br/>reserve first, caps at every level"]
+  L3 --> LOG["Every request and ad event logged"]
+  LOG --> SCORE["Risk score every 5 minutes"]
+  SCORE --> A1["Watch"]
+  SCORE --> A2["Slow down"]
+  SCORE --> A3["Challenge again"]
+  SCORE --> A4["Freeze and alert you"]
+  A4 --> HUMAN["You review in admin"]
+  HUMAN --> BAN["Ban, reverse fake credits"]
+  HUMAN --> OK["Unfreeze"]
+</pre></div>
+    </section>
+
+    <section id="journey">
+      <span class="eyebrow">7</span><h2>A user's journey</h2>
+      <p>The same path as the clickable storyboard, as one flow.</p>
+      <div class="diagram"><pre class="mermaid">
+flowchart LR
+  A["Sees a post<br/>or a friend's link"] --> B["Landing page"]
+  B --> C["Requests early access"]
+  C --> D["Shares invite link"]
+  C --> E["Approved in a weekly group"]
+  E --> F["Invite email"]
+  F --> G["Sign in and verify phone"]
+  G --> H["Welcome credits"]
+  H --> I["First build<br/>Haiku suggested"]
+  I --> J{"Credits left?"}
+  J -- "Yes" --> I
+  J -- "No" --> K["Watch, wait for the window,<br/>or switch to Haiku"]
+  K --> I
+  I --> L["Shares what they built"]
+  L --> A
+</pre></div>
+    </section>
+
+    <section id="parts">
+      <span class="eyebrow">8</span><h2>Every part, in one table</h2>
+      <div class="tw"><table>
+        <tr><th>Part</th><th>Job</th><th>Built with</th><th>When</th></tr>
+        <tr><td>Edge</td><td>Block bots, rate limits, country</td><td>Cloudflare WAF, Turnstile</td><td>Step 2</td></tr>
+        <tr><td>Sign-in</td><td>Accounts, phone check</td><td>Clerk</td><td>Step 2</td></tr>
+        <tr><td>Database</td><td>Users, ledger, jobs, events, audit</td><td>Neon Postgres</td><td>Step 2</td></tr>
+        <tr><td>Model router</td><td>Pick provider, fallback</td><td>Anthropic SDK, Bedrock/Vertex later</td><td>Step 3</td></tr>
+        <tr><td>Smart pick</td><td>Suggest cheapest good model</td><td>Haiku 5.5</td><td>Step 3</td></tr>
+        <tr><td>Limits and ledger</td><td>Windows, weekly cap, reserve and settle</td><td>Postgres + KV</td><td>Step 3</td></tr>
+        <tr><td>Budget controller</td><td>Daily safe spend from the float</td><td>Scheduled job</td><td>Step 3</td></tr>
+        <tr><td>Ad service</td><td>Slots, bidding, verified rewards</td><td>Ad Manager + other networks</td><td>Step 4</td></tr>
+        <tr><td>Risk scorer</td><td>Detect and act on abuse</td><td>Scheduled job + admin</td><td>Before beta</td></tr>
+        <tr><td>Design mode</td><td>Pages in a locked preview</td><td>Sandboxed iframe</td><td>Step 5</td></tr>
+        <tr><td>Images and video</td><td>Generation</td><td>Google or OpenAI models</td><td>Later</td></tr>
+        <tr><td>Code mode</td><td>Long builds in a sandbox</td><td>Claude Managed Agents</td><td>Step 6</td></tr>
+        <tr><td>Cost check</td><td>Estimate before long jobs</td><td>Token counting + past builds</td><td>Step 6</td></tr>
+        <tr><td>Connections</td><td>GitHub, Google, Twilio</td><td>GitHub App, OAuth, encrypted vault</td><td>Step 6</td></tr>
+        <tr><td>Admin</td><td>Numbers, users, roles, abuse, runway</td><td>Next.js pages</td><td>Steps 2–4</td></tr>
+        <tr><td>Analytics and errors</td><td>Funnels, recordings, alerts</td><td>PostHog, Sentry</td><td>Step 2</td></tr>
+      </table></div>
+    </section>
+  </main>
+</div>

@@ -8,6 +8,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 - Launch plan, beta process and tracking: [`docs/LAUNCH.md`](LAUNCH.md); pages `/beta` and `/admin` (design previews)
 - Every screen, start to finish: [`docs/journey.html`](journey.html) (clickable storyboard)
 - Legal and compliance checklist: [`docs/LEGAL.md`](LEGAL.md)
+- System architecture and flowcharts: [`docs/architecture.html`](architecture.html)
 - Brand: the Wanlly design system (logo set, colours, type, voice), with the logo files in `public/brand/`
 
 ---
@@ -108,12 +109,19 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 1. Images through an image API, saved to R2, with a flat token-based price.
 2. Design: the model writes HTML/React, shown in a locked-down preview with version history.
 
-### Step 6: Code and Build Pass (Claude builds)
-1. GitHub App install and repo picker.
-2. The agent works in an isolated sandbox: Haiku does the bulk steps, Sonnet or Opus the hard ones. It opens a pull request and never pushes to `main`.
-3. **Starter templates** (sign-in, database and deploy already set up), so builds don't start from zero.
-4. **Build Pass:** side panel on and a video about every 15 minutes while long builds run.
-5. **"Build overnight" queue:** jobs that can wait run through the batch API at half price.
+### Step 6: Code and Build Pass (Claude builds, after the beta proves itself)
+Launch with Chat and Design first. Design builds single-page sites that run safely in the browser, which already covers most first projects. Code mode comes once people are using Wanlly and ads are paying.
+
+1. **Runs on Claude Managed Agents.** Anthropic runs the agent loop and hosts a private sandbox per session (files, terminal, running code), so we don't build or secure that infrastructure ourselves.
+   - Cost: the model's normal token price, plus about **$0.08 per hour** of session running time, plus $10 per 1,000 web searches. Almost all the cost is tokens.
+   - Example: a 4–5 hour app build with model mixing is about **KES 300–430**; Sonnet alone, about KES 700–1,050.
+   - **Session budgets** put a hard dollar cap on each session. At the cap the agent **pauses and keeps all its work**; raising the cap resumes it. A user's credits become the session's budget.
+2. GitHub App install and repo picker. The agent opens a pull request and never pushes to `main`.
+3. Haiku does the bulk steps, Sonnet or Opus the hard ones.
+4. **Starter templates** (sign-in, database and deploy already set up), so builds don't start from zero.
+5. **Cost check before long jobs** (see `docs/architecture.html`): the plan is estimated before anything runs, the person sees the likely cost against their balance, and they choose to top up, go lighter, split it into milestones, or start anyway knowing it will pause safely.
+6. **Build Pass:** side panel on and a video about every 15 minutes while long builds run.
+7. **"Build overnight" queue:** jobs that can wait run through the batch API at half price.
 
 ### Step 7: Launch (mostly you)
 1. Privacy policy, terms, contact page.
