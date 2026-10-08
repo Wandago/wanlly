@@ -127,3 +127,33 @@ export const messages = pgTable("messages", {
   credits: integer("credits"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Beta applications from the public /beta page. Reviewed by hand in the admin page. */
+export const betaApplications = pgTable(
+  "beta_applications",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    country: text("country"),
+    build: text("build").notNull(),
+    source: text("source"),
+    referralCode: text("referral_code"),
+    inviteCode: text("invite_code").notNull(),
+    networkCountry: text("network_country"),
+    status: text("status", { enum: ["pending", "approved", "declined"] }).notNull().default("pending"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("beta_email").on(t.email), uniqueIndex("beta_invite_code").on(t.inviteCode)],
+);
+
+/** Messages from the public contact page. */
+export const contactMessages = pgTable("contact_messages", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  topic: text("topic").notNull(),
+  message: text("message").notNull(),
+  networkCountry: text("network_country"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

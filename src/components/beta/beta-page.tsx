@@ -6,22 +6,6 @@ import { Icon } from "../icon";
 const COUNTRIES = ["Kenya", "Nigeria", "Ghana", "Uganda", "Tanzania", "Rwanda", "South Africa", "Egypt", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Brazil", "Mexico", "United Kingdom", "United States", "Other"];
 const SOURCES = ["TikTok", "X", "Instagram", "LinkedIn", "WhatsApp", "A friend invited me", "University or community group", "Product Hunt", "Search", "Other"];
 
-function Mark({ size = 28 }: { size?: number }) {
-  return (
-    <svg viewBox="0 0 64 64" width={size} height={size} aria-hidden="true">
-      <defs>
-        <mask id="beta-node" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="#fff" />
-          <circle cx="32" cy="26" r="8.8" fill="#000" />
-        </mask>
-      </defs>
-      <rect width="64" height="64" rx="16" className="fill-fg" />
-      <path d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#beta-node)" fill="none" strokeWidth={6.5} strokeLinecap="round" strokeLinejoin="round" className="stroke-bg" />
-      <circle cx="32" cy="26" r="6.2" className="fill-accent" />
-    </svg>
-  );
-}
-
 /** A still of the product: the composer and a working card, drawn with the app's own styles. */
 function ProductStill() {
   return (
@@ -62,43 +46,62 @@ function ProductStill() {
 const STEPS = [
   { title: "Apply", text: "Tell us what you want to build. It takes a minute." },
   { title: "Get approved", text: "We open Wanlly in weekly groups. Friends you invite move you up." },
-  { title: "Watch, earn, build", text: "Short sponsor videos earn credits. Credits run Haiku, Sonnet, Opus and Fable." },
+  { title: "Watch, then build", text: "One short video a day unlocks your floor. Extra videos add more. Use Claude or Gemini." },
 ];
+
+/** A select with an "Other" choice that opens a text box, so nobody is stuck with our list. */
+function SelectOrType({ id, name, label, options, placeholder, required, field }: { id: string; name: string; label: string; options: string[]; placeholder: string; required?: boolean; field: string }) {
+  const [value, setValue] = useState("");
+  return (
+    <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor={id}>
+      {label}
+      <select id={id} name={value === "Other" ? undefined : name} required={required} value={value} onChange={(e) => setValue(e.target.value)} className={field}>
+        <option value="" disabled>Choose one</option>
+        {options.map((o) => <option key={o}>{o}</option>)}
+      </select>
+      {value === "Other" && <input name={name} required={required} autoFocus placeholder={placeholder} className={field} aria-label={`${label}: type your own`} />}
+    </label>
+  );
+}
 
 export function BetaPage() {
   const [sent, setSent] = useState<null | { name: string; code: string }>(null);
   const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
 
-  function submit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const data = new FormData(e.currentTarget);
-    const name = String(data.get("name") || "").trim().split(" ")[0];
-    // Design preview: nothing is sent yet. The real form posts to /api/beta in Step 2.
-    const code = (name || "friend").toLowerCase().replace(/[^a-z]/g, "").slice(0, 8) + "-" + Math.random().toString(36).slice(2, 6);
-    setSent({ name, code });
+    const body = Object.fromEntries(new FormData(e.currentTarget));
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref && !body.ref) body.ref = ref;
+    setBusy(true);
+    setError("");
+    try {
+      const r = await fetch("/api/beta", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || "Something went wrong.");
+      setSent({ name: String(body.name || "").trim().split(" ")[0], code: out.code });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong.");
+    } finally {
+      setBusy(false);
+    }
   }
-  const link = sent ? `wanlly.app/beta?ref=${sent.code}` : "";
+  const link = sent && typeof window !== "undefined" ? `${window.location.origin}/beta?ref=${sent.code}` : "";
 
-  const field = "w-full rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[15px] text-fg outline-none placeholder:text-faint focus:border-fg";
+  const field = "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-fg outline-none placeholder:text-faint focus:border-fg";
 
   return (
     <div className="min-h-full bg-bg">
-      <header className="sticky top-0 z-10 border-b border-line/60 bg-bg/85 px-4 backdrop-blur">
-        <div className="mx-auto flex h-14 max-w-[1100px] items-center gap-2.5">
-          <Mark />
-          <b className="font-display text-lg font-semibold tracking-[-0.02em]">wanlly</b>
-          <a href="#apply" className="ml-auto rounded-full bg-fg px-4 py-1.5 text-sm font-semibold text-bg">Apply for the beta</a>
-        </div>
-      </header>
-
       <main className="px-4">
         <section className="mx-auto flex max-w-[1100px] flex-col items-center gap-6 pt-16 pb-12 text-center sm:pt-24">
-          <span className="rounded-full border border-line bg-surface px-3 py-1 text-[13px] text-muted">Private beta · opening in weekly groups</span>
+          <span className="rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted">Private beta · opening in weekly groups</span>
           <h1 className="max-w-[16ch] font-display text-[clamp(40px,7vw,76px)] leading-[0.98] font-semibold tracking-[-0.04em] text-balance">
-            Frontier AI, paid for by ads.
+            Join the Wanlly beta.
           </h1>
           <p className="max-w-[56ch] text-[17px] text-muted text-balance">
-            Chat, code, design and make images with Haiku, Sonnet, Opus and Fable. Watch a short video, earn credits, build your idea. No card. No subscription.
+            Chat, code and design with Claude and Gemini. One short video a day unlocks your floor, the same wherever you live. No card. No subscription.
           </p>
           <a href="#apply" className="rounded-full bg-fg px-6 py-3 text-[15px] font-semibold text-bg">Apply for the beta</a>
         </section>
@@ -119,14 +122,14 @@ export function BetaPage() {
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight font-semibold tracking-[-0.03em] text-balance">How it&apos;s paid for, in plain numbers.</h2>
             <p className="max-w-[52ch] text-muted">
-              About 70% of what your ads earn goes straight to your AI. The rest keeps the lights on. Sponsors sit beside your work, never inside an answer, and never change what a model says.
+              Everyone gets the same daily floor, paid from a community pool. Extra videos earn on top. Sponsors sit beside your work, never inside an answer, and never change what a model says.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              ["4", "credits per 20-second video"],
-              ["70%", "of your ad earnings spent on your AI"],
-              ["4", "frontier models, from quick to deep"],
+              ["1", "video a day unlocks your floor"],
+              ["Same", "floor in every country"],
+              ["2", "AI families: Claude and Gemini"],
               ["0", "cards, subscriptions or API keys"],
             ].map(([n, l]) => (
               <div key={l} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
@@ -148,14 +151,13 @@ export function BetaPage() {
                 <button
                   type="button"
                   onClick={async () => {
-                    try { await navigator.clipboard.writeText(`https://${link}`); setCopied(true); } catch { setCopied(false); }
+                    try { await navigator.clipboard.writeText(link); setCopied(true); } catch { setCopied(false); }
                   }}
                   className="rounded-lg bg-fg px-3 py-1.5 text-[13px] font-semibold text-bg"
                 >
                   {copied ? "Copied" : "Copy link"}
                 </button>
               </div>
-              <p className="text-xs text-faint">Design preview: this form doesn&apos;t send anything yet.</p>
             </div>
           ) : (
             <>
@@ -164,27 +166,19 @@ export function BetaPage() {
                 <p className="text-muted">We review every application by hand.</p>
               </div>
               <form onSubmit={submit} className="flex flex-col gap-3.5">
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-name">Name<input id="b-name" name="name" required autoComplete="name" className={field} /></label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-email">Email<input id="b-email" name="email" type="email" required autoComplete="email" className={field} /></label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-country">Country
-                  <select id="b-country" name="country" required defaultValue="" className={field}>
-                    <option value="" disabled>Choose your country</option>
-                    {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-build">What do you want to build?
+                <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-name">Name<input id="b-name" name="name" required autoComplete="name" className={field} /></label>
+                <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-email">Email<input id="b-email" name="email" type="email" required autoComplete="email" className={field} /></label>
+                <SelectOrType id="b-country" name="country" label="Country" options={COUNTRIES} placeholder="Type your country" required field={field} />
+                <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-build">What do you want to build?
                   <textarea id="b-build" name="build" required rows={3} placeholder="A booking app for my cousin's salon, a study planner, a portfolio…" className={`${field} resize-none`} />
                 </label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-source">How did you hear about Wanlly?
-                  <select id="b-source" name="source" defaultValue="" className={field}>
-                    <option value="" disabled>Choose one</option>
-                    {SOURCES.map((s) => <option key={s}>{s}</option>)}
-                  </select>
-                </label>
-                <label className="flex flex-col gap-1.5 text-sm font-medium" htmlFor="b-ref">Invite code <span className="font-normal text-faint">optional</span>
+                <SelectOrType id="b-source" name="source" label="How did you hear about Wanlly?" options={SOURCES} placeholder="Tell us where" field={field} />
+                <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-ref">Invite code <span className="font-normal text-faint">optional</span>
                   <input id="b-ref" name="ref" className={field} />
                 </label>
-                <button type="submit" className="mt-2 rounded-full bg-fg px-6 py-3 text-[15px] font-semibold text-bg">Apply</button>
+                <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+                {error && <p role="alert" className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">{error}</p>}
+                <button type="submit" disabled={busy} className="mt-2 rounded-full bg-fg px-6 py-2.5 text-sm font-semibold text-bg disabled:opacity-60">{busy ? "Sending…" : "Apply"}</button>
                 <p className="text-center text-xs text-faint">By applying you agree to hear from us about the beta. No spam, unsubscribe anytime.</p>
               </form>
             </>
@@ -192,13 +186,6 @@ export function BetaPage() {
         </section>
       </main>
 
-      <footer className="border-t border-line px-4 py-8">
-        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-3 text-sm text-muted">
-          <Mark size={20} />
-          <span>Wanlly</span>
-          <span className="ml-auto">Built for people with ideas, everywhere.</span>
-        </div>
-      </footer>
     </div>
   );
 }

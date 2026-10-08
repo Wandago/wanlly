@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <main className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <section className="hidden flex-col justify-between bg-fg p-10 text-bg lg:flex">
-        <Link href="/beta" className="flex items-center gap-2.5">
+        <Link href="/" className="flex items-center gap-2.5">
           <svg viewBox="0 0 64 64" className="size-8" aria-hidden="true">
             <defs>
               <mask id="auth-node" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">

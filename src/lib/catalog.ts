@@ -5,7 +5,7 @@ export type ToolId = "chat" | "code" | "design" | "images";
 export type Model = {
   id: string;
   name: string;
-  group: "Anthropic" | "Other providers";
+  group: "Anthropic" | "Google" | "Other providers";
   description: string;
   /** Credits per chat message. One credit is half a US cent of model cost. */
   credits: number;
@@ -48,6 +48,7 @@ export const MODELS: Model[] = [
   { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 2 },
   { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4 },
   { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10 },
+  { id: "gemini-flash", name: "Gemini Flash", group: "Google", description: "Fast, good for everyday work. Testing on Google's free tier", credits: 1 },
   { id: "gpt", name: "GPT", group: "Other providers", description: "OpenAI, chat and Codex", credits: 2 },
   { id: "grok", name: "Grok", group: "Other providers", description: "xAI, fast with live web", credits: 2 },
 ];

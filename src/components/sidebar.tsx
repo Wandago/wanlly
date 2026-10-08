@@ -138,12 +138,12 @@ export function Sidebar() {
         className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
         aria-label="Sidebar"
       >
-        <Link href="/" onClick={close} className="flex items-center gap-2.5 px-2 pt-1 pb-3">
+        <Link href="/app" onClick={close} className="flex items-center gap-2.5 px-2 pt-1 pb-3">
           <Mark />
           <b className="font-display text-lg font-semibold tracking-[-0.02em]">Wanlly</b>
         </Link>
         <Link
-          href="/"
+          href="/app"
           onClick={() => dispatch({ type: "newChat" })}
           className="flex items-center gap-2.5 rounded-[10px] border border-line bg-surface px-2.5 py-2 font-medium hover:border-faint"
         >
@@ -154,11 +154,11 @@ export function Sidebar() {
 
         <nav className="mt-2 flex flex-col gap-px" aria-label="Main">
           {TOOL_LINKS.map((id) => {
-            const active = path === "/" && tool === id;
+            const active = path === "/app" && tool === id;
             return (
               <Link
                 key={id}
-                href="/"
+                href="/app"
                 aria-current={active ? "page" : undefined}
                 onClick={() => dispatch({ type: "setTool", tool: id })}
                 className={`${row} ${active ? "bg-hover font-medium text-fg" : "text-muted hover:bg-hover hover:text-fg"}`}
@@ -190,7 +190,7 @@ export function Sidebar() {
           {RECENTS.map((r) => (
             <Link
               key={r.title}
-              href="/"
+              href="/app"
               onClick={() => dispatch(r.tool === "chat" ? { type: "openSampleChat" } : { type: "setTool", tool: r.tool })}
               className={`${row} text-muted hover:bg-hover hover:text-fg`}
             >
