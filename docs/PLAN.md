@@ -17,6 +17,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 
 | Topic | Decision |
 |---|---|
+| Who it's for | **Students and under-resourced creators anywhere in the world**: people with ideas and no budget for AI subscriptions. Not one region. |
 | Who pays | **Ads only at launch.** Sponsorship deals come later, once there are users to show. |
 | Free tier | **None.** New accounts start at zero credits and earn their first ones by watching a video. Nobody uses AI that their own ads didn't pay for, so there's no subsidy to fund. |
 | Paywall | None for now. A Plus plan is an optional extra for later. |
@@ -143,7 +144,7 @@ The product won't promote itself, so start before it's finished.
 
 1. **Build in public from this weekend.** Short posts and screen recordings on X, TikTok, LinkedIn and Instagram: "I'm building a free AI workspace paid for by ads." Show the UI, the ad formats, the economics page.
 2. **Waitlist page on your domain** in Step 2, with a "skip the line by inviting friends" link.
-3. **Your home developer communities:** university tech clubs, local developer groups and WhatsApp/Telegram communities in Kenya, Nigeria and across Africa and Asia, the people Wanlly is built for.
+3. **Student and creator communities worldwide:** university tech clubs and hackathons, student developer Discords, bootcamps, creator collectives and WhatsApp/Telegram groups, from Nairobi and Lagos to Manila, São Paulo, Dhaka and US community colleges. These are the people Wanlly is built for.
 4. **Referral credits:** invite a friend who signs up and both get extra allowance. Cheap to give, and the best growth channel for a free product.
 5. **Public gallery** of things people built with Wanlly (with their permission). Good for sharing, search traffic and AdSense approval.
 6. **Launch days** when the beta opens: Product Hunt, Hacker News "Show HN", relevant Reddit communities (read each one's rules on self-promotion first).
