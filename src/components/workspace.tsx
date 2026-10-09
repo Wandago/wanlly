@@ -8,6 +8,7 @@ import { Composer } from "./composer";
 import { Icon } from "./icon";
 import { JobView } from "./job-view";
 import { TopBar } from "./top-bar";
+import { DesignHome } from "./design-home";
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
 function UnlockCard() {
@@ -59,6 +60,8 @@ export function Workspace() {
     const el = scroller.current;
     if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 160) el.scrollTop = el.scrollHeight;
   }, [streamed]);
+
+  if (tool === "design") return <DesignHome />;
 
   return (
     <main className="flex h-full min-h-0 min-w-0 flex-col">

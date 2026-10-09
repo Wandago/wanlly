@@ -8,10 +8,13 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
 
-type Project = {
+export type DesignKind = "slides" | "design" | "codebase" | "system";
+
+export type Project = {
   id: number;
   name: string;
   tool: ToolId;
+  kind?: DesignKind | null;
   about: string;
   instructions: string;
   modelId: string;
@@ -118,8 +121,12 @@ function Label({ text, children }: { text: string; children: ReactNode }) {
   );
 }
 
-function NewProject({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (p: Project) => void }) {
-  const [tool, setTool] = useState<ToolId>("code");
+/** What a preset dialog says and makes, e.g. "New slides" from the Design home. */
+export type Preset = { tool: ToolId; kind?: DesignKind; title: string; description: string; namePlaceholder: string; briefPlaceholder: string };
+
+export function NewProject({ open, onOpenChange, onCreated, preset }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (p: Project) => void; preset?: Preset }) {
+  const [chosen, setTool] = useState<ToolId>("code");
+  const tool = preset?.tool ?? chosen;
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -132,6 +139,7 @@ function NewProject({ open, onOpenChange, onCreated }: { open: boolean; onOpenCh
         about: form.get("about"),
         instructions: form.get("instructions"),
         tool,
+        kind: preset?.kind,
       });
       onCreated(project);
       onOpenChange(false);
@@ -149,8 +157,8 @@ function NewProject({ open, onOpenChange, onCreated }: { open: boolean; onOpenCh
         <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-32px)] w-[480px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-[20px] border border-line bg-surface p-5 text-fg shadow-soft">
           <header className="flex items-start gap-3">
             <div>
-              <Dialog.Title className="font-display text-lg font-semibold tracking-[-0.02em]">New project</Dialog.Title>
-              <Dialog.Description className="mt-0.5 text-[13px] text-muted">Keep chats and instructions together for one thing you&apos;re building.</Dialog.Description>
+              <Dialog.Title className="font-display text-lg font-semibold tracking-[-0.02em]">{preset?.title ?? "New project"}</Dialog.Title>
+              <Dialog.Description className="mt-0.5 text-[13px] text-muted">{preset?.description ?? "Keep chats and instructions together for one thing you're building."}</Dialog.Description>
             </div>
             <Dialog.Close aria-label="Close" className="ml-auto grid size-[34px] place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">
               <Icon name="x" />
@@ -158,35 +166,42 @@ function NewProject({ open, onOpenChange, onCreated }: { open: boolean; onOpenCh
           </header>
           <form action={submit} className="flex flex-col gap-3.5">
             <Label text="Name">
-              <input name="name" required maxLength={80} className={input} placeholder="My class revision app" autoFocus />
+              <input name="name" required maxLength={80} className={input} placeholder={preset?.namePlaceholder ?? "My class revision app"} autoFocus />
             </Label>
-            <div className="flex flex-col gap-1.5 text-[13px] font-medium">
-              Mostly for
-              <div className="inline-flex flex-wrap gap-0.5 self-start rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Tool">
-                {TOOLS.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    aria-pressed={tool === t}
-                    onClick={() => setTool(t)}
-                    className={`rounded-lg px-3 py-1 font-normal ${tool === t ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/0.08)]" : "text-muted"}`}
-                  >
-                    {LABEL[t]}
-                  </button>
-                ))}
+            {!preset && (
+              <div className="flex flex-col gap-1.5 text-[13px] font-medium">
+                Mostly for
+                <div className="inline-flex flex-wrap gap-0.5 self-start rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Tool">
+                  {TOOLS.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      aria-pressed={tool === t}
+                      onClick={() => setTool(t)}
+                      className={`rounded-lg px-3 py-1 font-normal ${tool === t ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/0.08)]" : "text-muted"}`}
+                    >
+                      {LABEL[t]}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <Label text="What it is (optional)">
               <input name="about" maxLength={300} className={input} placeholder="One line, so you can find it later" />
             </Label>
-            <Label text="Instructions (optional)">
-              <textarea name="instructions" maxLength={4000} className={`${input} min-h-24 resize-y font-normal`} placeholder="Every chat in this project follows these. For example: for students on cheap Android phones; keep it fast and simple." />
+            <Label text={preset ? "Brief (optional)" : "Instructions (optional)"}>
+              <textarea
+                name="instructions"
+                maxLength={4000}
+                className={`${input} min-h-24 resize-y font-normal`}
+                placeholder={preset?.briefPlaceholder ?? "Every chat in this project follows these. For example: for students on cheap Android phones; keep it fast and simple."}
+              />
             </Label>
             {error && <p className="text-[13px] text-bad">{error}</p>}
             <div className="flex justify-end gap-2">
               <Dialog.Close className={btnGhost}>Cancel</Dialog.Close>
               <button type="submit" disabled={busy} className={`${btnDark} disabled:opacity-60`}>
-                {busy ? "Creating…" : "Create project"}
+                {busy ? "Creating…" : preset ? "Create" : "Create project"}
               </button>
             </div>
           </form>
@@ -302,7 +317,12 @@ export function ProjectsView() {
 
   useEffect(() => {
     api<{ projects: Project[] }>("/api/projects")
-      .then((d) => setProjects(d.projects))
+      .then((d) => {
+        setProjects(d.projects);
+        // /projects?open=12 opens that project straight away (used by the Design home).
+        const id = Number(new URLSearchParams(window.location.search).get("open"));
+        if (id) setOpen(id);
+      })
       .catch((e: Error) => setError(e.message));
   }, []);
 

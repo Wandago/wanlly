@@ -5,7 +5,7 @@ import { projectFields } from "@/lib/projects";
 import { signedInUserId } from "@/lib/session";
 
 const p = schema.projects;
-const cols = { id: p.id, name: p.name, tool: p.tool, about: p.about, instructions: p.instructions, modelId: p.modelId, createdAt: p.createdAt, updatedAt: p.updatedAt };
+const cols = { id: p.id, name: p.name, tool: p.tool, about: p.about, instructions: p.instructions, modelId: p.modelId, kind: p.kind, createdAt: p.createdAt, updatedAt: p.updatedAt };
 
 /** Only the owner's own, undeleted project matches. */
 const mine = (userId: string, id: number) => and(eq(p.id, id), eq(p.ownerId, userId), isNull(p.deletedAt));

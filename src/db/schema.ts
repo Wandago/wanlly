@@ -106,6 +106,8 @@ export const projects = pgTable("projects", {
   about: text("about").notNull().default(""),
   instructions: text("instructions").notNull().default(""),
   modelId: text("model_id").notNull().default("haiku"),
+  /** For Design projects: slides, design, codebase or system. */
+  kind: text("kind", { enum: ["slides", "design", "codebase", "system"] }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   /** Set when deleted. Rows are kept 30 days so a mistake can be undone, then purged. */

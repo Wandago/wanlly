@@ -5,14 +5,21 @@ import { MAX_PROJECTS, projectFields } from "@/lib/projects";
 import { signedInUserId } from "@/lib/session";
 
 const p = schema.projects;
-const cols = { id: p.id, name: p.name, tool: p.tool, about: p.about, instructions: p.instructions, modelId: p.modelId, createdAt: p.createdAt, updatedAt: p.updatedAt };
+const TOOLS = ["chat", "code", "design", "images"] as const;
+const cols = { id: p.id, name: p.name, tool: p.tool, about: p.about, instructions: p.instructions, modelId: p.modelId, kind: p.kind, createdAt: p.createdAt, updatedAt: p.updatedAt };
 
 /** The signed-in person's projects, most recently changed first. */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
-    const projects = await db().select(cols).from(p).where(and(eq(p.ownerId, userId), isNull(p.deletedAt))).orderBy(desc(p.updatedAt)).limit(MAX_PROJECTS);
+    const tool = TOOLS.find((t) => t === new URL(req.url).searchParams.get("tool"));
+    const projects = await db()
+      .select(cols)
+      .from(p)
+      .where(and(eq(p.ownerId, userId), isNull(p.deletedAt), tool ? eq(p.tool, tool) : undefined))
+      .orderBy(desc(p.updatedAt))
+      .limit(MAX_PROJECTS);
     return Response.json({ projects });
   } catch (e) {
     console.error("projects GET failed", e);
@@ -31,7 +38,7 @@ export async function POST(req: Request) {
     if (n >= MAX_PROJECTS) return Response.json({ error: `You can have up to ${MAX_PROJECTS} projects. Delete one to make room.` }, { status: 429 });
     const [project] = await db()
       .insert(p)
-      .values({ ownerId: userId, name: f.name, tool: f.tool, about: f.about ?? "", instructions: f.instructions ?? "", modelId: f.modelId ?? "gemini-flash" })
+      .values({ ownerId: userId, name: f.name, tool: f.tool, about: f.about ?? "", instructions: f.instructions ?? "", modelId: f.modelId ?? "gemini-flash", kind: f.tool === "design" ? (f.kind ?? "design") : null })
       .returning(cols);
     return Response.json({ project });
   } catch (e) {

@@ -36,6 +36,13 @@
       "when": 1791533222546,
       "tag": "0004_traffic_and_ads",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791535849343,
+      "tag": "0005_design_kind",
+      "breakpoints": true
     }
   ]
 }

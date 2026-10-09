@@ -18,6 +18,30 @@ const PATHS = {
   down: <path d="m6 9 6 6 6-6" />,
   bolt: <path d="M13 3 5 13.5h6L10 21l8-10.5h-6L13 3z" />,
   menu: <path d="M4 7h16M4 12h16M4 17h10" />,
+  grid: (
+    <>
+      <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+      <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+      <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+    </>
+  ),
+  list: <path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01" />,
+  sliders: (
+    <>
+      <path d="M6 4v16M12 4v16M18 4v16" />
+      <circle cx="6" cy="9" r="2" />
+      <circle cx="12" cy="15" r="2" />
+      <circle cx="18" cy="8" r="2" />
+    </>
+  ),
+  more: <path d="M12 5.5h.01M12 12h.01M12 18.5h.01" />,
+  slides: (
+    <>
+      <rect x="3.5" y="5" width="13" height="10" rx="2" />
+      <path d="M7.5 19h13V9" />
+    </>
+  ),
   copy: (
     <>
       <rect x="8" y="8" width="12" height="12" rx="2.5" />
