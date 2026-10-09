@@ -70,7 +70,7 @@ function ProductPreview() {
           {[0, 1, 2].map((i) => (
             <span key={i} className="size-2.5 rounded-full bg-line" />
           ))}
-          <span className="ml-3 rounded-md border border-line bg-surface px-2 py-0.5 font-mono text-[10px] text-faint">wanlly.app/app</span>
+          <span className="ml-3 rounded-md border border-line bg-surface px-2 py-0.5 font-mono text-[10px] text-faint">Wanlly</span>
         </div>
         <div className="grid text-left sm:grid-cols-[150px_minmax(0,1fr)]">
           <aside className="hidden flex-col gap-0.5 border-r border-line bg-side p-2.5 text-xs sm:flex">
