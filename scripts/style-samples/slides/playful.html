@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@500;700&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#fff6e5;--page:#ffd23f;--surface:#ffffff;--ink:#111111;--text:#222;--muted:#555;--line:#111;--accent:#ff5a36;--accent2:#2ec4b6;--on:#fff;--r:20px;--d:'Bricolage Grotesque',sans-serif;--b:'DM Sans',sans-serif;--dw:800;--tr:-0.05em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:normal;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:20px;border:3px solid #111;box-shadow:4px 4px 0 #111;}
+.btn.ghost{background:transparent;color:var(--ink);border:3px solid #111;box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:3px solid #111;box-shadow:6px 6px 0 #111;}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+.deck{position:absolute;inset:40px 60px;display:flex;flex-direction:column;gap:28px}
+.s{position:relative;background:var(--bg);overflow:hidden;container-type:inline-size;aspect-ratio:16/9;box-shadow:0 20px 50px rgba(0,0,0,.18);border-radius:6px}
+.main{width:100%;max-width:1180px;align-self:center}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1180px;width:100%;align-self:center}
+.pad{position:absolute;inset:7cqw 7cqw}
+.k{font:600 1.5cqw var(--b);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.t{font-size:7.4cqw;margin-top:2cqw;max-width:78%}
+.sub{font-size:2.1cqw;color:var(--muted);margin-top:2.4cqw}
+.foot{position:absolute;left:7cqw;right:7cqw;bottom:4cqw;display:flex;justify-content:space-between;font-size:1.4cqw;color:var(--muted)}
+.big{font-size:6cqw}.chart{position:absolute;left:7cqw;right:7cqw;bottom:13cqw;height:30cqw;display:flex;align-items:flex-end;gap:3cqw;border-bottom:1px solid var(--line)}
+.chart i{flex:1;background:var(--line);border-radius:4px 4px 0 0}
+.pts{margin-top:4cqw;display:grid;gap:2cqw}.pts div{display:flex;gap:2.4cqw;align-items:baseline;font-size:3cqw;color:var(--ink);border-top:1px solid var(--line);padding-top:2cqw}
+.pts b{font-family:var(--d);color:var(--accent);font-size:3.4cqw;min-width:5cqw}
+</style></head><body>
+<div class="deck">
+<section class="s main"><div style="position:absolute;right:6%;bottom:10%;width:22%;aspect-ratio:1;border-radius:50%;background:var(--accent2);border:4px solid #111;transform:rotate(-8deg)"></div><div class="pad"><p class="k">chapa!</p><h1 class="disp t">Chapa! goes <span class="it">national</span></h1><p class="sub">Campus expansion plan · 2027</p></div><div class="foot"><span>chapa!</span><span>01</span></div></section>
+<div class="row">
+<section class="s"><div style="position:absolute;right:6%;bottom:10%;width:22%;aspect-ratio:1;border-radius:50%;background:var(--accent2);border:4px solid #111;transform:rotate(-8deg)"></div><div class="pad"><p class="k">Highlights</p><h2 class="disp big" style="margin-top:2cqw">12 → 40 campuses</h2></div><div class="chart"><i style="height:46%;"></i><i style="height:58%;"></i><i style="height:52%;"></i><i style="height:70%;"></i><i style="height:88%;background:var(--accent)"></i></div><div class="foot"><span>Source: internal data</span><span>02</span></div></section>
+<section class="s"><div class="pad"><p class="k">Priorities</p><div class="pts"><div><b>01</b>Late-night menu</div><div><b>02</b>Student riders</div><div><b>03</b>M-Pesa only</div></div></div><div class="foot"><span>chapa!</span><span>03</span></div></section>
+</div></div></body></html>

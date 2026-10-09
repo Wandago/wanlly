@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#f3e9d8;--page:#1d2554;--surface:#fbf4e8;--ink:#1d2554;--text:#2c3366;--muted:#5a5f80;--line:#d9c9ad;--accent:#c4532c;--accent2:#d9a441;--on:#fff;--r:18px;--d:Syne,sans-serif;--b:'DM Sans',sans-serif;--dw:800;--tr:-0.04em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:normal;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:18px;}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+.deck{position:absolute;inset:40px 60px;display:flex;flex-direction:column;gap:28px}
+.s{position:relative;background:var(--bg);overflow:hidden;container-type:inline-size;aspect-ratio:16/9;box-shadow:0 20px 50px rgba(0,0,0,.18);border-radius:6px}
+.main{width:100%;max-width:1180px;align-self:center}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1180px;width:100%;align-self:center}
+.pad{position:absolute;inset:7cqw 7cqw}
+.k{font:600 1.5cqw var(--b);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.t{font-size:7.4cqw;margin-top:2cqw;max-width:78%}
+.sub{font-size:2.1cqw;color:var(--muted);margin-top:2.4cqw}
+.foot{position:absolute;left:7cqw;right:7cqw;bottom:4cqw;display:flex;justify-content:space-between;font-size:1.4cqw;color:var(--muted)}
+.big{font-size:6cqw}.chart{position:absolute;left:7cqw;right:7cqw;bottom:13cqw;height:30cqw;display:flex;align-items:flex-end;gap:3cqw;border-bottom:1px solid var(--line)}
+.chart i{flex:1;background:var(--line);border-radius:4px 4px 0 0}
+.pts{margin-top:4cqw;display:grid;gap:2cqw}.pts div{display:flex;gap:2.4cqw;align-items:baseline;font-size:3cqw;color:var(--ink);border-top:1px solid var(--line);padding-top:2cqw}
+.pts b{font-family:var(--d);color:var(--accent);font-size:3.4cqw;min-width:5cqw}
+</style></head><body>
+<div class="deck">
+<section class="s main"><div class="pattern" style="position:absolute;left:0;right:0;top:0;height:7%"></div><div class="pad"><p class="k">Soko Collective</p><h1 class="disp t">The Maker <span class="it">Fund</span></h1><p class="sub">Soko Collective · Investor update</p></div><div class="foot"><span>Soko Collective</span><span>01</span></div></section>
+<div class="row">
+<section class="s"><div class="pattern" style="position:absolute;left:0;right:0;top:0;height:4.2%"></div><div class="pad"><p class="k">Highlights</p><h2 class="disp big" style="margin-top:2cqw">340 makers paid fairly</h2></div><div class="chart"><i style="height:46%;"></i><i style="height:58%;"></i><i style="height:52%;"></i><i style="height:70%;"></i><i style="height:88%;background:var(--accent)"></i></div><div class="foot"><span>Source: internal data</span><span>02</span></div></section>
+<section class="s"><div class="pad"><p class="k">Priorities</p><div class="pts"><div><b>01</b>Fair prices</div><div><b>02</b>47 counties</div><div><b>03</b>Stories on every item</div></div></div><div class="foot"><span>Soko Collective</span><span>03</span></div></section>
+</div></div></body></html>

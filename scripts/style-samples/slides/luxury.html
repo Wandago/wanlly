@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#0f0d0b;--page:#2a241d;--surface:#17140f;--ink:#efe7da;--text:#d8cfc2;--muted:#9a8f80;--line:#3b3329;--accent:#d9c29a;--accent2:#8a6a52;--on:#0f0d0b;--r:0px;--d:'Cormorant Garamond',serif;--b:Jost,sans-serif;--dw:400;--tr:-0.02em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:italic;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:0px;}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+.deck{position:absolute;inset:40px 60px;display:flex;flex-direction:column;gap:28px}
+.s{position:relative;background:var(--bg);overflow:hidden;container-type:inline-size;aspect-ratio:16/9;box-shadow:0 20px 50px rgba(0,0,0,.18);border-radius:6px}
+.main{width:100%;max-width:1180px;align-self:center}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:1180px;width:100%;align-self:center}
+.pad{position:absolute;inset:7cqw 7cqw}
+.k{font:600 1.5cqw var(--b);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.t{font-size:7.4cqw;margin-top:2cqw;max-width:78%}
+.sub{font-size:2.1cqw;color:var(--muted);margin-top:2.4cqw}
+.foot{position:absolute;left:7cqw;right:7cqw;bottom:4cqw;display:flex;justify-content:space-between;font-size:1.4cqw;color:var(--muted)}
+.big{font-size:6cqw}.chart{position:absolute;left:7cqw;right:7cqw;bottom:13cqw;height:30cqw;display:flex;align-items:flex-end;gap:3cqw;border-bottom:1px solid var(--line)}
+.chart i{flex:1;background:rgba(255,255,255,.18);border-radius:0}
+.pts{margin-top:4cqw;display:grid;gap:2cqw}.pts div{display:flex;gap:2.4cqw;align-items:baseline;font-size:3cqw;color:var(--ink);border-top:1px solid var(--line);padding-top:2cqw}
+.pts b{font-family:var(--d);color:var(--accent);font-size:3.4cqw;min-width:5cqw}
+</style></head><body>
+<div class="deck">
+<section class="s main"><div class="pad"><p class="k">Maison Lamu</p><h1 class="disp t">Season <span class="it">2027</span></h1><p class="sub">Maison Lamu · Private presentation</p></div><div class="foot"><span>Maison Lamu</span><span>01</span></div></section>
+<div class="row">
+<section class="s"><div class="pad"><p class="k">Highlights</p><h2 class="disp big" style="margin-top:2cqw">92% occupancy</h2></div><div class="chart"><i style="height:46%;"></i><i style="height:58%;"></i><i style="height:52%;"></i><i style="height:70%;"></i><i style="height:88%;background:var(--accent)"></i></div><div class="foot"><span>Source: internal data</span><span>02</span></div></section>
+<section class="s"><div class="pad"><p class="k">Priorities</p><div class="pts"><div><b>01</b>Twelve suites</div><div><b>02</b>Dhow arrivals</div><div><b>03</b>A new rooftop terrace</div></div></div><div class="foot"><span>Maison Lamu</span><span>03</span></div></section>
+</div></div></body></html>

@@ -715,7 +715,7 @@ export function DesignEditor({ id }: { id: number }) {
                 }}
               />
               <ModelPicker />
-              <StylePicker value={getStyle(styleId) || systems.some((x) => x.id === systemId) ? look : ""} onChange={setLook} systems={file.kind === "system" ? [] : systems} />
+              <StylePicker value={getStyle(styleId) || systems.some((x) => x.id === systemId) ? look : ""} onChange={setLook} systems={file.kind === "system" ? [] : systems} kind={file.kind} />
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from rate={model.credits} />
                 {editing ? (

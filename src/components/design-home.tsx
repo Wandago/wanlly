@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { NewProject, type DesignKind, type Preset, type Project } from "./pages/projects-view";
-import { STYLES } from "@/lib/design-styles";
+import { LOOK_SETS, STYLES } from "@/lib/design-styles";
+import { useLocalSetting } from "@/lib/use-local-setting";
 import { StylePreview, StyleThumb } from "./style-picker";
 
 /*
@@ -176,6 +177,18 @@ export function DesignHome() {
   const [look, setLook] = useState<string | null>(null);
   /** The style shown large, before the person decides to use it. */
   const [preview, setPreview] = useState<string | null>(null);
+  /** Which kind of design the looks are shown for, and whether the section is open (both remembered). */
+  const [setKey, pickSet] = useLocalSetting("wanlly-look-set", "slides");
+  const lookSet = LOOK_SETS.find((x) => x.key === setKey) ?? LOOK_SETS[0];
+  const [openSetting, setOpenSetting] = useLocalSetting("wanlly-looks-open", "1");
+  const looksOpen = openSetting !== "0";
+  const toggleLooks = (o: boolean) => setOpenSetting(o ? "1" : "0");
+  /** Opens the new-file form for the current tab's kind, with a look or blank. */
+  const startWith = (id: string | null) => {
+    setPreview(null);
+    setLook(id);
+    setCreating(lookSet.kind as DesignKind);
+  };
   const rename = async (p: Project) => {
     const name = window.prompt("Rename", p.name)?.trim();
     if (!name || name === p.name) return;
@@ -356,28 +369,56 @@ export function DesignHome() {
         </section>
 
         <section className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 className="text-[15px] text-muted">Start from a look</h2>
-            <small className="text-[12px] text-faint">Have a site you love? Attach a screenshot in the editor and say &ldquo;in this style&rdquo;.</small>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <button type="button" onClick={() => toggleLooks(!looksOpen)} aria-expanded={looksOpen} className="flex items-center gap-1.5 text-[15px] text-muted hover:text-fg">
+              Start from a look
+              <Icon name="down" size={15} className={`text-faint transition-transform ${looksOpen ? "" : "-rotate-90"}`} />
+            </button>
+            {looksOpen && <small className="text-[12px] text-faint">Have a design you love? Attach a screenshot in the editor and say &ldquo;in this style&rdquo;.</small>}
           </div>
-          <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-x-4 sm:gap-y-5 sm:overflow-visible sm:px-0 lg:grid-cols-5">
-            {STYLES.map((st) => (
-              <button
-                key={st.id}
-                type="button"
-                onClick={() => setPreview(st.id)}
-                className="group flex w-[168px] shrink-0 snap-start flex-col gap-2 text-left sm:w-auto"
-              >
-                <span className="block aspect-[4/3] overflow-hidden rounded-xl border border-line transition-transform group-hover:-translate-y-0.5 group-hover:border-faint">
-                  <StyleThumb id={st.id} />
-                </span>
-                <span>
-                  <b className="block text-[14px] font-medium">{st.name}</b>
-                  <small className="block text-[12px] text-muted">{st.blurb}</small>
-                </span>
-              </button>
-            ))}
-          </div>
+          {looksOpen && (
+            <>
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Kind of design">
+                {LOOK_SETS.map((set) => (
+                  <button
+                    key={set.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={set.key === lookSet.key}
+                    onClick={() => pickSet(set.key)}
+                    className={`shrink-0 rounded-full border px-3.5 py-1.5 text-[13px] ${set.key === lookSet.key ? "border-fg bg-fg font-medium text-bg" : "border-line text-muted hover:text-fg"}`}
+                  >
+                    {set.label}
+                  </button>
+                ))}
+              </div>
+              <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-x-4 sm:gap-y-5 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+                <button type="button" onClick={() => startWith(null)} className="group flex w-[168px] shrink-0 snap-start flex-col gap-2 text-left sm:w-auto">
+                  <span className="grid aspect-[4/3] place-items-center rounded-xl border border-dashed border-line bg-surface text-faint transition-transform group-hover:-translate-y-0.5 group-hover:border-faint group-hover:text-fg">
+                    <Icon name="plus" size={26} />
+                  </span>
+                  <span>
+                    <b className="block text-[14px] font-medium">Blank</b>
+                    <small className="block text-[12px] text-muted">Start from nothing</small>
+                  </span>
+                </button>
+                {lookSet.ids.map((id) => {
+                  const st = STYLES.find((x) => x.id === id)!;
+                  return (
+                    <button key={id} type="button" onClick={() => setPreview(id)} className="group flex w-[168px] shrink-0 snap-start flex-col gap-2 text-left sm:w-auto">
+                      <span className="block aspect-[4/3] overflow-hidden rounded-xl border border-line transition-transform group-hover:-translate-y-0.5 group-hover:border-faint">
+                        <StyleThumb id={id} dir={lookSet.dir} />
+                      </span>
+                      <span>
+                        <b className="block text-[14px] font-medium">{st.name}</b>
+                        <small className="block text-[12px] text-muted">{st.blurb}</small>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </section>
 
         {error ? (
@@ -444,15 +485,7 @@ export function DesignHome() {
         )}
       </div>
 
-      <StylePreview
-        id={preview}
-        onIdChange={setPreview}
-        onUse={(id) => {
-          setPreview(null);
-          setLook(id);
-          setCreating("design");
-        }}
-      />
+      <StylePreview id={preview} items={lookSet.ids.map((id) => ({ id, dir: lookSet.dir }))} onIdChange={setPreview} onUse={startWith} />
 
       <NewProject
         key={creating ?? "none"}
@@ -468,7 +501,7 @@ export function DesignHome() {
                 tool: "design",
                 kind: creating,
                 ...KINDS[creating].preset,
-                ...(look ? { title: `New design · ${STYLES.find((x) => x.id === look)?.name ?? ""} style` } : {}),
+                ...(look ? { title: `New ${lookSet.key === "app" ? "app" : KINDS[creating].label.toLowerCase()} · ${STYLES.find((x) => x.id === look)?.name ?? ""} style` } : {}),
               }
             : undefined
         }

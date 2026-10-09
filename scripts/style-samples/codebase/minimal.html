@@ -1,0 +1,50 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#ffffff;--page:#ededeb;--surface:#f6f6f4;--ink:#111;--text:#333;--muted:#999;--line:#e6e6e6;--accent:#111111;--accent2:#bbbbbb;--on:#fff;--r:0px;--d:Inter,sans-serif;--b:Inter,sans-serif;--dw:300;--tr:-0.03em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:normal;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:0px;}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap');
+body{display:grid;grid-template-columns:600px 1fr;gap:0;background:var(--page)}
+.ed{background:#0d0f14;color:#c9ccd3;padding:0;display:flex;flex-direction:column}
+.tabs{display:flex;gap:2px;background:#07080b;padding:12px 12px 0}.tabs span{padding:10px 16px;font:500 13px 'Geist Mono';color:#7a7f8c;border-radius:8px 8px 0 0}.tabs span.on{background:#0d0f14;color:#e5e7eb}
+pre{padding:34px 34px;font:400 18px/1.9 'Geist Mono',monospace;white-space:pre}
+.c{color:#5c6370}.k{color:#c678dd}.f{color:#61afef}.s{color:#98c379}
+.term{margin-top:auto;border-top:1px solid #1f232b;padding:18px 30px;font:400 14px/1.7 'Geist Mono';color:#7a7f8c}.term b{color:#98c379;font-weight:400}
+.pv{background:var(--bg);padding:64px 60px;display:flex;flex-direction:column;justify-content:center;gap:40px;position:relative;overflow:hidden}
+.lab{font:600 14px var(--b);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.pc{padding:36px;display:flex;flex-direction:column;gap:14px;align-items:flex-start;font-size:18px}
+.badge{font-size:14px;font-weight:700;padding:5px 12px;border-radius:999px;background:var(--accent2);color:#fff;}
+.pc h3{font:var(--dw) 32px var(--d);color:var(--ink);letter-spacing:var(--tr)}
+.pc .p{font:var(--dw) 56px var(--d);color:var(--ink);letter-spacing:var(--tr);white-space:nowrap}.pc .p small{font:500 16px var(--b);color:var(--muted)}
+.pc ul{list-style:none;padding:0;display:grid;gap:6px;color:var(--text);margin:6px 0 10px}.pc li::before{content:"✓  ";color:var(--accent)}
+.feat{border:2px solid var(--accent)}
+.row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.inp{flex:1;min-width:240px;padding:18px 20px;font-size:17px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+</style></head><body>
+<div class="ed"><div class="tabs"><span class="on">pricing-card.tsx</span><span>button.tsx</span><span>tailwind.config.ts</span></div><pre><span class="c">// components/pricing-card.tsx</span>
+<span class="k">export function</span> <span class="f">PricingCard</span>({ plan }) {
+  <span class="k">return</span> (
+    &lt;<span class="f">Card</span> className=<span class="s">"p-6"</span>&gt;
+      &lt;<span class="f">Badge</span>&gt;{plan.tag}&lt;/<span class="f">Badge</span>&gt;
+      &lt;h3 className=<span class="s">"text-2xl font-semibold"</span>&gt;
+        {plan.name}
+      &lt;/h3&gt;
+      &lt;p className=<span class="s">"text-4xl"</span>&gt;KES {plan.price}&lt;/p&gt;
+      &lt;<span class="f">Button</span> size=<span class="s">"lg"</span>&gt;Choose plan&lt;/<span class="f">Button</span>&gt;
+    &lt;/<span class="f">Card</span>&gt;
+  );
+}</pre><div class="term">$ npm run dev<br><b>✓</b> Ready on http://localhost:3000</div></div>
+<div class="pv"><p class="lab" style="position:relative">Preview · Wairimu Studio</p>
+<div class="cards" style="position:relative"><div class="card pc"><span class="badge">Starter</span><h3>Basic</h3><p class="p">KES 0 <small>/ month</small></p><ul><li>3 projects</li><li>Community support</li></ul><span class="btn ghost" style="padding:15px 24px;font-size:17px">Start free</span></div>
+<div class="card pc feat"><span class="badge">Popular</span><h3>Pro</h3><p class="p">KES 900 <small>/ month</small></p><ul><li>Unlimited projects</li><li>Priority support</li></ul><span class="btn" style="padding:15px 24px;font-size:17px">Choose plan</span></div></div>
+<p class="lab" style="position:relative">Buttons & inputs</p>
+<div class="row" style="position:relative"><span class="btn" style="padding:16px 28px;font-size:18px">Primary</span><span class="btn ghost" style="padding:16px 28px;font-size:18px">Secondary</span><span class="badge" style="font-size:16px">Badge</span></div>
+<div class="row" style="position:relative"><span class="inp">you@example.co.ke</span><span class="btn" style="padding:18px 26px;font-size:17px">Subscribe</span></div>
+</div></body></html>

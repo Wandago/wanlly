@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;700&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#f3e9d8;--page:#1d2554;--surface:#fbf4e8;--ink:#1d2554;--text:#2c3366;--muted:#5a5f80;--line:#d9c9ad;--accent:#c4532c;--accent2:#d9a441;--on:#fff;--r:18px;--d:Syne,sans-serif;--b:'DM Sans',sans-serif;--dw:800;--tr:-0.04em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:normal;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:18px;}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--line);}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+body{background:var(--bg);padding:56px 72px;display:grid;grid-template-columns:1.1fr .9fr;grid-template-rows:auto 1fr;gap:40px 64px;font-size:18px}
+body::before{content:'';position:absolute;left:0;right:0;top:0;height:18px;background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+header{grid-column:1/3;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:20px;position:relative}
+header h1{font-size:84px}header p{color:var(--muted)}
+.lab{font:600 14px var(--b);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+.sw{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.sw div{border-radius:var(--r);overflow:hidden;border:1px solid var(--line);background:var(--surface)}
+.sw i{display:block;height:130px}.sw p{padding:12px 14px;font-size:16px;color:var(--ink);font-weight:600}.sw small{display:block;color:var(--muted);font-weight:400;font-family:monospace}
+.ts{display:flex;flex-direction:column;gap:14px;margin-top:40px}
+.ts div{display:flex;align-items:baseline;gap:18px;border-top:1px solid var(--line);padding-top:10px}.ts small{width:80px;color:var(--muted);font-size:12px;font-family:monospace}
+.comp{display:flex;flex-direction:column;gap:34px;position:relative}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.inp{display:block;width:100%;padding:18px 20px;font-size:18px;border-radius:var(--r);border:1px solid var(--line);background:var(--surface);color:var(--muted)}
+.chk{display:flex;gap:10px;align-items:center;color:var(--ink)}.chk i{width:28px;height:28px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--on);font-style:normal;font-size:14px}
+.alert{padding:22px 24px;font-size:18px;border-radius:var(--r);border-left:4px solid var(--accent);background:var(--surface);color:var(--ink)}
+.badge{font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--accent2);color:#fff}
+.rad{display:flex;gap:14px}.rad span{width:76px;height:76px;border:2px solid var(--accent);background:var(--surface)}
+</style></head><body>
+<header><div><p class="lab">Design system · v1.0</p><h1 class="disp">Soko Collective</h1></div><p>Colours, type and components</p></header>
+<section style="position:relative"><p class="lab">Colour</p><div class="sw"><div><i style="background:#1d2554"></i><p>Ink<small>#1d2554</small></p></div><div><i style="background:#c4532c"></i><p>Accent<small>#c4532c</small></p></div><div><i style="background:#d9a441"></i><p>Accent 2<small>#d9a441</small></p></div><div><i style="background:#fbf4e8"></i><p>Surface<small>#fbf4e8</small></p></div><div><i style="background:#f3e9d8"></i><p>Background<small>#f3e9d8</small></p></div><div><i style="background:#d9c9ad"></i><p>Line<small>#d9c9ad</small></p></div></div>
+<div class="ts"><p class="lab" style="margin:0">Type scale</p>
+<div><small>Display</small><span class="disp" style="font-size:76px">Build boldly</span></div>
+<div><small>Heading</small><span class="disp" style="font-size:44px">Section heading</span></div>
+<div><small>Body</small><span style="font-size:20px;color:var(--text)">Body text reads clearly at 16–18px.</span></div></div></section>
+<section class="comp"><div><p class="lab">Buttons</p><div class="row"><span class="btn" style="padding:17px 28px;font-size:18px">Primary</span><span class="btn ghost" style="padding:17px 28px;font-size:18px">Secondary</span><span class="badge" style="font-size:15px">New</span></div></div>
+<div><p class="lab">Input</p><span class="inp">Phone number · 07XX XXX XXX</span></div>
+<div class="chk"><i>✓</i>Remember me on this device</div>
+<div class="alert"><b>Payment received.</b> KES 2,500 via M-Pesa.</div>
+<div><p class="lab">Radius</p><div class="rad"><span style="border-radius:0"></span><span style="border-radius:9px"></span><span style="border-radius:18px"></span><span style="border-radius:999px"></span></div></div></section>
+</body></html>

@@ -243,3 +243,28 @@ export const STYLES: DesignStyle[] = [
 ];
 
 export const getStyle = (id: unknown) => (typeof id === "string" ? STYLES.find((s) => s.id === id) : undefined);
+
+/**
+ * Example pages per kind of design, so each tab shows looks that fit it: slide decks for Slides,
+ * phone screens for apps, components for codebases, token sheets for design systems. `dir` is the
+ * folder under public/styles ("" for the website pages). Made by scripts/style-samples.
+ */
+export const LOOK_SETS = [
+  { key: "slides", label: "Slides", kind: "slides", dir: "slides", ids: ["corporate", "editorial", "swiss", "dark-premium", "playful", "minimal", "afro-modern", "luxury"] },
+  { key: "app", label: "App screens", kind: "design", dir: "app", ids: ["product", "dark-premium", "playful", "glass", "organic", "kids"] },
+  { key: "web", label: "Websites", kind: "design", dir: "", ids: STYLES.map((s) => s.id) },
+  { key: "codebase", label: "Codebase", kind: "codebase", dir: "codebase", ids: ["product", "dark-premium", "minimal", "playful"] },
+  { key: "system", label: "Design system", kind: "system", dir: "system", ids: ["corporate", "product", "playful", "afro-modern"] },
+] as const;
+
+export type LookSet = (typeof LOOK_SETS)[number];
+
+/** The preview image for a style, from a set's folder ("" = websites). */
+export const lookImage = (id: string, dir = "") => (dir ? `/styles/${dir}/${id}.webp` : `/styles/${id}.webp`);
+
+/** For a design's kind: its own examples first, then every other style shown as a website. */
+export function looksForKind(kind: string): { id: string; dir: string }[] {
+  const own = kind === "design" ? [] : (LOOK_SETS.find((s) => s.kind === kind && s.key !== "web")?.ids ?? []);
+  const dir = LOOK_SETS.find((s) => s.kind === kind && s.key !== "web")?.dir ?? "";
+  return [...own.map((id) => ({ id, dir })), ...STYLES.filter((s) => !(own as readonly string[]).includes(s.id)).map((s) => ({ id: s.id, dir: "" }))];
+}

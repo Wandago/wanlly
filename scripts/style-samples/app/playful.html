@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8"><style>@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@500;700&display=swap');
+*{box-sizing:border-box;margin:0}
+:root{--bg:#fff6e5;--page:#ffd23f;--surface:#ffffff;--ink:#111111;--text:#222;--muted:#555;--line:#111;--accent:#ff5a36;--accent2:#2ec4b6;--on:#fff;--r:20px;--d:'Bricolage Grotesque',sans-serif;--b:'DM Sans',sans-serif;--dw:800;--tr:-0.05em}
+body{width:1440px;height:1080px;overflow:hidden;background:var(--page);font-family:var(--b);color:var(--text);position:relative}
+.disp{font-family:var(--d);font-weight:var(--dw);letter-spacing:var(--tr);color:var(--ink);line-height:.98}
+.it{font-style:normal;color:var(--accent)}
+.btn{display:inline-flex;align-items:center;justify-content:center;background:var(--accent);color:var(--on);font-weight:600;border-radius:20px;border:3px solid #111;box-shadow:4px 4px 0 #111;}
+.btn.ghost{background:transparent;color:var(--ink);border:3px solid #111;box-shadow:none}
+.card{background:var(--surface);border-radius:var(--r);border:3px solid #111;box-shadow:6px 6px 0 #111;}
+.pattern{background:repeating-linear-gradient(90deg,var(--accent) 0 24px,var(--accent2) 24px 48px,var(--ink) 48px 72px)}
+
+body{display:flex;align-items:center;justify-content:center;gap:56px}
+.ph{position:relative;width:380px;height:800px;border-radius:56px;background:#111;padding:14px;box-shadow:0 40px 80px rgba(0,0,0,.25)}
+.ph:nth-child(even){transform:translateY(40px)}
+.sc{height:100%;border-radius:44px;background:var(--bg);padding:20px 22px 0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.st{display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:var(--ink);margin-bottom:16px}
+.k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.hero{padding:22px;display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.hero small{color:var(--muted);font-weight:600}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.li{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:calc(var(--r) * .8);background:var(--surface);border:2.5px solid #111;color:var(--ink);font-weight:600;font-size:15px}
+.li i{width:34px;height:34px;border-radius:10px;background:var(--accent2);opacity:.85;flex:none}
+.li em{margin-left:auto;font-style:normal;color:var(--muted);font-size:14px}
+.nav{margin-top:auto;display:flex;justify-content:space-between;padding:16px 8px 26px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+</style></head><body>
+<div class="ph"><div class="sc"><div class="st"><span>9:41</span><span>● ● ●</span></div><p class="k">chapa!</p><h1 class="disp" style="font-size:44px;margin:6px 0 18px">Hungry?</h1>
+<div class="card hero" style=""><small>Chapati wrap</small><b class="disp" style="font-size:36px">KES 150</b><span class="btn" style="padding:12px 18px;margin-top:14px">Order now</span></div>
+<div class="list"><div class="li"><i></i><span>Chai + 2 mandazi</span><em>KES 90</em></div><div class="li"><i></i><span>Smocha</span><em>KES 120</em></div><div class="li"><i></i><span>Fries & sausage</span><em>KES 200</em></div></div><div class="nav"><span style="color:var(--accent);font-weight:700">Menu</span><span style="">Orders</span><span style="">Deals</span><span style="">Me</span></div></div></div><div class="ph"><div class="sc"><div class="st"><span>9:41</span><span>● ● ●</span></div><p class="k">Details</p><h1 class="disp" style="font-size:36px;margin:6px 0 16px">Chai + 2 mandazi</h1>
+<div class="card" style="height:250px;display:grid;place-items:center"><svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="60" fill="none" stroke="var(--line)" stroke-width="16"/><circle cx="75" cy="75" r="60" fill="none" stroke="var(--accent)" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="110" stroke-linecap="round" transform="rotate(-90 75 75)"/><text x="75" y="84" text-anchor="middle" font-size="28" font-weight="700" fill="var(--ink)" font-family="Bricolage Grotesque,sans-serif">71%</text></svg></div>
+<div class="list" style="margin-top:16px"><div class="li"><i></i><span>Smocha</span><em>KES 120</em></div><div class="li"><i></i><span>Fries & sausage</span><em>KES 200</em></div></div><span class="btn" style="width:100%;padding:16px;margin-top:18px">Order now</span></div></div><div class="ph"><div class="sc"><div class="st"><span>9:41</span><span>● ● ●</span></div><p class="k">Done</p><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px"><span style="width:110px;height:110px;border-radius:50%;background:var(--accent);display:grid;place-items:center;color:var(--on);font-size:52px;border:3px solid #111;box-shadow:5px 5px 0 #111">✓</span><h1 class="disp" style="font-size:38px">All set!</h1><p style="color:var(--muted);max-width:240px">We’ll send an M-Pesa confirmation in a moment.</p></div><span class="btn ghost" style="width:100%;padding:15px">Back home</span></div></div>
+</body></html>

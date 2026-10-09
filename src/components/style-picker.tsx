@@ -3,7 +3,7 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
 import { useEffect, useState, type ReactNode } from "react";
-import { STYLES } from "@/lib/design-styles";
+import { STYLES, lookImage, looksForKind } from "@/lib/design-styles";
 import { Icon } from "./icon";
 
 /*
@@ -15,7 +15,7 @@ import { Icon } from "./icon";
  * A style's preview: a real example page designed for that style (scripts/style-samples),
  * screenshotted to public/styles. "Any style" gets a plain tile.
  */
-export function StyleThumb({ id }: { id: string }) {
+export function StyleThumb({ id, dir = "" }: { id: string; dir?: string }) {
   if (!STYLES.some((s) => s.id === id))
     return (
       <span aria-hidden="true" className="grid size-full place-items-center bg-surface text-faint">
@@ -23,7 +23,7 @@ export function StyleThumb({ id }: { id: string }) {
       </span>
     );
   // eslint-disable-next-line @next/next/no-img-element -- small static previews; the image optimiser isn't available on Workers
-  return <img src={`/styles/${id}.webp`} alt="" loading="lazy" decoding="async" className="block size-full object-cover object-top" />;
+  return <img src={lookImage(id, dir)} alt="" loading="lazy" decoding="async" className="block size-full object-cover object-top" />;
 }
 
 const Chevron = ({ dir }: { dir: "left" | "right" }) => (
@@ -32,23 +32,37 @@ const Chevron = ({ dir }: { dir: "left" | "right" }) => (
   </svg>
 );
 
+const ALL_WEB = STYLES.map((s) => ({ id: s.id, dir: "" }));
+
 /**
  * A large look at one style's example page, with its art direction in a sentence. Arrows (and
- * the ← → keys) move through all the styles; "Use this style" hands the choice back.
+ * the ← → keys) move through `items` (a tab's looks; every website look by default); "Use this
+ * style" hands the choice back.
  */
-export function StylePreview({ id, onIdChange, onUse }: { id: string | null; onIdChange: (id: string | null) => void; onUse: (id: string) => void }) {
-  const i = STYLES.findIndex((s) => s.id === id);
-  const style = i >= 0 ? STYLES[i] : null;
-  const step = (d: number) => onIdChange(STYLES[(i + d + STYLES.length) % STYLES.length].id);
+export function StylePreview({
+  id,
+  items = ALL_WEB,
+  onIdChange,
+  onUse,
+}: {
+  id: string | null;
+  items?: readonly { id: string; dir: string }[];
+  onIdChange: (id: string | null) => void;
+  onUse: (id: string) => void;
+}) {
+  const i = items.findIndex((s) => s.id === id);
+  const style = i >= 0 ? STYLES.find((s) => s.id === items[i].id) : undefined;
+  const dir = i >= 0 ? items[i].dir : "";
+  const step = (d: number) => onIdChange(items[(i + d + items.length) % items.length].id);
   useEffect(() => {
     if (!style) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowLeft") onIdChange(STYLES[(i - 1 + STYLES.length) % STYLES.length].id);
-      if (e.key === "ArrowRight") onIdChange(STYLES[(i + 1) % STYLES.length].id);
+      if (e.key === "ArrowLeft") onIdChange(items[(i - 1 + items.length) % items.length].id);
+      if (e.key === "ArrowRight") onIdChange(items[(i + 1) % items.length].id);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [style, i, onIdChange]);
+  }, [style, i, items, onIdChange]);
   const line = style?.guide.split("\n")[0].replace(/^Art direction:\s*/, "") ?? "";
   const direction = line.charAt(0).toUpperCase() + line.slice(1);
   const nav = "grid size-10 shrink-0 place-items-center rounded-full border border-line bg-surface text-muted hover:text-fg";
@@ -65,7 +79,7 @@ export function StylePreview({ id, onIdChange, onUse }: { id: string | null; onI
                   <Dialog.Description className="mt-0.5 text-[13px] text-muted">{direction}</Dialog.Description>
                 </div>
                 <span className="ml-auto shrink-0 pt-1 text-xs text-faint tabular-nums">
-                  {i + 1} / {STYLES.length}
+                  {i + 1} / {items.length}
                 </span>
                 <Dialog.Close aria-label="Close" className="grid size-[34px] shrink-0 place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">
                   <Icon name="x" />
@@ -73,7 +87,7 @@ export function StylePreview({ id, onIdChange, onUse }: { id: string | null; onI
               </header>
               <div className="relative overflow-hidden rounded-xl border border-line">
                 {/* eslint-disable-next-line @next/next/no-img-element -- static preview */}
-                <img key={style.id} src={`/styles/${style.id}.webp`} alt={`Example page in the ${style.name} style`} className="block aspect-[4/3] w-full bg-hover object-cover object-top" />
+                <img key={`${dir}/${style.id}`} src={lookImage(style.id, dir)} alt={`Example in the ${style.name} style`} className="block aspect-[4/3] w-full bg-hover object-cover object-top" />
               </div>
               <footer className="flex flex-wrap items-center gap-2">
                 <button type="button" aria-label="Previous style" onClick={() => step(-1)} className={nav}>
@@ -82,7 +96,7 @@ export function StylePreview({ id, onIdChange, onUse }: { id: string | null; onI
                 <button type="button" aria-label="Next style" onClick={() => step(1)} className={nav}>
                   <Chevron dir="right" />
                 </button>
-                <p className="hidden min-w-0 flex-1 text-[12px] text-faint sm:block">An example page made for Wanlly. Your design keeps this look and uses your own content.</p>
+                <p className="hidden min-w-0 flex-1 text-[12px] text-faint sm:block">An example made for Wanlly. Your design keeps this look and uses your own content.</p>
                 <button type="button" onClick={() => onUse(style.id)} className="ml-auto rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
                   Use this style
                 </button>
@@ -99,7 +113,9 @@ export function StylePreview({ id, onIdChange, onUse }: { id: string | null; onI
  * `value` is "style:<id>", "ds:<id>" or "" (any style). Design systems are the person's own
  * Design System files.
  */
-export function StylePicker({ value, onChange, systems }: { value: string; onChange: (v: string) => void; systems: { id: number; name: string }[] }) {
+export function StylePicker({ value, onChange, systems, kind = "design" }: { value: string; onChange: (v: string) => void; systems: { id: number; name: string }[]; kind?: string }) {
+  // Examples made for this kind of design come first (slides show decks, and so on).
+  const looks = looksForKind(kind);
   const style = value.startsWith("style:") ? STYLES.find((s) => `style:${s.id}` === value) : undefined;
   const system = value.startsWith("ds:") ? systems.find((s) => `ds:${s.id}` === value) : undefined;
   const label = style?.name ?? system?.name ?? "Any style";
@@ -142,6 +158,7 @@ export function StylePicker({ value, onChange, systems }: { value: string; onCha
     <>
       <StylePreview
         id={preview}
+        items={looks}
         onIdChange={setPreview}
         onUse={(id) => {
           setPreview(null);
@@ -154,7 +171,7 @@ export function StylePicker({ value, onChange, systems }: { value: string; onCha
           className="flex max-w-[170px] items-center gap-1.5 rounded-lg border border-line bg-surface py-1 pr-2 pl-1 text-xs text-muted outline-none hover:text-fg focus-visible:ring-2 focus-visible:ring-accent data-[state=open]:text-fg"
         >
           <span className="block h-[18px] w-6 shrink-0 overflow-hidden rounded border border-line">
-            <StyleThumb id={style?.id ?? ""} />
+            <StyleThumb id={style?.id ?? ""} dir={looks.find((l) => l.id === style?.id)?.dir} />
           </span>
           <span className="truncate">{label}</span>
           <Icon name="down" size={13} className="shrink-0 text-faint" />
@@ -170,7 +187,10 @@ export function StylePicker({ value, onChange, systems }: { value: string; onCha
             <p className="px-1.5 pb-2 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Pick a look</p>
             <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
               {tile("", "Any style", "The designer decides", <StyleThumb id="" />)}
-              {STYLES.map((s) => tile(`style:${s.id}`, s.name, s.blurb, <StyleThumb id={s.id} />))}
+              {looks.map((l) => {
+                const s = STYLES.find((x) => x.id === l.id)!;
+                return tile(`style:${s.id}`, s.name, s.blurb, <StyleThumb id={s.id} dir={l.dir} />);
+              })}
             </div>
             {systems.length > 0 && (
               <>
