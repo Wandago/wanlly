@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
+import { NETWORK_SIZES as UNIT_SIZES, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 
 /* Traffic, ads and revenue, and abuse: the admin tabs that read what the app records. */
@@ -229,8 +230,133 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
           <Empty>No ad views yet.</Empty>
         )}
       </Card>
+      <AdNetwork />
       <NetworkTest />
     </div>
+  );
+}
+
+const WHERE: Record<NetworkSize, string> = {
+  "300x250": "Side panel (takes turns with sponsor cards) and job cards",
+  "320x50": "Phone bar (takes turns with sponsors)",
+  "728x90": "Under the chat box on an empty chat, wide screens",
+  "468x60": "Under the chat box on an empty chat, tablets",
+  "300x600": "Side panel on tall screens",
+  "336x280": "Job cards on wide screens",
+  "160x600": "Not used yet",
+  "320x100": "Not used yet",
+};
+
+/** The ad network: its name, who sees it, and the banner code for each size. */
+function AdNetwork() {
+  const [cfg, setCfg] = useState<NetworkConfig | null>(null);
+  const [saved, setSaved] = useState<NetworkConfig | null>(null);
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [preview, setPreview] = useState(0);
+  useEffect(() => {
+    api<{ network: NetworkConfig }>("/api/admin/network")
+      .then((b) => {
+        setCfg(b.network);
+        setSaved(b.network);
+      })
+      .catch((e: Error) => setNote(e.message));
+  }, []);
+  if (!cfg) return <Card title="Ad network">{note ? <Empty>{note}</Empty> : <Empty>Loading…</Empty>}</Card>;
+  const set = (patch: Partial<NetworkConfig>) => setCfg({ ...cfg, ...patch });
+  const save = async () => {
+    setBusy(true);
+    setNote("");
+    try {
+      const b = await api<{ network: NetworkConfig }>("/api/admin/network", "PUT", cfg);
+      setCfg(b.network);
+      setSaved(b.network);
+      setPreview((n) => n + 1);
+      setNote("Saved. Changes reach the app within 5 minutes.");
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  const field = "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-faint";
+  return (
+    <Card
+      title="Ad network"
+      note="Real paid banners from a network such as Adsterra or A-ADS, alongside your own campaigns. Paste each banner's code from the network's dashboard. Each one runs in a locked-down frame, so its script can't reach the app or people's accounts."
+    >
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex flex-col gap-1 text-[13px] font-medium">
+          Network
+          <input className={`${field} w-[180px]`} value={cfg.name} onChange={(e) => set({ name: e.target.value })} placeholder="adsterra" list="networks" />
+          <datalist id="networks">
+            <option value="adsterra" />
+            <option value="a-ads" />
+          </datalist>
+        </label>
+        <div className="flex flex-col gap-1 text-[13px] font-medium">
+          Who sees it
+          <span className="flex gap-1">
+            {(
+              [
+                ["off", "Off"],
+                ["staff", "Team only"],
+                ["everyone", "Everyone"],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={cfg.audience === k}
+                onClick={() => set({ audience: k })}
+                className={`rounded-full border px-2.5 py-1 text-xs ${cfg.audience === k ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line font-normal text-muted"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </span>
+        </div>
+        <button type="button" className={`${btnGhost} ml-auto`} onClick={save} disabled={busy}>
+          {busy ? "Saving…" : "Save"}
+        </button>
+      </div>
+      {note && <p className="text-[13px] text-muted">{note}</p>}
+      <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. Slots with a network size take turns between network banners and your sponsors.</p>
+      <ul className="flex flex-col">
+        {UNIT_SIZES.map((size) => {
+          const { w, h } = sizeOf(size);
+          const live = saved?.audience !== "off" && !!saved?.units[size];
+          return (
+            <li key={size} className="flex flex-col gap-2 border-t border-line py-3 first:border-t-0">
+              <div className="text-[13px]">
+                <b className="font-semibold">{w}×{h}</b> <span className="text-muted">{WHERE[size]}</span>
+              </div>
+              <textarea
+                className={`${field} min-h-[64px] font-mono text-[11px]`}
+                value={cfg.units[size] ?? ""}
+                onChange={(e) => set({ units: { ...cfg.units, [size]: e.target.value } })}
+                placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
+                spellCheck={false}
+              />
+              {live && (
+                <div className="overflow-x-auto pb-1">
+                  <iframe
+                    key={preview}
+                    title={`${w}×${h} banner preview`}
+                    src={`/api/ads/unit?size=${size}`}
+                    width={w}
+                    height={h}
+                    sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
+                    className="block border border-dashed border-line"
+                    style={{ width: w, height: h }}
+                  />
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </Card>
   );
 }
 

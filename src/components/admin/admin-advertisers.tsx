@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useState, type ReactNode } from "react";
 import type { CoverKind } from "@/lib/catalog";
 import { Cover } from "../ads/cover";
+import { CountryPicker } from "./country-picker";
 import { Icon } from "../icon";
 import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when } from "./admin-ui";
 
@@ -42,6 +43,7 @@ type Campaign = {
   startsAt: string | null;
   endsAt: string | null;
   maxImpressions: number | null;
+  frequencyCap: number | null;
   cpmCents: number;
   impressions: number;
   clicks: number;
@@ -69,6 +71,34 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       {hint && <small className="text-xs font-normal text-faint">{hint}</small>}
     </label>
   );
+}
+
+/** Brand colours to start from: Wanlly's palette plus common brand hues. */
+const SWATCHES = ["#2a78d6", "#1d4ed8", "#0ea5e9", "#0ac216", "#16a34a", "#0f766e", "#f59e0b", "#ff6a33", "#dc2626", "#db2777", "#7c3aed", "#111827"];
+
+/** The strongest colour in a picture, for "match the picture". Greys and near-whites are skipped. */
+async function colourOf(dataUrl: string): Promise<string | null> {
+  const img = new Image();
+  img.src = dataUrl;
+  await img.decode();
+  const c = document.createElement("canvas");
+  c.width = c.height = 32;
+  const g = c.getContext("2d")!;
+  g.drawImage(img, 0, 0, 32, 32);
+  const px = g.getImageData(0, 0, 32, 32).data;
+  const buckets = new Map<string, { n: number; r: number; g: number; b: number }>();
+  for (let i = 0; i < px.length; i += 4) {
+    const [r, gr, b, a] = [px[i], px[i + 1], px[i + 2], px[i + 3]];
+    const max = Math.max(r, gr, b);
+    const min = Math.min(r, gr, b);
+    if (a < 200 || max - min < 50 || max < 40) continue;
+    const key = `${r >> 5}-${gr >> 5}-${b >> 5}`;
+    const v = buckets.get(key) ?? { n: 0, r: 0, g: 0, b: 0 };
+    buckets.set(key, { n: v.n + 1, r: v.r + r, g: v.g + gr, b: v.b + b });
+  }
+  const best = [...buckets.values()].sort((x, y) => y.n - x.n)[0];
+  if (!best) return null;
+  return "#" + [best.r, best.g, best.b].map((v) => Math.round(v / best.n).toString(16).padStart(2, "0")).join("");
 }
 
 /** Shrinks a picture to at most 800 px wide and under 200 KB, as a data URL. */
@@ -134,6 +164,7 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
       startsAt: c.startsAt || null,
       endsAt: c.endsAt || null,
       maxImpressions: c.maxImpressions ?? null,
+      frequencyCap: c.frequencyCap ?? null,
       cpmCents: c.cpmCents ?? 0,
       applicationId: c.applicationId ?? null,
     };
@@ -185,12 +216,39 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
                   <input className={input} value={c.url ?? ""} onChange={(e) => set({ url: e.target.value })} placeholder="https://" />
                 </Field>
               </div>
-              <Field label="Brand colour">
+              <div className="flex flex-col gap-1 text-[13px] font-medium">
+                Brand colour
                 <span className="flex items-center gap-2">
-                  <input type="color" value={c.color || "#2a78d6"} onChange={(e) => set({ color: e.target.value })} className="h-8 w-10 rounded border border-line bg-surface" />
-                  <input className={input} value={c.color || "#2a78d6"} onChange={(e) => set({ color: e.target.value })} maxLength={7} />
+                  <input type="color" aria-label="Pick any colour" value={c.color || "#2a78d6"} onChange={(e) => set({ color: e.target.value })} className="h-8 w-10 shrink-0 rounded border border-line bg-surface" />
+                  <input className={input} aria-label="Colour code" value={c.color || "#2a78d6"} onChange={(e) => set({ color: e.target.value })} maxLength={7} />
                 </span>
-              </Field>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Colour swatches">
+                  {SWATCHES.map((hex) => (
+                    <button
+                      key={hex}
+                      type="button"
+                      aria-label={hex}
+                      aria-pressed={(c.color || "#2a78d6").toLowerCase() === hex}
+                      onClick={() => set({ color: hex })}
+                      className="size-6 rounded-full border border-line outline-offset-2 aria-pressed:outline-2 aria-pressed:outline-fg"
+                      style={{ background: hex }}
+                    />
+                  ))}
+                  {c.image && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const hex = await colourOf(c.image!).catch(() => null);
+                        if (hex) set({ color: hex });
+                        else setError("Couldn't find a strong colour in the picture.");
+                      }}
+                      className="rounded-full border border-line px-2 text-[11px] font-normal text-muted hover:text-fg"
+                    >
+                      Match picture
+                    </button>
+                  )}
+                </div>
+              </div>
               <Field label="Picture" hint="Their own image, or one of Wanlly's illustrations.">
                 <span className="flex items-center gap-2">
                   <label className={`${btnGhost} cursor-pointer`}>
@@ -245,9 +303,11 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
                   })}
                 </div>
               </div>
-              <Field label="Countries" hint="Two-letter codes, e.g. KE, NG. Empty means everywhere.">
-                <input className={input} value={(c.countries ?? []).join(", ")} onChange={(e) => set({ countries: e.target.value.split(/[\s,]+/).filter(Boolean) })} />
-              </Field>
+              <div className="flex flex-col gap-1 text-[13px] font-medium sm:col-span-2">
+                Countries
+                <CountryPicker value={c.countries ?? []} onChange={(countries) => set({ countries })} input={input} />
+                <small className="text-xs font-normal text-faint">Uses each visitor&apos;s network country. None picked means everywhere.</small>
+              </div>
               <Field label="Price per 1,000 views (US$)">
                 <input type="number" min={0} step={0.1} className={input} value={(c.cpmCents ?? 0) / 100} onChange={(e) => set({ cpmCents: Math.round(Number(e.target.value) * 100) })} />
               </Field>
@@ -257,9 +317,26 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
               <Field label="Ends">
                 <input type="date" className={input} value={dateInput(c.endsAt ?? null)} onChange={(e) => set({ endsAt: e.target.value || null })} />
               </Field>
-              <Field label="Stop after views" hint="Empty for no cap.">
+              <Field label="Stop after views" hint="Total for the campaign. Empty for no cap.">
                 <input type="number" min={0} className={input} value={c.maxImpressions ?? ""} onChange={(e) => set({ maxImpressions: e.target.value ? Number(e.target.value) : null })} />
               </Field>
+              <div className="flex flex-col gap-1 text-[13px] font-medium">
+                Views per person a day
+                <span className="flex flex-wrap gap-1">
+                  {([null, 1, 2, 3, 5, 10] as const).map((n) => (
+                    <button
+                      key={String(n)}
+                      type="button"
+                      aria-pressed={(c.frequencyCap ?? null) === n}
+                      onClick={() => set({ frequencyCap: n })}
+                      className={`rounded-full border px-2.5 py-1 text-xs ${(c.frequencyCap ?? null) === n ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line font-normal text-muted"}`}
+                    >
+                      {n === null ? "No limit" : n}
+                    </button>
+                  ))}
+                </span>
+                <small className="text-xs font-normal text-faint">After this many views, the same person sees other ads until tomorrow.</small>
+              </div>
             </div>
             <div className="flex flex-col gap-2">
               <span className="text-[13px] font-medium">Preview</span>

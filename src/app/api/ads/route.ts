@@ -1,4 +1,5 @@
 import { rawSql } from "@/db";
+import { loadNetwork } from "@/lib/ad-network-server";
 
 /**
  * Directly sold ads that may show right now to someone in this country, with where they may show.
@@ -9,7 +10,8 @@ export async function GET(req: Request) {
   try {
     const q = rawSql();
     const rows = (await q`
-      select c.id, c.advertiser, c.headline, c.body, c.cta, c.url, c.color, c.cover, (c.image is not null) as has_image, c.placements
+      select c.id, c.advertiser, c.headline, c.body, c.cta, c.url, c.color, c.cover, (c.image is not null) as has_image, c.placements,
+        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap
       from campaigns c
       where c.status = 'active'
         and (c.starts_at is null or c.starts_at <= now())
@@ -18,8 +20,11 @@ export async function GET(req: Request) {
         and (c.max_impressions is null or c.max_impressions > (
           select count(*) from ad_events a where a.creative = 'campaign:' || c.id and a.kind = 'impression'))
       order by c.id desc limit 20`) as Record<string, unknown>[];
+    // Which network sizes are set up, and for whom. The codes themselves stay in /api/ads/unit.
+    const network = await loadNetwork();
     return Response.json(
       {
+        network: network.audience === "off" ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units) },
         ads: rows.map((r) => ({
           campaignId: Number(r.id),
           name: String(r.advertiser),
@@ -32,6 +37,7 @@ export async function GET(req: Request) {
           cover: r.cover ?? undefined,
           image: r.has_image ? `/api/ads/image/${r.id}` : undefined,
           placements: r.placements,
+          cap: r.frequency_cap === null ? undefined : Number(r.frequency_cap),
         })),
       },
       { headers: { "cache-control": "public, max-age=300" } },

@@ -23,6 +23,8 @@ const CSP = [
 
 const BASE_CSS = `html.wanlly-editing body *:hover{outline:1px dashed rgba(255,106,51,.7);outline-offset:2px}
 html.wanlly-editing body *:focus{outline:2px solid #ff6a33}
+html.wanlly-editing .wanlly-deco{pointer-events:none!important}
+html.wanlly-editing body *{-webkit-user-select:text!important;user-select:text!important;cursor:text}
 *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 @media print{html{zoom:1!important}}`;
 
@@ -94,13 +96,30 @@ function clean(){
   Array.prototype.forEach.call(b.querySelectorAll('[data-wanlly]'),function(n){n.remove()});
   Array.prototype.forEach.call(b.querySelectorAll('.wanlly-on'),function(n){n.classList.remove('wanlly-on')});
   Array.prototype.forEach.call(b.querySelectorAll('[contenteditable]'),function(n){n.removeAttribute('contenteditable')});
+  Array.prototype.forEach.call(b.querySelectorAll('.wanlly-deco'),function(n){n.classList.remove('wanlly-deco'); if(!n.className) n.removeAttribute('class')});
   return b.innerHTML;
 }
+// Decorations with no text (glows, overlays, background shapes) often sit on top of the words.
+// While editing they let clicks through, so any visible text can be clicked and changed.
+function decorations(on){
+  Array.prototype.forEach.call(document.body.querySelectorAll('*'),function(el){
+    if(!on){el.classList.remove('wanlly-deco'); if(!el.className) el.removeAttribute('class'); return;}
+    if(el.hasAttribute('data-wanlly')||el.matches('img,svg,video,canvas,input,textarea,select,button,a')) return;
+    if(!(el.textContent||'').trim()&&!el.querySelector('img,svg,video,canvas,input,textarea')) el.classList.add('wanlly-deco');
+  });
+}
+var editing=false;
+function edit(on){editing=on; present=false; fit(); decorations(on); document.designMode=on?'on':'off'; root.classList.toggle('wanlly-editing',on); send({wanlly:'editing',on:on});}
+// While editing, the page's own scripts (slide navigation, click handlers) don't see keys or clicks,
+// so typing a space or clicking a heading changes the text instead of moving to another slide.
+['keydown','keyup','keypress','click','mousedown','mouseup','pointerdown','pointerup','touchstart','wheel'].forEach(function(t){
+  addEventListener(t,function(e){ if(editing) e.stopImmediatePropagation(); },true);
+});
 addEventListener('resize',fit); addEventListener('load',fit); fit();
 addEventListener('message',function(e){var m=e.data||{};
   if(m.wanlly==='present'){present=!!m.on; i=m.index||0; fit(); go(0);}
   if(m.wanlly==='go') go(m.by);
-  if(m.wanlly==='edit'){present=false; fit(); document.designMode=m.on?'on':'off'; root.classList.toggle('wanlly-editing',!!m.on);}
+  if(m.wanlly==='edit') edit(!!m.on);
   if(m.wanlly==='serialize') send({wanlly:'html',body:clean()});
   if(m.wanlly==='print'){present=false; fit(); setTimeout(function(){print()},300);}
   if(m.wanlly==='pptx'){ try{ send({wanlly:'pptx',slides:measure()}); }catch(err){ send({wanlly:'pptx',error:String(err)}); } }

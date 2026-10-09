@@ -293,6 +293,8 @@ export const campaigns = pgTable(
     startsAt: timestamp("starts_at", { withTimezone: true }),
     endsAt: timestamp("ends_at", { withTimezone: true }),
     maxImpressions: integer("max_impressions"),
+    /** Most times one person sees it in a day; null for no limit. */
+    frequencyCap: integer("frequency_cap"),
     /** Agreed price in US cents per 1,000 impressions, for revenue. */
     cpmCents: integer("cpm_cents").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

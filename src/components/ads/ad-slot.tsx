@@ -4,10 +4,12 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
 import { SPOT_REWARD, SPOT_SECONDS, type Sponsor } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
-import { openSponsor } from "@/lib/ads-context";
+import { openSponsor, useNetwork } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { DisplayCreative, VideoFrame, useWidth } from "./creatives";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
+import { NetworkUnit } from "./network-unit";
+import type { NetworkSize } from "@/lib/ad-network";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -163,6 +165,16 @@ function FittedDisplay({ sizes, sponsor, align = "center" }: { sizes: (keyof typ
   const size = width ? pickSize(sizes, width) : null;
   const showSize = useContext(ShowAdSizes);
   const networkTest = useNetworkTest();
+  const network = useNetwork();
+  // A network banner when the network has a size that fits; otherwise the sponsor's banner.
+  const netSize = width && network ? (sizes.filter((x) => network.sizes.includes(x as NetworkSize)) as NetworkSize[]).find((x) => DISPLAY_SIZES[x as keyof typeof DISPLAY_SIZES].w <= width) : undefined;
+  if (network && netSize && !networkTest) {
+    return (
+      <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>
+        <NetworkUnit size={netSize} network={network.name} placement="job_card" />
+      </div>
+    );
+  }
   if (networkTest && size) {
     return (
       <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>

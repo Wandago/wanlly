@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import type { NetworkSize } from "@/lib/ad-network";
 import { FLOOR_CREDITS, RAIL_SPONSORS, SPOT_REWARD, type Sponsor } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
@@ -8,7 +9,8 @@ import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
 import { Tracked } from "./tracked";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
-import { creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
+import { creativeOf, openSponsor, useNetwork, useSponsors, useTick } from "@/lib/ads-context";
+import { NetworkUnit } from "./network-unit";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -105,6 +107,30 @@ function DisplayFrame({ sponsor }: { sponsor: Sponsor }) {
   );
 }
 
+/** A network banner in the same rounded frame as Wanlly's own ads. */
+function NetworkFrame({ size, network, placement }: { size: NetworkSize; network: string; placement: string }) {
+  return (
+    <div className="flex animate-rise flex-col items-center gap-1.5 rounded-2xl border border-line bg-surface p-2 shadow-soft">
+      <span className="self-start px-1 text-[11px] tracking-[0.07em] text-faint uppercase">Advertisement</span>
+      <NetworkUnit size={size} network={network} placement={placement} />
+    </div>
+  );
+}
+
+const TALL = "(min-height: 1200px)";
+/** Screens tall enough for a 300×600 half-page banner under the cover card. */
+function useTall() {
+  return useSyncExternalStore(
+    (fn) => {
+      const m = window.matchMedia(TALL);
+      m.addEventListener("change", fn);
+      return () => m.removeEventListener("change", fn);
+    },
+    () => window.matchMedia(TALL).matches,
+    () => false,
+  );
+}
+
 /** The earning shortcut that ends every side panel. */
 function EarnMini() {
   const { floorUnlocked, dispatch } = useWorkspace();
@@ -132,12 +158,19 @@ function EarnMini() {
 export function AdRail() {
   const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
+  // With an ad network on, the two slots take turns: one shows a network banner while the other
+  // shows a sponsor card, and they swap every 45 seconds. Tall screens get the 300×600 size.
+  const network = useNetwork();
+  const turn = useTick(45000);
+  const tall = useTall();
+  const has = (s: NetworkSize) => !!network?.sizes.includes(s);
+  const bannerSize: NetworkSize | null = tall && has("300x600") ? "300x600" : has("300x250") ? "300x250" : null;
   return (
     <aside aria-label="Sponsored" className="hidden min-h-0 border-l border-line bg-side xl:block">
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
-        <CoverCard sponsor={top} />
+        {network && has("300x250") && turn % 2 === 1 ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
         <div className="hidden [@media(min-height:860px)]:block">
-          <DisplayFrame sponsor={banner} />
+          {network && bannerSize && turn % 2 === 0 ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
         </div>
         <div className="mt-auto">
           <EarnMini />

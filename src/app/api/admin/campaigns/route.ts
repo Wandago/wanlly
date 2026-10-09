@@ -1,6 +1,6 @@
 import { db, rawSql, schema } from "@/db";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
-import { campaignFields } from "@/lib/campaigns";
+import { campaignFields, needsMigration } from "@/lib/campaigns";
 import { jsonUpTo } from "@/lib/forms";
 
 /** Every campaign with its delivery so far: impressions, clicks and what it has earned. */
@@ -12,6 +12,7 @@ export async function GET(req: Request) {
     const rows = (await q`
       select c.id, c.application_id, c.advertiser, c.name, c.status, c.headline, c.body, c.cta, c.url, c.color, c.cover,
         c.image, c.placements, c.countries, c.starts_at, c.ends_at, c.max_impressions, c.cpm_cents, c.created_at,
+        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap,
         coalesce(e.impressions, 0)::int as impressions, coalesce(e.clicks, 0)::int as clicks
       from campaigns c
       left join (
@@ -38,6 +39,7 @@ export async function GET(req: Request) {
         startsAt: r.starts_at,
         endsAt: r.ends_at,
         maxImpressions: r.max_impressions === null ? null : Number(r.max_impressions),
+        frequencyCap: r.frequency_cap === null ? null : Number(r.frequency_cap),
         cpmCents: Number(r.cpm_cents),
         impressions: Number(r.impressions),
         clicks: Number(r.clicks),
@@ -69,6 +71,6 @@ export async function POST(req: Request) {
     return Response.json({ id: row.id });
   } catch (e) {
     console.error("admin campaign POST failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: needsMigration(e) ?? "Database unavailable" }, { status: 503 });
   }
 }

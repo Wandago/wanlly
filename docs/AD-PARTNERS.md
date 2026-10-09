@@ -112,3 +112,15 @@ Admin → Ads → **Ad network test** loads Google's public sample ad unit (`/63
 When an AdSense or Ad Manager account is approved, swap `TEST_UNIT` in `src/components/ads/network-slot.tsx` for the real ad unit paths and decide who sees network ads.
 
 **Meta and TikTok.** Neither sells ads on websites like Wanlly. Meta Audience Network and TikTok's Pangle only serve ads inside mobile apps, so they become options if Wanlly ships an Android or iOS app. Until then, use them the other way round: buy ads on Instagram, Facebook and TikTok that bring people to Wanlly, with `utm_source` set so they show up in Admin → Traffic.
+
+## 8. A real network before AdSense (built)
+
+Admin → Ads → **Ad network**: name the network, paste each banner's code per size, and choose who sees it (Off, Team only, Everyone). Each banner is served from `/api/ads/unit?size=WxH` with a `Content-Security-Policy: sandbox` header and loaded in a sandboxed iframe, so the network's script cannot read Wanlly's cookies, storage or page, and cannot navigate the app (tested).
+
+Where network banners go, taking turns with sponsors every 45 s:
+- Side panel: one slot shows a network banner while the other shows a sponsor card; 300×600 on screens 1200 px tall or more.
+- Phone bar: 320×50.
+- Job cards: 336×280 or 300×250, whichever fits.
+- Empty chat, under the chat box (tablet and up): 728×90 or 468×60.
+
+Recommended: **Adsterra** banners only (no popunder, Social Bar or Direct Link), with **A-ADS** as a no-signup fallback. Ezoic, Media.net, EthicalAds and Carbon don't take new low-traffic sites; Monetag and HilltopAds are mostly pop formats. Apply with a real domain rather than workers.dev.

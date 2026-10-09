@@ -83,6 +83,9 @@ export function DesignEditor({ id }: { id: number }) {
     } catch {}
   };
   const [editing, setEditing] = useState(false);
+  /** The preview confirmed it's editable. */
+  const [editReady, setEditReady] = useState(false);
+  const reloaded = useRef(false);
   const [frameKey, setFrameKey] = useState(0);
   const [working, setWorking] = useState("");
   const frame = useRef<HTMLIFrameElement>(null);
@@ -132,6 +135,7 @@ export function DesignEditor({ id }: { id: number }) {
       if (e.source !== frame.current?.contentWindow) return;
       const m = e.data as { wanlly?: string; index?: number; count?: number };
       if (m?.wanlly === "slide") setSlide({ index: m.index ?? 0, count: m.count ?? 0 });
+      if (m?.wanlly === "editing") setEditReady(!!(m as { on?: boolean }).on);
       if (m?.wanlly && waiting.current.has(m.wanlly)) {
         waiting.current.get(m.wanlly)!(m as Record<string, unknown>);
         waiting.current.delete(m.wanlly);
@@ -265,10 +269,31 @@ export function DesignEditor({ id }: { id: number }) {
 
   const startEdit = (on: boolean) => {
     setEditing(on);
+    setEditReady(false);
+    reloaded.current = false;
     setView("preview");
-    if (on) frame.current?.contentWindow?.postMessage({ wanlly: "edit", on: true }, "*");
-    else setFrameKey((k) => k + 1); // Cancel: reload the page as it was.
+    if (!on) setFrameKey((k) => k + 1); // Cancel: reload the page as it was.
   };
+
+  // Edit mode is (re)sent whenever the preview loads, so it survives switching from Code view
+  // and any reload of the frame.
+  const sendEdit = useCallback(() => {
+    if (editing) frame.current?.contentWindow?.postMessage({ wanlly: "edit", on: true }, "*");
+  }, [editing]);
+  useEffect(() => {
+    const t = window.setTimeout(sendEdit, 50);
+    return () => window.clearTimeout(t);
+  }, [sendEdit, view, frameKey]);
+  // No answer from the page: reload it once, which sends edit mode again when it loads.
+  useEffect(() => {
+    if (!editing || editReady) return;
+    const t = window.setTimeout(() => {
+      if (reloaded.current) return;
+      reloaded.current = true;
+      setFrameKey((k) => k + 1);
+    }, 1500);
+    return () => window.clearTimeout(t);
+  }, [editing, editReady]);
 
   const saveEdit = async () => {
     if (!shown) return;
@@ -504,6 +529,7 @@ export function DesignEditor({ id }: { id: number }) {
                 sandbox="allow-scripts allow-modals"
                 referrerPolicy="no-referrer"
                 srcDoc={srcDoc}
+                onLoad={sendEdit}
                 className={`h-full bg-white ${device === "phone" && file.kind !== "slides" && !full ? "w-[390px] max-w-full rounded-[22px] border-[6px] border-[#16171b] shadow-soft" : "w-full"}`}
               />
               {full && (
@@ -532,11 +558,11 @@ export function DesignEditor({ id }: { id: number }) {
           )}
           {editing && (
             <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-1 pl-3.5 text-xs shadow-soft">
-              <span className="text-muted max-sm:hidden">Editing · click any text to change it</span>
+              <span className="text-muted max-sm:hidden">{editReady ? "Editing · click any text to change it" : "Turning on editing…"}</span>
               <button type="button" onClick={() => startEdit(false)} className="rounded-full px-2.5 py-1 font-medium hover:bg-hover" disabled={!!working}>
                 Cancel
               </button>
-              <button type="button" onClick={saveEdit} className="rounded-full bg-fg px-3 py-1 font-semibold text-bg disabled:opacity-60" disabled={!!working}>
+              <button type="button" onClick={saveEdit} className="rounded-full bg-fg px-3 py-1 font-semibold text-bg disabled:opacity-60" disabled={!!working || !editReady}>
                 {working || "Save as new version"}
               </button>
             </div>

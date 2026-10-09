@@ -9,6 +9,7 @@ import { Icon } from "./icon";
 import { JobView } from "./job-view";
 import { TopBar } from "./top-bar";
 import { DesignHome } from "./design-home";
+import { HomeBanner } from "./ads/home-banner";
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
 function UnlockCard() {
@@ -81,6 +82,7 @@ export function Workspace() {
         <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-3">
           {synced && !floorUnlocked && <UnlockCard />}
           <Composer showSuggestions={empty || tool !== "chat"} />
+          {empty && <HomeBanner />}
         </div>
       </div>
     </main>

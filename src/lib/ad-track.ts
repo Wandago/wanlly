@@ -17,7 +17,33 @@ function flush() {
   if (queue.length) timer = window.setTimeout(flush, 1000);
 }
 
+const SEEN = "wanlly-ad-seen";
+
+/** How many times this browser counted a view of `creative` today. */
+export function seenToday(creative: string): number {
+  try {
+    const v = JSON.parse(localStorage.getItem(SEEN) ?? "{}");
+    return v.day === new Date().toISOString().slice(0, 10) ? (v.n?.[creative] ?? 0) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** Counts a view of a sold campaign, so frequency caps hold across pages and tabs. */
+function countView(creative: string) {
+  if (!creative.startsWith("campaign:")) return;
+  try {
+    const day = new Date().toISOString().slice(0, 10);
+    const v = JSON.parse(localStorage.getItem(SEEN) ?? "{}");
+    const n = v.day === day ? (v.n ?? {}) : {};
+    n[creative] = (n[creative] ?? 0) + 1;
+    localStorage.setItem(SEEN, JSON.stringify({ day, n }));
+  } catch {}
+  window.dispatchEvent(new Event(SEEN));
+}
+
 export function trackAd(e: AdEvent) {
+  if (e.kind === "impression") countView(e.creative);
   queue.push(e);
   if (e.kind === "click") return flush();
   timer ??= window.setTimeout(flush, 5000);

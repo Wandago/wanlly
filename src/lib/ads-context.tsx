@@ -1,6 +1,9 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { seenToday } from "./ad-track";
+import type { NetworkSize } from "./ad-network";
+import { useWorkspace } from "./workspace-store";
 import type { Sponsor } from "./catalog";
 
 /*
@@ -9,30 +12,70 @@ import type { Sponsor } from "./catalog";
  */
 
 type Served = Sponsor & { placements: string[] };
-const AdsContext = createContext<Served[]>([]);
+type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[] } | null;
+const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
+const AdsContext = createContext<{ ads: Served[]; seen: number; network: { name: string; sizes: NetworkSize[] } | null }>({ ads: [], seen: 0, network: null });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
   const [ads, setAds] = useState<Served[]>([]);
+  const [net, setNet] = useState<Network>(null);
+  const { me } = useWorkspace();
+  // Bumped after each counted view, so campaigns that reach their daily cap drop out.
+  const [seen, setSeen] = useState(0);
+  useEffect(() => {
+    const bump = () => setSeen((n) => n + 1);
+    window.addEventListener("wanlly-ad-seen", bump);
+    return () => window.removeEventListener("wanlly-ad-seen", bump);
+  }, []);
   useEffect(() => {
     let live = true;
     fetch("/api/ads")
       .then((r) => (r.ok ? r.json() : { ads: [] }))
-      .then((b) => live && Array.isArray(b.ads) && setAds(b.ads))
+      .then((b) => {
+        if (!live) return;
+        if (Array.isArray(b.ads)) setAds(b.ads);
+        if (b.network?.sizes?.length) setNet(b.network);
+      })
       .catch(() => {});
     return () => {
       live = false;
     };
   }, []);
-  return <AdsContext.Provider value={ads}>{children}</AdsContext.Provider>;
+  // "staff" networks are being checked by the team; everyone else keeps seeing sponsors.
+  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? `${net.name}|${net.sizes.join(",")}` : "";
+  const value = useMemo(() => {
+    const [name, sizes] = netKey.split("|");
+    return { ads, seen, network: netKey ? { name, sizes: sizes.split(",") as NetworkSize[] } : null };
+  }, [ads, seen, netKey]);
+  return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
-/** The sponsors for one placement: booked campaigns first, otherwise the fallback list. */
+/**
+ * The sponsors for one placement: booked campaigns first, otherwise the fallback list. A campaign
+ * this person has already seen as often as its daily cap allows is skipped until tomorrow.
+ */
 export function useSponsors(placement: string, fallback: Sponsor[]): Sponsor[] {
-  const ads = useContext(AdsContext);
+  const { ads, seen } = useContext(AdsContext);
   return useMemo(() => {
-    const booked = ads.filter((a) => a.placements.includes(placement));
+    void seen;
+    const booked = ads.filter((a) => a.placements.includes(placement) && !(a.cap && seenToday(creativeOf(a)) >= a.cap));
     return booked.length ? booked : fallback;
-  }, [ads, placement, fallback]);
+  }, [ads, seen, placement, fallback]);
+}
+
+/** The network banner sizes this person may see; empty when there's no network. */
+export function useNetwork() {
+  return useContext(AdsContext).network;
+}
+
+/** A counter that ticks every `ms` while the page is visible, for alternating ads in a slot. */
+export function useTick(ms: number, offset = 0) {
+  const [i, setI] = useState(offset);
+  useEffect(() => {
+    const iv = window.setInterval(() => document.visibilityState === "visible" && setI((n) => n + 1), ms);
+    return () => window.clearInterval(iv);
+  }, [ms]);
+  return i;
 }
 
 /** How a sponsor is named in ad events: campaigns by id, house sponsors by name. */

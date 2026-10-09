@@ -4,7 +4,7 @@ import { signedInUserId } from "@/lib/session";
 
 const KINDS = new Set(["impression", "click"]);
 const FORMATS = new Set(["native", "display"]);
-const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial"]);
+const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial", "home_banner"]);
 /** Above this many events a minute from one account, the rest are dropped. */
 const PER_MINUTE = 120;
 
@@ -28,7 +28,8 @@ export async function POST(req: Request) {
     .filter((e) => KINDS.has(e.kind) && FORMATS.has(e.format) && PLACEMENTS.has(e.placement) && typeof e.creative === "string")
     .map((e) => ({
       userId,
-      partner: "house",
+      // Network banners are counted under the network's name; clicks inside them can't be seen.
+      partner: e.creative.startsWith("network:") ? e.creative.slice(8, 38) || "network" : "house",
       kind: e.kind as "impression" | "click",
       format: e.format,
       placement: e.placement,

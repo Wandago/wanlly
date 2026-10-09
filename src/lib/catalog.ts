@@ -28,6 +28,8 @@ export type Sponsor = {
   /** Set for directly sold ads: where the card links, its campaign, and an uploaded picture. */
   url?: string;
   campaignId?: number;
+  /** Most views per person per day, for sold campaigns. */
+  cap?: number;
   image?: string;
 };
 

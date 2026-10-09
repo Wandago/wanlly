@@ -40,9 +40,14 @@ export type CampaignInput = Partial<{
   startsAt: Date | null;
   endsAt: Date | null;
   maxImpressions: number | null;
+  frequencyCap: number | null;
   cpmCents: number;
   applicationId: number | null;
 }>;
+
+/** Before migration 0009, saving a frequency cap fails; say what to do instead of "unavailable". */
+export const needsMigration = (e: unknown) =>
+  /frequency_cap/.test(`${e} ${(e as { cause?: unknown }).cause}`) ? "Run migration 0009 (frequency cap) in Neon, then save again." : null;
 
 /** The valid fields present in a request; an error message for the first invalid one. */
 export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput } | { error: string } {
@@ -82,6 +87,7 @@ export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput 
       out[k] = v;
     }
   if ("maxImpressions" in d) out.maxImpressions = d.maxImpressions === null || d.maxImpressions === "" ? null : Math.max(0, Math.min(1e9, Math.round(Number(d.maxImpressions)) || 0));
+  if ("frequencyCap" in d) out.frequencyCap = d.frequencyCap === null || d.frequencyCap === "" ? null : Math.max(1, Math.min(50, Math.round(Number(d.frequencyCap)) || 1));
   if ("cpmCents" in d) out.cpmCents = Math.max(0, Math.min(1e6, Math.round(Number(d.cpmCents)) || 0));
   if ("applicationId" in d) out.applicationId = Number.isSafeInteger(d.applicationId) ? (d.applicationId as number) : null;
   return { ok: out };

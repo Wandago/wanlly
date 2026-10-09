@@ -64,6 +64,13 @@
       "when": 1791540444241,
       "tag": "0008_beta_first_touch",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791542101590,
+      "tag": "0009_campaign_frequency_cap",
+      "breakpoints": true
     }
   ]
 }

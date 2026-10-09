@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { CoverKind, Sponsor } from "@/lib/catalog";
 
 /* Stand-in cover art for sponsor cards. In production each sponsor uploads its own cover image
@@ -128,10 +131,12 @@ function Art({ kind, color }: { kind: CoverKind; color: string }) {
 
 /** Full-bleed 16:9 cover for a sponsor card. The parent sets the rounding and clips it. */
 export function Cover({ sponsor, className = "" }: { sponsor: Sponsor; className?: string }) {
-  // Sold campaigns can bring their own picture.
-  if (sponsor.image)
+  // Sold campaigns can bring their own picture. If it can't load (offline, or blocked by an
+  // extension), the illustration shows instead so the card is never left without a cover.
+  const [failed, setFailed] = useState<string | null>(null);
+  if (sponsor.image && failed !== sponsor.image)
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={sponsor.image} alt="" className={`block aspect-video w-full object-cover ${className}`} />;
+    return <img src={sponsor.image} alt="" onError={() => setFailed(sponsor.image ?? null)} className={`block aspect-video w-full bg-code object-cover ${className}`} />;
   const c = sponsor.color;
   const id = `cv-${sponsor.name.replace(/\W/g, "")}`;
   return (
