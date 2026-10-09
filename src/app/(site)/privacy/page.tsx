@@ -29,10 +29,13 @@ export default function PrivacyPage() {
       </ul>
       <h2>Who we share it with</h2>
       <p>
-        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini), Clerk (sign-in), Neon (database), Cloudflare (hosting and security) and our ad partners. Advertisers never receive your prompts or your work.
+        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini, xAI for Grok, and the hosts of the open models: NVIDIA, Cerebras, Groq, Mistral and OpenRouter), Clerk (sign-in), Neon (database), Cloudflare (hosting and security) and our ad partners. Advertisers never receive your prompts or your work.
       </p>
       <p>
         <strong>Gemini during testing:</strong> while Wanlly uses Google&apos;s free Gemini access for testing, Google may use those prompts and replies to improve its products. We&apos;ll tell you clearly before that applies to you, and you can choose Claude instead.
+      </p>
+      <p>
+        <strong>Open models and Auto (free):</strong> these run on free tiers from NVIDIA, Cerebras, Groq, Mistral or OpenRouter. Some of these hosts may log prompts or use them to improve their services. Don&apos;t share anything private with these models; choose Claude for sensitive work.
       </p>
       <h2>What we never do</h2>
       <ul>

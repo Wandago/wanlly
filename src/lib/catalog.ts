@@ -10,7 +10,7 @@ export type Model = {
   /** Credits a reply costs at least. One credit is half a US cent of model cost; long replies cost more. */
   credits: number;
   /** Who runs it. Models whose provider has no key yet show as "soon". */
-  provider: "anthropic" | "google" | "nvidia" | "xai" | null;
+  provider: "anthropic" | "google" | "nvidia" | "xai" | "pool" | null;
 };
 
 /** Which illustration the cover art draws. Real sponsors upload their own cover image. */
@@ -63,6 +63,7 @@ export const MODELS: Model[] = [
   { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4, provider: "anthropic" },
   { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10, provider: "anthropic" },
   { id: "gemini-flash", name: "Gemini Flash", group: "Google", description: "Fast, good for everyday work. Start here", credits: 1, provider: "google" },
+  { id: "free", name: "Auto (free)", group: "Open models", description: "Picks a fast free open model for you", credits: 1, provider: "pool" },
   { id: "glm-flash", name: "GLM 5.3 Flash", group: "Open models", description: "Z.ai. Quick everyday answers", credits: 1, provider: "nvidia" },
   { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", group: "Open models", description: "DeepSeek. Fast, sharp at code and maths", credits: 1, provider: "nvidia" },
   { id: "glm", name: "GLM 5.3", group: "Open models", description: "Z.ai. Strong at code and long tasks", credits: 2, provider: "nvidia" },
@@ -75,7 +76,7 @@ export const MODELS: Model[] = [
 /** The model new accounts start on, and the one suggested when credits are short. Live on Google's free tier. */
 export const CHEAPEST_MODEL_ID = "gemini-flash";
 
-export type Providers = { anthropic: boolean; google: boolean; nvidia: boolean; xai: boolean };
+export type Providers = { anthropic: boolean; google: boolean; nvidia: boolean; xai: boolean; pool: boolean };
 /** Whether a model can run, given which providers have keys. */
 export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
 export const IMAGE_MODEL_NAME = "Gemini Image";

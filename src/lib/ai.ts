@@ -20,7 +20,16 @@ const CLAUDE: Record<string, { api: string; usdIn: number; usdOut: number; fallb
 };
 
 export function providers(): Providers {
-  return { anthropic: !!process.env.ANTHROPIC_API_KEY, google: !!process.env.GEMINI_API_KEY, nvidia: !!process.env.NVIDIA_API_KEY, xai: !!process.env.XAI_API_KEY };
+  const google = !!process.env.GEMINI_API_KEY;
+  const nvidia = !!process.env.NVIDIA_API_KEY;
+  return {
+    anthropic: !!process.env.ANTHROPIC_API_KEY,
+    google,
+    nvidia,
+    xai: !!process.env.XAI_API_KEY,
+    // Auto (free) runs when any free host has a key; Gemini is its last resort.
+    pool: google || POOL_HOSTS.some((h) => !!process.env[h.env]),
+  };
 }
 
 /** Model cost in US dollars for one reply. Gemini and the NVIDIA-hosted models run on free tiers for now, so they're 0. */
@@ -351,7 +360,7 @@ const xaiHost = (): Host => ({ name: "xAI", base: (process.env.XAI_BASE_URL || "
  * A reply from any OpenAI-compatible host (NVIDIA's open models, xAI's Grok). Text only: these
  * models get a note instead of pictures and PDFs.
  */
-async function* openaiChat(host: Host, model: string, system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
+async function* openaiChat(host: Host, model: string, system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, tries = 2): AsyncGenerator<ReplyEvent> {
   // These models read text only. Office files and text files already arrive as text; pictures and
   // PDFs can't be read here, so the model is told, and can say so.
   const messages = [
@@ -368,7 +377,7 @@ async function* openaiChat(host: Host, model: string, system: string, turns: Tur
   let error: ProviderError | null = null;
   // A busy host (NVIDIA's free tier allows about 40 requests a minute per key) gets one more try
   // after a pause, then the person hears it's busy.
-  for (let i = 0; i < 2 && !res; i++) {
+  for (let i = 0; i < tries && !res; i++) {
     if (i) await pause(1500, signal);
     const r = await fetch(`${host.base}/chat/completions`, {
       method: "POST",
@@ -439,6 +448,87 @@ async function* openaiChat(host: Host, model: string, system: string, turns: Tur
   yield { type: "done", inputTokens, outputTokens, stop };
 }
 
+// ---------------------------------------------------------------- Auto (free)
+
+/*
+ * "Auto (free)" spreads replies over free tiers: each host below joins when its key is set, and
+ * the first one that answers wins. Hosts that are busy or out of quota rest for 10 minutes, so
+ * the next reply goes straight to one that works. Gemini Flash is the last resort. Each host's
+ * models are matched against its live list, so retired ids drop out on their own.
+ */
+const POOL_HOSTS: { id: string; name: string; base: string; env: string; models: (ids: string[]) => string[] }[] = [
+  { id: "cerebras", name: "Cerebras", base: "https://api.cerebras.ai/v1", env: "CEREBRAS_API_KEY", models: (ids) => pick(ids, ["gpt-oss-120b", "zai-glm-4.7", "qwen-3-235b-a22b-instruct-2507", "llama-3.3-70b"]) },
+  { id: "groq", name: "Groq", base: "https://api.groq.com/openai/v1", env: "GROQ_API_KEY", models: (ids) => pick(ids, ["moonshotai/kimi-k2-instruct-0905", "openai/gpt-oss-120b", "llama-3.3-70b-versatile"]) },
+  { id: "nvidia", name: "NVIDIA", base: "", env: "NVIDIA_API_KEY", models: (ids) => pick(ids, [...NVIDIA["glm-flash"], ...NVIDIA["deepseek-flash"]]) },
+  { id: "mistral", name: "Mistral", base: "https://api.mistral.ai/v1", env: "MISTRAL_API_KEY", models: (ids) => pick(ids, ["mistral-medium-latest", "mistral-small-latest"]) },
+  {
+    id: "openrouter",
+    name: "OpenRouter",
+    base: "https://openrouter.ai/api/v1",
+    env: "OPENROUTER_API_KEY",
+    // Free models end in ":free"; prefer well-known families.
+    models: (ids) => ids.filter((m) => m.endsWith(":free") && /deepseek|qwen|glm|kimi|nemotron|gpt-oss|llama-3\.3-70b/.test(m)).slice(0, 2),
+  },
+];
+
+/** The wanted ids this host serves, in order (at most two). */
+const pick = (ids: string[], wanted: string[]) => wanted.filter((w) => ids.includes(w)).slice(0, 2);
+
+const poolHost = (h: (typeof POOL_HOSTS)[number]): Host => (h.id === "nvidia" ? nvidiaHost() : { name: h.name, base: h.base, key: process.env[h.env] ?? "" });
+
+const hostModels = new Map<string, { ids: string[]; at: number }>();
+
+/** A host's model list, checked at most once an hour. */
+async function listModels(host: Host): Promise<string[]> {
+  const cached = hostModels.get(host.base);
+  if (cached && Date.now() - cached.at < 3600_000) return cached.ids;
+  let ids: string[] = [];
+  try {
+    const r = await fetch(`${host.base}/models`, { headers: { authorization: `Bearer ${host.key}` }, signal: AbortSignal.timeout(8000) });
+    if (r.ok) ids = ((await r.json()) as { data?: { id: string }[] }).data?.map((m) => m.id) ?? [];
+    else console.error(`${host.name} models list failed`, r.status);
+  } catch {}
+  hostModels.set(host.base, { ids, at: Date.now() });
+  return ids;
+}
+
+/** Every host and model Auto (free) would try, in order, and whether each is resting. */
+export async function poolPlan() {
+  const out: { id: string; host: Host; label: string; model: string; resting: boolean }[] = [];
+  for (const h of POOL_HOSTS) {
+    if (!process.env[h.env]) continue;
+    const host = poolHost(h);
+    for (const model of h.models(await listModels(host)))
+      out.push({ id: `${h.id}:${model}`, host, label: h.name, model, resting: (resting.get(`${h.id}:${model}`) ?? 0) > Date.now() });
+  }
+  return out;
+}
+
+async function* pool(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
+  // Pictures and PDFs need a model that can see them: Gemini, when it's there.
+  if (process.env.GEMINI_API_KEY && turns.some((t) => t.files?.length)) return yield* gemini(system, turns, maxTokens, signal);
+  const tried: string[] = [];
+  for (const c of (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
+    const it = openaiChat(c.host, c.model, system, turns, maxTokens, signal, 1);
+    let first: IteratorResult<ReplyEvent>;
+    try {
+      // Nothing has reached the person before the first piece arrives, so a failure here quietly
+      // moves on to the next host.
+      first = await it.next();
+    } catch (e) {
+      if (signal.aborted) throw e;
+      resting.set(c.id, Date.now() + 10 * 60_000);
+      tried.push(`${c.label} ${c.model}: ${errorDetail(e).slice(0, 120)}`);
+      continue;
+    }
+    if (!first.done) yield first.value;
+    yield* it;
+    return;
+  }
+  if (process.env.GEMINI_API_KEY) return yield* gemini(system, turns, maxTokens, signal);
+  throw new ProviderError("busy", tried.length ? `Every free host was busy: ${tried.join(" · ")}` : "No free host has a key");
+}
+
 // ---------------------------------------------------------------- Shared
 
 export class ProviderError extends Error {
@@ -470,6 +560,7 @@ export async function checkProviders() {
     ["anthropic", "haiku"],
     ["nvidia", "glm-flash"],
     ["xai", "grok"],
+    ["pool", "free"],
   ] as const) {
     if (!providers()[provider]) {
       out.push({ provider, model: "", ok: false, detail: "No API key set", ms: 0 });
@@ -478,7 +569,15 @@ export async function checkProviders() {
     const t = Date.now();
     let text = "";
     let model =
-      provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : provider === "nvidia" ? await nvidiaModel(modelId) : provider === "xai" ? GROK.grok.api : CLAUDE.haiku.api;
+      provider === "google"
+        ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ")
+        : provider === "nvidia"
+          ? await nvidiaModel(modelId)
+          : provider === "xai"
+            ? GROK.grok.api
+            : provider === "pool"
+              ? (await poolPlan()).map((p) => `${p.label} ${p.model}${p.resting ? " (resting)" : ""}`).join(" → ") || "Gemini only"
+              : CLAUDE.haiku.api;
     try {
       for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
         if (ev.type === "text") text += ev.text;
@@ -518,6 +617,10 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
     return (async function* () {
       yield* openaiChat(nvidiaHost(), await nvidiaModel(opts.modelId), opts.system, opts.turns, max, opts.signal);
     })();
+  }
+  if (opts.modelId === "free") {
+    if (!providers().pool) throw new ProviderError("unavailable");
+    return pool(opts.system, opts.turns, max, opts.signal);
   }
   if (GROK[opts.modelId]) {
     if (!process.env.XAI_API_KEY) throw new ProviderError("unavailable");
