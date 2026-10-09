@@ -121,13 +121,3 @@ export const STYLES: DesignStyle[] = [
 ];
 
 export const getStyle = (id: unknown) => (typeof id === "string" ? STYLES.find((s) => s.id === id) : undefined);
-
-/** Where to find references: the person can screenshot a page they like and attach it. */
-export const INSPIRATION: { name: string; url: string; what: string }[] = [
-  { name: "Minimal Gallery", url: "https://minimal.gallery", what: "Calm, high-end sites" },
-  { name: "Godly", url: "https://godly.website", what: "Bold, award-level sites" },
-  { name: "Land-book", url: "https://land-book.com", what: "Landing pages" },
-  { name: "Mobbin", url: "https://mobbin.com", what: "Mobile app screens" },
-  { name: "Component Gallery", url: "https://component.gallery", what: "How design systems build each part" },
-  { name: "Awwwards", url: "https://www.awwwards.com", what: "The year's best web design" },
-];

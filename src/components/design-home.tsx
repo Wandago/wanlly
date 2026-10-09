@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { NewProject, type DesignKind, type Preset, type Project } from "./pages/projects-view";
-import { INSPIRATION, STYLES } from "@/lib/design-styles";
+import { STYLES } from "@/lib/design-styles";
+import { StyleThumb } from "./style-picker";
 
 /*
  * The Design tool's home: start something new from one of four kinds, then find your design
@@ -171,6 +172,8 @@ export function DesignHome() {
   }, []);
 
   const open = (p: Project) => router.push(`/design/${p.id}`);
+  /** A style picked from "Start from a look", applied to the design that's created next. */
+  const [look, setLook] = useState<string | null>(null);
   const rename = async (p: Project) => {
     const name = window.prompt("Rename", p.name)?.trim();
     if (!name || name === p.name) return;
@@ -348,18 +351,34 @@ export function DesignHome() {
               </button>
             ))}
           </div>
-          <p className="text-[13px] text-muted">
-            Want a certain look? Pick one of {STYLES.length} styles in the editor, or find a page you love on{" "}
-            {INSPIRATION.map((x, i) => (
-              <span key={x.url}>
-                <a href={x.url} target="_blank" rel="noopener noreferrer" title={x.what} className="text-fg underline decoration-line underline-offset-2 hover:decoration-faint">
-                  {x.name}
-                </a>
-                {i < INSPIRATION.length - 2 ? ", " : i === INSPIRATION.length - 2 ? " or " : ""}
-              </span>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-[15px] text-muted">Start from a look</h2>
+            <small className="text-[12px] text-faint">Have a site you love? Attach a screenshot in the editor and say &ldquo;in this style&rdquo;.</small>
+          </div>
+          <div className="-mx-1 flex snap-x gap-3 overflow-x-auto px-1 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-x-4 sm:gap-y-5 sm:overflow-visible sm:px-0 lg:grid-cols-5">
+            {STYLES.map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => {
+                  setLook(st.id);
+                  setCreating("design");
+                }}
+                className="group flex w-[168px] shrink-0 snap-start flex-col gap-2 text-left sm:w-auto"
+              >
+                <span className="block aspect-[4/3] overflow-hidden rounded-xl border border-line transition-transform group-hover:-translate-y-0.5 group-hover:border-faint">
+                  <StyleThumb id={st.id} />
+                </span>
+                <span>
+                  <b className="block text-[14px] font-medium">{st.name}</b>
+                  <small className="block text-[12px] text-muted">{st.blurb}</small>
+                </span>
+              </button>
             ))}
-            , attach a screenshot and say &ldquo;in this style&rdquo;.
-          </p>
+          </div>
         </section>
 
         {error ? (
@@ -429,9 +448,29 @@ export function DesignHome() {
       <NewProject
         key={creating ?? "none"}
         open={creating !== null}
-        onOpenChange={(o) => !o && setCreating(null)}
-        preset={creating ? { tool: "design", kind: creating, ...KINDS[creating].preset } : undefined}
-        onCreated={(p) => open(p)}
+        onOpenChange={(o) => {
+          if (o) return;
+          setCreating(null);
+          setLook(null);
+        }}
+        preset={
+          creating
+            ? {
+                tool: "design",
+                kind: creating,
+                ...KINDS[creating].preset,
+                ...(look ? { title: `New design · ${STYLES.find((x) => x.id === look)?.name ?? ""} style` } : {}),
+              }
+            : undefined
+        }
+        onCreated={(p) => {
+          // The editor reads its starting style from here (see design-editor.tsx).
+          if (look)
+            try {
+              localStorage.setItem(`wanlly-ds-${p.id}`, `style:${look}`);
+            } catch {}
+          open(p);
+        }}
       />
     </main>
   );
