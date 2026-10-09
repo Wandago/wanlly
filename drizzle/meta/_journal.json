@@ -92,6 +92,13 @@
       "when": 1791555537762,
       "tag": "0012_campaign_banners",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791557225520,
+      "tag": "0013_user_memory",
+      "breakpoints": true
     }
   ]
 }

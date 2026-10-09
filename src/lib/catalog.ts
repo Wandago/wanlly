@@ -33,6 +33,10 @@ export type Sponsor = {
   image?: string;
   /** Banner sizes this sold campaign has pictures for, e.g. ["300x250", "728x90"]. */
   banners?: string[];
+  /** For Wanlly's own affiliate offers: its id, matching words and the places it may show. */
+  affiliateId?: string;
+  keywords?: string[];
+  places?: string[];
 };
 
 export type Tool = {

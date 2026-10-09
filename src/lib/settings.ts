@@ -17,6 +17,8 @@ export type Settings = {
   askBeforeLong: boolean;
   adTopics: string[];
   personalisedAds: boolean;
+  /** Let Wanlly keep a short profile from chats, to tailor answers and suggestions. */
+  memory: boolean;
   videoSound: boolean;
   notify: Record<(typeof NOTIFY)[number], boolean>;
 };
@@ -30,6 +32,7 @@ export const DEFAULT_SETTINGS: Settings = {
   askBeforeLong: true,
   adTopics: ["Learning and courses", "Developer tools", "Jobs and internships"],
   personalisedAds: true,
+  memory: true,
   videoSound: false,
   notify: { coworkerNeedsOk: true, bonusReady: true, weeklySummary: true, productNews: false },
 };
@@ -50,6 +53,7 @@ export function cleanSettings(input: unknown, base: Settings = DEFAULT_SETTINGS)
     askBeforeLong: bool("askBeforeLong", base.askBeforeLong),
     adTopics: Array.isArray(v.adTopics) ? AD_TOPICS.filter((t) => (v.adTopics as unknown[]).includes(t)) : base.adTopics,
     personalisedAds: bool("personalisedAds", base.personalisedAds),
+    memory: bool("memory", base.memory),
     videoSound: bool("videoSound", base.videoSound),
     notify: Object.fromEntries(NOTIFY.map((k) => [k, typeof n[k] === "boolean" ? n[k] : base.notify[k]])) as Settings["notify"],
   };

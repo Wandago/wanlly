@@ -47,6 +47,8 @@ export type Job = {
 
 export type Picture = { url: string; original: string; originalType: string; savedId?: number | null };
 
+export type MemoryView = { about: string; interests: string[]; suggestions: string[]; updatedAt: string };
+
 export type Recent = { id: number; title: string; tool: string; projectId: number | null };
 
 /** Tools that run real models inside the chat workspace (Design has its own editor). */
@@ -63,6 +65,8 @@ type State = {
   usage: Usage | null;
   /** Network country, account status and role, from /api/me. */
   me: { country: string | null; status: string; role?: string } | null;
+  /** What Wanlly remembers about this person (null when off or empty). */
+  memory: MemoryView | null;
   /** Which model providers have keys. Null until synced. */
   providers: Providers | null;
   /** Profile preferences from the server. Null until loaded. */
@@ -95,6 +99,7 @@ type Action =
   | { type: "jobError"; id: string; message: string }
   | { type: "setSpot"; id: string; spot: SpotState }
   | { type: "account"; credits: number; floorUnlocked: boolean; usage: Usage; me?: State["me"]; providers?: Providers; toast?: string }
+  | { type: "memory"; memory: MemoryView | null }
   | { type: "dropJob"; id: string; toast: string }
   | { type: "settings"; settings: Settings; first?: boolean }
   | { type: "conversation"; id: number }
@@ -154,6 +159,7 @@ const initialState: State = {
   synced: false,
   usage: null,
   me: null,
+  memory: null,
   providers: null,
   settings: null,
   modelId: CHEAPEST_MODEL_ID,
@@ -188,6 +194,8 @@ function reducer(state: State, action: Action): State {
       return patchJob(state, action.id, () => ({ status: "done", credits: action.charged, stop: action.stop }));
     case "jobPictures":
       return patchJob(state, action.id, () => ({ status: "done", pictures: action.pictures, text: action.caption, credits: action.charged, stop: "end" }));
+    case "memory":
+      return { ...state, memory: action.memory };
     case "jobError":
       return patchJob(state, action.id, () => ({ status: "error", error: action.message, credits: 0 }));
     case "setSpot":

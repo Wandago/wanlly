@@ -6,6 +6,7 @@ import type { CoverKind } from "@/lib/catalog";
 import { Cover } from "../ads/cover";
 import { resetSeen, seenToday } from "@/lib/ad-track";
 import { CountryPicker } from "./country-picker";
+import { AffiliatesCard } from "./admin-affiliates";
 import { Icon } from "../icon";
 import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when } from "./admin-ui";
 
@@ -668,6 +669,7 @@ export function AdvertisersTab() {
           reload();
         }}
       />
+      <AffiliatesCard />
       <Card
         title="Campaigns"
         note={`Active campaigns replace the house sponsors in the slots they're booked for. Earned = views × the agreed price.${serving ? ` Serving to you now: ${serving.ids.size} campaign${serving.ids.size === 1 ? "" : "s"} (your network country: ${serving.country || "unknown"}).` : ""}`}

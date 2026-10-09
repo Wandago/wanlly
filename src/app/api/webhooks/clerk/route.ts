@@ -1,7 +1,7 @@
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 
 /**
  * Clerk calls this when a person signs up, changes their details or deletes their account.
@@ -20,13 +20,11 @@ export async function POST(req: NextRequest) {
     const email = u.email_addresses.find((e) => e.id === u.primary_email_address_id)?.email_address ?? null;
     const phoneVerified = u.phone_numbers.some((p) => p.verification?.status === "verified");
     const name = [u.first_name, u.last_name].filter(Boolean).join(" ") || u.username || null;
-    await db()
-      .insert(schema.users)
-      .values({ id: u.id, email, name, phoneVerified })
-      .onConflictDoUpdate({
-        target: schema.users.id,
-        set: { email, name, phoneVerified, updatedAt: sql`now()` },
-      });
+    // Named columns only, so a newer column can't break this before its migration runs.
+    const q = rawSql();
+    await q`
+      insert into users (id, email, name, phone_verified) values (${u.id}, ${email}, ${name}, ${phoneVerified})
+      on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = excluded.phone_verified, updated_at = now()`;
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {

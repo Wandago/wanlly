@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DisplaySlot } from "./ads/display-slot";
+import { NativeSlot } from "./ads/native-slot";
 import { TOOLS } from "@/lib/catalog";
 import { isConnected, useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
@@ -75,7 +76,9 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
   const { dispatch, stop } = useWorkspace();
   const { adFormat, spotAspect } = TOOLS[job.tool];
   // A booked campaign for this slot if there is one, otherwise the tool's house sponsor.
-  const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", [TOOLS[job.tool].sponsor]);
+  // Offers that match what this job is about come first (matching happens here, in the browser).
+  const context = `${job.prompt} ${(job.text ?? "").slice(0, 2000)}`;
+  const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", [TOOLS[job.tool].sponsor], context);
   const sponsor = options[(job.id.length + job.prompt.length) % options.length];
   const showCard = job.status === "working" || job.spot === "playing";
 
@@ -118,6 +121,16 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
           placement="between_turns"
           sizes={["728x90", "468x60", "320x100", "320x50"]}
           className="border-y border-line py-3"
+          fallback={
+            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
+              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+            </Tracked>
+          }
+        />
+      ) : index % 4 === 2 && !job.sample ? (
+        // Every fourth reply (offset from the banners), the ad network's native row, if set up.
+        <NativeSlot
+          placement="native_row"
           fallback={
             <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
               <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />

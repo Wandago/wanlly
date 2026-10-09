@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   sessionStartedAt: timestamp("session_started_at", { withTimezone: true }),
   /** When this person's current 7-day usage week began. */
   weekStartedAt: timestamp("week_started_at", { withTimezone: true }),
+  /** What Wanlly remembers about this person (see src/lib/memory.ts); null until there's something. */
+  memory: jsonb("memory"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

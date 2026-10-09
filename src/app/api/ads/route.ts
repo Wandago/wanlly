@@ -1,6 +1,8 @@
 import { rawSql } from "@/db";
 import { directSrc } from "@/lib/ad-network";
 import { loadNetwork } from "@/lib/ad-network-server";
+import { affiliateSponsor } from "@/lib/affiliates";
+import { loadAffiliates } from "@/lib/affiliates-server";
 
 /**
  * Directly sold ads that may show right now to someone in this country, with where they may show.
@@ -23,11 +25,13 @@ export async function GET(req: Request) {
           select count(*) from ad_events a where a.creative = 'campaign:' || c.id and a.kind = 'impression'))
       order by c.id desc limit 20`) as Record<string, unknown>[];
     // Which network sizes are set up, and for whom. The codes themselves stay in /api/ads/unit.
-    const network = await loadNetwork();
+    const [network, affiliates] = await Promise.all([loadNetwork(), loadAffiliates()]);
     return Response.json(
       {
         // The visitor's own network country, so the team can see why a campaign isn't shown.
         country,
+        // Wanlly's affiliate offers, for places no sold campaign has booked.
+        house: affiliates.filter((a) => a.active).map(affiliateSponsor),
         // Iframe-only banners (A-ADS…) run on the network's own site and need nothing more. Script
         // banners (Adsterra…) need the banner host: inside Wanlly's sandbox they load blank.
         network: (() => {
@@ -41,7 +45,9 @@ export async function GET(req: Request) {
             else if (network.host && code) codes[size] = code;
             if (src || network.host) sizes.push(size);
           }
-          return sizes.length ? { name: network.name, audience: network.audience, sizes, host: network.host, direct, codes } : null;
+          // The native row needs the banner host (its script, like any network script).
+          const native = network.native && network.host ? { code: network.native, height: network.nativeHeight ?? 280 } : undefined;
+          return sizes.length || native ? { name: network.name, audience: network.audience, sizes, host: network.host, direct, codes, native } : null;
         })(),
         ads: rows.map((r) => ({
           campaignId: Number(r.id),

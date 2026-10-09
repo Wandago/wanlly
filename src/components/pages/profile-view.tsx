@@ -113,6 +113,69 @@ function useSettings() {
   return { settings, save };
 }
 
+/** What Wanlly remembers about you: see it, correct it, switch it off, or wipe it. */
+function MemoryPanel() {
+  const { memory, dispatch } = useWorkspace();
+  const { settings: s, save } = useSettings();
+  const [about, setAbout] = useState<string | null>(null);
+  const [interests, setInterests] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const shownAbout = about ?? memory?.about ?? "";
+  const shownInterests = interests ?? memory?.interests.join(", ") ?? "";
+  const dirty = about !== null || interests !== null;
+  const put = async (body: object | null) => {
+    setBusy(true);
+    try {
+      const r = await fetch("/api/me/memory", body ? { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify(body) } : { method: "DELETE" });
+      const b = await r.json();
+      if (!r.ok) throw new Error(b.error ?? "Couldn't save that");
+      dispatch({ type: "memory", memory: b.memory ?? null });
+      setAbout(null);
+      setInterests(null);
+      dispatch({ type: "toast", text: body ? "Saved" : "Forgotten" });
+    } catch (e) {
+      dispatch({ type: "toast", text: (e as Error).message });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Panel title="What Wanlly remembers" note="A short profile Wanlly writes from your chats, so answers fit you and the home screen suggests useful next steps. It never keeps health, money, religion or politics details, passwords, or anything about other people. Sponsors never see it.">
+      <div id="memory" className="flex flex-col gap-3">
+        {s && <Switch label="Remember things about me" detail="Off: nothing new is kept and replies don't use what's here." on={s.memory} onChange={(v) => save({ memory: v })} />}
+        {memory || dirty ? (
+          <>
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium">
+              About you
+              <textarea rows={4} value={shownAbout} onChange={(e) => setAbout(e.target.value)} className="w-full resize-y rounded-lg border border-line bg-surface px-3 py-2 text-[13px] font-normal outline-none focus:border-faint" />
+            </label>
+            <label className="flex flex-col gap-1.5 text-[13px] font-medium">
+              Interests <span className="font-normal text-faint">comma separated</span>
+              <input value={shownInterests} onChange={(e) => setInterests(e.target.value)} className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-[13px] font-normal outline-none focus:border-faint" />
+            </label>
+            {memory?.suggestions.length ? <p className="text-xs text-muted">Suggested next: {memory.suggestions.join(" · ")}</p> : null}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                disabled={!dirty || busy}
+                onClick={() => put({ about: shownAbout, interests: shownInterests.split(",").map((x) => x.trim()).filter(Boolean), suggestions: memory?.suggestions ?? [] })}
+                className="rounded-[10px] bg-fg px-3.5 py-2 text-[13px] font-semibold text-bg disabled:opacity-50"
+              >
+                Save changes
+              </button>
+              <button type="button" disabled={busy || !memory} onClick={() => window.confirm("Forget everything Wanlly remembers about you?") && put(null)} className="rounded-[10px] border border-line px-3.5 py-2 text-[13px] font-medium hover:border-faint disabled:opacity-50">
+                Forget everything
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="text-[13px] text-muted">Nothing yet. After a few chats, what Wanlly learns about you shows here, and you can change it anytime.</p>
+        )}
+      </div>
+    </Panel>
+  );
+}
+
 function countryName(code: string | null | undefined) {
   if (!code || code === "XX" || code === "T1") return "Unknown";
   try {
@@ -407,13 +470,15 @@ export function ProfileView() {
               <UsageMeters usage={usage} />
               {usage && (
                 <p className="mt-2.5 text-xs text-muted">
-                  You can use up to {usage.dayLimit} credits a day and {usage.weekLimit} a week, however many you&apos;ve saved.
+                  You can use up to {usage.dayLimit} credits in a 6-hour session and {usage.weekLimit} a week, however many you&apos;ve saved. Both start with your first request.
                 </p>
               )}
             </div>
             <Standing />
             <History />
           </Panel>
+
+          <MemoryPanel />
 
           <Panel title="Ads and privacy" note="Ads keep Wanlly free. You choose what they're about; sponsors never see your prompts or your work.">
             <div id="ads" className="flex flex-col gap-2">

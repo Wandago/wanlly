@@ -12,6 +12,9 @@ export default function PrivacyPage() {
         <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and your phone number if you verify it.</li>
         <li>Your country, from your network, to choose ads and set ad rates.</li>
         <li>What you create: prompts, files, projects and the replies AI models send back.</li>
+        <li>
+          A short profile Wanlly writes from your chats (what you work on, your interests, how you like answers), used to tailor replies and suggestions. It never includes health, money, religion or politics details, passwords, or anything about other people. You can read, edit, switch off or erase it on your Profile page; advertisers never see it. Ads that match your chat are chosen in your browser.
+        </li>
         <li>How you use Wanlly: credits earned and spent, ads shown and watched, and security signals such as device and network, to stop abuse.</li>
         <li>
           Visits, counted without cookies: the page, the site that sent you, your country and device type. Your network address and browser are turned into a code that

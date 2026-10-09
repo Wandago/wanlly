@@ -1,6 +1,5 @@
 import "server-only";
-import { sql } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { rawSql, schema } from "@/db";
 import { clerk } from "./session";
 
 /**
@@ -13,13 +12,12 @@ export async function ensureUser(userId: string, country: string | null) {
   const email = u.primaryEmailAddress?.emailAddress ?? null;
   const name = u.fullName || u.username || null;
   const phoneVerified = u.phoneNumbers.some((p) => p.verification?.status === "verified");
-  const [row] = await db()
-    .insert(schema.users)
-    .values({ id: u.id, email, name, phoneVerified, country })
-    .onConflictDoUpdate({
-      target: schema.users.id,
-      set: { email, name, phoneVerified, country: sql`coalesce(${schema.users.country}, excluded.country)`, updatedAt: sql`now()` },
-    })
-    .returning({ id: schema.users.id, country: schema.users.country, status: schema.users.status, role: schema.users.role });
-  return row;
+  // Named columns only, so a column added by a newer migration can't break sign-in before it runs.
+  const q = rawSql();
+  const [row] = (await q`
+    insert into users (id, email, name, phone_verified, country) values (${u.id}, ${email}, ${name}, ${phoneVerified}, ${country})
+    on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = excluded.phone_verified,
+      country = coalesce(users.country, excluded.country), updated_at = now()
+    returning id, country, status, role`) as { id: string; country: string | null; status: string; role: string }[];
+  return row as { id: string; country: string | null; status: (typeof schema.users.$inferSelect)["status"]; role: (typeof schema.users.$inferSelect)["role"] };
 }

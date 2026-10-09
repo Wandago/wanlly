@@ -21,6 +21,10 @@ export type NetworkConfig = {
    * access to Wanlly. Empty: banners come from Wanlly itself, fully sandboxed.
    */
   host?: string;
+  /** A native ad unit (e.g. Adsterra's Native Banner): a row of picture-and-headline ads. */
+  native?: string;
+  /** Height of the native row in px; the unit fills the width. */
+  nativeHeight?: number;
 };
 
 export const NO_NETWORK: NetworkConfig = { name: "", audience: "off", units: {} };
@@ -82,5 +86,7 @@ export function cleanNetwork(v: unknown): NetworkConfig {
     audience: o.audience === "staff" || o.audience === "everyone" ? o.audience : "off",
     units,
     host: httpsOrigin(o.host),
+    native: typeof o.native === "string" && o.native.trim() ? o.native.trim().slice(0, 4000) : undefined,
+    nativeHeight: Math.max(100, Math.min(600, Math.round(Number(o.nativeHeight)) || 280)),
   };
 }

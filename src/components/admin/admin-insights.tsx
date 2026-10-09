@@ -378,6 +378,34 @@ function AdNetwork() {
           );
         })}
       </ul>
+      <div className="flex flex-col gap-2 border-t border-line pt-3">
+        <div className="text-[13px]">
+          <b className="font-semibold">Native row</b>{" "}
+          <span className="text-muted">A few picture-and-headline ads in a row, under replies (Adsterra&apos;s &quot;Native Banner&quot;). Needs the banner host.</span>
+        </div>
+        <textarea
+          className={`${field} min-h-[64px] font-mono text-[11px]`}
+          value={cfg.native ?? ""}
+          onChange={(e) => set({ native: e.target.value })}
+          placeholder="Native Banner code from the network's dashboard"
+          spellCheck={false}
+        />
+        <label className="flex items-center gap-2 text-xs text-muted">
+          Height
+          <input type="number" min={100} max={600} className={`${field} w-24`} value={cfg.nativeHeight ?? 280} onChange={(e) => set({ nativeHeight: Number(e.target.value) })} />
+          px. Use the height the network shows for your layout (often 250–320).
+        </label>
+        {saved?.native && saved.host && saved.audience !== "off" && (
+          <iframe
+            key={`native-${preview}`}
+            title="Native row preview"
+            src={frameUrl(saved.host, saved.native)}
+            sandbox={DIRECT_SANDBOX}
+            className="block w-full rounded-lg border border-dashed border-line"
+            style={{ height: saved.nativeHeight ?? 280 }}
+          />
+        )}
+      </div>
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs text-muted">Add a size:</span>
         {UNIT_SIZES.filter((size) => cfg.units[size] === undefined && !added.includes(size)).map((size) => (

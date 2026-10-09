@@ -7,6 +7,8 @@ import { MAX_BODY, readAttachments } from "@/lib/attachments";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
+import { loadMemory, maybeUpdateMemory, memoryPrompt } from "@/lib/memory";
+import { after } from "next/server";
 
 /*
  * One reply, streamed as newline-delimited JSON:
@@ -147,7 +149,13 @@ export async function POST(req: Request) {
   }, []);
   while (turns[0]?.role === "assistant") turns.shift();
 
-  const system = SYSTEM[toolId as "chat" | "code"] + (instructions ? `\n\nThe person set these instructions for this project. Follow them:\n<project_instructions>\n${instructions}\n</project_instructions>` : "");
+  const memory = await loadMemory(userId);
+  const system =
+    SYSTEM[toolId as "chat" | "code"] +
+    memoryPrompt(memory) +
+    (instructions ? `\n\nThe person set these instructions for this project. Follow them:\n<project_instructions>\n${instructions}\n</project_instructions>` : "");
+  // After the reply is sent, refresh what Wanlly remembers from this person's own words.
+  after(() => maybeUpdateMemory(userId, turns.filter((t) => t.role === "user").map((t) => t.text)));
   const abort = new AbortController();
   const enc = new TextEncoder();
 

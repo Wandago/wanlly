@@ -77,7 +77,7 @@ function Gate() {
 }
 
 export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
-  const { tool, draft, price, gate, modelId, dispatch, submit } = useWorkspace();
+  const { tool, draft, price, gate, modelId, dispatch, submit, memory } = useWorkspace();
   const ta = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const config = TOOLS[tool];
@@ -104,7 +104,8 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
     <div className="flex flex-col gap-2">
       {showSuggestions && !draft && (
         <div className="flex flex-wrap justify-center gap-2">
-          {config.suggestions.map((s) => (
+          {/* In Chat, suggestions come from what Wanlly remembers about the person, when it has some. */}
+          {(tool === "chat" && memory?.suggestions.length ? memory.suggestions : config.suggestions).map((s) => (
             <button
               key={s}
               type="button"

@@ -5,6 +5,7 @@ import { account } from "@/lib/ledger";
 import { clerk, signedInUserId } from "@/lib/session";
 import { visitorHash } from "@/lib/traffic";
 import { providers } from "@/lib/ai";
+import { loadMemory } from "@/lib/memory";
 
 /** The signed-in person's account: created on first call, then their balance, today's bonus and usage. */
 export async function GET(req: Request) {
@@ -18,7 +19,8 @@ export async function GET(req: Request) {
       .values({ userId: user.id, visitor: await visitorHash(req) })
       .onConflictDoUpdate({ target: [schema.userDevices.userId, schema.userDevices.visitor], set: { seenAt: sql`now()` } })
       .catch((e) => console.error("user device failed", e));
-    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, providers: providers(), ...(await account(user.id)) });
+    const [acct, memory] = await Promise.all([account(user.id), loadMemory(user.id)]);
+    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, providers: providers(), memory, ...acct });
   } catch (e) {
     console.error("api/me failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });
