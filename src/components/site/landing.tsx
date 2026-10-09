@@ -1,18 +1,17 @@
 import Link from "next/link";
+import { ClaudeMark, GeminiMark } from "./brand-marks";
 import type { ReactNode } from "react";
 import { FLOOR_CREDITS } from "@/lib/catalog";
 import { Icon, type IconName } from "../icon";
 
 /* The public home page. Flat and typographic: solid colours, hairline borders, no gradients or glows. */
 
-const MODELS: [string, string, boolean][] = [
-  ["Claude", "Haiku 5.5", true],
-  ["Claude", "Sonnet 5.5", true],
-  ["Claude", "Opus 5.5", true],
-  ["Claude", "Fable 5.1", true],
-  ["Gemini", "Flash", true],
-  ["OpenAI", "GPT", false],
-  ["xAI", "Grok", false],
+/** The "Runs on" strip: each maker once, with its mark when Wanlly runs its models. */
+const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean }[] = [
+  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5", "Fable 5.1"], live: true },
+  { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
+  { maker: "OpenAI", models: ["GPT"], live: false },
+  { maker: "xAI", models: ["Grok"], live: false },
 ];
 
 function Hero() {
@@ -137,10 +136,16 @@ function ModelStrip() {
     <section aria-label="Models" className="border-b border-line">
       <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-8 gap-y-3 px-4 py-6 sm:px-6">
         <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Runs on</span>
-        {MODELS.map(([maker, name, live]) => (
-          <span key={name} className="flex items-baseline gap-1.5 text-sm">
-            <span className="text-faint">{maker}</span>
-            <b className={`font-display font-semibold ${live ? "" : "text-faint"}`}>{name}</b>
+        {MAKERS.map(({ maker, mark, models, live }) => (
+          <span key={maker} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
+            {mark ?? <span className="text-faint">{maker}</span>}
+            {mark && <span className="text-muted">{maker}</span>}
+            {models.map((m, i) => (
+              <span key={m} className="flex items-baseline gap-2">
+                {i > 0 && <span className="text-faint">·</span>}
+                <b className={`font-display font-semibold ${live ? "" : "text-faint"}`}>{m}</b>
+              </span>
+            ))}
             {!live && <span className="text-[10px] text-faint">soon</span>}
           </span>
         ))}
