@@ -1,0 +1,563 @@
+<title>Wanlly Promo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* The high-energy cut: 32 s at 140 BPM, every cut on a beat, hard colour flips, slams, shake and
+   flash on the hits. Pairs with promo/wanlly-promo-music.m4a (original, synthesized). Flat colour only. */
+:root {
+  --ink: #0b0b0e;
+  --ink-2: #17171c;
+  --paper: #f6f5f1;
+  --white: #ffffff;
+  --muted: #8b8f99;
+  --line: #2a2a31;
+  --tang: #ff5a1f;
+  --volt: #d7ff3a;
+  --cobalt: #2d5bff;
+  --cyan: #00e0ff;
+  --impact: "Anton", "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #050507; color: var(--white); font: 15px/1.5 var(--body); }
+.page { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.head h1 { font: 800 22px/1.2 var(--display); letter-spacing: -.02em; margin: 0; }
+.head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* Stage */
+.stage-wrap { width: 100%; display: grid; place-items: center; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--ink); border-radius: 14px; overflow: hidden; container-type: size; isolation: isolate; }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); }
+.portrait .stage { aspect-ratio: 4 / 5; width: min(100%, 560px); }
+.cam { position: absolute; inset: 0; }
+.scene { position: absolute; inset: 0; display: grid; place-items: center; padding: 6cqmin; visibility: hidden; overflow: hidden; }
+.col { position: relative; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2.4cqmin; max-width: 100%; }
+[data-in] { will-change: transform, opacity; }
+/* Lines that take turns in one scene share the same spot. */
+.scene > * { grid-area: 1 / 1; }
+/* Phones: bigger type, allowed to wrap */
+.vertical .x2 { font-size: 21cqw; }
+.vertical .x3 { font-size: 15cqw; }
+.vertical .tag { font-size: 4.2cqw; }
+.vertical .win { width: 92cqw; }
+.vertical .win-body { font-size: 4.6cqw; }
+.vertical .code { font-size: 3.5cqw; }
+.vertical .win-top { font-size: 3.4cqw; }
+.vertical .chip { font-size: 9cqw; }
+.vertical .cta { font-size: 7cqw; }
+.vertical .cta span { font-size: 3.4cqw; }
+.vertical .pops span, .portrait .pops span { top: 58%; }
+
+/* Type scale: sized against both width and height so 16:9, 9:16 and 4:5 all fill the frame. */
+.x0 { font: 400 min(34cqw, 50cqh)/.86 var(--impact); letter-spacing: -.01em; margin: 0; text-transform: uppercase; }
+.x1 { font: 400 min(25cqw, 40cqh)/.88 var(--impact); letter-spacing: -.005em; margin: 0; text-transform: uppercase; }
+.x2 { font: 400 min(15cqw, 25cqh)/.9 var(--impact); margin: 0; text-transform: uppercase; }
+.x3 { font: 400 min(10.5cqw, 17cqh)/.95 var(--impact); margin: 0; text-transform: uppercase; text-wrap: balance; }
+.tag { font: 500 min(3.4cqw, 3.4cqh)/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; margin: 0; }
+.rgb { text-shadow: var(--rgb, 0) 0 0 var(--cyan), calc(var(--rgb, 0) * -1) 0 0 var(--tang); }
+.hl { color: var(--tang); }
+.volt { color: var(--volt); }
+.outline { color: transparent; -webkit-text-stroke: max(2px, .5cqmin) currentColor; }
+
+/* Background type: huge outlined WANLLY rows drifting, faint. */
+.bgtype { position: absolute; inset: -20% -40%; display: flex; flex-direction: column; justify-content: center; gap: 2cqmin; transform: rotate(-8deg); pointer-events: none; opacity: .07; }
+.bgtype div { font: 400 24cqmin/1 var(--impact); white-space: nowrap; color: transparent; -webkit-text-stroke: 2px var(--white); }
+.on-light .bgtype div { -webkit-text-stroke-color: var(--ink); }
+
+/* Hit effects */
+.flash { position: absolute; inset: 0; background: var(--white); opacity: 0; pointer-events: none; z-index: 5; }
+.grain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 4; opacity: .11; mix-blend-mode: overlay; }
+.burst { position: absolute; left: 50%; top: 50%; width: 200cqmax; height: 200cqmax; margin: -100cqmax 0 0 -100cqmax; pointer-events: none; }
+.burst line { stroke: var(--tang); stroke-width: 3; stroke-linecap: round; }
+.ring { position: absolute; left: 50%; top: 50%; border-radius: 50%; border: 1cqmin solid var(--tang); pointer-events: none; transform: translate(-50%, -50%); }
+.bar-strike { position: absolute; left: -6%; right: -6%; top: 46%; height: .11em; background: var(--tang); transform-origin: left; transform: scaleX(0) rotate(-6deg); }
+
+/* Logo */
+.mark { width: min(30cqw, 34cqh); height: min(30cqw, 34cqh); }
+.mark .tile { fill: var(--white); }
+.mark .w { fill: none; stroke: var(--ink); stroke-width: 6.5; stroke-linecap: round; stroke-linejoin: round; }
+.mark .node { fill: var(--tang); }
+.wordmark { font: 800 min(17cqw, 26cqh)/.9 var(--display); letter-spacing: -.05em; }
+.lockup { display: flex; align-items: center; gap: 3cqmin; }
+.lockup .mark { width: min(17cqw, 20cqh); height: min(17cqw, 20cqh); }
+.lockup .wordmark { font-size: min(14cqw, 19cqh); }
+.vertical .lockup { flex-direction: column; }
+
+/* Tool flips: one word, one colour, one beat pair */
+.flip .x1 { line-height: .82; }
+.flip .tag { margin-top: 2cqmin; }
+
+/* Montage cards */
+.win { width: min(80cqw, 112cqh); border-radius: 2.2cqmin; background: var(--ink-2); border: 1px solid var(--line); overflow: hidden; text-align: left; box-shadow: 0 2cqmin 6cqmin rgb(0 0 0 / .45); }
+.win-top { display: flex; align-items: center; gap: 1cqmin; padding: 1.6cqmin 2cqmin; border-bottom: 1px solid var(--line); font: 500 min(2.8cqw, 3.4cqh)/1 var(--mono); color: var(--muted); }
+.win-top i { width: 1.4cqmin; height: 1.4cqmin; border-radius: 50%; background: var(--line); }
+.win-top i:first-child { background: var(--tang); }
+.win-body { padding: 3cqmin; display: flex; flex-direction: column; gap: 2cqmin; font: 400 min(3.6cqw, 4.2cqh)/1.35 var(--body); }
+.bubble { align-self: flex-end; background: var(--tang); color: #fff; padding: 1.2cqmin 2cqmin; border-radius: 2cqmin 2cqmin .6cqmin 2cqmin; max-width: 80%; }
+.reply { color: #d9dbe0; }
+.reply b { color: #fff; font-weight: 600; }
+.code { font: 500 min(2.9cqw, 3.5cqh)/1.55 var(--mono); color: #c9ccd3; white-space: pre; }
+.code .k { color: var(--tang); } .code .s { color: var(--volt); } .code .c { color: #6b6f78; }
+.poster { aspect-ratio: 16 / 9; background: var(--volt); color: var(--ink); border-radius: 1.4cqmin; padding: 3cqmin; display: flex; flex-direction: column; justify-content: space-between; }
+.poster b { font: 400 min(9cqw, 12cqh)/.9 var(--impact); text-transform: uppercase; }
+.poster small { font: 500 min(2.6cqw, 3.2cqh)/1 var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+.poster .dotrow { display: flex; gap: 1cqmin; } .poster .dotrow span { width: 4cqmin; height: 4cqmin; border-radius: 50%; background: var(--ink); } .poster .dotrow span:nth-child(2) { background: var(--tang); } .poster .dotrow span:nth-child(3) { background: var(--cobalt); }
+.imgs { display: grid; grid-template-columns: repeat(3, 1fr); width: 78%; margin: 0 auto; gap: 1cqmin; }
+.imgs span { aspect-ratio: 1; border-radius: 1cqmin; position: relative; overflow: hidden; }
+.imgs span::after { content: ""; position: absolute; left: 18%; bottom: 0; width: 64%; height: 54%; border-radius: 50% 50% 0 0; background: rgb(0 0 0 / .28); }
+.imgs span::before { content: ""; position: absolute; right: 16%; top: 16%; width: 22%; height: 22%; border-radius: 50%; background: rgb(255 255 255 / .75); }
+.montage-label { position: absolute; top: 4cqmin; left: 0; right: 0; text-align: center; }
+
+/* Earn */
+.earn { display: grid; grid-template-columns: auto auto; align-items: center; gap: 6cqmin; }
+.vertical .earn, .portrait .earn { grid-template-columns: 1fr; gap: 4cqmin; justify-items: center; }
+.vidcard { width: min(52cqw, 62cqh); background: var(--ink-2); border: 1px solid var(--line); border-radius: 2.2cqmin; padding: 2cqmin; display: flex; flex-direction: column; gap: 1.6cqmin; text-align: left; }
+.vidcard .screen { aspect-ratio: 16 / 9; border-radius: 1.4cqmin; background: var(--cobalt); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 2.4cqmin; }
+.vidcard .screen b { font: 400 min(5cqw, 6cqh)/.95 var(--impact); text-transform: uppercase; }
+.vidcard .screen small { position: absolute; top: 2cqmin; left: 2cqmin; font: 500 min(1.8cqw, 2.1cqh)/1 var(--mono); letter-spacing: .1em; background: rgb(0 0 0 / .3); padding: .8cqmin 1.2cqmin; border-radius: .8cqmin; }
+.vidcard .screen .play { position: absolute; right: 2.4cqmin; top: 50%; translate: 0 -50%; width: 9cqmin; height: 9cqmin; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+.vidcard .screen .play::after { content: ""; border-left: 2.6cqmin solid var(--cobalt); border-top: 1.6cqmin solid transparent; border-bottom: 1.6cqmin solid transparent; margin-left: .6cqmin; }
+.prog { height: 1.2cqmin; border-radius: 1cqmin; background: var(--line); overflow: hidden; }
+.prog i { display: block; height: 100%; width: calc(var(--p, 0) * 100%); background: var(--tang); }
+.vidcard .meta { display: flex; justify-content: space-between; font: 500 min(2.1cqw, 2.4cqh)/1 var(--mono); color: var(--muted); }
+.credits { display: flex; flex-direction: column; align-items: center; gap: 1cqmin; position: relative; }
+.credits .num { font: 400 min(26cqw, 36cqh)/.85 var(--impact); font-variant-numeric: tabular-nums; }
+.pops { position: absolute; inset: 0; pointer-events: none; }
+.pops span { position: absolute; left: 100%; top: 34%; font: 400 min(7cqw, 9cqh)/1 var(--impact); color: var(--volt); white-space: nowrap; }
+
+/* Build */
+.build { display: grid; grid-template-columns: 1.1fr .9fr; gap: 5cqmin; align-items: center; width: min(150cqh, 92cqw); }
+.vertical .build, .portrait .build { grid-template-columns: 1fr; gap: 3cqmin; justify-items: center; }
+.build .x2 { text-align: left; }
+.vertical .build .x2, .portrait .build .x2 { text-align: center; }
+.prompt { display: flex; align-items: center; gap: 1.6cqmin; background: var(--white); color: var(--ink); border-radius: 5cqmin; padding: 1.8cqmin 1.8cqmin 1.8cqmin 3cqmin; font: 500 min(2.6cqw, 3cqh)/1.3 var(--body); margin-top: 3cqmin; text-align: left; }
+.prompt .typed { flex: 1; min-width: 0; }
+.prompt .send { flex: none; width: 5.4cqmin; height: 5.4cqmin; border-radius: 50%; background: var(--tang); display: grid; place-items: center; }
+.prompt .send svg { width: 2.6cqmin; height: 2.6cqmin; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.caret { display: inline-block; width: .09em; height: 1em; margin-left: .05em; background: var(--tang); vertical-align: -.12em; }
+.phone { width: min(30cqw, 52cqh); aspect-ratio: 9 / 18.5; border-radius: 4.6cqmin; background: #000; padding: 1.3cqmin; border: 1px solid var(--line); position: relative; }
+.vertical .phone { width: 44cqw; }
+.portrait .phone { width: 34cqw; }
+.phone-screen { height: 100%; border-radius: 3.4cqmin; background: var(--paper); color: var(--ink); padding: 3cqmin 2.4cqmin; display: flex; flex-direction: column; gap: 1.6cqmin; text-align: left; }
+.phone-screen small { font: 500 min(1.7cqw, 2cqh)/1 var(--mono); color: #6b6f78; }
+.phone-screen b { font: 400 min(4.4cqw, 5.4cqh)/.95 var(--impact); text-transform: uppercase; }
+.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqmin; }
+.slots span { border: 1px solid #ddd9cf; border-radius: 1cqmin; padding: 1.1cqmin 0; text-align: center; font: 500 min(1.8cqw, 2.1cqh)/1 var(--body); background: #fff; }
+.slots span.pick { background: var(--tang); border-color: var(--tang); color: #fff; }
+.phone-screen .btn { margin-top: auto; background: var(--ink); color: #fff; border-radius: 1.4cqmin; text-align: center; padding: 1.7cqmin 0; font: 600 min(2cqw, 2.3cqh)/1 var(--body); }
+.stamp { position: absolute; left: 50%; top: 50%; translate: -50% -50%; font: 400 min(13cqw, 17cqh)/.9 var(--impact); color: var(--volt); border: max(3px, .8cqmin) solid var(--volt); padding: 1cqmin 3cqmin 1.6cqmin; border-radius: 2cqmin; white-space: nowrap; background: var(--ink); }
+
+/* Models and cities: one name at a time, then the stack */
+.swap { position: relative; display: grid; place-items: center; }
+.swap > * { grid-area: 1 / 1; }
+.stack { display: flex; flex-wrap: wrap; justify-content: center; gap: 2cqmin; max-width: 92cqw; }
+.chip { display: inline-flex; align-items: baseline; gap: 1.4cqmin; padding: 2cqmin 3.4cqmin; border-radius: 8cqmin; background: var(--ink-2); border: 1px solid var(--line); font: 400 min(7cqw, 9cqh)/1 var(--impact); text-transform: uppercase; }
+.chip span { font: 500 min(2.6cqw, 3.2cqh)/1 var(--mono); color: var(--muted); letter-spacing: .1em; }
+
+/* End card */
+.cta { display: inline-flex; align-items: center; gap: 2cqmin; background: var(--tang); color: #fff; border-radius: 6cqmin; padding: 2.2cqmin 4cqmin; font: 400 min(5cqw, 6.4cqh)/1 var(--impact); text-transform: uppercase; letter-spacing: .01em; }
+.cta span { font: 500 min(2.4cqw, 2.8cqh)/1 var(--mono); text-transform: none; letter-spacing: 0; opacity: .9; }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.btn-c { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--ink-2); color: var(--white); border-radius: 8px; padding: 7px 12px; font: 500 13px/1 var(--body); cursor: pointer; }
+.btn-c.primary { background: var(--tang); border-color: var(--tang); }
+.btn-c:focus-visible, input:focus-visible { outline: 2px solid var(--volt); outline-offset: 2px; }
+.scrub { flex: 1 1 220px; min-width: 0; accent-color: var(--tang); }
+.time { font: 500 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+.note a { color: var(--white); }
+
+.recording body, .recording .page { padding: 0; margin: 0; max-width: none; background: var(--ink); }
+.recording .head, .recording .controls, .recording .note { display: none; }
+.recording .stage { border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; max-width: none; }
+
+@media (max-width: 520px) { .head h1 { font-size: 19px; } }
+</style>
+
+<div class="page">
+  <div class="head">
+    <h1>Wanlly promo</h1>
+    <p>32 seconds &middot; 140 BPM &middot; sound on</p>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage" aria-label="Wanlly promo animation">
+      <div class="cam" id="cam">
+
+        <!-- 1. The hook: $20 a month -->
+        <section class="scene" data-from="0" data-to="8" style="background:var(--ink)">
+          <div class="bgtype" aria-hidden="true"><div>WANLLY WANLLY WANLLY</div><div>WANLLY WANLLY WANLLY</div><div>WANLLY WANLLY WANLLY</div></div>
+          <div class="col" data-in="0" data-out="4" data-fx="cut">
+            <h2 class="x0 rgb" data-in="0" data-fx="slam" style="position:relative">$20<i class="bar-strike" id="strike"></i></h2>
+            <p class="tag" data-in="1" data-fx="rise" style="color:var(--muted)">a month, for AI</p>
+          </div>
+          <div class="col" data-in="4" data-out="6" data-fx="cut">
+            <h2 class="x3 rgb" data-in="4" data-fx="slam">That&rsquo;s a week<br>of <span class="hl">food.</span></h2>
+          </div>
+          <div class="col" data-in="6" data-out="7.5" data-fx="cut">
+            <h2 class="x2 rgb"><span data-in="6" data-fx="slam" style="display:inline-block">Not</span> <span data-in="6.5" data-fx="slam" style="display:inline-block" class="hl">anymore.</span></h2>
+          </div>
+        </section>
+
+        <!-- 2. The drop: logo slam -->
+        <section class="scene" data-from="8" data-to="16" style="background:var(--ink)" id="s-drop">
+          <svg class="burst" id="burst1" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+          <span class="ring" id="ring1"></span>
+          <div class="col" data-in="8" data-out="12" data-fx="cut">
+            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-in="8" data-fx="slam">
+              <defs><mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
+              <rect class="tile" width="64" height="64" rx="16"/>
+              <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m1)"/>
+              <circle class="node" cx="32" cy="26" r="6.2"/>
+            </svg>
+            <span class="wordmark rgb" data-in="10" data-fx="slam">Wanlly</span>
+          </div>
+          <div class="col" data-in="12" data-out="14" data-fx="cut">
+            <h2 class="x2 rgb" data-in="12" data-fx="slam">Frontier AI.</h2>
+          </div>
+        </section>
+        <section class="scene" data-from="14" data-to="16" style="background:var(--tang)">
+          <div class="col">
+            <h2 class="x0" data-in="14" data-fx="slam" style="color:var(--ink)">Free.</h2>
+            <p class="tag" data-in="15" data-fx="rise" style="color:var(--ink)">for real</p>
+          </div>
+        </section>
+
+        <!-- 3. Tools: one word per beat pair, hard colour flips -->
+        <section class="scene flip on-light" data-from="16" data-to="18" style="background:var(--white);color:var(--ink)">
+          <div class="col"><h2 class="x1" data-in="16" data-fx="slam">Chat.</h2><p class="tag" data-in="16.5" data-fx="rise">ask anything</p></div>
+        </section>
+        <section class="scene flip" data-from="18" data-to="20" style="background:var(--tang);color:var(--ink)">
+          <div class="col"><h2 class="x1" data-in="18" data-fx="slam">Code.</h2><p class="tag" data-in="18.5" data-fx="rise">ship real apps</p></div>
+        </section>
+        <section class="scene flip" data-from="20" data-to="22" style="background:var(--cobalt)">
+          <div class="col"><h2 class="x1" data-in="20" data-fx="slam">Design.</h2><p class="tag" data-in="20.5" data-fx="rise">posters &middot; decks &middot; sites</p></div>
+        </section>
+        <section class="scene flip" data-from="22" data-to="24" style="background:var(--volt);color:var(--ink)">
+          <div class="col"><h2 class="x1" data-in="22" data-fx="slam">Images.</h2><p class="tag" data-in="22.5" data-fx="rise">from one sentence</p></div>
+        </section>
+
+        <!-- 4. Montage: the real workspace, a card per beat pair -->
+        <section class="scene" data-from="24" data-to="32" style="background:var(--ink)">
+          <div class="bgtype" aria-hidden="true"><div>CHAT CODE DESIGN IMAGES</div><div>CHAT CODE DESIGN IMAGES</div><div>CHAT CODE DESIGN IMAGES</div></div>
+          <p class="tag montage-label" data-in="24" data-fx="rise" style="color:var(--muted)">one workspace &middot; no subscription</p>
+          <div class="swap">
+            <div class="win" data-in="24" data-out="26" data-fx="left" style="--rot:-3deg">
+              <div class="win-top"><i></i><i></i><i></i>&nbsp;Chat</div>
+              <div class="win-body">
+                <span class="bubble">Explain recursion like I&rsquo;m cramming for a CAT tomorrow</span>
+                <span class="reply"><b>Think of a mirror facing a mirror.</b> A function that calls itself, each time with a smaller problem, until it hits the base case&hellip;</span>
+              </div>
+            </div>
+            <div class="win" data-in="26" data-out="28" data-fx="right" style="--rot:2deg">
+              <div class="win-top"><i></i><i></i><i></i>&nbsp;Code &middot; app.js</div>
+              <div class="win-body"><div class="code"><span class="c">// M-Pesa checkout, built in one prompt</span>
+<span class="k">const</span> pay = <span class="k">async</span> (phone, amount) =&gt; {
+  <span class="k">const</span> res = <span class="k">await</span> fetch(<span class="s">"/api/stk-push"</span>, {
+    method: <span class="s">"POST"</span>,
+    body: JSON.stringify({ phone, amount }),
+  });
+  <span class="k">return</span> res.json();
+};</div></div>
+            </div>
+            <div class="win" data-in="28" data-out="30" data-fx="pop" style="--rot:-2deg">
+              <div class="win-top"><i></i><i></i><i></i>&nbsp;Design &middot; poster</div>
+              <div class="win-body"><div class="poster"><small>Strathmore &middot; Fri 7pm</small><b>Campus<br>Hack Night</b><div class="dotrow"><span></span><span></span><span></span></div></div></div>
+            </div>
+            <div class="win" data-in="30" data-out="32" data-fx="slam" style="--rot:3deg">
+              <div class="win-top"><i></i><i></i><i></i>&nbsp;Images</div>
+              <div class="win-body"><div class="imgs">
+                <span style="background:var(--tang)"></span><span style="background:var(--cobalt)"></span><span style="background:#1e7a55"></span>
+                <span style="background:var(--volt)"></span><span style="background:#7c3aed"></span><span style="background:#e11d48"></span>
+              </div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. Earn: watch 20 seconds, credits stack up -->
+        <section class="scene" data-from="32" data-to="44" style="background:var(--ink)">
+          <div class="col">
+            <h2 class="x3 rgb" data-in="32" data-fx="slam">Watch <span class="volt">20s.</span> Get credits.</h2>
+            <div class="earn">
+              <div class="vidcard" data-in="33" data-fx="left">
+                <div class="screen"><small>SPONSORED</small><b>Your next<br>laptop deal</b><span class="play"></span></div>
+                <div class="prog"><i id="prog"></i></div>
+                <div class="meta"><span id="secs">0:00 / 0:20</span><span>+4 credits</span></div>
+              </div>
+              <div class="credits" data-in="34" data-fx="pop">
+                <p class="tag" style="color:var(--muted)">your credits</p>
+                <span class="num rgb" id="count">0</span>
+                <div class="pops" aria-hidden="true">
+                  <span id="pop0">+4</span><span id="pop1">+4</span><span id="pop2">+8 bonus</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="scene" data-from="44" data-to="45" style="background:var(--white);color:var(--ink)"><h2 class="x1" data-in="44" data-fx="slam">No card.</h2></section>
+        <section class="scene" data-from="45" data-to="46" style="background:var(--tang);color:var(--ink)"><h2 class="x1" data-in="45" data-fx="slam">No sub.</h2></section>
+        <section class="scene" data-from="46" data-to="48" style="background:var(--ink)"><h2 class="x1 rgb" data-in="46" data-fx="slam">No <span class="volt">stress.</span></h2></section>
+
+        <!-- 6. Build: a real thing, shipped -->
+        <section class="scene" data-from="48" data-to="54" style="background:var(--ink)">
+          <div class="bgtype" aria-hidden="true"><div>BUILD SHIP BUILD SHIP</div><div>BUILD SHIP BUILD SHIP</div><div>BUILD SHIP BUILD SHIP</div></div>
+          <div class="build">
+            <div>
+              <h2 class="x2 rgb" data-in="48" data-fx="slam">Build the<br>thing<span class="hl">.</span></h2>
+              <div class="prompt" data-in="48.5" data-fx="rise"><span class="typed"><span id="typed"></span><span class="caret" id="caret"></span></span><span class="send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+            </div>
+            <div class="phone" data-in="50" data-fx="right" style="--rot:4deg">
+              <div class="phone-screen">
+                <small>salon-amani.app</small>
+                <b>Book your Saturday slot.</b>
+                <div class="slots"><span>9:00</span><span class="pick">10:30</span><span>12:00</span><span>14:30</span></div>
+                <small>Pay with M-Pesa when you arrive</small>
+                <span class="btn">Book 10:30</span>
+              </div>
+              <span class="stamp" data-in="52" data-fx="stamp">Shipped.</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 7. Models: rapid fire -->
+        <section class="scene" data-from="54" data-to="60" style="background:var(--ink)">
+          <div class="col">
+            <p class="tag" data-in="54" data-fx="rise" style="color:var(--muted)">powered by the best models</p>
+            <div class="swap" data-in="55" data-out="58" data-fx="cut">
+              <h2 class="x2 rgb" data-in="55" data-out="55.5" data-fx="cut">Claude <span class="hl">Haiku</span></h2>
+              <h2 class="x2 rgb" data-in="55.5" data-out="56" data-fx="cut">Claude <span class="hl">Sonnet</span></h2>
+              <h2 class="x2 rgb" data-in="56" data-out="56.5" data-fx="cut">Claude <span class="hl">Opus</span></h2>
+              <h2 class="x2 rgb" data-in="56.5" data-out="57" data-fx="cut">Claude <span class="hl">Fable</span></h2>
+              <h2 class="x2 rgb" data-in="57" data-out="58" data-fx="slam">Gemini <span class="volt">Flash</span></h2>
+            </div>
+            <div class="stack" data-in="58" data-fx="cut">
+              <span class="chip" data-in="58" data-fx="pop"><span>CLAUDE</span>Haiku</span>
+              <span class="chip" data-in="58.25" data-fx="pop"><span>CLAUDE</span>Sonnet</span>
+              <span class="chip" data-in="58.5" data-fx="pop"><span>CLAUDE</span>Opus</span>
+              <span class="chip" data-in="58.75" data-fx="pop"><span>CLAUDE</span>Fable</span>
+              <span class="chip" data-in="59" data-fx="pop"><span>GEMINI</span>Flash</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. Cities: a flip per half beat -->
+        <section class="scene" data-from="60" data-to="63.5" style="background:var(--tang);color:var(--ink)">
+          <div class="col">
+            <p class="tag" data-in="60" data-fx="cut">made for</p>
+            <div class="swap">
+              <h2 class="x1" data-in="60" data-out="60.5" data-fx="cut">Nairobi</h2>
+              <h2 class="x1" data-in="60.5" data-out="61" data-fx="cut">Mombasa</h2>
+              <h2 class="x1" data-in="61" data-out="61.5" data-fx="cut">Kisumu</h2>
+              <h2 class="x1" data-in="61.5" data-out="62" data-fx="cut">Lagos</h2>
+              <h2 class="x1" data-in="62" data-out="62.5" data-fx="cut">Accra</h2>
+              <h2 class="x1" data-in="62.5" data-out="63" data-fx="cut">Kampala</h2>
+              <h2 class="x1" data-in="63" data-fx="cut" style="color:var(--white)">You.</h2>
+            </div>
+          </div>
+        </section>
+        <section class="scene" data-from="63.5" data-to="64" style="background:#000"></section>
+
+        <!-- 9. End card -->
+        <section class="scene" data-from="64" data-to="999" style="background:var(--ink)">
+          <svg class="burst" id="burst2" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
+          <span class="ring" id="ring2"></span>
+          <div class="col">
+            <div class="lockup" data-in="64" data-fx="slam">
+              <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+                <defs><mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
+                <rect class="tile" width="64" height="64" rx="16"/>
+                <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m2)"/>
+                <circle class="node" cx="32" cy="26" r="6.2"/>
+              </svg>
+              <span class="wordmark rgb">Wanlly</span>
+            </div>
+            <h2 class="x3 rgb" data-in="66" data-fx="slam">Watch. Earn. <span class="hl">Build.</span></h2>
+            <span class="cta" data-in="68" data-fx="pop">Join the beta <span>wanlly.app</span></span>
+            <p class="tag" data-in="69" data-fx="rise" style="color:var(--muted)">free AI for students &amp; creators</p>
+          </div>
+        </section>
+
+      </div>
+      <svg class="grain" aria-hidden="true"><filter id="gr"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#gr)"/></svg>
+      <div class="flash" id="flash"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-c primary" id="play" type="button">Play with sound</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="32000" step="10" value="0" aria-label="Position in the promo">
+    <span class="time" id="time">0:00 / 0:32</span>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
+  </div>
+  <p class="note">Music and sound effects are original and synthesized for Wanlly, so they&rsquo;re free to post anywhere. The calm version is <a href="teaser.html">teaser.html</a>.</p>
+  <audio id="audio" src="promo/wanlly-promo-music.m4a" preload="auto"></audio>
+</div>
+
+<script>
+(function () {
+  const BPM = 140, B = 60000 / BPM, TOTAL = 32000;
+  // Beats that hit hard: shake, colour split, and (FLASH) a white frame.
+  const HITS = [0, 2, 4, 6, 6.5, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 36, 38, 40, 44, 45, 46, 48, 52, 57, 60, 63, 64, 66, 68];
+  const FLASH = [8, 14, 32, 48, 64];
+  const BIG = new Set([8, 32, 48, 64]);
+  const typedText = "Build a booking page for my cousin's salon";
+  const el = (id) => document.getElementById(id);
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
+  const outBack = (x) => { x = clamp(x); const c = 2.2; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+
+  const stage = el("stage");
+  const scenes = [...stage.querySelectorAll(".scene")].map((s) => ({ s, from: +s.dataset.from * B, to: +s.dataset.to * B }));
+  const items = [...stage.querySelectorAll("[data-in]")].map((n) => ({
+    n, at: +n.dataset.in * B, out: n.dataset.out ? +n.dataset.out * B : Infinity, fx: n.dataset.fx || "rise", rot: n.style.getPropertyValue("--rot") || "0deg",
+  }));
+
+  // Burst lines for the two drops
+  for (const id of ["burst1", "burst2"]) {
+    const svg = el(id);
+    for (let i = 0; i < 28; i++) {
+      const a = (i / 28) * Math.PI * 2 + (i % 2) * 0.05;
+      const l = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      const r0 = 18 + (i % 3) * 4, r1 = r0 + 14 + (i % 4) * 6;
+      l.setAttribute("x1", Math.cos(a) * r0); l.setAttribute("y1", Math.sin(a) * r0);
+      l.setAttribute("x2", Math.cos(a) * r1); l.setAttribute("y2", Math.sin(a) * r1);
+      l.setAttribute("stroke-width", i % 3 ? 1.2 : 2.2);
+      svg.appendChild(l);
+    }
+  }
+
+  function decaySince(list, t, tau) {
+    let v = 0;
+    for (const b of list) { const d = t - b * B; if (d >= 0 && d < tau * 6) v = Math.max(v, Math.exp(-d / tau)); }
+    return v;
+  }
+  // Deterministic wobble so frame-by-frame export matches live playback.
+  const wob = (t, f, p) => Math.sin(t * f + p) * 0.6 + Math.sin(t * f * 2.3 + p * 1.7) * 0.4;
+
+  function render(t) {
+    for (const { s, from, to } of scenes) s.style.visibility = t >= from && t < to ? "visible" : "hidden";
+
+    for (const it of items) {
+      const { n, at, out, fx, rot } = it;
+      const d = t - at;
+      if (d < 0 || t >= out) { n.style.opacity = "0"; continue; }
+      let o = 1, tr = "";
+      if (fx === "slam") { const k = outExpo(d / 260); o = clamp(d / 40); tr = `scale(${1.9 - 0.9 * k})`; }
+      else if (fx === "stamp") { const k = outBack(d / 300); o = clamp(d / 40); tr = `rotate(-8deg) scale(${2.4 - 1.4 * k})`; }
+      else if (fx === "pop") { const k = outBack(d / 320); o = clamp(d / 80); tr = `scale(${0.5 + 0.5 * k}) rotate(${rot})`; }
+      else if (fx === "left" || fx === "right") { const k = outExpo(d / 320); const dir = fx === "left" ? -1 : 1; o = clamp(d / 60); tr = `translateX(${dir * 70 * (1 - k)}cqmin) rotate(${rot})`; }
+      else if (fx === "rise") { const k = outExpo(d / 300); o = clamp(d / 120); tr = `translateY(${5 * (1 - k)}cqmin)`; }
+      n.style.opacity = String(o);
+      n.style.transform = tr;
+    }
+
+    // Camera: shake on hits, a small push on every kick once the beat is in.
+    const hit = decaySince(HITS, t, 70);
+    const big = decaySince([...BIG], t, 160);
+    const amp = hit * 0.9 + big * 2.4;
+    const beat = t / B;
+    const inBeat = (beat >= 8 && beat < 63.5) || beat >= 64;
+    const pulse = inBeat ? Math.exp(-((t % B) / 110)) * 0.018 : 0;
+    el("cam").style.transform = `translate(${wob(t, 0.11, 1) * amp}cqmin, ${wob(t, 0.13, 4) * amp}cqmin) rotate(${wob(t, 0.07, 2) * amp * 0.25}deg) scale(${1 + pulse + big * 0.04})`;
+    stage.style.setProperty("--rgb", `${(hit * 0.7 + big * 1.4).toFixed(3)}cqmin`);
+    el("flash").style.opacity = String(decaySince(FLASH, t, 55) * 0.9);
+    el("turb").setAttribute("seed", String(Math.floor(t / 42) % 9 + 1));
+
+    // Background type drifts
+    stage.querySelectorAll(".bgtype").forEach((g) => [...g.children].forEach((row, i) => (row.style.transform = `translateX(${(i % 2 ? 1 : -1) * ((t / 40) % 400) - 200}px)`)));
+
+    // Hook: the price gets struck through on beat 2
+    el("strike").style.transform = `scaleX(${outExpo((t - 2 * B) / 200)}) rotate(-6deg)`;
+
+    // Drops: burst and shockwave
+    for (const [b, burst, ring] of [[8, "burst1", "ring1"], [64, "burst2", "ring2"]]) {
+      const d = t - b * B;
+      const k = clamp(d / 700);
+      el(burst).style.transform = `scale(${0.4 + outExpo(k) * 1.3}) rotate(${k * 12}deg)`;
+      el(burst).style.opacity = String(d < 0 ? 0 : 1 - k);
+      const r = outExpo(clamp(d / 600)) * 140;
+      el(ring).style.width = el(ring).style.height = `${r}cqmin`;
+      el(ring).style.opacity = String(d < 0 ? 0 : 1 - clamp(d / 600));
+    }
+
+    // Earn: a 20 s video plays in 2.5 beats (sped up), credits land on 36, 38, 40
+    const p = clamp((t - 33.25 * B) / (2.6 * B));
+    el("prog").style.setProperty("--p", p);
+    el("secs").textContent = `0:${String(Math.round(p * 20)).padStart(2, "0")} / 0:20`;
+    let credits = 0;
+    [[36, 4], [38, 4], [40, 8]].forEach(([b, v], i) => {
+      const d = t - b * B;
+      credits += d >= 0 ? v * outExpo(d / 200) : 0;
+      const pop = el("pop" + i);
+      pop.style.opacity = String(d < 0 ? 0 : 1 - clamp((d - 250) / 350));
+      pop.style.transform = `translate(1cqmin, ${-outExpo(clamp(d / 600)) * 12}cqmin) scale(${d < 0 ? 0.5 : 0.6 + 0.4 * outBack(d / 260)})`;
+    });
+    el("count").textContent = String(Math.round(credits));
+
+    // Build: the prompt types fast
+    const chars = Math.round(typedText.length * clamp((t - 48.6 * B) / (1.3 * B)));
+    el("typed").textContent = typedText.slice(0, chars);
+    el("caret").style.visibility = Math.floor(t / 260) % 2 ? "hidden" : "visible";
+
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  // Playback, kept in step with the music when it's playing
+  const audio = el("audio");
+  let t = 0, playing = false, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = !audio.paused && audio.readyState >= 2 ? audio.currentTime * 1000 : Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { t = TOTAL; stop(); }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function start() {
+    if (t >= TOTAL) t = 0;
+    playing = true;
+    el("play").textContent = "Pause";
+    try { audio.currentTime = t / 1000; audio.play().catch(() => {}); } catch {}
+  }
+  function stop() { playing = false; el("play").textContent = "Play with sound"; audio.pause(); }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); try { audio.currentTime = t / 1000; } catch {} render(t); }
+  el("play").addEventListener("click", () => (playing ? stop() : start()));
+  el("replay").addEventListener("click", () => { t = 0; start(); });
+  el("scrub").addEventListener("input", (e) => seek(+e.target.value));
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["portrait", "4:5"]];
+  let shape = 0;
+  function setShape(i) {
+    shape = i;
+    document.documentElement.classList.remove("vertical", "portrait");
+    if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]);
+    el("shape").textContent = `Format: ${SHAPES[i][1]}`;
+  }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
+  if (location.hash === "#vertical") setShape(1);
+  if (location.hash === "#portrait") setShape(2);
+
+  // Frame-by-frame export: #capture, #capture-vertical, #capture-portrait expose __seek.
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-portrait") document.documentElement.classList.add("portrait");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+
+  render(0);
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {
+    last = performance.now();
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
