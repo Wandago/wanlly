@@ -29,7 +29,7 @@ function Hero() {
             Frontier AI for everyone with an idea<span className="text-accent">.</span>
           </h1>
           <p className="anim-rise max-w-[50ch] text-[clamp(15px,1.4vw,17px)] text-muted [animation-delay:120ms]">
-            Chat, code and design with Claude and Gemini. No card and no subscription: one short video a day unlocks your credits, and it&apos;s the same wherever you live.
+            Chat, code and design with Claude and Gemini. No card and no subscription: watch short sponsor videos, earn credits, and build.
           </p>
           <div className="anim-rise flex flex-wrap gap-3 [animation-delay:180ms]">
             <Link href="/beta" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
@@ -41,7 +41,7 @@ function Hero() {
           </div>
           <dl className="anim-rise mt-2 grid w-full max-w-[460px] grid-cols-3 border-t border-line pt-5 [animation-delay:240ms]">
             {[
-              [`${FLOOR_CREDITS}`, "credits a day"],
+              ["20s", "per video"],
               ["0", "cards needed"],
               ["5", "frontier models"],
             ].map(([n, l]) => (
@@ -260,9 +260,9 @@ function Features() {
 
 function HowFree() {
   const steps = [
-    ["Watch one video", `Twenty seconds unlocks today's ${FLOOR_CREDITS} credits: about 30 minutes of building with a fast model.`],
+    ["Watch short videos", "Each sponsor video is about 20 seconds and earns you credits. Watch more whenever you need more."],
     ["Build on any model", "Spend credits on Claude or Gemini. Bigger models use them faster, and you always see the cost first."],
-    ["Earn more when you need it", "Extra videos, short surveys and sponsor trials add credits. Nothing is ever charged to a card."],
+    ["Other ways to earn", "Short surveys and trying a sponsor's product add credits too. Nothing is ever charged to a card."],
   ];
   return (
     <section id="how" className="scroll-mt-20 border-y border-line bg-side">
@@ -288,7 +288,7 @@ function HowFree() {
   );
 }
 
-const CITIES = ["Nairobi", "Lagos", "Accra", "Dhaka", "Mumbai", "Manila", "São Paulo", "London", "Boston"];
+const CITIES = ["Kenya", "Nigeria", "Ghana", "South Africa", "India", "Bangladesh", "Philippines", "Brazil", "And more"];
 
 function Everywhere() {
   return (
@@ -296,16 +296,14 @@ function Everywhere() {
       <div className="mx-auto grid max-w-[1180px] items-center gap-12 px-4 py-24 sm:px-6 lg:grid-cols-2">
         <div className="flex flex-col gap-4">
           <span className="text-xs font-medium tracking-[0.08em] text-accent uppercase">For students and creators everywhere</span>
-          <h2 className="font-display text-[clamp(28px,3.4vw,40px)] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">Where you live never decides whether you can build.</h2>
-          <p className="max-w-[50ch] text-[15px] opacity-70">Ads pay very differently from country to country. Wanlly doesn&apos;t pass that on: everyone starts each day with the same credits.</p>
+          <h2 className="font-display text-[clamp(28px,3.4vw,40px)] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">Built for students and creators everywhere.</h2>
+          <p className="max-w-[50ch] text-[15px] opacity-70">Starting with the people the best AI tools priced out. If you have an idea and an internet connection, Wanlly is for you.</p>
         </div>
         <ul className="grid grid-cols-2 border-t border-l border-bg/15 sm:grid-cols-3">
           {CITIES.map((c) => (
             <li key={c} className="flex flex-col gap-1 border-r border-b border-bg/15 p-4">
               <span className="text-xs opacity-60">{c}</span>
-              <span className="font-display text-xl font-semibold tabular-nums">
-                {FLOOR_CREDITS} <span className="text-xs font-normal opacity-60">credits/day</span>
-              </span>
+              <span className="font-display text-base font-semibold">Available</span>
             </li>
           ))}
         </ul>
@@ -334,9 +332,9 @@ function Promises() {
 }
 
 const FAQ = [
-  ["Is it really free?", `Yes. You never enter a card. Each day, one short video unlocks ${FLOOR_CREDITS} credits, and sponsors pay for it. If you want more, you can watch more videos or try a sponsor's product.`],
+  ["Is it really free?", "Yes. You never enter a card. You watch short sponsor videos and earn credits, and the sponsors pay for your AI. Need more? Watch a few more."],
   ["Which AI models can I use?", "Claude (Haiku, Sonnet, Opus and Fable) and Gemini. You choose for every message. GPT, Grok and image models are coming."],
-  ["Why the same credits everywhere?", "Ads pay very differently by country, but ideas don't. Everyone gets the same daily credits, so a student in Lagos starts with the same as one in London."],
+  ["How do credits work?", "Every video you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
   ["Who is it for?", "Students and creators with ideas and no budget for AI subscriptions: anyone who wants to build an app, a site, a shop page or a side project."],
   ["When can I start?", "We're letting people in weekly. Join the beta and invite friends to move up the list."],
 ];

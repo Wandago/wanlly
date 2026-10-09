@@ -30,6 +30,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 .stage-wrap { width: 100%; display: grid; place-items: center; }
 .stage { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; container-type: size; }
 .vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); }
+.portrait .stage { aspect-ratio: 4 / 5; width: min(100%, 560px); }
 .scene { position: absolute; inset: 0; display: grid; place-items: center; padding: 6cqmin; opacity: 0; pointer-events: none; }
 .col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3cqmin; max-width: 100%; }
 
@@ -38,6 +39,8 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 [data-at] { will-change: opacity, transform, filter; }
 /* Phones: the same layouts, set larger so they fill a 9:16 frame */
 .vertical .col, .vertical .build { zoom: 1.32; }
+.portrait .col { zoom: 1.12; }
+.portrait .reel { grid-template-columns: repeat(3, 26cqmin); }
 
 .big { font: 600 10cqmin/1.02 var(--display); letter-spacing: -.045em; margin: 0; text-wrap: balance; }
 .mid { font: 600 6.6cqmin/1.08 var(--display); letter-spacing: -.035em; margin: 0; text-wrap: balance; }
@@ -69,6 +72,24 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 .unlock-row > span { font: 400 2.6cqmin/1.3 var(--body); color: var(--muted); }
 .unlock-row b { font: 600 5.6cqmin/1 var(--display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
 .unlock-row b em { font-style: normal; font: 500 2.4cqmin/1 var(--body); color: var(--muted); margin-left: .6cqmin; }
+
+.reel { display: grid; grid-template-columns: repeat(3, 30cqmin); gap: 2.4cqmin; }
+.vid { position: relative; display: flex; flex-direction: column; gap: 1.4cqmin; background: var(--card); border: 1px solid var(--line); border-radius: 2cqmin; padding: 1.6cqmin; text-align: left; }
+.thumb { aspect-ratio: 16 / 10; border-radius: 1.2cqmin; color: #fff; padding: 1.6cqmin; display: flex; flex-direction: column; justify-content: space-between; }
+.thumb small { font: 500 1.4cqmin/1 var(--body); letter-spacing: .06em; text-transform: uppercase; opacity: .85; }
+.thumb b { font: 600 2.4cqmin/1.1 var(--display); letter-spacing: -.02em; }
+.plus { position: absolute; top: -1.6cqmin; right: -1.2cqmin; background: var(--tang); color: #fff; font: 600 1.8cqmin/1 var(--body); padding: 1cqmin 1.4cqmin; border-radius: 4cqmin; }
+.tally { margin: 0; font: 400 2.8cqmin/1 var(--body); color: var(--muted); display: flex; align-items: baseline; gap: 1.4cqmin; }
+.tally b { font: 600 6cqmin/1 var(--display); color: var(--ink); letter-spacing: -.03em; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: left; }
+.vertical .reel { grid-template-columns: 1fr; width: 54cqmin; gap: 2cqmin; }
+.vertical .thumb { aspect-ratio: 16 / 7; }
+.chip.plain { font-weight: 500; }
+
+/* Background: a faint dot grid and two thin rings drifting slowly. Flat, no gradients. */
+.bg { position: absolute; inset: -10%; width: 120%; height: 120%; pointer-events: none; }
+.bg #dotp circle { fill: #dcd9cf; }
+.bg .ring { fill: none; stroke: #e6d3c6; stroke-width: 1.2; }
+.bg .ring.ink { stroke: #dedbd2; }
 
 /* Scene 5: build */
 .build { width: min(96cqmin, 100%); display: grid; grid-template-columns: 1.15fr .85fr; gap: 3cqmin; align-items: center; }
@@ -139,11 +160,17 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 <div class="page">
   <div class="head">
     <h1>Wanlly teaser</h1>
-    <p>40 seconds · eight scenes · made for TikTok, Reels and X</p>
+    <p>40 seconds &middot; eight scenes &middot; 16:9, 9:16 and 4:5</p>
   </div>
 
   <div class="stage-wrap">
     <div class="stage" id="stage" aria-label="Wanlly teaser animation">
+      <svg class="bg" id="bg" aria-hidden="true" viewBox="0 0 1200 1200" preserveAspectRatio="xMidYMid slice">
+        <defs><pattern id="dotp" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.6"/></pattern></defs>
+        <g class="dots" id="dots"><rect x="-60" y="-60" width="1320" height="1320" fill="url(#dotp)"/></g>
+        <circle class="ring" id="ring1" cx="980" cy="260" r="240"/>
+        <circle class="ring ink" id="ring2" cx="200" cy="940" r="320"/>
+      </svg>
 
       <section class="scene" data-start="0" data-end="4200">
         <div class="col">
@@ -175,13 +202,26 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 
       <section class="scene" data-start="13000" data-end="19000">
         <div class="col">
-          <h2 class="mid" data-at="100">Watch one 20&#8209;second video.</h2>
-          <div class="card unlock pop" data-at="500">
-            <div class="video"><small>Sponsored</small><b>Notes that organize themselves.</b></div>
-            <div class="bar"><i id="vbar"></i></div>
-            <div class="unlock-row"><span>Today&rsquo;s credits</span><b><span id="count">0</span><em>credits</em></b></div>
+          <h2 class="mid" data-at="100">Watch short videos. Earn credits.</h2>
+          <div class="reel">
+            <div class="vid pop" data-at="400">
+              <div class="thumb" style="background:#1e7a55"><small>Sponsored &middot; Fieldnote</small><b>Notes that organize themselves.</b></div>
+              <div class="bar"><i id="v0"></i></div>
+              <span class="plus" data-at="1650">+4 credits</span>
+            </div>
+            <div class="vid pop" data-at="1700">
+              <div class="thumb" style="background:#4f46e5"><small>Sponsored &middot; Lumen</small><b>Student pricing on laptops.</b></div>
+              <div class="bar"><i id="v1"></i></div>
+              <span class="plus" data-at="2950">+4 credits</span>
+            </div>
+            <div class="vid pop" data-at="3000">
+              <div class="thumb" style="background:#c2410c"><small>Sponsored &middot; Courseway</small><b>Ship your first app in 30 days.</b></div>
+              <div class="bar"><i id="v2"></i></div>
+              <span class="plus" data-at="4250">+4 credits</span>
+            </div>
           </div>
-          <p class="sub" data-at="4200">No card. No subscription. Unlocked.</p>
+          <p class="tally" data-at="500">Your credits <b id="count">0</b></p>
+          <p class="sub" data-at="4500">No card. No subscription. Just build.</p>
         </div>
       </section>
 
@@ -194,7 +234,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
               <li data-at="3500"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Built the booking form<small>0:19</small></li>
               <li data-at="4000"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Ready to share<small>0:26</small></li>
             </ul>
-            <span class="model-tag" data-at="600">Gemini Flash · 1 credit</span>
+            <span class="model-tag" data-at="600">Gemini Flash &middot; 1 credit</span>
           </div>
           <div class="phone pop" data-at="4500">
             <div class="phone-screen">
@@ -223,14 +263,18 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 
       <section class="scene" data-start="30500" data-end="35000">
         <div class="col">
-          <h2 class="mid" data-at="100">The same credits, everywhere.</h2>
-          <ul class="cities">
-            <li data-at="700">Nairobi<b>8<em>a day</em></b></li>
-            <li data-at="900">Lagos<b>8<em>a day</em></b></li>
-            <li data-at="1100">Dhaka<b>8<em>a day</em></b></li>
-            <li data-at="1300">S&atilde;o Paulo<b>8<em>a day</em></b></li>
-            <li data-at="1500">Boston<b>8<em>a day</em></b></li>
-          </ul>
+          <h2 class="mid" data-at="100">Built for students and creators in</h2>
+          <div class="chips">
+            <span class="chip plain" data-at="700">Kenya</span>
+            <span class="chip plain" data-at="830">Nigeria</span>
+            <span class="chip plain" data-at="960">Ghana</span>
+            <span class="chip plain" data-at="1090">South Africa</span>
+            <span class="chip plain" data-at="1220">India</span>
+            <span class="chip plain" data-at="1350">Bangladesh</span>
+            <span class="chip plain" data-at="1480">Philippines</span>
+            <span class="chip plain" data-at="1610">Brazil</span>
+          </div>
+          <p class="sub" data-at="2000">and wherever people have ideas.</p>
         </div>
       </section>
 
@@ -258,7 +302,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
     <button class="btn-c" id="replay" type="button">Replay</button>
     <input class="scrub" id="scrub" type="range" min="0" max="40000" step="10" value="0" aria-label="Position in the teaser">
     <span class="time" id="time">0:00 / 0:40</span>
-    <button class="btn-c" id="shape" type="button">Show 9:16</button>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
   </div>
   <div class="chapters" id="chapters"></div>
   <p class="note">Captions are on screen, so it works with sound off. Add a soft music bed when you post it.</p>
@@ -318,9 +362,17 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
     el("wpath").style.strokeDashoffset = String(120 * (1 - ease((t - 9000 - 150) / 1100)));
     el("node").style.setProperty("--n", ease((t - 9000 - 1200) / 450));
     // Scene 4: the video plays and credits count up
-    const p = ease((t - 13000 - 900) / 2600);
-    el("vbar").style.setProperty("--p", p);
-    el("count").textContent = String(Math.round(8 * ease((t - 13000 - 3300) / 700)));
+    let credits = 0;
+    for (let i = 0; i < 3; i++) {
+      const start = 13000 + 400 + i * 1300 + 150;
+      el("v" + i).style.setProperty("--p", ease((t - start) / 1050));
+      credits += 4 * ease((t - (start + 1100)) / 300);
+    }
+    el("count").textContent = String(Math.round(credits));
+    // Background drifts slowly the whole time.
+    el("dots").setAttribute("transform", `translate(${(-t / 40000) * 28 * 3} ${(-t / 40000) * 28 * 2})`);
+    el("ring1").setAttribute("transform", `translate(${Math.sin(t / 7000) * 40} ${Math.cos(t / 9000) * 30})`);
+    el("ring2").setAttribute("transform", `translate(${Math.cos(t / 8000) * 50} ${Math.sin(t / 6000) * 30})`);
     // Scene 5: the prompt types itself
     const chars = Math.round(typedText.length * Math.min(1, Math.max(0, (t - 19000 - 500) / 2200)));
     el("typed").textContent = typedText.slice(0, chars);
@@ -346,10 +398,15 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
   });
   el("replay").addEventListener("click", () => { t = 0; playing = true; el("play").textContent = "Pause"; });
   el("scrub").addEventListener("input", (e) => { seek(+e.target.value); });
-  el("shape").addEventListener("click", () => {
-    const v = document.documentElement.classList.toggle("vertical");
-    el("shape").textContent = v ? "Show 16:9" : "Show 9:16";
-  });
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["portrait", "4:5"]];
+  let shape = 0;
+  function setShape(i) {
+    shape = i;
+    document.documentElement.classList.remove("vertical", "portrait");
+    if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]);
+    el("shape").textContent = `Format: ${SHAPES[i][1]}`;
+  }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
 
   // Recording mode for exporting video: #record (16:9) or #record-vertical (9:16)
   const recording = location.hash === "#record" || location.hash === "#record-vertical";
@@ -357,12 +414,14 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
     document.documentElement.classList.add("recording");
     if (location.hash === "#record-vertical") document.documentElement.classList.add("vertical");
   }
-  if (location.hash === "#vertical") { document.documentElement.classList.add("vertical"); el("shape").textContent = "Show 16:9"; }
+  if (location.hash === "#vertical") setShape(1);
+  if (location.hash === "#portrait") setShape(2);
 
   // Frame-by-frame export: #capture exposes a seek function and stops the clock.
   if (location.hash.startsWith("#capture")) {
     document.documentElement.classList.add("recording");
     if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-portrait") document.documentElement.classList.add("portrait");
     window.__seek = (ms) => { playing = false; seek(ms); };
   }
 

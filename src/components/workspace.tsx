@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FLOOR_CREDITS, SPOT_SPONSOR } from "@/lib/catalog";
+import { SPOT_SPONSOR } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { RewardedSpot } from "./ads/ad-slot";
 import { Composer } from "./composer";
@@ -23,9 +23,9 @@ function UnlockCard() {
             <Icon name="play" size={20} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <b className="font-display text-base font-semibold tracking-[-0.01em]">Start today with one video</b>
+            <b className="font-display text-base font-semibold tracking-[-0.01em]">Watch a short video to get credits</b>
             <p className="text-[13px] text-muted">
-              Watch 20 seconds to unlock today&apos;s floor: {FLOOR_CREDITS} credits, about 30 minutes of building with a fast model. Everyone gets the same floor, wherever they live.
+              Each 20-second sponsor video adds credits. Spend them on Claude or Gemini, and watch more whenever you need more.
             </p>
           </div>
           <button
@@ -34,7 +34,7 @@ function UnlockCard() {
             className="flex shrink-0 items-center justify-center gap-2 rounded-xl bg-fg px-4 py-2.5 text-[13px] font-semibold text-bg"
           >
             <Icon name="play" size={15} />
-            Watch and unlock
+            Watch and earn
           </button>
         </div>
       )}
