@@ -42,9 +42,9 @@ function ChatResult({ job }: { job: Job }) {
       </p>
       <h4 className="mt-1 font-semibold">A setup that holds up</h4>
       <ol className="flex list-decimal flex-col gap-1 pl-5">
-        <li>No free credits: one video a day unlocks a small floor that&apos;s the same for everyone.</li>
+        <li>No free credits: short sponsor videos earn them, with a bonus for the first one each day.</li>
         <li>Opt-in sponsor videos that top up credits for bigger models.</li>
-        <li>The same small floor for everyone, wherever they live.</li>
+        <li>Credits work the same on every model, so people choose how to spend them.</li>
       </ol>
       <pre className={pre}>
         <span className="text-faint">{"// credits are integer half-cents"}</span>

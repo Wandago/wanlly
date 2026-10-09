@@ -55,7 +55,7 @@ export const MODELS: Model[] = [
 
 export const CHEAPEST_MODEL_ID = "haiku";
 export const IMAGE_MODEL_NAME = "Wanlly Image";
-/** The daily floor: the same credits for everyone, unlocked each day by watching one video (about $0.04). */
+/** Bonus credits for the first video each day (about $0.04). Every later video earns SPOT_REWARD. */
 export const FLOOR_CREDITS = 8;
 export const SPOT_REWARD = 4;
 export const SPONSOR_TRIAL_REWARD = 25;

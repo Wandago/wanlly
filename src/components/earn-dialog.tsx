@@ -93,7 +93,7 @@ export function EarnDialog() {
               {floorUnlocked ? (
                 <Option icon="play" title="Watch a 20s video" detail="Or press Watch on any working card" gain={SPOT_REWARD} onClick={() => setPlaying("self")} />
               ) : (
-                <Option icon="play" title="Unlock today's floor" detail="One video a day. The same floor for everyone, everywhere" gain={FLOOR_CREDITS} onClick={() => setPlaying("self")} />
+                <Option icon="play" title="Today's first video" detail="Your first video each day earns a bonus" gain={FLOOR_CREDITS} onClick={() => setPlaying("self")} />
               )}
               <Option
                 icon="gift"

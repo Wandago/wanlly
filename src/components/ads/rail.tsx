@@ -96,8 +96,8 @@ function EarnMini() {
         <Icon name="play" size={16} />
       </span>
       <div className="min-w-0 flex-1 text-[13px] leading-snug">
-        <b className="block font-semibold">{floorUnlocked ? "Keep building" : "Unlock today"}</b>
-        <span className="text-muted">{floorUnlocked ? `+${SPOT_REWARD} credits a video` : `One video, +${FLOOR_CREDITS} credits`}</span>
+        <b className="block font-semibold">{floorUnlocked ? "Keep building" : "First video today"}</b>
+        <span className="text-muted">{floorUnlocked ? `+${SPOT_REWARD} credits a video` : `+${FLOOR_CREDITS} credits bonus`}</span>
       </div>
       <button
         type="button"

@@ -156,7 +156,7 @@ export function ProfileView() {
                 <Icon name="lock" size={14} /> Kenya
               </div>
             </Field>
-            <Field label="Student" hint="Verify a university email for a bonus on your daily floor.">
+            <Field label="Student" hint="Verify a university email for bonus credits.">
               <div className="flex gap-2">
                 <input className={input} placeholder="you@university.ac.ke" />
                 <button type="button" className={btnGhost} onClick={() => dispatch({ type: "toast", text: "We sent a code to that address" })}>
@@ -193,7 +193,7 @@ export function ProfileView() {
             <div id="credits" className="grid gap-3 sm:grid-cols-3">
               {[
                 ["Balance", `${credits} credits`],
-                ["Today's floor", floorUnlocked ? `Unlocked · ${FLOOR_CREDITS}` : "Locked"],
+                ["Today's bonus", floorUnlocked ? `Collected · +${FLOOR_CREDITS}` : `+${FLOOR_CREDITS} waiting`],
                 ["Videos this week", "11"],
               ].map(([l, v]) => (
                 <div key={l} className="flex flex-col gap-0.5 rounded-xl bg-code p-3">
@@ -261,7 +261,7 @@ export function ProfileView() {
           <Panel title="Notifications">
             <div id="notifications">
               <Switch label="A coworker needs your OK" detail="Email and push" initial />
-              <Switch label="Your floor is ready each morning" detail="Push only" initial />
+              <Switch label="Your daily bonus is ready" detail="Push only" initial />
               <Switch label="Weekly summary" detail="What you built and what it cost" initial />
               <Switch label="Product news" detail="New models and features, about once a month" />
             </div>

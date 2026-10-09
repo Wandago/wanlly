@@ -51,7 +51,7 @@ function Gate() {
             </p>
           ) : (
             <p>
-              <b>Unlock today first.</b> One 20-second video adds today&apos;s floor of {FLOOR_CREDITS} credits. There are no free credits; ads pay for every answer.
+              <b>Watch a short video to get credits.</b> Your first one today earns {FLOOR_CREDITS}, then {SPOT_REWARD} for each one after. Sponsors pay for every answer.
             </p>
           )}
           <div className="flex flex-wrap gap-2">

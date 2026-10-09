@@ -200,7 +200,7 @@ export function AdminDashboard() {
           <RevenueChart days={days} />
         </Card>
 
-        <Card title="Community pool" note="Everyone gets the same daily floor. Paid only from revenue already received; unlocked by one video a day.">
+        <Card title="First-video bonus" note="The bonus for each person's first video of the day. Paid only from revenue already received.">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
             <div className="grid grid-cols-2 content-start gap-x-4 gap-y-3">
               {[

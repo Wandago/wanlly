@@ -10,7 +10,7 @@ export default function PrivacyPage() {
       <h2>What we collect</h2>
       <ul>
         <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and your phone number if you verify it.</li>
-        <li>Your country, from your network, to set ad rates and the community floor.</li>
+        <li>Your country, from your network, to choose ads and set ad rates.</li>
         <li>What you create: prompts, files, projects and the replies AI models send back.</li>
         <li>How you use Wanlly: credits earned and spent, ads shown and watched, and security signals such as device and network, to stop abuse.</li>
       </ul>

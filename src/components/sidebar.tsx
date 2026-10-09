@@ -54,8 +54,8 @@ function TodayCard() {
   return (
     <div className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between">
-        <span className="text-[13px] text-muted">{floorUnlocked ? "Credits" : "Today's floor"}</span>
-        <b className="font-mono text-[13px] font-medium tabular-nums">{floorUnlocked ? credits : "Locked"}</b>
+        <span className="text-[13px] text-muted">Credits</span>
+        <b className="font-mono text-[13px] font-medium tabular-nums">{credits}</b>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-hover">
         <i
@@ -69,7 +69,7 @@ function TodayCard() {
         className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
       >
         <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
-        {floorUnlocked ? "Earn more credits" : `Watch to unlock · +${FLOOR_CREDITS}`}
+        {floorUnlocked ? "Earn more credits" : `Watch a video · +${FLOOR_CREDITS} today`}
       </button>
     </div>
   );

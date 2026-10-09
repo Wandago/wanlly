@@ -46,7 +46,7 @@ function ProductStill() {
 const STEPS = [
   { title: "Apply", text: "Tell us what you want to build. It takes a minute." },
   { title: "Get approved", text: "We open Wanlly in weekly groups. Friends you invite move you up." },
-  { title: "Watch, then build", text: "One short video a day unlocks your floor. Extra videos add more. Use Claude or Gemini." },
+  { title: "Watch, then build", text: "Short sponsor videos earn credits. Watch more whenever you need more. Use Claude or Gemini." },
 ];
 
 /** A select with an "Other" choice that opens a text box, so nobody is stuck with our list. */
@@ -101,7 +101,7 @@ export function BetaPage() {
             Join the Wanlly beta.
           </h1>
           <p className="max-w-[56ch] text-[17px] text-muted text-balance">
-            Chat, code and design with Claude and Gemini. One short video a day unlocks your floor, the same wherever you live. No card. No subscription.
+            Chat, code and design with Claude and Gemini. Watch short sponsor videos, earn credits, build. No card. No subscription.
           </p>
           <a href="#apply" className="rounded-full bg-fg px-6 py-3 text-[15px] font-semibold text-bg">Apply for the beta</a>
         </section>
@@ -122,13 +122,13 @@ export function BetaPage() {
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight font-semibold tracking-[-0.03em] text-balance">How it&apos;s paid for, in plain numbers.</h2>
             <p className="max-w-[52ch] text-muted">
-              Everyone gets the same daily floor, wherever they live. Extra videos earn on top. Sponsors sit beside your work, never inside an answer, and never change what a model says.
+              Every short video you watch earns credits, and your first one each day earns a bonus. Sponsors sit beside your work, never inside an answer, and never change what a model says.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              ["1", "video a day unlocks your floor"],
-              ["Same", "floor in every country"],
+              ["20s", "per sponsor video"],
+              ["0", "subscriptions"],
               ["2", "AI families: Claude and Gemini"],
               ["0", "cards, subscriptions or API keys"],
             ].map(([n, l]) => (

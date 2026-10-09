@@ -3,7 +3,7 @@ import { Landing } from "@/components/site/landing";
 
 export const metadata: Metadata = {
   title: "Wanlly · Frontier AI for everyone with an idea",
-  description: "Chat, code and design with Claude and Gemini. No card, no subscription: one short video a day unlocks your floor, wherever you live.",
+  description: "Chat, code and design with Claude and Gemini. No card, no subscription: watch short sponsor videos, earn credits, build.",
 };
 
 export default function Home() {
