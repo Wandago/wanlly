@@ -28,27 +28,47 @@ export async function post(userId: string, delta: number, reason: Reason, refId:
   return rows.length > 0;
 }
 
-function nextResets(now = new Date()) {
-  const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const daysToMonday = (8 - now.getUTCDay()) % 7 || 7;
-  const week = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysToMonday));
-  return { dayResetsAt: day.toISOString(), weekResetsAt: week.toISOString() };
-}
-
 export type Account = { credits: number; floorUnlocked: boolean; usage: Usage };
 
-/** Balance, today's bonus and usage against the limits, in one round trip. */
+/** Before migration 0011 adds the session columns, limits fall back to UTC days and Monday weeks. */
+const noSessionColumns = (e: unknown) => /session_started_at|week_started_at/.test(`${e} ${(e as { cause?: unknown }).cause}`);
+
+/** Balance, today's bonus and usage in this person's current session and week, in one round trip. */
 export async function account(userId: string): Promise<Account> {
   const q = rawSql();
-  const rows = (await q`
-    select
-      coalesce(sum(delta), 0)::int as credits,
-      coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day_used,
-      coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week_used,
-      (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
-      exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
-    from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
+  let rows: Record<string, unknown>[];
+  try {
+    rows = (await q`
+      with u as (
+        select
+          case when session_started_at + interval '6 hours' > now() then session_started_at end as ss,
+          case when week_started_at + interval '7 days' > now() then week_started_at end as ws
+        from users where id = ${userId}
+      )
+      select
+        coalesce(sum(delta), 0)::int as credits,
+        coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= (select ss from u)), 0)::int as day_used,
+        coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= (select ws from u)), 0)::int as week_used,
+        (select ss + interval '6 hours' from u) as day_resets,
+        (select ws + interval '7 days' from u) as week_resets,
+        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
+        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
+      from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
+  } catch (e) {
+    if (!noSessionColumns(e)) throw e;
+    rows = (await q`
+      select
+        coalesce(sum(delta), 0)::int as credits,
+        coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day_used,
+        coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week_used,
+        date_trunc('day', now()) + interval '1 day' as day_resets,
+        date_trunc('week', now()) + interval '7 days' as week_resets,
+        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
+        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
+      from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
+  }
   const r = rows[0] ?? {};
+  const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
   return {
     credits: Number(r.credits ?? 0),
     floorUnlocked: Boolean(r.floor),
@@ -59,7 +79,8 @@ export async function account(userId: string): Promise<Account> {
       weekLimit: WEEKLY_SPEND_LIMIT,
       videos: Number(r.videos ?? 0),
       videoCap: DAILY_VIDEO_CAP,
-      ...nextResets(),
+      dayResetsAt: iso(r.day_resets),
+      weekResetsAt: iso(r.week_resets),
     },
   };
 }
@@ -73,24 +94,59 @@ export type SpendResult = { ok: true } | { ok: false; reason: "credits" | "day" 
  */
 export async function spend(userId: string, amount: number, refId: string, note: string): Promise<SpendResult> {
   const q = rawSql();
-  const [, rows] = await q.transaction([
-    q`select pg_advisory_xact_lock(hashtext(${userId}))`,
-    q`with cur as (
-        select
-          coalesce(sum(delta), 0)::int as total,
-          coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day,
-          coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week
-        from ledger_entries where user_id = ${userId}
-      ),
-      ins as (
-        insert into ledger_entries (user_id, delta, reason, ref_id, note)
-        select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
-        where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
-        on conflict (ref_id, reason) do nothing
-        returning delta
-      )
-      select cur.total, cur.day, cur.week, (select count(*) from ins)::int as charged from cur`,
-  ]);
+  let rows: unknown;
+  try {
+    // A session (6 hours) and a week (7 days) start with the first spend after the last one ended.
+    [, rows] = await q.transaction([
+      q`select pg_advisory_xact_lock(hashtext(${userId}))`,
+      q`with u as (
+          select
+            case when session_started_at is null or session_started_at + interval '6 hours' <= now() then now() else session_started_at end as ss,
+            case when week_started_at is null or week_started_at + interval '7 days' <= now() then now() else week_started_at end as ws
+          from users where id = ${userId}
+        ),
+        cur as (
+          select
+            coalesce(sum(delta), 0)::int as total,
+            coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= (select ss from u)), 0)::int as day,
+            coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= (select ws from u)), 0)::int as week
+          from ledger_entries where user_id = ${userId}
+        ),
+        ins as (
+          insert into ledger_entries (user_id, delta, reason, ref_id, note)
+          select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
+          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
+          on conflict (ref_id, reason) do nothing
+          returning delta
+        ),
+        started as (
+          update users set session_started_at = (select ss from u), week_started_at = (select ws from u)
+          where id = ${userId} and exists (select 1 from ins)
+          returning 1
+        )
+        select cur.total, cur.day, cur.week, (select count(*) from ins)::int as charged, (select count(*) from started)::int as started from cur`,
+    ]);
+  } catch (e) {
+    if (!noSessionColumns(e)) throw e;
+    [, rows] = await q.transaction([
+      q`select pg_advisory_xact_lock(hashtext(${userId}))`,
+      q`with cur as (
+          select
+            coalesce(sum(delta), 0)::int as total,
+            coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day,
+            coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week
+          from ledger_entries where user_id = ${userId}
+        ),
+        ins as (
+          insert into ledger_entries (user_id, delta, reason, ref_id, note)
+          select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
+          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
+          on conflict (ref_id, reason) do nothing
+          returning delta
+        )
+        select cur.total, cur.day, cur.week, (select count(*) from ins)::int as charged from cur`,
+    ]);
+  }
   const r = (rows as Record<string, unknown>[])[0] ?? {};
   if (Number(r.charged) > 0) return { ok: true };
   if (Number(r.total) < amount) return { ok: false, reason: "credits" };

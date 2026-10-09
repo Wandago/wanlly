@@ -31,7 +31,7 @@ export function Ring({ used, size = 18 }: { used: number; size?: number }) {
 }
 
 /**
- * Credits and usage, under the message box. The ring shows how much of today's limit is used;
+ * Credits and usage, under the message box. The ring shows how much of the session's limit is used;
  * opening it shows the balance, today's and this week's limits, and a way to earn more.
  */
 export function CreditsButton({ price, from, rate }: { price: number; from: boolean; rate?: number }) {
@@ -55,7 +55,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
     <Popover.Root>
       <Popover.Trigger
         ref={ref}
-        aria-label={`${credits} credits, ${Math.round(dayUsed * 100)}% of today's limit used. Show usage`}
+        aria-label={`${credits} credits, ${Math.round(dayUsed * 100)}% of this session's limit used. Show usage`}
         className="flex items-center gap-1.5 rounded-full px-2 py-1 font-mono text-xs text-muted tabular-nums outline-none hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-accent-line data-[state=open]:bg-hover data-[state=open]:text-fg"
       >
         <Ring used={dayUsed} />

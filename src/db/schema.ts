@@ -21,6 +21,10 @@ export const users = pgTable("users", {
   riskScore: integer("risk_score").notNull().default(0),
   /** Preferences from the profile page. Shape and defaults live in src/lib/settings.ts. */
   settings: jsonb("settings").notNull().default({}),
+  /** When this person's current 6-hour usage session began (their first spend in it). */
+  sessionStartedAt: timestamp("session_started_at", { withTimezone: true }),
+  /** When this person's current 7-day usage week began. */
+  weekStartedAt: timestamp("week_started_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

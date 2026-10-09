@@ -27,7 +27,7 @@ function Meter({ label, used, limit, resets }: { label: string; used: number; li
   );
 }
 
-/** Daily and weekly usage limits, like a plan's usage panel. Relative reset times refresh each minute. */
+/** Session (6 hours) and weekly usage limits, each on this person's own clock, like a plan's usage panel. Relative reset times refresh each minute. */
 export function UsageMeters({ usage, videos = false }: { usage: Usage | null; videos?: boolean }) {
   const [, tick] = useState(0);
   useEffect(() => {
@@ -37,8 +37,8 @@ export function UsageMeters({ usage, videos = false }: { usage: Usage | null; vi
   if (!usage) return <div className="h-[58px]" aria-hidden="true" />;
   return (
     <div className="flex flex-col gap-2.5">
-      <Meter label="Today" used={usage.dayUsed} limit={usage.dayLimit} resets={`Resets ${resetLabel(usage.dayResetsAt, "relative")}`} />
-      <Meter label="This week" used={usage.weekUsed} limit={usage.weekLimit} resets={`Resets ${resetLabel(usage.weekResetsAt, "weekday")}`} />
+      <Meter label="Current session" used={usage.dayUsed} limit={usage.dayLimit} resets={usage.dayResetsAt ? `Resets ${resetLabel(usage.dayResetsAt, "relative")}` : "Starts with your next request"} />
+      <Meter label="This week" used={usage.weekUsed} limit={usage.weekLimit} resets={usage.weekResetsAt ? `Resets ${resetLabel(usage.weekResetsAt, "weekday")}` : "Starts with your next request"} />
       {videos && <Meter label="Videos today" used={usage.videos} limit={usage.videoCap} resets={`${usage.videos} of ${usage.videoCap}`} />}
     </div>
   );

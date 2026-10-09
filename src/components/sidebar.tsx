@@ -171,6 +171,32 @@ export function Sidebar() {
     if (synced && recents === null) refreshRecents();
   }, [synced, recents, refreshRecents]);
 
+  // Search: the words typed find chats by title or by anything said in them.
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState("");
+  const [found, setFound] = useState<typeof recents>(null);
+  useEffect(() => {
+    const q = query.trim();
+    if (!q) return;
+    const ctrl = new AbortController();
+    const t = window.setTimeout(() => {
+      fetch(`/api/conversations?q=${encodeURIComponent(q)}`, { cache: "no-store", signal: ctrl.signal })
+        .then((r) => (r.ok ? r.json() : { conversations: [] }))
+        .then((b) => setFound(b.conversations))
+        .catch(() => {});
+    }, 250);
+    return () => {
+      window.clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [query]);
+  const endSearch = () => {
+    setSearching(false);
+    setQuery("");
+    setFound(null);
+  };
+  const list = query.trim() ? found : recents;
+
   const remove = async (id: number, title: string) => {
     if (!window.confirm(`Delete "${title}"? This can't be undone.`)) return;
     const r = await fetch(`/api/conversations/${id}`, { method: "DELETE" }).catch(() => null);
@@ -239,12 +265,40 @@ export function Sidebar() {
           )}
         </nav>
 
-        <div className="px-2.5 pt-3 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Recent</div>
-        <nav className="flex min-h-0 flex-1 flex-col gap-px overflow-auto" aria-label="Recent">
-          {recents === null ? null : recents.length === 0 ? (
-            <p className="px-2.5 py-1.5 text-xs text-faint">Your chats will show here.</p>
+        {searching ? (
+          <div className="mt-2 flex items-center gap-1.5 rounded-[10px] border border-line bg-surface px-2.5 focus-within:border-faint">
+            <Icon name="search" size={14} className="shrink-0 text-faint" />
+            <input
+              autoFocus
+              value={query}
+              onChange={(e) => {
+                setQuery(e.target.value);
+                if (!e.target.value.trim()) setFound(null);
+              }}
+              onKeyDown={(e) => e.key === "Escape" && endSearch()}
+              placeholder="Search chats"
+              aria-label="Search chats"
+              className="min-w-0 flex-1 bg-transparent py-1.5 text-[13px] outline-none placeholder:text-faint"
+            />
+            <button type="button" aria-label="Close search" onClick={endSearch} className="rounded-md p-0.5 text-faint hover:text-fg">
+              <Icon name="x" size={13} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center px-2.5 pt-3 pb-1">
+            <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Recent</span>
+            <button type="button" aria-label="Search chats" title="Search chats" onClick={() => setSearching(true)} className="ml-auto rounded-md p-1 text-faint hover:bg-hover hover:text-fg">
+              <Icon name="search" size={14} />
+            </button>
+          </div>
+        )}
+        <nav className="flex min-h-0 flex-1 flex-col gap-px overflow-auto" aria-label={query.trim() ? "Search results" : "Recent"}>
+          {list === null ? (
+            query.trim() ? <p className="px-2.5 py-1.5 text-xs text-faint">Searching…</p> : null
+          ) : list.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-xs text-faint">{query.trim() ? `No chats mention “${query.trim()}”.` : "Your chats will show here."}</p>
           ) : (
-            recents.map((r) => {
+            list.map((r) => {
               const active = r.id === conversationId && path === "/app";
               return (
                 <div key={r.id} className={`group flex items-center rounded-lg ${active ? "bg-hover" : "hover:bg-hover"}`}>

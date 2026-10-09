@@ -268,7 +268,8 @@ type Workspace = State & {
 };
 
 /** "in 5 hr 12 min", "Mon 3:00 AM": when a limit window resets, in the viewer's time. */
-export function resetLabel(iso: string, style: "relative" | "weekday"): string {
+export function resetLabel(iso: string | null, style: "relative" | "weekday"): string {
+  if (!iso) return "with your next request";
   const at = new Date(iso);
   if (style === "weekday") return at.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
   const mins = Math.max(1, Math.round((at.getTime() - Date.now()) / 60000));
@@ -279,7 +280,7 @@ export function resetLabel(iso: string, style: "relative" | "weekday"): string {
 /** The message to show when a job of this price would go over a limit, or null. */
 export function limitReached(usage: Usage | null, price: number): string | null {
   if (!usage) return null;
-  if (usage.dayUsed + price > usage.dayLimit) return `You've reached today's limit. It resets ${resetLabel(usage.dayResetsAt, "relative")}`;
+  if (usage.dayUsed + price > usage.dayLimit) return `You've reached this session's limit. It resets ${resetLabel(usage.dayResetsAt, "relative")}`;
   if (usage.weekUsed + price > usage.weekLimit) return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}`;
   return null;
 }
@@ -328,7 +329,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
             b.reason === "credits"
               ? "Not enough credits for that. Watch a video to earn more"
               : b.reason === "day" && b.usage
-                ? `You've reached today's limit. It resets ${resetLabel(b.usage.dayResetsAt, "relative")}`
+                ? `You've reached this session's limit. It resets ${resetLabel(b.usage.dayResetsAt, "relative")}`
                 : b.reason === "week" && b.usage
                   ? `You've reached this week's limit. It resets ${resetLabel(b.usage.weekResetsAt, "weekday")}`
                   : b.error;
