@@ -130,6 +130,116 @@ export const STYLES: DesignStyle[] = [
 - Content: local, specific detail when the brief allows (place names, M-Pesa or mobile money, real neighbourhoods), real people-first copy.
 - Avoid: safari and savanna clichés, tribal stereotypes, random mixing of unrelated cultural symbols.`,
   },
+  {
+    id: "minimal",
+    name: "Minimal",
+    blurb: "Quiet, white, lots of space",
+    guide: `Art direction: radical restraint, like a top architect's or photographer's portfolio.
+- Type: one family ("Inter" 300/400/500). Small UI text (13–14px), one large light-weight statement (44–56px, weight 300, tight tracking). Secondary words in light grey inside the same sentence.
+- Colour: white or off-white, black text, greys for secondary text. No accent colour, or one tiny one.
+- Layout: huge margins (80px+), lots of empty space, a simple grid of large images with a one-line caption and year under each. Navigation is three words.
+- Details: no borders, no shadows, no rounded corners, no icons. Hover states are a subtle underline or opacity change.
+- Avoid: anything decorative. If in doubt, remove it.`,
+  },
+  {
+    id: "luxury",
+    name: "Luxury",
+    blurb: "Black, ivory and gold",
+    guide: `Art direction: a luxury hotel, fashion house or fine jeweller.
+- Type: an elegant high-contrast serif for headlines ("Cormorant Garamond" 400, large, with italic for one emphasised word) and a light geometric sans for text ("Jost" 300/400). Small uppercase labels with wide letter-spacing (0.3em).
+- Colour: near-black (#0f0d0b) or ivory (#f5efe6) backgrounds, warm off-white text, a muted gold accent (#d9c29a). Nothing bright.
+- Layout: centred, symmetrical, cinematic: one large atmospheric image block with the headline over it, then a refined booking or enquiry bar with thin dividers.
+- Details: hairline borders, no rounded corners, slow and calm. Prices stated quietly ("From KES 64,000 / night").
+- Avoid: bold sans headlines, bright buttons, emoji, crowded layouts, discount language.`,
+  },
+  {
+    id: "brutalist",
+    name: "Brutalist",
+    blurb: "Raw, loud, unapologetic",
+    guide: `Art direction: web brutalism, like an independent radio station, zine or art collective.
+- Type: a massive heavy display face ("Archivo Black", all caps, very tight) with a monospace for everything else ("Space Mono" 400/700).
+- Colour: off-white or paper (#f0f0e8) and black, plus one or two pure, loud colours used as solid blocks (#ff0000, #0000ff, #ffff00).
+- Layout: thick black borders (3–4px) dividing the page into a visible grid of boxes, like a table. A tab-like top bar, a news ticker strip, big numbers.
+- Details: square corners, no shadows, no gradients, labels as black tags with inverted text, dashed rules in lists.
+- Avoid: softness, rounded corners, subtle greys, polished stock UI. It should feel handmade on purpose, but still be readable and usable.`,
+  },
+  {
+    id: "retro",
+    name: "Retro",
+    blurb: "90s arcade nostalgia",
+    guide: `Art direction: playful 80s and 90s nostalgia: arcades, mixtapes, old operating systems.
+- Type: a rounded retro display face ("Righteous") with stacked offset text-shadows in two colours, a pixel or terminal face for small text ("VT323"), and "Space Grotesk" for body text.
+- Colour: pastel pink or cream background with electric purple (#6a2cff), teal (#00d1c1), sun yellow (#ffd23f) and deep navy outlines.
+- Shapes: an old-style window with a title bar and _ □ × buttons, a cassette tape, a striped sunset circle, a checkerboard floor strip, stars and sparkles.
+- Details: thick navy outlines and hard offset shadows on buttons and cards, chunky pill tags.
+- Avoid: modern minimal greys, thin type, glassy effects.`,
+  },
+  {
+    id: "organic",
+    name: "Organic",
+    blurb: "Earthy, soft, natural",
+    guide: `Art direction: natural and wholesome, like an organic farm, wellness brand or eco product.
+- Type: a soft, warm serif ("Fraunces" 400/600, with italic for emphasis) and a friendly rounded sans for text ("Nunito Sans").
+- Colour: oat or cream backgrounds (#f4efe3), deep leaf green (#3e5a2e), sage (#c9d8b6), terracotta (#b5653a) and honey (#e2a53b).
+- Shapes: soft blobs, leaves and circles drawn in SVG, pill-shaped buttons, cards with large radii (20–28px) and soft shadows.
+- Copy: warm, specific and local (farms, places, people), with clear benefits.
+- Avoid: harsh black, neon colours, sharp corners, techy layouts.`,
+  },
+  {
+    id: "kids",
+    name: "Kids & learning",
+    blurb: "Friendly, bright, rounded",
+    guide: `Art direction: a joyful learning product for children, parents and teachers.
+- Type: a rounded, friendly display face ("Baloo 2" 700/800) and "Nunito" 700 for text. Large sizes everywhere; body text at least 18px.
+- Colour: a light sky background (#e9f6ff) with bright, cheerful colours that each have a job: orange (#ff7a00), green (#00a86b), indigo (#5b5bf0), pink (#ff4f7b), sunshine yellow.
+- Shapes: big rounded buttons (20px+ radius) with a solid darker "pressed" shadow beneath, simple friendly SVG characters (diverse, smiling), letter blocks, stars.
+- Copy: simple words, short sentences, encouraging tone. Show ages and languages clearly (English and Kiswahili).
+- Avoid: small text, dark themes, thin lines, scary or sarcastic tone, anything that looks like an ad aimed at children.`,
+  },
+  {
+    id: "newspaper",
+    name: "Newspaper",
+    blurb: "Columns, headlines, news",
+    guide: `Art direction: a respected daily newspaper or long-form news site.
+- Type: a bold high-contrast serif masthead and headlines ("Playfair Display" 700/900), a readable text serif for articles ("Source Serif 4"), and a small sans ("Inter" 600) for labels, bylines and data.
+- Colour: newsprint off-white (#fbfaf6), black ink, one red for section kickers and alerts, green/red only for market moves.
+- Layout: centred masthead with the date bar above and section links between double rules; a lead story with a big headline, photo and two justified text columns with a drop cap; narrower side columns separated by thin vertical rules.
+- Details: kicker labels in small caps above headlines, bylines with reading time, a small markets table.
+- Avoid: big rounded cards, bright colours, marketing-style buttons.`,
+  },
+  {
+    id: "sport",
+    name: "Sport",
+    blurb: "Fast, slanted, high energy",
+    guide: `Art direction: a big sports event, team or sportswear launch.
+- Type: an italic extra-bold condensed face ("Barlow Condensed" 800/900 italic, all caps) for headlines and numbers, "Barlow" for text.
+- Colour: near-black (#0b0f14) with one electric accent (volt #d4ff00) and a hot second accent (red #ff3b30). Big diagonal stripes of solid colour cutting across the page.
+- Layout: a huge slanted headline, skewed buttons (transform: skewX(-12deg)), a bold athlete silhouette or shape, a strip of big stats (distance, runners, prize money) and a countdown.
+- Details: everything leans forward; numbers are huge; labels are small uppercase with tracking.
+- Avoid: calm pastel palettes, serif type, centred quiet layouts.`,
+  },
+  {
+    id: "bento",
+    name: "Bento",
+    blurb: "Product tiles, Apple-like",
+    guide: `Art direction: a premium product showcase built from a bento grid of tiles, in the spirit of modern phone and laptop launch pages.
+- Type: "Inter Tight" 600/700 with tight tracking for headlines, 500 for text. A short centred headline and price line above the grid.
+- Colour: light grey page (#f5f5f7), white tiles, one dark hero tile, and pale tinted tiles (blue, green, peach) for individual features.
+- Layout: a 4-column grid of tiles with 28px radii and 16–20px gaps: one large tile spanning 2×2 with the product, then smaller tiles, each with one feature, one short headline, one line of copy and one big visual or number.
+- Details: big numbers for specs (6000 mAh, 50 MP), colour swatches as dots, product drawn in CSS/SVG.
+- Avoid: long paragraphs inside tiles, more than one idea per tile, heavy borders.`,
+  },
+  {
+    id: "restaurant",
+    name: "Restaurant",
+    blurb: "Warm, appetising, inviting",
+    guide: `Art direction: a warm restaurant, café or food brand that makes people hungry.
+- Type: an expressive serif for headlines ("Playfair Display" 600 with a 500 italic word) and "Karla" for text.
+- Colour: deep warm brown or charcoal backgrounds (#2b1a12), cream text (#f6e9d8), a glowing ember accent (#e8913a) and food colours (tomato, herb green, turmeric).
+- Layout: split screen: copy, booking buttons and a short menu on one side; a large, rich food illustration or photo area on the other. Menu items with dotted leaders to prices and a one-line description.
+- Details: opening hours, location and a rating badge; buttons with small radii; generous line height.
+- Avoid: cold blues, techy UI, stock "chef's hat" clip art.`,
+  },
 ];
 
 export const getStyle = (id: unknown) => (typeof id === "string" ? STYLES.find((s) => s.id === id) : undefined);
