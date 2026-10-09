@@ -11,7 +11,11 @@ import { TopBar } from "./top-bar";
 import { DesignHome } from "./design-home";
 import { HomeBanner } from "./ads/home-banner";
 import { ImagesGallery } from "./images-gallery";
+import { ComingSoon } from "./coming-soon";
 import { CanvasProvider, ProjectCanvas, useCanvas } from "./project-canvas";
+
+/** Roles that can open tools still marked "coming soon". */
+const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
 function UnlockCard() {
@@ -46,7 +50,7 @@ function UnlockCard() {
 }
 
 export function Workspace() {
-  const { jobs, tool, floorUnlocked, synced } = useWorkspace();
+  const { jobs, tool, floorUnlocked, synced, me } = useWorkspace();
   const visible = jobs.filter((j) => j.tool === tool);
   const empty = visible.length === 0;
   const scroller = useRef<HTMLDivElement>(null);
@@ -65,6 +69,16 @@ export function Workspace() {
   }, [streamed]);
 
   if (tool === "design") return <DesignHome />;
+  // Images isn't open to everyone yet; the team can still use it to test.
+  if (tool === "images" && !STAFF.has(me?.role ?? ""))
+    return (
+      <ComingSoon
+        icon="images"
+        title="Make pictures from a sentence"
+        text="Posters, product shots, logos and illustrations, made in seconds and saved to your gallery."
+        points={["Describe it, or attach a photo to change", "Download in high quality, ready for WhatsApp and Instagram", "Quick fixes: remove a background, erase an object"]}
+      />
+    );
 
   return (
     <CanvasProvider>

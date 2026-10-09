@@ -239,6 +239,7 @@ export function Sidebar() {
               >
                 <Icon name={id} size={16} />
                 {TOOLS[id].label}
+                {id === "images" && <span className="ml-auto rounded-md border border-line px-1.5 py-px text-[10px] font-medium text-faint">Soon</span>}
               </Link>
             );
           })}
@@ -254,6 +255,7 @@ export function Sidebar() {
               >
                 <Icon name={p.icon} size={16} />
                 {p.label}
+                {p.href === "/coworkers" && <span className="ml-auto rounded-md border border-line px-1.5 py-px text-[10px] font-medium text-faint">Soon</span>}
               </Link>
             );
           })}
