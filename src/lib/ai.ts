@@ -20,10 +20,10 @@ const CLAUDE: Record<string, { api: string; usdIn: number; usdOut: number; fallb
 };
 
 export function providers(): Providers {
-  return { anthropic: !!process.env.ANTHROPIC_API_KEY, google: !!process.env.GEMINI_API_KEY };
+  return { anthropic: !!process.env.ANTHROPIC_API_KEY, google: !!process.env.GEMINI_API_KEY, nvidia: !!process.env.NVIDIA_API_KEY };
 }
 
-/** Model cost in US dollars for one reply. Gemini runs on Google's free tier for now, so it's 0. */
+/** Model cost in US dollars for one reply. Gemini and the NVIDIA-hosted models run on free tiers for now, so they're 0. */
 export function replyCostUsd(modelId: string, inputTokens: number, outputTokens: number): number {
   const c = CLAUDE[modelId];
   return c ? (inputTokens * c.usdIn + outputTokens * c.usdOut) / 1e6 : 0;
@@ -274,6 +274,154 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
   yield { type: "done", inputTokens: final.usage.input_tokens + (final.usage.cache_read_input_tokens ?? 0), outputTokens: final.usage.output_tokens, stop };
 }
 
+// ---------------------------------------------------------------- NVIDIA (open models)
+
+/*
+ * Open models hosted by NVIDIA (build.nvidia.com), through its OpenAI-compatible API. Catalog ids
+ * are written slightly differently in different places, so each model lists the spellings it may
+ * have and the live list picks the one NVIDIA serves. NVIDIA_BASE_URL can point the same models
+ * at another OpenAI-compatible host (a paid NIM endpoint, or the makers' own APIs) later.
+ */
+const NVIDIA: Record<string, string[]> = {
+  "deepseek-flash": ["deepseek-ai/deepseek-v4.1-flash", "deepseek-ai/deepseek-v4-1-flash", "deepseek-ai/deepseek-v4-flash"],
+  glm: ["z-ai/glm-5.3", "z-ai/glm-5-3", "zai-org/glm-5.3"],
+  "glm-flash": ["z-ai/glm-5.3-flash", "z-ai/glm-5-3-flash", "zai-org/glm-5.3-flash"],
+  kimi: ["moonshotai/kimi-k3", "moonshotai/kimi-k3-instruct"],
+};
+
+const nvidiaBase = () => (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, "");
+let nvidiaList: { ids: Set<string>; at: number } | null = null;
+
+/** The id NVIDIA serves for one of our models, from its model list (checked at most once an hour). */
+export async function nvidiaModel(modelId: string): Promise<string> {
+  const names = NVIDIA[modelId];
+  if (!nvidiaList || Date.now() - nvidiaList.at > 3600_000) {
+    let ids = new Set<string>();
+    try {
+      const r = await fetch(`${nvidiaBase()}/models`, { headers: { authorization: `Bearer ${process.env.NVIDIA_API_KEY}` } });
+      if (r.ok) ids = new Set(((await r.json()) as { data?: { id: string }[] }).data?.map((m) => m.id) ?? []);
+      else console.error("nvidia models list failed", r.status);
+    } catch {}
+    nvidiaList = { ids, at: Date.now() };
+  }
+  return names.find((n) => nvidiaList!.ids.has(n)) ?? names[0];
+}
+
+/** Removes <think>…</think> from a stream of text pieces, for models that think out loud in their answer. */
+function thinkFilter() {
+  let inside = false;
+  let carry = "";
+  return (piece: string): string => {
+    let s = carry + piece;
+    carry = "";
+    let out = "";
+    while (s) {
+      const tag = inside ? "</think>" : "<think>";
+      const i = s.indexOf(tag);
+      if (i >= 0) {
+        if (!inside) out += s.slice(0, i);
+        s = s.slice(i + tag.length);
+        inside = !inside;
+        continue;
+      }
+      // Keep a possible half tag at the end for the next piece.
+      const keep = [...Array(tag.length - 1).keys()].map((k) => k + 1).reverse().find((k) => s.endsWith(tag.slice(0, k))) ?? 0;
+      if (!inside) out += s.slice(0, s.length - keep);
+      carry = s.slice(s.length - keep);
+      break;
+    }
+    return out;
+  };
+}
+
+async function* nvidia(modelId: string, system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
+  const model = await nvidiaModel(modelId);
+  // These models read text only. Office files and text files already arrive as text; pictures and
+  // PDFs can't be read here, so the model is told, and can say so.
+  const messages = [
+    { role: "system", content: system },
+    ...turns.map((t) => ({
+      role: t.role,
+      content: t.files?.length
+        ? `${t.text}\n\n[The person attached ${t.files.length} picture or PDF file${t.files.length > 1 ? "s" : ""} that this model can't open. If it matters, tell them to switch to Gemini Flash or Claude to read it.]`
+        : t.text,
+    })),
+  ];
+  const body = JSON.stringify({ model, messages, max_tokens: maxTokens, stream: true, stream_options: { include_usage: true } });
+  let res: Response | null = null;
+  let error: ProviderError | null = null;
+  // The free tier allows about 40 requests a minute per key: one more try after a pause, then "busy".
+  for (let i = 0; i < 2 && !res; i++) {
+    if (i) await pause(1500, signal);
+    const r = await fetch(`${nvidiaBase()}/chat/completions`, {
+      method: "POST",
+      signal,
+      headers: { "content-type": "application/json", authorization: `Bearer ${process.env.NVIDIA_API_KEY}`, accept: "text/event-stream" },
+      body,
+    });
+    if (r.ok && r.body) {
+      res = r;
+      break;
+    }
+    const raw = await r.text().catch(() => "");
+    let message = raw.slice(0, 300);
+    try {
+      const j = JSON.parse(raw) as { error?: { message?: string } | string; detail?: string };
+      message = (typeof j.error === "string" ? j.error : j.error?.message) ?? j.detail ?? message;
+    } catch {}
+    console.error("nvidia error", model, r.status, message);
+    const kind = RETRYABLE.has(r.status) ? "busy" : r.status === 401 || r.status === 402 || r.status === 403 || r.status === 404 ? "unavailable" : "failed";
+    error = new ProviderError(kind, `NVIDIA ${r.status} on ${model}: ${message}`);
+    if (!RETRYABLE.has(r.status)) break;
+  }
+  if (!res?.body) throw error ?? new ProviderError("failed");
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let stop = "end";
+  let chars = 0;
+  const strip = thinkFilter();
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += value;
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (data === "[DONE]") continue;
+      let chunk: {
+        choices?: { delta?: { content?: string | null }; finish_reason?: string | null }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
+      };
+      try {
+        chunk = JSON.parse(data);
+      } catch {
+        continue;
+      }
+      const choice = chunk.choices?.[0];
+      // Reasoning arrives separately (reasoning_content) and is left out; only the answer is shown.
+      const text = choice?.delta?.content ? strip(choice.delta.content) : "";
+      if (text) {
+        chars += text.length;
+        yield { type: "text", text };
+      }
+      if (choice?.finish_reason) stop = choice.finish_reason === "length" ? "max_tokens" : choice.finish_reason === "content_filter" ? "refusal" : "end";
+      if (chunk.usage) {
+        inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
+        outputTokens = chunk.usage.completion_tokens ?? outputTokens;
+      }
+    }
+  }
+  // Some hosts send no usage: estimate from the text (about 4 characters a token).
+  if (!outputTokens) outputTokens = Math.ceil(chars / 4);
+  if (!inputTokens) inputTokens = Math.ceil(messages.reduce((n, m) => n + m.content.length, 0) / 4);
+  yield { type: "done", inputTokens, outputTokens, stop };
+}
+
 // ---------------------------------------------------------------- Shared
 
 export class ProviderError extends Error {
@@ -303,6 +451,7 @@ export async function checkProviders() {
   for (const [provider, modelId] of [
     ["google", "gemini-flash"],
     ["anthropic", "haiku"],
+    ["nvidia", "glm-flash"],
   ] as const) {
     if (!providers()[provider]) {
       out.push({ provider, model: "", ok: false, detail: "No API key set", ms: 0 });
@@ -310,7 +459,8 @@ export async function checkProviders() {
     }
     const t = Date.now();
     let text = "";
-    let model = provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : CLAUDE.haiku.api;
+    let model =
+      provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : provider === "nvidia" ? await nvidiaModel(modelId) : CLAUDE.haiku.api;
     try {
       for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
         if (ev.type === "text") text += ev.text;
@@ -344,6 +494,10 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
   if (CLAUDE[opts.modelId]) {
     if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
     return claude(opts.modelId, opts.tool, opts.system, opts.turns, max, opts.signal);
+  }
+  if (NVIDIA[opts.modelId]) {
+    if (!process.env.NVIDIA_API_KEY) throw new ProviderError("unavailable");
+    return nvidia(opts.modelId, opts.system, opts.turns, max, opts.signal);
   }
   throw new ProviderError("unavailable");
 }
