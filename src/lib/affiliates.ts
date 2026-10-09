@@ -23,9 +23,20 @@ export type Affiliate = {
   /** Words that make this offer a good match, e.g. ["website", "hosting", "domain"]. */
   keywords: string[];
   places: string[];
+  /** The landing page's share picture (https), shown on the ad when set. */
+  image?: string;
 };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+function httpsUrl(v: unknown): string | undefined {
+  try {
+    const u = new URL(str(v, 800));
+    return u.protocol === "https:" ? u.toString() : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export function cleanAffiliates(v: unknown): Affiliate[] {
   if (!Array.isArray(v)) return [];
@@ -54,6 +65,7 @@ export function cleanAffiliates(v: unknown): Affiliate[] {
           ? [...new Set((o.keywords as unknown[]).map((k) => String(k).toLowerCase().trim().slice(0, 30)).filter(Boolean))].slice(0, 20)
           : [],
         places: Array.isArray(o.places) ? AFFILIATE_PLACES.filter((p) => (o.places as unknown[]).includes(p)) : [...AFFILIATE_PLACES],
+        image: httpsUrl(o.image),
       },
     ];
   });
@@ -69,6 +81,7 @@ export const affiliateSponsor = (a: Affiliate): Sponsor & { affiliateId: string;
   text: a.text,
   cta: a.cta,
   url: a.url,
+  image: a.image,
   affiliateId: a.id,
   keywords: a.keywords,
   places: a.places,

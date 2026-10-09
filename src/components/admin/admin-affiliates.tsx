@@ -102,9 +102,14 @@ export function AffiliatesCard() {
           {list.map((a) => (
             <li key={a.id} className="border-t border-line py-2.5 first:border-t-0 first:pt-0">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="grid size-6 place-items-center rounded-md text-[11px] font-bold text-white" style={{ background: a.color }}>
-                  {(a.name || "?").charAt(0).toUpperCase()}
-                </span>
+                {a.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- the landing page's own picture
+                  <img src={a.image} alt="" className="h-6 w-10 rounded-md border border-line object-cover" />
+                ) : (
+                  <span className="grid size-6 place-items-center rounded-md text-[11px] font-bold text-white" style={{ background: a.color }}>
+                    {(a.name || "?").charAt(0).toUpperCase()}
+                  </span>
+                )}
                 <b className="text-[13px] font-semibold">{a.name || "New link"}</b>
                 <span className="min-w-0 flex-1 truncate text-xs text-muted">
                   {a.keywords.length ? `Matches: ${a.keywords.join(", ")}` : "No keywords: shown in rotation"}
@@ -127,6 +132,7 @@ export function AffiliatesCard() {
                   Remove
                 </button>
               </div>
+              {open === a.id && <LinkPreview url={a.url} image={a.image} onImage={(image) => change(a.id, { image })} />}
               {open === a.id && (
                 <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
                   {(
@@ -142,6 +148,10 @@ export function AffiliatesCard() {
                       <input className={input} maxLength={max} placeholder={ph} value={a[k]} onChange={(e) => change(a.id, { [k]: e.target.value })} />
                     </label>
                   ))}
+                  <label className="flex flex-col gap-1 text-[13px] font-medium sm:col-span-2">
+                    Picture link <span className="font-normal text-faint">optional, https:// image shown on the ad (filled in by “Use this picture”)</span>
+                    <input className={input} maxLength={800} placeholder="https://…/banner.jpg" value={a.image ?? ""} onChange={(e) => change(a.id, { image: e.target.value.trim() || undefined })} />
+                  </label>
                   <label className="flex flex-col gap-1 text-[13px] font-medium sm:col-span-2">
                     One line
                     <input className={input} maxLength={160} value={a.text} onChange={(e) => change(a.id, { text: e.target.value })} />
@@ -203,5 +213,77 @@ export function AffiliatesCard() {
       )}
       <p className="text-xs text-faint">Clicks are counted in Ads &amp; revenue → Dashboard (as affiliate:…), and each link gets utm_source=wanlly so your affiliate dashboard can see them too.</p>
     </Card>
+  );
+}
+
+type Preview = { url: string; host: string; title: string; description: string; site: string; image?: string };
+
+/** What the affiliate link opens: the landing page's title, description and share picture. */
+function LinkPreview({ url, image, onImage }: { url: string; image?: string; onImage: (image: string | undefined) => void }) {
+  const [p, setP] = useState<Preview | null>(null);
+  const [state, setState] = useState<"idle" | "loading" | "error">("idle");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!/^https:\/\/[^/]+\.[^/]+/.test(url)) return;
+    let live = true;
+    // Wait for typing to stop before opening the page.
+    const t = window.setTimeout(() => {
+      setState("loading");
+      api<Preview>(`/api/admin/affiliates/preview?url=${encodeURIComponent(url)}`)
+        .then((x) => {
+          if (!live) return;
+          setP(x);
+          setState("idle");
+        })
+        .catch((e: Error) => {
+          if (!live) return;
+          setError(e.message);
+          setState("error");
+        });
+    }, 600);
+    return () => {
+      live = false;
+      window.clearTimeout(t);
+    };
+  }, [url]);
+  return (
+    <div className="mt-3 flex flex-col gap-2.5 rounded-xl border border-line bg-surface p-3 sm:flex-row">
+      <div className="aspect-[1.91/1] w-full shrink-0 overflow-hidden rounded-lg border border-line bg-hover sm:w-[240px]">
+        {p?.image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- remote share picture, previewed as-is
+          <img src={p.image} alt="" className="block size-full object-cover" />
+        ) : (
+          <span className="grid size-full place-items-center text-xs text-faint">{state === "loading" ? "Opening the page…" : "No share picture"}</span>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-1 flex-col gap-1 text-[13px]">
+        <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Landing page{p?.host ? ` · ${p.host}` : ""}</span>
+        {state === "error" ? (
+          <p className="text-bad">{error}</p>
+        ) : p ? (
+          <>
+            <b className="line-clamp-2 font-semibold">{p.title || "No title"}</b>
+            {p.description && <p className="line-clamp-3 text-muted">{p.description}</p>}
+            <div className="mt-auto flex flex-wrap gap-2 pt-1.5">
+              {p.image && p.image !== image && (
+                <button type="button" className={btnDark} onClick={() => onImage(p.image)}>
+                  Use this picture in the ad
+                </button>
+              )}
+              {image && (
+                <button type="button" className={btnGhost} onClick={() => onImage(undefined)}>
+                  {image === p.image ? "Picture in use · remove" : "Remove picture"}
+                </button>
+              )}
+              <a href={p.url} target="_blank" rel="noopener noreferrer" className={btnGhost}>
+                Open page ↗
+              </a>
+            </div>
+          </>
+        ) : (
+          <p className="text-muted">{state === "loading" ? "Opening the page…" : "Add an https:// link to see its page."}</p>
+        )}
+      </div>
+    </div>
   );
 }
