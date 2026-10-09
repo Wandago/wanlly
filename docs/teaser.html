@@ -56,8 +56,6 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 /* Scene 3: logo */
 .mark { width: 22cqmin; height: 22cqmin; }
 .mark .tile { fill: var(--ink); }
-.mark .w { fill: none; stroke: var(--paper); stroke-width: 6.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; }
-.mark .node { fill: var(--tang); transform-origin: 32px 26px; transform: scale(var(--n, 0)); }
 .wordmark { font: 600 9cqmin/1 var(--display); letter-spacing: -.04em; }
 
 /* Scene 4: video unlock card */
@@ -189,12 +187,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
 
       <section class="scene" data-start="9000" data-end="13000">
         <div class="col">
-          <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-at="0">
-            <defs><mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
-            <rect class="tile" width="64" height="64" rx="16"/>
-            <path class="w" id="wpath" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m3)"/>
-            <circle class="node" id="node" cx="32" cy="26" r="6.2"/>
-          </svg>
+          <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-at="0"><rect class="tile" width="64" height="64" rx="16" fill="#0b0b0d"/><g id="spin3" style="transform-origin:32px 32px"><defs><mask id="spin1" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spin1)"/></g></svg>
           <span class="wordmark" data-at="1500">Wanlly</span>
           <p class="sub" data-at="2100">Frontier AI for everyone with an idea.</p>
         </div>
@@ -281,12 +274,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
       <section class="scene" data-start="35000" data-end="40000">
         <div class="col">
           <div class="lockup" data-at="100">
-            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
-              <defs><mask id="m8" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
-              <rect class="tile" width="64" height="64" rx="16"/>
-              <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m8)" style="stroke-dashoffset:0"/>
-              <circle class="node" cx="32" cy="26" r="6.2" style="--n:1"/>
-            </svg>
+            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect class="tile" width="64" height="64" rx="16" fill="#0b0b0d"/><g style="transform-origin:32px 32px"><defs><mask id="spin2" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spin2)"/></g></svg>
             <span class="wordmark">Wanlly</span>
           </div>
           <h2 class="mid" data-at="600">Build the thing you keep thinking about<span class="dot">.</span></h2>
@@ -359,8 +347,9 @@ body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 va
     // Scene 2: the price gets struck through
     el("price").style.setProperty("--s", ease((t - 4200 - 1500) / 600));
     // Scene 3: the W draws, then the node lands
-    el("wpath").style.strokeDashoffset = String(120 * (1 - ease((t - 9000 - 150) / 1100)));
-    el("node").style.setProperty("--n", ease((t - 9000 - 1200) / 450));
+    // The spin turns into place as the scene opens.
+    const k3 = ease((t - 9000 - 150) / 1300);
+    el("spin3").style.transform = `rotate(${(1 - k3) * -180}deg) scale(${0.35 + 0.65 * k3})`;
     // Scene 4: the video plays and credits count up
     let credits = 0;
     for (let i = 0; i < 3; i++) {

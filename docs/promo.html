@@ -80,8 +80,6 @@ body { margin: 0; background: #050507; color: var(--white); font: 15px/1.5 var(-
 /* Logo */
 .mark { width: min(30cqw, 34cqh); height: min(30cqw, 34cqh); }
 .mark .tile { fill: var(--white); }
-.mark .w { fill: none; stroke: var(--ink); stroke-width: 6.5; stroke-linecap: round; stroke-linejoin: round; }
-.mark .node { fill: var(--tang); }
 .wordmark { font: 800 min(17cqw, 26cqh)/.9 var(--display); letter-spacing: -.05em; }
 .lockup { display: flex; align-items: center; gap: 3cqmin; }
 .lockup .mark { width: min(17cqw, 20cqh); height: min(17cqw, 20cqh); }
@@ -210,12 +208,7 @@ body { margin: 0; background: #050507; color: var(--white); font: 15px/1.5 var(-
           <svg class="burst" id="burst1" viewBox="-100 -100 200 200" aria-hidden="true"></svg>
           <span class="ring" id="ring1"></span>
           <div class="col" data-in="8" data-out="12" data-fx="cut">
-            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-in="8" data-fx="slam">
-              <defs><mask id="m1" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
-              <rect class="tile" width="64" height="64" rx="16"/>
-              <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m1)"/>
-              <circle class="node" cx="32" cy="26" r="6.2"/>
-            </svg>
+            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-in="8" data-fx="slam"><rect class="tile" width="64" height="64" rx="16" fill="#0b0b0d"/><g style="transform-origin:32px 32px"><defs><mask id="spin3" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spin3)"/></g></svg>
             <span class="wordmark rgb" data-in="10" data-fx="slam">Wanlly</span>
           </div>
           <div class="col" data-in="12" data-out="14" data-fx="cut">
@@ -369,12 +362,7 @@ body { margin: 0; background: #050507; color: var(--white); font: 15px/1.5 var(-
           <span class="ring" id="ring2"></span>
           <div class="col">
             <div class="lockup" data-in="64" data-fx="slam">
-              <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
-                <defs><mask id="m2" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
-                <rect class="tile" width="64" height="64" rx="16"/>
-                <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m2)"/>
-                <circle class="node" cx="32" cy="26" r="6.2"/>
-              </svg>
+              <svg class="mark" viewBox="0 0 64 64" aria-hidden="true"><rect class="tile" width="64" height="64" rx="16" fill="#0b0b0d"/><g style="transform-origin:32px 32px"><defs><mask id="spin4" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spin4)"/></g></svg>
               <span class="wordmark rgb">Wanlly</span>
             </div>
             <h2 class="x3 rgb" data-in="66" data-fx="slam">Watch. Earn. <span class="hl">Build.</span></h2>
