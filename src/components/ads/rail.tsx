@@ -6,6 +6,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
+import { Tracked } from "./tracked";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -26,6 +27,7 @@ function SponsoredLabel({ sponsor }: { sponsor: Sponsor }) {
   return (
     <button
       type="button"
+      data-ad-ignore
       onClick={() => dispatch({ type: "toast", text: `Paid for by ${sponsor.name}. Shown because of the page you're on, not your prompts.` })}
       className={`${eyebrow} inline-flex items-center gap-1 hover:text-muted`}
     >
@@ -49,25 +51,27 @@ function Cta({ sponsor, className = "" }: { sponsor: Sponsor; className?: string
 }
 
 /** Native sponsor card with a cover image. The main side-panel unit. */
-export function CoverCard({ sponsor }: { sponsor: Sponsor }) {
+export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Sponsor; placement?: string }) {
   return (
-    <article key={sponsor.name} className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
-      <Cover sponsor={sponsor} />
-      <div className="flex flex-col gap-1.5 p-3.5">
-        <div className="flex items-center gap-2">
-          <span className="grid size-6 place-items-center rounded-md text-[11px] font-bold text-white" style={{ background: sponsor.color }} aria-hidden="true">
-            {sponsor.initial}
-          </span>
-          <b className="text-[13px] font-semibold">{sponsor.name}</b>
-          <span className="ml-auto">
-            <SponsoredLabel sponsor={sponsor} />
-          </span>
+    <Tracked key={sponsor.name} placement={placement} format="native" creative={sponsor.name}>
+      <article className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <Cover sponsor={sponsor} />
+        <div className="flex flex-col gap-1.5 p-3.5">
+          <div className="flex items-center gap-2">
+            <span className="grid size-6 place-items-center rounded-md text-[11px] font-bold text-white" style={{ background: sponsor.color }} aria-hidden="true">
+              {sponsor.initial}
+            </span>
+            <b className="text-[13px] font-semibold">{sponsor.name}</b>
+            <span className="ml-auto">
+              <SponsoredLabel sponsor={sponsor} />
+            </span>
+          </div>
+          <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
+          <p className="text-[13px] leading-snug text-muted">{sponsor.text}</p>
+          <Cta sponsor={sponsor} className="mt-1 self-start" />
         </div>
-        <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
-        <p className="text-[13px] leading-snug text-muted">{sponsor.text}</p>
-        <Cta sponsor={sponsor} className="mt-1 self-start" />
-      </div>
-    </article>
+      </article>
+    </Tracked>
   );
 }
 
@@ -78,11 +82,11 @@ function DisplayFrame({ sponsor }: { sponsor: Sponsor }) {
       <div className="px-1">
         <SponsoredLabel sponsor={sponsor} />
       </div>
-      <div key={sponsor.name} className="grid animate-rise place-items-center overflow-hidden rounded-xl bg-code">
-        <div className="overflow-hidden rounded-xl">
+      <Tracked key={sponsor.name} placement="rail_banner" format="display" creative={sponsor.name} className="grid animate-rise place-items-center overflow-hidden rounded-xl bg-code">
+        <button type="button" aria-label={`${sponsor.name}: ${sponsor.cta}`} className="block overflow-hidden rounded-xl">
           <DisplayCreative size="300x250" sponsor={sponsor} />
-        </div>
-      </div>
+        </button>
+      </Tracked>
     </div>
   );
 }
@@ -133,17 +137,19 @@ export function AdRail() {
 export function SidebarAd() {
   const sponsor = useRotation(RAIL_SPONSORS, 50000, 1);
   return (
-    <article key={sponsor.name} className="hidden animate-rise overflow-hidden rounded-[14px] border border-line bg-surface [@media(min-height:700px)]:block">
-      <div className="h-[72px] overflow-hidden">
-        <Cover sponsor={sponsor} className="h-full" />
-      </div>
-      <div className="flex flex-col gap-1 px-3 pt-2 pb-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <b className="truncate text-[13px] font-semibold">{sponsor.name}</b>
-          <SponsoredLabel sponsor={sponsor} />
+    <Tracked key={sponsor.name} placement="sidebar_card" format="native" creative={sponsor.name} className="hidden [@media(min-height:700px)]:block">
+      <article className="animate-rise overflow-hidden rounded-[14px] border border-line bg-surface">
+        <div className="h-[72px] overflow-hidden">
+          <Cover sponsor={sponsor} className="h-full" />
         </div>
-        <p className="line-clamp-2 text-xs leading-snug text-muted">{sponsor.headline}</p>
-      </div>
-    </article>
+        <div className="flex flex-col gap-1 px-3 pt-2 pb-2.5">
+          <div className="flex items-center justify-between gap-2">
+            <b className="truncate text-[13px] font-semibold">{sponsor.name}</b>
+            <SponsoredLabel sponsor={sponsor} />
+          </div>
+          <p className="line-clamp-2 text-xs leading-snug text-muted">{sponsor.headline}</p>
+        </div>
+      </article>
+    </Tracked>
   );
 }

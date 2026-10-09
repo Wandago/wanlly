@@ -1,5 +1,6 @@
 import { rawSql } from "@/db";
 import { CAN, requireStaff } from "@/lib/admin";
+import { ESTIMATE } from "@/lib/catalog";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -20,7 +21,11 @@ export async function GET(req: Request) {
           (select count(*) from beta_applications where status = 'pending')::int as beta_pending,
           (select count(*) from beta_applications)::int as beta_total,
           (select count(*) from contact_messages where handled_at is null)::int as messages_open,
-          (select count(*) from users where status in ('frozen', 'banned'))::int as paused`,
+          (select count(*) from users where status in ('frozen', 'banned'))::int as paused,
+          (select count(distinct visitor) from page_views where created_at >= date_trunc('day', now()))::int as visitors_today,
+          (select count(*) from page_views where created_at >= date_trunc('day', now()))::int as views_today,
+          (select count(*) from ad_events where kind = 'impression' and format = 'native' and created_at >= date_trunc('day', now()))::int as native_today,
+          (select count(*) from ad_events where kind = 'impression' and format = 'display' and created_at >= date_trunc('day', now()))::int as display_today`,
       q`with d as (select generate_series(date_trunc('day', now()) - interval '13 days', date_trunc('day', now()), interval '1 day') as day)
         select to_char(d.day, 'YYYY-MM-DD') as day,
           (select count(*) from users u where u.created_at >= d.day and u.created_at < d.day + interval '1 day')::int as signups,
@@ -44,6 +49,12 @@ export async function GET(req: Request) {
         betaTotal: num(t.beta_total),
         messagesOpen: num(t.messages_open),
         paused: num(t.paused),
+        visitorsToday: num(t.visitors_today),
+        viewsToday: num(t.views_today),
+        adViewsToday: num(t.native_today) + num(t.display_today),
+        revenueToday:
+          (num(t.native_today) / 1000) * ESTIMATE.ecpm.native + (num(t.display_today) / 1000) * ESTIMATE.ecpm.display + (num(t.videos_today) / 1000) * ESTIMATE.ecpm.rewarded,
+        costToday: num(t.spent_today) * ESTIMATE.usdPerCredit,
       },
       days: (days as Record<string, unknown>[]).map((d) => ({ day: String(d.day), signups: num(d.signups), active: num(d.active), videos: num(d.videos), spent: num(d.spent), applications: num(d.applications) })),
     });

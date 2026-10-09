@@ -13,6 +13,10 @@ export default function PrivacyPage() {
         <li>Your country, from your network, to choose ads and set ad rates.</li>
         <li>What you create: prompts, files, projects and the replies AI models send back.</li>
         <li>How you use Wanlly: credits earned and spent, ads shown and watched, and security signals such as device and network, to stop abuse.</li>
+        <li>
+          Visits, counted without cookies: the page, the site that sent you, your country and device type. Your network address and browser are turned into a code that
+          changes every day and can&apos;t be turned back. We skip this if your browser sends Do Not Track or Global Privacy Control.
+        </li>
       </ul>
       <h2>Why we use it</h2>
       <ul>

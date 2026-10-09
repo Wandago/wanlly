@@ -35,6 +35,7 @@ export function WatchButton({ onClick, earned = false, className = "" }: { onCli
   return (
     <button
       type="button"
+      data-ad-ignore
       onClick={onClick}
       disabled={earned}
       className={`flex items-center gap-[7px] rounded-[9px] px-3 py-[7px] text-[13px] font-semibold ${earned ? "bg-hover text-good" : "bg-fg text-bg"} ${className}`}

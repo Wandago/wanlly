@@ -3,6 +3,7 @@ import { db, schema } from "@/db";
 import { ensureUser } from "@/lib/account";
 import { account } from "@/lib/ledger";
 import { clerk, signedInUserId } from "@/lib/session";
+import { visitorHash } from "@/lib/traffic";
 
 /** The signed-in person's account: created on first call, then their balance, today's bonus and usage. */
 export async function GET(req: Request) {
@@ -10,6 +11,12 @@ export async function GET(req: Request) {
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
     const user = await ensureUser(userId, req.headers.get("cf-ipcountry"));
+    // Which daily visitor hash this account was seen on, for spotting one person with many accounts.
+    await db()
+      .insert(schema.userDevices)
+      .values({ userId: user.id, visitor: await visitorHash(req) })
+      .onConflictDoUpdate({ target: [schema.userDevices.userId, schema.userDevices.visitor], set: { seenAt: sql`now()` } })
+      .catch((e) => console.error("user device failed", e));
     return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, ...(await account(user.id)) });
   } catch (e) {
     console.error("api/me failed", e);

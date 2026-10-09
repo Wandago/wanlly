@@ -70,6 +70,8 @@ export const adEvents = pgTable(
     placement: text("placement").notNull(),
     country: text("country"),
     kind: text("kind", { enum: ["impression", "click", "reward_started", "reward_completed", "reward_reversed"] }).notNull(),
+    /** Which ad (the sponsor or creative name), for per-ad performance. */
+    creative: text("creative"),
     /** The partner's transaction id for rewarded views. Unique, so a replayed callback is ignored. */
     transactionId: text("transaction_id"),
     /** Revenue in millionths of a US dollar, once known. */
@@ -181,3 +183,43 @@ export const adminActions = pgTable(
   },
   (t) => [index("admin_actions_time").on(t.createdAt)],
 );
+
+/**
+ * One row per page view, recorded without cookies. `visitor` is a keyed hash of the network
+ * address and browser that changes every UTC day, so a visitor can't be followed across days.
+ */
+export const pageViews = pgTable(
+  "page_views",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    path: text("path").notNull(),
+    referrer: text("referrer"),
+    utmSource: text("utm_source"),
+    country: text("country"),
+    device: text("device", { enum: ["mobile", "tablet", "desktop"] }).notNull(),
+    visitor: text("visitor").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("page_views_time").on(t.createdAt), index("page_views_visitor").on(t.visitor)],
+);
+
+/** Which daily visitor hashes each account was seen on. Several accounts on one hash is an abuse signal. */
+export const userDevices = pgTable(
+  "user_devices",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    visitor: text("visitor").notNull(),
+    seenAt: timestamp("seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("user_devices_pair").on(t.userId, t.visitor), index("user_devices_visitor").on(t.visitor)],
+);
+
+/** Switches the team can flip from the admin page, like pausing all earning. */
+export const appFlags = pgTable("app_flags", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedBy: text("updated_by"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

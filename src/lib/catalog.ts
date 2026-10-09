@@ -69,6 +69,15 @@ export const WEEKLY_SPEND_LIMIT = 500;
 /** Most paid videos per day. */
 export const DAILY_VIDEO_CAP = 30;
 
+/*
+ * Planning numbers for the admin page's revenue estimate, until an ad network reports real money.
+ * eCPM is US dollars per 1,000 viewable impressions; a credit costs about half a US cent of model use.
+ */
+export const ESTIMATE = {
+  ecpm: { native: 1.2, display: 0.6, rewarded: 8 },
+  usdPerCredit: 0.005,
+} as const;
+
 export type Usage = {
   dayUsed: number;
   dayLimit: number;

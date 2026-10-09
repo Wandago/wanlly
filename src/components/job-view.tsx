@@ -5,6 +5,7 @@ import { TOOLS } from "@/lib/catalog";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
+import { Tracked } from "./ads/tracked";
 
 function WorkingStatus({ job }: { job: Job }) {
   const tool = TOOLS[job.tool];
@@ -56,16 +57,20 @@ export function JobView({ job }: { job: Job }) {
         {job.status === "working" ? <WorkingStatus job={job} /> : <JobResult job={job} />}
       </div>
       {showCard ? (
-        <SponsorCard
-          sponsor={sponsor}
-          format={adFormat}
-          spotAspect={spotAspect}
-          spot={job.spot}
-          onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
-          onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
-        />
+        <Tracked key="card" placement="job_card" format={adFormat} creative={sponsor.name}>
+          <SponsorCard
+            sponsor={sponsor}
+            format={adFormat}
+            spotAspect={spotAspect}
+            spot={job.spot}
+            onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
+            onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
+          />
+        </Tracked>
       ) : (
-        <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+        <Tracked key="line" placement="job_line" format={adFormat} creative={sponsor.name}>
+          <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+        </Tracked>
       )}
     </div>
   );

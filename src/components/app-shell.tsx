@@ -8,6 +8,7 @@ import { RAIL_SPONSORS } from "@/lib/catalog";
 import { applyTheme, type Settings } from "@/lib/settings";
 import { AdRail } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
+import { Tracked } from "./ads/tracked";
 import { EarnDialog } from "./earn-dialog";
 import { Sidebar } from "./sidebar";
 
@@ -59,9 +60,11 @@ function AccountSync() {
 function PhoneBanner() {
   return (
     <div className="flex items-center justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Sponsored">
-      <div className="overflow-hidden rounded-xl">
-        <DisplayCreative size="320x50" sponsor={RAIL_SPONSORS[0]} />
-      </div>
+      <Tracked placement="phone_banner" format="display" creative={RAIL_SPONSORS[0].name} className="overflow-hidden rounded-xl">
+        <button type="button" aria-label={`${RAIL_SPONSORS[0].name}: ${RAIL_SPONSORS[0].cta}`} className="block">
+          <DisplayCreative size="320x50" sponsor={RAIL_SPONSORS[0]} />
+        </button>
+      </Tracked>
     </div>
   );
 }

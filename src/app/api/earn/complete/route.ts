@@ -8,7 +8,7 @@ import { signedInUserId } from "@/lib/session";
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
-  const blocked = await blockedReason(userId).catch(() => null);
+  const blocked = await blockedReason(userId, "earn").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
   const data = await smallJson(req);
   const viewId = data ? field(data, "viewId", 64) : "";

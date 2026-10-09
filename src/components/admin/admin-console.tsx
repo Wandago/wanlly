@@ -2,94 +2,18 @@
 
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
+import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when } from "./admin-ui";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
 
-type Tab = "overview" | "beta" | "messages" | "users";
-type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused", number>;
+type Tab = "overview" | "traffic" | "ads" | "abuse" | "users" | "beta" | "messages";
+type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused" | "visitorsToday" | "viewsToday" | "adViewsToday" | "revenueToday" | "costToday", number>;
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
 type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string };
 type Message = { id: number; name: string; email: string; topic: string; message: string; networkCountry: string | null; handledAt: string | null; createdAt: string };
 type User = { id: string; email: string | null; name: string | null; country: string | null; role: string; status: string; createdAt: string; credits: number; spentToday: number; lastActive: string | null };
-
-class ApiError extends Error {
-  constructor(message: string, public status: number) {
-    super(message);
-  }
-}
-
-async function api<T>(url: string, method = "GET", body?: object): Promise<T> {
-  const r = await fetch(url, { method, cache: "no-store", headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new ApiError(data.error ?? "Something went wrong", r.status);
-  return data as T;
-}
-
-const num = (v: number) => v.toLocaleString("en-US");
-const when = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
-const btnDark = "inline-flex items-center gap-1.5 rounded-lg bg-fg px-2.5 py-1 text-xs font-semibold text-bg disabled:opacity-50";
-const btnGhost = "inline-flex items-center gap-1.5 rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-medium hover:border-faint disabled:opacity-50";
-
-function Card({ title, note, actions, children }: { title: string; note?: string; actions?: ReactNode; children: ReactNode }) {
-  return (
-    <section className="flex min-w-0 flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
-      <header className="flex flex-wrap items-start gap-3">
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h2 className="text-sm font-semibold">{title}</h2>
-          {note && <p className="text-[13px] text-muted">{note}</p>}
-        </div>
-        {actions && <div className="ml-auto flex flex-wrap gap-1.5">{actions}</div>}
-      </header>
-      {children}
-    </section>
-  );
-}
-
-function Kpi({ label, value, sub }: { label: string; value: number; sub?: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-1 rounded-2xl border border-line bg-surface p-3.5">
-      <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">{label}</span>
-      <span className="font-display text-2xl leading-none font-semibold tabular-nums">{num(value)}</span>
-      {sub && <span className="text-xs text-muted">{sub}</span>}
-    </div>
-  );
-}
-
-function Pills<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
-  return (
-    <div className="inline-flex flex-wrap gap-0.5 rounded-[10px] bg-hover p-[3px]" role="group" aria-label={label}>
-      {options.map(([v, l]) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={value === v}
-          onClick={() => onChange(v)}
-          className={`rounded-lg px-2.5 py-1 text-[13px] ${value === v ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/0.08)]" : "text-muted"}`}
-        >
-          {l}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Empty({ children }: { children: ReactNode }) {
-  return <p className="rounded-xl bg-code px-3 py-6 text-center text-[13px] text-muted">{children}</p>;
-}
-
-const STATUS_CHIP: Record<string, string> = {
-  pending: "bg-hover text-muted",
-  approved: "bg-good/12 text-good",
-  declined: "bg-bad/12 text-bad",
-  active: "bg-good/12 text-good",
-  slowed: "bg-hover text-muted",
-  challenged: "bg-hover text-muted",
-  frozen: "bg-bad/12 text-bad",
-  banned: "bg-bad/12 text-bad",
-  deleted: "bg-hover text-faint",
-};
-const Chip = ({ s }: { s: string }) => <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap capitalize ${STATUS_CHIP[s] ?? "bg-hover text-muted"}`}>{s}</span>;
 
 /** Hook for a list that reloads when its query changes and can be patched locally after an action. */
 function useList<T>(url: string, key: string) {
@@ -127,6 +51,18 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <button type="button" onClick={() => go("traffic")} className="text-left">
+          <Kpi label="Visitors today" value={t.visitorsToday} sub={`${num(t.viewsToday)} page views →`} />
+        </button>
+        <button type="button" onClick={() => go("ads")} className="text-left">
+          <Kpi label="Ad views today" value={t.adViewsToday} sub="seen for 1s or more →" />
+        </button>
+        <button type="button" onClick={() => go("ads")} className="text-left">
+          <Kpi label="Est. revenue today" value={usd(t.revenueToday)} sub="placeholder ads, estimate →" />
+        </button>
+        <Kpi label="Est. model cost today" value={usd(t.costToday)} sub={t.revenueToday >= t.costToday ? "covered by ads" : "more than ads bring in"} />
+      </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="People" value={t.users} sub={`${num(t.newToday)} new today`} />
         <Kpi label="Active today" value={t.activeToday} sub="earned or spent a credit" />
         <Kpi label="Videos today" value={t.videosToday} sub={`${num(t.earnedToday)} credits earned`} />
@@ -139,8 +75,8 @@ function Overview({ go }: { go: (t: Tab) => void }) {
         <button type="button" onClick={() => go("messages")} className="text-left">
           <Kpi label="Messages open" value={t.messagesOpen} sub="read and reply →" />
         </button>
-        <button type="button" onClick={() => go("users")} className="text-left">
-          <Kpi label="Paused accounts" value={t.paused} sub="frozen or banned →" />
+        <button type="button" onClick={() => go("abuse")} className="text-left">
+          <Kpi label="Paused accounts" value={t.paused} sub="frozen or banned · abuse →" />
         </button>
       </div>
       <Card title="Last 14 days" note="UTC days. Active means the person earned or spent at least one credit.">
@@ -352,9 +288,9 @@ function Messages() {
   );
 }
 
-function Users() {
-  const [term, setTerm] = useState("");
-  const [query, setQuery] = useState("");
+function Users({ initial = "" }: { initial?: string }) {
+  const [term, setTerm] = useState(initial);
+  const [query, setQuery] = useState(initial);
   const { items, setItems, extra, error } = useList<User>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ""}`, "users");
   const [note, setNote] = useState("");
   const canEdit = extra.canEdit === true;
@@ -461,9 +397,12 @@ function Users() {
 
 const TABS: [Tab, string][] = [
   ["overview", "Overview"],
+  ["traffic", "Traffic"],
+  ["ads", "Ads & revenue"],
+  ["abuse", "Abuse"],
+  ["users", "People"],
   ["beta", "Beta"],
   ["messages", "Messages"],
-  ["users", "People"],
 ];
 
 export function AdminConsole() {
@@ -475,6 +414,8 @@ export function AdminConsole() {
   });
   const [access, setAccess] = useState<"checking" | "ok" | "denied" | "error">("checking");
   const [role, setRole] = useState("");
+  const [days, setDays] = useState<7 | 30>(30);
+  const [person, setPerson] = useState("");
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -520,14 +461,37 @@ export function AdminConsole() {
           </Link>
           <h1 className="font-display text-xl font-semibold tracking-[-0.02em]">Admin</h1>
           <span className="rounded-full border border-line bg-surface px-2 py-0.5 text-xs text-muted capitalize">{role}</span>
-          <div className="ml-auto">
-            <Pills label="Section" value={tab} onChange={go} options={TABS} />
-          </div>
+          {(tab === "traffic" || tab === "ads") && (
+            <div className="ml-auto">
+              <Pills
+                label="Date range"
+                value={String(days) as "7" | "30"}
+                onChange={(v) => setDays(v === "7" ? 7 : 30)}
+                options={[
+                  ["7", "7 days"],
+                  ["30", "30 days"],
+                ]}
+              />
+            </div>
+          )}
         </header>
+        <nav className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none]">
+          <Pills label="Section" value={tab} onChange={go} options={TABS} />
+        </nav>
         {tab === "overview" && <Overview go={go} />}
+        {tab === "traffic" && <TrafficTab days={days} />}
+        {tab === "ads" && <AdsTab days={days} />}
+        {tab === "abuse" && (
+          <AbuseTab
+            onOpenPerson={(q) => {
+              setPerson(q);
+              go("users");
+            }}
+          />
+        )}
+        {tab === "users" && <Users key={person} initial={person} />}
         {tab === "beta" && <Beta />}
         {tab === "messages" && <Messages />}
-        {tab === "users" && <Users />}
       </div>
     </div>
   );

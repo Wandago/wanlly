@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import { PageBeacon } from "@/components/page-beacon";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -45,7 +46,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="h-full">
-        <ClerkProvider appearance={clerkAppearance}>{children}</ClerkProvider>
+        <ClerkProvider appearance={clerkAppearance}>
+          {children}
+          <PageBeacon />
+        </ClerkProvider>
       </body>
     </html>
   );

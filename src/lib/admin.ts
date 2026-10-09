@@ -1,6 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 import { signedInUserId } from "./session";
 
 type Role = (typeof schema.users.$inferSelect)["role"];
@@ -11,6 +11,7 @@ export const CAN = {
   beta: ["owner", "admin", "support"],
   messages: ["owner", "admin", "support"],
   users: ["owner", "admin", "moderator"],
+  switches: ["owner", "admin"],
 } satisfies Record<string, Role[]>;
 
 export type Staff = { id: string; role: Role };
@@ -28,12 +29,30 @@ export async function logAction(actorId: string, action: string, target: string,
   await db().insert(schema.adminActions).values({ actorId, action, target, detail });
 }
 
+export const FLAGS = {
+  earningPaused: "Earning is paused for everyone for a short while. Please try again later.",
+  spendingPaused: "Wanlly's models are paused for everyone for a short while. Please try again later.",
+} as const;
+export type FlagKey = keyof typeof FLAGS;
+
 /** Statuses that stop an account earning or spending. */
 const BLOCKED = new Set(["frozen", "banned", "deleted"]);
 
-/** Null when the account may earn and spend; otherwise the message to show. */
-export async function blockedReason(userId: string): Promise<string | null> {
-  const [u] = await db().select({ status: schema.users.status }).from(schema.users).where(eq(schema.users.id, userId)).limit(1);
-  if (!u) return null;
-  return BLOCKED.has(u.status) ? "Your account is paused while we take a look. Contact us if you think this is a mistake." : null;
+/**
+ * Null when this account may earn (or spend) right now; otherwise the message to show. Checks the
+ * account's status and the team's pause switch in one query.
+ */
+export async function blockedReason(userId: string, action: "earn" | "spend"): Promise<string | null> {
+  const flag: FlagKey = action === "earn" ? "earningPaused" : "spendingPaused";
+  const q = rawSql();
+  const rows = (await q`
+    select (select status from users where id = ${userId}) as status,
+      coalesce((select value = 'true'::jsonb from app_flags where key = ${flag}), false) as paused`) as { status: string | null; paused: boolean }[];
+  const r = rows[0];
+  if (r?.paused) return FLAGS[flag];
+  if (r?.status && BLOCKED.has(r.status)) return "Your account is paused while we take a look. Contact us if you think this is a mistake.";
+  return null;
 }
+
+/** The admin page's date range: 7 or 30 days, ending today (UTC). */
+export const rangeDays = (req: Request) => (new URL(req.url).searchParams.get("days") === "7" ? 7 : 30);
