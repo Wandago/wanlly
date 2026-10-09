@@ -7,6 +7,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { openSponsor, useNetwork } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { Cover } from "./cover";
+import { DisplaySlot } from "./display-slot";
 import { DisplayCreative, VideoFrame, useWidth } from "./creatives";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { NetworkUnit } from "./network-unit";
@@ -247,6 +248,8 @@ export function SponsorCard({
   // Sold campaigns bring a picture, not a video: their card shows the picture, and Watch plays
   // one of Wanlly's own videos so it never looks like the advertiser's.
   const sold = !!sponsor.campaignId;
+  // A banner (ad network or a campaign's) took the card: the house sponsor's button goes.
+  const [banner, setBanner] = useState(false);
   if (spot === "playing") {
     const video = sold ? SPOT_SPONSOR : sponsor;
     return (
@@ -275,25 +278,37 @@ export function SponsorCard({
             {sponsor.text && <p className="text-[13px] text-muted">{sponsor.text}</p>}
           </div>
         </div>
-      ) : format === "native" ? (
-        <div className="flex items-start gap-3 p-3.5">
-          <Logo sponsor={sponsor} />
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span className={eyebrow}>While you wait · Sponsored</span>
-            <b className="font-semibold">{sponsor.name}</b>
-            <p className="text-[13px] text-muted">{sponsor.text}</p>
-          </div>
-        </div>
       ) : (
-        <div className="flex flex-col gap-2.5 p-3.5">
-          <span className={eyebrow}>While you wait · Sponsored</span>
-          <div className="rounded-xl bg-code px-2 py-4">
-            <FittedDisplay sizes={PLACEMENT_SIZES.card} sponsor={sponsor} />
-          </div>
-        </div>
+        // No sold campaign here: an ad-network banner if one fits, else Wanlly's house sponsor.
+        <DisplaySlot
+          placement="job_card"
+          sizes={["336x280", "300x250", "320x100", "320x50"]}
+          label="While you wait · Sponsored"
+          className="p-3.5"
+          onBanner={setBanner}
+          fallback={
+            format === "native" ? (
+              <div className="flex items-start gap-3 p-3.5">
+                <Logo sponsor={sponsor} />
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className={eyebrow}>While you wait · Sponsored</span>
+                  <b className="font-semibold">{sponsor.name}</b>
+                  <p className="text-[13px] text-muted">{sponsor.text}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5 p-3.5">
+                <span className={eyebrow}>While you wait · Sponsored</span>
+                <div className="rounded-xl bg-code px-2 py-4">
+                  <FittedDisplay sizes={PLACEMENT_SIZES.card} sponsor={sponsor} />
+                </div>
+              </div>
+            )
+          }
+        />
       )}
       <div className="flex flex-wrap items-center gap-2 border-t border-line px-3.5 py-2.5">
-        {(format === "native" || sold) && (
+        {(format === "native" || sold) && !banner && (
           <SponsorLink
             sponsor={sponsor}
             className="rounded-[9px] border border-line bg-surface px-[11px] py-[7px] text-[13px] font-medium hover:border-faint"

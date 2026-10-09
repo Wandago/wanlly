@@ -1,0 +1,1 @@
+ALTER TABLE "campaigns" ADD COLUMN "banners" jsonb DEFAULT '{}'::jsonb NOT NULL;

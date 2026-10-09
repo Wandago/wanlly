@@ -11,7 +11,7 @@ export async function GET(req: Request) {
     const q = rawSql();
     const rows = (await q`
       select c.id, c.application_id, c.advertiser, c.name, c.status, c.headline, c.body, c.cta, c.url, c.color, c.cover,
-        c.image, c.placements, c.countries, c.starts_at, c.ends_at, c.max_impressions, c.cpm_cents, c.created_at,
+        c.image, coalesce(to_jsonb(c)->'banners', '{}'::jsonb) as banners, c.placements, c.countries, c.starts_at, c.ends_at, c.max_impressions, c.cpm_cents, c.created_at,
         (to_jsonb(c)->>'frequency_cap')::int as frequency_cap,
         coalesce(e.impressions, 0)::int as impressions, coalesce(e.clicks, 0)::int as clicks
       from campaigns c
@@ -34,6 +34,7 @@ export async function GET(req: Request) {
         color: r.color,
         cover: r.cover,
         image: r.image,
+        banners: r.banners ?? {},
         placements: r.placements,
         countries: r.countries,
         startsAt: r.starts_at,
@@ -55,7 +56,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
-  const data = await jsonUpTo(req, 320_000);
+  const data = await jsonUpTo(req, 2_600_000);
   if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
   const r = campaignFields(data);
   if ("error" in r) return Response.json({ error: r.error }, { status: 422 });

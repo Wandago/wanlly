@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DisplaySlot } from "./ads/display-slot";
 import { TOOLS } from "@/lib/catalog";
 import { isConnected, useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
@@ -70,7 +71,7 @@ function WorkingStatus({ job }: { job: Job }) {
  * Every tool runs a job the same way: prompt → working card with a sponsor slot → result →
  * the sponsor folds to one line. A spot that's still playing keeps its card until it ends.
  */
-export function JobView({ job }: { job: Job }) {
+export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
   const { dispatch, stop } = useWorkspace();
   const { adFormat, spotAspect } = TOOLS[job.tool];
   // A booked campaign for this slot if there is one, otherwise the tool's house sponsor.
@@ -111,6 +112,18 @@ export function JobView({ job }: { job: Job }) {
             onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
           />
         </Tracked>
+      ) : index % 2 === 1 && !job.sample ? (
+        // After every second reply, a banner sits between it and the next prompt.
+        <DisplaySlot
+          placement="between_turns"
+          sizes={["728x90", "468x60", "320x100", "320x50"]}
+          className="border-y border-line py-3"
+          fallback={
+            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
+              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+            </Tracked>
+          }
+        />
       ) : (
         <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
           <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />

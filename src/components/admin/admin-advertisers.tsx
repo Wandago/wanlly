@@ -39,6 +39,7 @@ type Campaign = {
   color: string;
   cover: CoverKind | null;
   image: string | null;
+  banners: Record<string, string>;
   placements: string[];
   countries: string[];
   startsAt: string | null;
@@ -59,6 +60,21 @@ const PLACEMENTS: [string, string][] = [
   ["job_card", "While you wait card"],
   ["job_line", "After a result line"],
   ["interstitial", "Pop-up card"],
+  ["between_turns", "Between replies (banner)"],
+  ["design_wait", "Design: while it's made (banner)"],
+  ["home_banner", "Under the chat box (banner)"],
+];
+
+/** Banner sizes an advertiser can supply, with where each one shows. */
+const BANNERS: [string, string][] = [
+  ["300x250", "Side panel, while-you-wait cards, design"],
+  ["336x280", "While-you-wait cards, wide screens"],
+  ["728x90", "Between replies, under the chat box"],
+  ["468x60", "Between replies on tablets"],
+  ["320x50", "Phone bar, small screens"],
+  ["320x100", "Phones, between replies"],
+  ["300x600", "Side panel on tall screens"],
+  ["160x600", "Not used yet"],
 ];
 const COVERS: CoverKind[] = ["laptop", "course", "jobs", "notes", "db", "deploy", "type", "print"];
 const input = "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-faint";
@@ -100,6 +116,29 @@ async function colourOf(dataUrl: string): Promise<string | null> {
   const best = [...buckets.values()].sort((x, y) => y.n - x.n)[0];
   if (!best) return null;
   return "#" + [best.r, best.g, best.b].map((v) => Math.round(v / best.n).toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * A banner picture at exactly one size: the upload is scaled to cover it and centred (twice the
+ * pixels when that stays small, so it's sharp on good screens), as WebP under 200 KB.
+ */
+async function bannerFrom(file: File, size: string): Promise<string> {
+  const [w, h] = size.split("x").map(Number);
+  const bmp = await createImageBitmap(file);
+  for (const scale of [2, 1]) {
+    const c = document.createElement("canvas");
+    c.width = w * scale;
+    c.height = h * scale;
+    const k = Math.max(c.width / bmp.width, c.height / bmp.height);
+    const dw = bmp.width * k;
+    const dh = bmp.height * k;
+    c.getContext("2d")!.drawImage(bmp, (c.width - dw) / 2, (c.height - dh) / 2, dw, dh);
+    for (const q of [0.88, 0.75, 0.6]) {
+      const url = c.toDataURL("image/webp", q);
+      if (url.length < 270_000) return url;
+    }
+  }
+  throw new Error("That banner is too detailed. Try a simpler picture.");
 }
 
 /** Shrinks a picture to at most 800 px wide and under 200 KB, as a data URL. */
@@ -174,6 +213,7 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
       color: c.color || "#2a78d6",
       cover: c.cover ?? null,
       image: c.image ?? null,
+      banners: c.banners ?? {},
       placements: c.placements ?? ["rail_cover", "sidebar_card"],
       countries: c.countries ?? [],
       startsAt: c.startsAt || null,
@@ -314,6 +354,71 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
                       >
                         {label}
                       </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5 text-[13px] font-medium sm:col-span-2">
+                <span>
+                  Banner sizes <span className="font-normal text-faint">optional</span>
+                </span>
+                <small className="text-xs font-normal text-faint">
+                  Upload a picture for any standard size: it&apos;s cropped to fit exactly. Banners show in the banner places you picked above (side panel banner, phone bar, between replies, design, under the chat box), ahead of ad-network banners.
+                </small>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {BANNERS.map(([size, where]) => {
+                    const [w, h] = size.split("x").map(Number);
+                    const pic = c.banners?.[size];
+                    const scale = Math.min(1, 150 / w, 60 / h);
+                    return (
+                      <div key={size} className="flex items-center gap-2.5 rounded-lg border border-line p-2">
+                        <span className="grid h-[60px] w-[150px] shrink-0 place-items-center rounded bg-code">
+                          {pic ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={pic} alt={`${size} banner`} style={{ width: w * scale, height: h * scale }} />
+                          ) : (
+                            <span className="rounded border border-dashed border-line" style={{ width: w * scale, height: h * scale }} />
+                          )}
+                        </span>
+                        <span className="flex min-w-0 flex-1 flex-col gap-1">
+                          <b className="font-mono text-xs">{size.replace("x", "×")}</b>
+                          <small className="text-[11px] leading-tight font-normal text-faint">{where}</small>
+                          <span className="flex gap-1">
+                            <label className="cursor-pointer rounded-md border border-line px-2 py-0.5 text-[11px] font-medium hover:border-faint">
+                              {pic ? "Replace" : "Upload"}
+                              <input
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                hidden
+                                onChange={async (e) => {
+                                  const f = e.target.files?.[0];
+                                  e.target.value = "";
+                                  if (!f) return;
+                                  try {
+                                    const url = await bannerFrom(f, size);
+                                    set({ banners: { ...(c.banners ?? {}), [size]: url } });
+                                  } catch (err) {
+                                    setError((err as Error).message);
+                                  }
+                                }}
+                              />
+                            </label>
+                            {pic && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const next = { ...(c.banners ?? {}) };
+                                  delete next[size];
+                                  set({ banners: next });
+                                }}
+                                className="rounded-md px-2 py-0.5 text-[11px] text-muted hover:text-fg"
+                              >
+                                Remove
+                              </button>
+                            )}
+                          </span>
+                        </span>
+                      </div>
                     );
                   })}
                 </div>

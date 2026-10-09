@@ -31,6 +31,8 @@ export type Sponsor = {
   /** Most views per person per day, for sold campaigns. */
   cap?: number;
   image?: string;
+  /** Banner sizes this sold campaign has pictures for, e.g. ["300x250", "728x90"]. */
+  banners?: string[];
 };
 
 export type Tool = {

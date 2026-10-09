@@ -12,7 +12,8 @@ export async function GET(req: Request) {
     const q = rawSql();
     const rows = (await q`
       select c.id, c.advertiser, c.headline, c.body, c.cta, c.url, c.color, c.cover, (c.image is not null) as has_image, c.placements,
-        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap
+        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap,
+        (select coalesce(jsonb_agg(k), '[]'::jsonb) from jsonb_object_keys(coalesce(to_jsonb(c)->'banners', '{}'::jsonb)) k) as banner_sizes
       from campaigns c
       where c.status = 'active'
         and (c.starts_at is null or c.starts_at <= now())
@@ -55,6 +56,7 @@ export async function GET(req: Request) {
           image: r.has_image ? `/api/ads/image/${r.id}` : undefined,
           placements: r.placements,
           cap: r.frequency_cap === null ? undefined : Number(r.frequency_cap),
+          banners: Array.isArray(r.banner_sizes) && r.banner_sizes.length ? r.banner_sizes : undefined,
         })),
       },
       { headers: { "cache-control": "private, max-age=300", vary: "cf-ipcountry" } },

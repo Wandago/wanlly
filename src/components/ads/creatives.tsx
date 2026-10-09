@@ -34,8 +34,17 @@ function SponsorMark({ sponsor, size }: { sponsor: Sponsor; size: number }) {
 }
 
 /** A banner drawn at its exact pixel size, the way a network would deliver it. */
+/** A sold campaign's own banner at this size, when they uploaded one; otherwise null. */
+export function campaignBanner(sponsor: Sponsor, size: string): string | null {
+  return sponsor.campaignId && sponsor.banners?.includes(size) ? `/api/ads/banner/${sponsor.campaignId}/${size}` : null;
+}
+
 export function DisplayCreative({ size, sponsor }: { size: DisplaySize; sponsor: Sponsor }) {
   const { w, h } = DISPLAY_SIZES[size];
+  // A sold campaign's own banner at this size, when they uploaded one.
+  const own = campaignBanner(sponsor, size);
+  // eslint-disable-next-line @next/next/no-img-element
+  if (own) return <img src={own} alt={`${sponsor.name}: ${sponsor.headline}`} width={w} height={h} style={{ width: w, height: h }} className="block" />;
   const bg = { width: w, height: h, background: `linear-gradient(140deg, ${sponsor.color}, color-mix(in srgb, ${sponsor.color} 55%, #000))` };
   const cta = (small: boolean) => (
     <span className={`shrink-0 rounded-full bg-white font-semibold whitespace-nowrap ${small ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1.5 text-[13px]"}`} style={{ color: sponsor.color }}>

@@ -86,7 +86,7 @@ export function Workspace() {
                   )}
                 </h1>
               ) : (
-                visible.map((job) => <JobView key={job.id} job={job} />)
+                visible.map((job, i) => <JobView key={job.id} job={job} index={i} />)
               )}
             </div>
           </div>

@@ -3,7 +3,9 @@ import { field } from "./forms";
 
 /* Directly sold ads: what a campaign may contain, checked before it's saved. */
 
-export const PLACEMENTS = ["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial"] as const;
+export const PLACEMENTS = ["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial", "between_turns", "design_wait", "home_banner"] as const;
+/** Standard banner sizes an advertiser can upload a picture for. */
+export const BANNER_SIZES = ["300x250", "336x280", "728x90", "468x60", "320x50", "320x100", "300x600", "160x600"] as const;
 export const COVERS = ["db", "deploy", "type", "print", "notes", "laptop", "course", "jobs"] as const;
 export const CATEGORIES = ["Learning and courses", "Developer tools", "Laptops and phones", "Jobs and internships", "Money and banking", "Design tools", "Telecoms and data", "Student services", "Other"] as const;
 export const FORMATS = ["Sponsor cards", "Banners", "Sponsored videos", "Pop-up cards", "Sponsor trials"] as const;
@@ -35,6 +37,7 @@ export type CampaignInput = Partial<{
   color: string;
   cover: string | null;
   image: string | null;
+  banners: Record<string, string>;
   placements: string[];
   countries: string[];
   startsAt: Date | null;
@@ -47,7 +50,11 @@ export type CampaignInput = Partial<{
 
 /** Before migration 0009, saving a frequency cap fails; say what to do instead of "unavailable". */
 export const needsMigration = (e: unknown) =>
-  /frequency_cap/.test(`${e} ${(e as { cause?: unknown }).cause}`) ? "Run migration 0009 (frequency cap) in Neon, then save again." : null;
+  /frequency_cap/.test(`${e} ${(e as { cause?: unknown }).cause}`)
+    ? "Run migration 0009 (frequency cap) in Neon, then save again."
+    : /banners/.test(`${e} ${(e as { cause?: unknown }).cause}`)
+      ? "Run migration 0012 (banner sizes) in Neon, then save again."
+      : null;
 
 /** The valid fields present in a request; an error message for the first invalid one. */
 export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput } | { error: string } {
@@ -71,6 +78,16 @@ export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput 
     if (d.image === null || d.image === "") out.image = null;
     else if (typeof d.image === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(d.image) && d.image.length < 280_000) out.image = d.image;
     else return { error: "The picture must be a PNG, JPEG or WebP under 200 KB." };
+  }
+  if ("banners" in d) {
+    if (!d.banners || typeof d.banners !== "object" || Array.isArray(d.banners)) return { error: "Bad banners." };
+    const out2: Record<string, string> = {};
+    for (const [size, v] of Object.entries(d.banners as Record<string, unknown>)) {
+      if (!BANNER_SIZES.includes(size as (typeof BANNER_SIZES)[number]) || v === null || v === "") continue;
+      if (typeof v !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(v) || v.length > 280_000) return { error: `The ${size} banner must be a PNG, JPEG or WebP under 200 KB.` };
+      out2[size] = v;
+    }
+    out.banners = out2;
   }
   if ("placements" in d) {
     if (!Array.isArray(d.placements)) return { error: "Bad placements." };

@@ -292,6 +292,8 @@ export const campaigns = pgTable(
     cover: text("cover"),
     /** Optional picture for the card, as a small data URL (uploaded in Admin). */
     image: text("image"),
+    /** Banner pictures by standard size, e.g. {"300x250": "data:image/webp;base64,…"}, for display slots. */
+    banners: jsonb("banners").notNull().default({}),
     placements: jsonb("placements").notNull().default([]),
     countries: jsonb("countries").notNull().default([]),
     startsAt: timestamp("starts_at", { withTimezone: true }),

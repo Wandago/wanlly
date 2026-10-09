@@ -11,7 +11,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/campaign
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
   const id = Number((await ctx.params).id);
-  const data = await jsonUpTo(req, 320_000);
+  const data = await jsonUpTo(req, 2_600_000);
   if (!Number.isSafeInteger(id) || id <= 0 || !data) return Response.json({ error: "Bad request" }, { status: 400 });
   const r = campaignFields(data);
   if ("error" in r) return Response.json({ error: r.error }, { status: 422 });

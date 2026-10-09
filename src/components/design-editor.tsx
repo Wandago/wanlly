@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { DisplaySlot } from "./ads/display-slot";
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -564,6 +565,7 @@ export function DesignEditor({ id }: { id: number }) {
                 </span>
                 <b className="font-semibold">{busy ? "Starting…" : "Nothing here yet"}</b>
                 <p className="text-[13px] text-muted">{busy ? "The preview appears as soon as the model starts writing." : "Describe what you want on the left, and it'll be designed here."}</p>
+                {busy && <DisplaySlot placement="design_wait" sizes={["336x280", "300x250", "320x100", "320x50"]} label="While you wait · Sponsored" className="mt-4" />}
               </div>
             </div>
           )}
@@ -657,6 +659,12 @@ export function DesignEditor({ id }: { id: number }) {
             {busy && asked && (
               <div className="self-end rounded-[14px_14px_4px_14px] bg-hover px-3 py-2 text-[13px] whitespace-pre-wrap" aria-label="Your request">
                 {asked}
+              </div>
+            )}
+            {busy && shown && (
+              // Edge to edge, so a 300×250 banner fits the 320px panel.
+              <div className="-mx-3">
+                <DisplaySlot placement="design_wait" sizes={["300x250", "320x100", "320x50"]} label="" />
               </div>
             )}
             <AttachmentTray items={files.items} onRemove={busy ? () => {} : files.remove} small />
