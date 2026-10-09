@@ -302,3 +302,22 @@ export const campaigns = pgTable(
   },
   (t) => [index("campaigns_status").on(t.status)],
 );
+
+/** Pictures made in Images, kept as small WebP data URLs (made in the browser from the model's PNG). */
+export const images = pgTable(
+  "images",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    prompt: text("prompt").notNull(),
+    model: text("model").notNull(),
+    credits: integer("credits").notNull().default(0),
+    /** The job id it was paid with, so each paid job saves once. */
+    refId: text("ref_id").notNull(),
+    data: text("data").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("images_user").on(t.userId, t.createdAt), uniqueIndex("images_ref").on(t.refId)],
+);

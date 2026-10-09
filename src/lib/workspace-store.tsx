@@ -41,12 +41,16 @@ export type Job = {
   stop?: string;
   /** Files sent with the prompt. Their contents stay in memory only, for Ask again. */
   files?: Attachment[];
+  /** Pictures from Images: a small WebP to show and the model's original to download. */
+  pictures?: Picture[];
 };
+
+export type Picture = { url: string; original: string; originalType: string; savedId?: number | null };
 
 export type Recent = { id: number; title: string; tool: string; projectId: number | null };
 
-/** Text tools are connected to real models; the others are design samples for now. */
-export const isConnected = (tool: ToolId) => tool === "chat" || tool === "code";
+/** Tools that run real models inside the chat workspace (Design has its own editor). */
+export const isConnected = (tool: ToolId) => tool === "chat" || tool === "code" || tool === "images";
 
 type State = {
   /** The server balance, refreshed from /api/me and after every earn or spend. */
@@ -87,6 +91,7 @@ type Action =
   | { type: "finishJob"; id: string }
   | { type: "jobText"; id: string; text: string }
   | { type: "jobDone"; id: string; charged: number; stop: string }
+  | { type: "jobPictures"; id: string; pictures: Picture[]; caption: string; charged: number }
   | { type: "jobError"; id: string; message: string }
   | { type: "setSpot"; id: string; spot: SpotState }
   | { type: "account"; credits: number; floorUnlocked: boolean; usage: Usage; me?: State["me"]; providers?: Providers; toast?: string }
@@ -106,6 +111,30 @@ type Action =
 function sampleJob(tool: ToolId, id: string, modelName: string, credits: number): Job {
   return { id, tool, prompt: TOOLS[tool].sample, status: "done", modelName, credits, sample: true, startedAt: 0, spot: "idle" };
 }
+
+/** A picture made smaller for showing and keeping: WebP, longest side 1536 px. */
+async function toWebp(blob: Blob): Promise<Blob> {
+  const bmp = await createImageBitmap(blob);
+  const scale = Math.min(1, 1536 / Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close();
+  for (const q of [0.88, 0.75, 0.6]) {
+    const out = await new Promise<Blob | null>((r) => c.toBlob(r, "image/webp", q));
+    if (out && out.size < 1_100_000) return out;
+  }
+  return blob;
+}
+
+const blobToDataUrl = (b: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(b);
+  });
 
 const patchJob = (state: State, id: string, patch: (j: Job) => Partial<Job>): State => ({
   ...state,
@@ -129,7 +158,7 @@ const initialState: State = {
   settings: null,
   modelId: CHEAPEST_MODEL_ID,
   tool: "chat",
-  jobs: [sampleJob("design", "seed-design", "Sonnet 5.5", 4), sampleJob("images", "seed-images", IMAGE_MODEL_NAME, 3)],
+  jobs: [sampleJob("design", "seed-design", "Sonnet 5.5", 4)],
   conversationId: null,
   projectId: null,
   recents: null,
@@ -157,6 +186,8 @@ function reducer(state: State, action: Action): State {
       return patchJob(state, action.id, (j) => ({ text: (j.text ?? "") + action.text }));
     case "jobDone":
       return patchJob(state, action.id, () => ({ status: "done", credits: action.charged, stop: action.stop }));
+    case "jobPictures":
+      return patchJob(state, action.id, () => ({ status: "done", pictures: action.pictures, text: action.caption, credits: action.charged, stop: "end" }));
     case "jobError":
       return patchJob(state, action.id, () => ({ status: "error", error: action.message, credits: 0 }));
     case "setSpot":
@@ -355,6 +386,84 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     [refreshRecents],
   );
 
+  /** Makes one picture with /api/images, keeps a small WebP of it, and saves it to the person's images. */
+  const runImage = useCallback(async (id: string, prompt: string, files: Attachment[]) => {
+    const ctrl = new AbortController();
+    streams.current.set(id, ctrl);
+    const refresh = () =>
+      fetch("/api/me", { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((b) => {
+          const acct = b && accountFrom(b);
+          if (acct) dispatch(acct);
+        })
+        .catch(() => {});
+    try {
+      const r = await fetch("/api/images", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prompt, jobId: id, attachments: forSending(files.filter((f) => f.data || f.text)) }),
+        signal: ctrl.signal,
+      });
+      if (!r.ok) {
+        const b = await r.json().catch(() => ({}));
+        const acct = accountFrom(b);
+        if (acct) dispatch(acct);
+        if (b.reason === "credits" || b.reason === "day" || b.reason === "week")
+          return dispatch({ type: "dropJob", id, toast: b.reason === "credits" ? "Not enough credits for that. Watch a video to earn more" : "You've reached your limit for now" });
+        return dispatch({ type: "jobError", id, message: b.error ?? "Something went wrong making that image. Your credits were refunded." });
+      }
+      const model = r.headers.get("x-wanlly-model") ?? "gemini";
+      const charged = Number(r.headers.get("x-wanlly-price")) || 0;
+      type Part = { text?: string; thought?: boolean; inlineData?: { mimeType: string; data: string } };
+      const raw = (await r.json()) as { candidates?: { content?: { parts?: Part[] }; finishReason?: string }[]; promptFeedback?: { blockReason?: string } };
+      const parts = raw.candidates?.[0]?.content?.parts ?? [];
+      const caption = parts
+        .filter((p) => p.text && !p.thought)
+        .map((p) => p.text)
+        .join("\n")
+        .trim();
+      const found = parts.filter((p) => p.inlineData?.data);
+      if (!found.length) {
+        const why = raw.promptFeedback?.blockReason ?? raw.candidates?.[0]?.finishReason;
+        dispatch({
+          type: "jobError",
+          id,
+          message: `No image came back${why && why !== "STOP" ? ` (the model declined: ${why.toLowerCase().replace(/_/g, " ")})` : ""}. Your credits were refunded. Try describing it differently.${caption ? `\n\n${caption}` : ""}`,
+        });
+        return refresh();
+      }
+      const pictures: Picture[] = [];
+      for (const [i, p] of found.slice(0, 4).entries()) {
+        const original = await (await fetch(`data:${p.inlineData!.mimeType};base64,${p.inlineData!.data}`)).blob();
+        const small = await toWebp(original);
+        let savedId: number | null = null;
+        if (i === 0) {
+          const saved = await fetch("/api/images/save", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ jobId: id, prompt, model, data: await blobToDataUrl(small) }),
+          })
+            .then((x) => x.json())
+            .catch(() => ({}));
+          savedId = saved.id ?? null;
+          const acct = accountFrom(saved);
+          if (acct) dispatch(acct);
+        }
+        pictures.push({ url: URL.createObjectURL(small), original: URL.createObjectURL(original), originalType: original.type, savedId });
+      }
+      dispatch({ type: "jobPictures", id, pictures, caption, charged });
+      window.dispatchEvent(new Event("wanlly:break"));
+      window.dispatchEvent(new Event("wanlly:images"));
+    } catch (e) {
+      const stopped = e instanceof Error && e.name === "AbortError";
+      dispatch({ type: "jobError", id, message: stopped ? "Stopped. Your credits were refunded." : "Connection lost. If no image arrived, your credits were refunded." });
+      refresh();
+    } finally {
+      streams.current.delete(id);
+    }
+  }, []);
+
   const send = useCallback(
     (prompt: string, toolId: ToolId, files: Attachment[] = []) => {
       const s = live.current;
@@ -371,8 +480,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       dispatch({
         type: "addJob",
         cost,
-        job: { id, tool: toolId, prompt, status: "working", modelName: m.name, credits: cost, sample: false, startedAt: Date.now(), spot: "idle", text: "", files },
+        job: { id, tool: toolId, prompt, status: "working", modelName: toolId === "images" ? IMAGE_MODEL_NAME : m.name, credits: cost, sample: false, startedAt: Date.now(), spot: "idle", text: "", files },
       });
+      if (toolId === "images") return void runImage(id, prompt, files);
       run(id, {
         message: prompt,
         tool: toolId,
@@ -383,7 +493,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         attachments: forSending(files.filter((f) => f.data || f.text)),
       });
     },
-    [run],
+    [run, runImage],
   );
 
   const submit = useCallback(

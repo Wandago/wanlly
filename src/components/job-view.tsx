@@ -21,7 +21,7 @@ function Waiting({ job }: { job: Job }) {
   return (
     <div className="flex items-center gap-2.5 text-[13px] text-muted" role="status" aria-live="polite">
       <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
-      <span>{job.modelName} is {job.tool === "code" ? "working" : "thinking"}</span>
+      <span>{job.modelName} is {job.tool === "code" ? "working" : job.tool === "images" ? "drawing" : "thinking"}</span>
       <time className="font-mono text-xs text-faint tabular-nums">
         {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}
       </time>

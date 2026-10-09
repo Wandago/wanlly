@@ -121,14 +121,46 @@ function Placeholder({ seed, label }: { seed: number; label: string }) {
 }
 
 function ImagesResult({ job }: { job: Job }) {
-  const base = [...job.id].reduce((n, ch) => n + ch.charCodeAt(0), 0);
+  if (job.status === "error")
+    return (
+      <>
+        <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] whitespace-pre-wrap text-muted">{job.error}</p>
+        <Meta job={job} />
+      </>
+    );
+  if (job.sample || !job.pictures) {
+    const base = [...job.id].reduce((n, ch) => n + ch.charCodeAt(0), 0);
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+          {["Sunlit", "Moody", "Wide", "Close-up"].map((label, i) => (
+            <Placeholder key={label} seed={base + i} label={label} />
+          ))}
+        </div>
+        <Meta job={job} />
+      </>
+    );
+  }
+  const name = job.prompt.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "wanlly-image";
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
-        {["Sunlit", "Moody", "Wide", "Close-up"].map((label, i) => (
-          <Placeholder key={label} seed={base + i} label={label} />
+      <div className={`grid gap-2.5 ${job.pictures.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+        {job.pictures.map((p, i) => (
+          <figure key={p.url} className="group relative overflow-hidden rounded-2xl border border-line bg-code">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={p.url} alt={job.prompt || "Generated image"} className="block max-h-[70vh] w-full object-contain" />
+            <div className="absolute right-2 bottom-2 flex gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:focus-within:opacity-100">
+              <a href={p.original} download={`${name}${i ? `-${i + 1}` : ""}.${p.originalType.split("/")[1] ?? "png"}`} className="flex items-center gap-1 rounded-lg bg-black/65 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/80">
+                <Icon name="down" size={13} /> Full size
+              </a>
+              <a href={p.url} download={`${name}${i ? `-${i + 1}` : ""}.webp`} className="rounded-lg bg-black/65 px-2.5 py-1.5 text-xs font-medium text-white backdrop-blur-sm hover:bg-black/80">
+                WebP
+              </a>
+            </div>
+          </figure>
         ))}
       </div>
+      {job.text && <p className="text-[13px] text-muted">{job.text}</p>}
       <Meta job={job} />
     </>
   );

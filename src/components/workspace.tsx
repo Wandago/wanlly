@@ -10,6 +10,7 @@ import { JobView } from "./job-view";
 import { TopBar } from "./top-bar";
 import { DesignHome } from "./design-home";
 import { HomeBanner } from "./ads/home-banner";
+import { ImagesGallery } from "./images-gallery";
 import { CanvasProvider, ProjectCanvas, useCanvas } from "./project-canvas";
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
@@ -74,7 +75,15 @@ export function Workspace() {
             <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-[30px] pt-5 pb-3">
               {empty ? (
                 <h1 className="pt-2 text-center font-display text-[clamp(24px,3vw,30px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
-                  What are we <em className="text-accent not-italic">making</em> today?
+                  {tool === "images" ? (
+                    <>
+                      What should we <em className="text-accent not-italic">draw</em>?
+                    </>
+                  ) : (
+                    <>
+                      What are we <em className="text-accent not-italic">making</em> today?
+                    </>
+                  )}
                 </h1>
               ) : (
                 visible.map((job) => <JobView key={job.id} job={job} />)
@@ -86,6 +95,7 @@ export function Workspace() {
               {synced && !floorUnlocked && <UnlockCard />}
               <Composer showSuggestions={empty || tool !== "chat"} />
               {empty && <HomeBanner />}
+              {tool === "images" && <ImagesGallery />}
             </div>
           </div>
         </main>

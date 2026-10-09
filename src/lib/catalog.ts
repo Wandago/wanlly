@@ -67,7 +67,7 @@ export const CHEAPEST_MODEL_ID = "gemini-flash";
 export type Providers = { anthropic: boolean; google: boolean };
 /** Whether a model can run, given which providers have keys. */
 export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
-export const IMAGE_MODEL_NAME = "Wanlly Image";
+export const IMAGE_MODEL_NAME = "Gemini Image";
 /** Bonus credits for the first video each day (about $0.04). Every later video earns SPOT_REWARD. */
 export const FLOOR_CREDITS = 8;
 export const SPOT_REWARD = 4;
@@ -186,9 +186,10 @@ export const TOOLS: Record<ToolId, Tool> = {
     id: "images",
     label: "Images",
     placeholder: "Describe an image",
-    flatCredits: 3,
-    durationMs: 4800,
-    steps: ["Composing", "Rendering 4 images", "Upscaling"],
+    // A picture from Gemini's image model; covers its paid price (about $0.04) when that applies.
+    flatCredits: 5,
+    durationMs: 12000,
+    steps: ["Reading your idea", "Drawing", "Finishing"],
     suggestions: ["Mug on a sunlit counter, film grain", "Flat-lay of a desk setup"],
     sponsor: {
       name: "Printwell",

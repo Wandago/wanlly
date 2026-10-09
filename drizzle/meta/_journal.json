@@ -71,6 +71,13 @@
       "when": 1791542101590,
       "tag": "0009_campaign_frequency_cap",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791552529076,
+      "tag": "0010_images",
+      "breakpoints": true
     }
   ]
 }

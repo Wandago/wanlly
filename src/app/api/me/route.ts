@@ -43,6 +43,11 @@ export async function DELETE(req: Request) {
       await db().delete(schema.messages).where(inArray(schema.messages.conversationId, convos.map((c) => c.id)));
       await db().delete(schema.conversations).where(eq(schema.conversations.userId, userId));
     }
+    // Pictures made in Images too (the table exists once migration 0010 has run).
+    await db()
+      .delete(schema.images)
+      .where(eq(schema.images.userId, userId))
+      .catch(() => {});
     await db()
       .update(schema.users)
       .set({ status: "deleted", email: null, name: null, settings: {}, updatedAt: sql`now()` })

@@ -158,6 +158,67 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   yield { type: "done", inputTokens, outputTokens, stop };
 }
 
+// ---------------------------------------------------------------- Google images
+
+let imagePick: { models: string[]; at: number } | null = null;
+const IMAGE_FALLBACKS = ["gemini-2.5-flash-image", "gemini-2.0-flash-preview-image-generation"];
+
+/** Gemini models that draw pictures (Flash first: cheaper and faster), checked once an hour. */
+export async function geminiImageModels(key: string): Promise<string[]> {
+  if (process.env.GEMINI_IMAGE_MODEL) return [process.env.GEMINI_IMAGE_MODEL, ...IMAGE_FALLBACKS];
+  if (imagePick && Date.now() - imagePick.at < 3600_000) return imagePick.models;
+  let models = IMAGE_FALLBACKS;
+  try {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
+    if (r.ok) {
+      const { models: list = [] } = (await r.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
+      const found = list
+        .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+        .map((m) => m.name.replace(/^models\//, ""))
+        .filter((n) => /^gemini-[\d.]+-(flash|pro)(-preview)?-image/.test(n) && !/tts|live/.test(n))
+        .sort((a, b) => Number(b.includes("flash")) - Number(a.includes("flash")) || parseFloat(b.slice(7)) - parseFloat(a.slice(7)));
+      models = [...new Set([...found.slice(0, 3), ...IMAGE_FALLBACKS])];
+    }
+  } catch {}
+  imagePick = { models, at: Date.now() };
+  return models;
+}
+
+/**
+ * Asks Gemini for one picture. Returns the model's raw response, unread: an image response is
+ * several MB, and reading it here would cost more CPU than a Worker has. Busy or unavailable
+ * models are skipped for the next one.
+ */
+export async function requestImage(prompt: string, files: { mime: string; data: string }[], signal: AbortSignal): Promise<{ res: Response; model: string }> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new ProviderError("unavailable");
+  const body = JSON.stringify({
+    contents: [{ role: "user", parts: [...files.map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: prompt }] }],
+    generationConfig: { responseModalities: ["TEXT", "IMAGE"] },
+  });
+  let error: ProviderError | null = null;
+  for (const model of (await geminiImageModels(key)).slice(0, 4)) {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST",
+      signal,
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body,
+    });
+    if (res.ok && res.body) return { res, model };
+    const raw = await res.text().catch(() => "");
+    let message = raw.slice(0, 300);
+    try {
+      message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message ?? message;
+    } catch {}
+    console.error("gemini image error", model, res.status, message);
+    // A quota of 0 means this key's plan has no image generation (free tier): a billing matter.
+    const kind = /limit: 0|billing|prepayment/i.test(message) || res.status === 402 || res.status === 403 ? "unavailable" : RETRYABLE.has(res.status) ? "busy" : "failed";
+    error = new ProviderError(kind, `Google ${res.status} on ${model}: ${message}`);
+    if (!RETRYABLE.has(res.status) && res.status !== 404 && res.status !== 400) break;
+  }
+  throw error ?? new ProviderError("failed");
+}
+
 // ---------------------------------------------------------------- Anthropic
 
 let anthropic: Anthropic | null = null;
@@ -245,6 +306,17 @@ export async function checkProviders() {
       out.push({ provider, model, ok: !!text, detail: text ? `Replied: ${text.slice(0, 60)}` : "Empty reply", ms: Date.now() - t });
     } catch (e) {
       out.push({ provider, model, ok: false, detail: errorDetail(e), ms: Date.now() - t });
+    }
+  }
+  // Images: one small picture, measured by size only (an image comes back as hundreds of KB).
+  if (providers().google) {
+    const t = Date.now();
+    try {
+      const { res, model } = await requestImage("A small red circle on a plain white background.", [], AbortSignal.timeout(60_000));
+      const bytes = (await res.arrayBuffer()).byteLength;
+      out.push({ provider: "google images", model, ok: bytes > 20_000, detail: bytes > 20_000 ? `Made an image (${Math.round(bytes / 1024)} KB)` : "No image came back", ms: Date.now() - t });
+    } catch (e) {
+      out.push({ provider: "google images", model: (await geminiImageModels(process.env.GEMINI_API_KEY!)).join(" → "), ok: false, detail: errorDetail(e), ms: Date.now() - t });
     }
   }
   return out;
