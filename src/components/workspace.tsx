@@ -11,12 +11,11 @@ import { TopBar } from "./top-bar";
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
 function UnlockCard() {
-  const { dispatch } = useWorkspace();
   const [playing, setPlaying] = useState(false);
   return (
     <div className="animate-rise overflow-hidden rounded-[20px] border border-line bg-surface shadow-soft">
       {playing ? (
-        <RewardedSpot aspect="16:9" sponsor={SPOT_SPONSOR} maxHeight={300} onDone={() => dispatch({ type: "unlockFloor" })} />
+        <RewardedSpot aspect="16:9" sponsor={SPOT_SPONSOR} placement="unlock" maxHeight={300} onDone={() => setPlaying(false)} />
       ) : (
         <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:gap-5">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-accent-soft text-accent">
@@ -43,7 +42,7 @@ function UnlockCard() {
 }
 
 export function Workspace() {
-  const { jobs, tool, floorUnlocked } = useWorkspace();
+  const { jobs, tool, floorUnlocked, synced } = useWorkspace();
   const visible = jobs.filter((j) => j.tool === tool);
   const empty = visible.length === 0;
   const scroller = useRef<HTMLDivElement>(null);
@@ -70,7 +69,7 @@ export function Workspace() {
       </div>
       <div className={`px-4 pt-1.5 pb-[calc(14px+env(safe-area-inset-bottom,0px))] ${empty ? "mb-auto pb-[12vh]" : ""}`}>
         <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-3">
-          {!floorUnlocked && <UnlockCard />}
+          {synced && !floorUnlocked && <UnlockCard />}
           <Composer showSuggestions={empty || tool !== "chat"} />
         </div>
       </div>

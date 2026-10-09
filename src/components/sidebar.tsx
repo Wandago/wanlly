@@ -50,12 +50,12 @@ function Mark() {
 }
 
 function TodayCard() {
-  const { credits, floorUnlocked, dispatch } = useWorkspace();
+  const { credits, floorUnlocked, synced, dispatch } = useWorkspace();
   return (
     <div className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between">
         <span className="text-[13px] text-muted">Credits</span>
-        <b className="font-mono text-[13px] font-medium tabular-nums">{credits}</b>
+        <b className="font-mono text-[13px] font-medium tabular-nums">{synced ? credits : "–"}</b>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-hover">
         <i

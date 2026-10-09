@@ -77,26 +77,76 @@ export function VideoSpot({ aspect, sponsor, progress, maxHeight }: { aspect: Vi
   );
 }
 
-/** A spot that plays wherever it's mounted, then calls onDone once. */
-export function RewardedSpot({ aspect, sponsor, onDone, maxHeight }: { aspect: VideoAspect; sponsor: Sponsor; onDone: () => void; maxHeight?: number }) {
+export type Placement = "unlock" | "earn_dialog" | "gate" | "job_card";
+/** What the server paid for a finished video, or null when it paid nothing. */
+export type ViewResult = { earned: number; credits: number } | null;
+
+async function postJson(url: string, body: object) {
+  const r = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  return { ok: r.ok, body: await r.json().catch(() => ({})) };
+}
+
+/**
+ * A spot that plays wherever it's mounted, then calls onDone once. The server opens the view
+ * when it starts and pays for it when it ends, so credits can't be earned from the browser alone.
+ */
+export function RewardedSpot({
+  aspect,
+  sponsor,
+  placement,
+  onDone,
+  maxHeight,
+}: {
+  aspect: VideoAspect;
+  sponsor: Sponsor;
+  placement: Placement;
+  onDone: (result: ViewResult) => void;
+  maxHeight?: number;
+}) {
+  const { dispatch } = useWorkspace();
   const [progress, setProgress] = useState(0);
   const done = useRef(onDone);
+  const view = useRef<Promise<string | null> | null>(null);
   useEffect(() => {
     done.current = onDone;
   }, [onDone]);
 
   useEffect(() => {
+    // Once per mount, even when React runs effects twice in development.
+    view.current ??= postJson("/api/earn/start", { placement })
+      .then(({ ok, body }) => {
+        if (ok) return body.viewId as string;
+        dispatch({ type: "toast", text: body.error ?? "Couldn't start the video" });
+        return null;
+      })
+      .catch(() => null);
+    const pending = view.current;
     const start = Date.now();
     const iv = window.setInterval(() => {
       const f = Math.min(1, (Date.now() - start) / 1000 / SPOT_SECONDS);
       setProgress(f);
-      if (f >= 1) {
-        window.clearInterval(iv);
-        done.current();
-      }
+      if (f < 1) return;
+      window.clearInterval(iv);
+      pending
+        .then(async (viewId) => {
+          if (!viewId) return null;
+          const { ok, body } = await postJson("/api/earn/complete", { viewId });
+          if (!ok) {
+            dispatch({ type: "toast", text: body.error ?? "Couldn't add those credits" });
+            return null;
+          }
+          const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first video today" : ""}` : undefined;
+          dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, toast: text });
+          return body.earned ? { earned: body.earned as number, credits: body.credits as number } : null;
+        })
+        .catch(() => {
+          dispatch({ type: "toast", text: "You're offline. Those credits weren't added" });
+          return null;
+        })
+        .then((r) => done.current(r));
     }, 100);
     return () => window.clearInterval(iv);
-  }, []);
+  }, [placement, dispatch]);
 
   return <VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />;
 }
@@ -146,7 +196,7 @@ export function SponsorCard({
   spot: SpotState;
   spotAspect: VideoAspect;
   onWatch?: () => void;
-  onSpotDone?: () => void;
+  onSpotDone?: (result: ViewResult) => void;
   progress?: number;
 }) {
   if (spot === "playing") {
@@ -155,7 +205,7 @@ export function SponsorCard({
         {progress !== undefined ? (
           <VideoSpot aspect={spotAspect} sponsor={sponsor} progress={progress} />
         ) : (
-          <RewardedSpot aspect={spotAspect} sponsor={sponsor} onDone={() => onSpotDone?.()} />
+          <RewardedSpot aspect={spotAspect} sponsor={sponsor} placement="job_card" onDone={(r) => onSpotDone?.(r)} />
         )}
       </div>
     );

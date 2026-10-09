@@ -2,7 +2,7 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, type ReactNode } from "react";
-import { FLOOR_CREDITS, SPONSOR_TRIAL_REWARD, SPOT_REWARD, SPOT_SPONSOR } from "@/lib/catalog";
+import { FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { RewardedSpot } from "./ads/ad-slot";
@@ -71,8 +71,8 @@ export function EarnDialog() {
                 <RewardedSpot
                   aspect="16:9"
                   sponsor={SPOT_SPONSOR}
+                  placement="earn_dialog"
                   onDone={() => {
-                    dispatch(floorUnlocked ? { type: "earn", amount: SPOT_REWARD } : { type: "unlockFloor" });
                     setPlaying(null);
                     close();
                   }}
@@ -99,28 +99,19 @@ export function EarnDialog() {
                 icon="gift"
                 title="Try a sponsor's tool"
                 detail="Northbeam DB · create a free database"
-                gain={SPONSOR_TRIAL_REWARD}
-                onClick={() => {
-                  dispatch({ type: "earn", amount: SPONSOR_TRIAL_REWARD, note: "sponsor trial" });
-                  close();
-                }}
+                gain="Soon"
+                locked
               />
               <Option
                 icon="search"
                 title="Answer a short survey"
                 detail="Pays more than a video · credits arrive when the survey company confirms"
-                gain={30}
-                onClick={() => dispatch({ type: "toast", text: "Opens a survey. Credits arrive once it's confirmed" })}
+                gain="Soon"
+                locked
               />
-              <Option icon="flame" title="Daily streak · 3 of 5" detail="Two more days for a bonus Fable 5.1 answer" gain={10}>
-                <span className="mt-1.5 flex gap-1.5" aria-label="3 of 5 days">
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <i key={i} className={`h-[5px] flex-1 rounded-full ${i < 3 ? "bg-accent" : "bg-hover"}`} />
-                  ))}
-                </span>
-              </Option>
+              <Option icon="flame" title="Daily streak" detail="Watch on five days in a row for a bonus Fable 5.1 answer" gain="Soon" locked />
               <p className="border-t border-line pt-3 text-xs text-faint">
-                Sponsors never appear inside an answer and never change what a model says. Rewards follow what each video pays where you are.
+                Sponsors never appear inside an answer and never change what a model says.
               </p>
             </>
           )}

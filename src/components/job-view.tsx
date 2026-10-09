@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SPOT_REWARD, TOOLS } from "@/lib/catalog";
+import { TOOLS } from "@/lib/catalog";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
@@ -62,10 +62,7 @@ export function JobView({ job }: { job: Job }) {
           spotAspect={spotAspect}
           spot={job.spot}
           onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
-          onSpotDone={() => {
-            dispatch({ type: "setSpot", id: job.id, spot: "earned" });
-            dispatch({ type: "earn", amount: SPOT_REWARD, note: "thanks for watching" });
-          }}
+          onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
         />
       ) : (
         <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />

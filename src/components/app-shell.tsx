@@ -29,6 +29,7 @@ function Toast() {
  */
 function AccountSync() {
   const { isLoaded, isSignedIn, userId } = useAuth();
+  const { dispatch } = useWorkspace();
   const router = useRouter();
   // Signed-out visitors go to sign-in. Data is protected on the server; this just keeps the UI honest.
   useEffect(() => {
@@ -37,9 +38,13 @@ function AccountSync() {
   useEffect(() => {
     if (!isSignedIn) return;
     fetch("/api/me", { cache: "no-store" })
-      .then((r) => (r.ok ? null : r.json().then((b) => console.warn("Account sync:", r.status, b?.error))))
+      .then(async (r) => {
+        const b = await r.json().catch(() => ({}));
+        if (r.ok) dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked });
+        else console.warn("Account sync:", r.status, b?.error);
+      })
       .catch(() => console.warn("Account sync: network error"));
-  }, [isSignedIn, userId]);
+  }, [isSignedIn, userId, dispatch]);
   return null;
 }
 

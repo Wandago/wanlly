@@ -30,11 +30,9 @@ function Gate() {
           <RewardedSpot
             aspect="16:9"
             sponsor={SPOT_SPONSOR}
+            placement="gate"
             maxHeight={220}
-            onDone={() => {
-              dispatch(floorUnlocked ? { type: "earn", amount: SPOT_REWARD } : { type: "unlockFloor" });
-              setPhase(credits + gain >= price ? "ready" : "offer");
-            }}
+            onDone={(r) => setPhase(r && r.credits >= price ? "ready" : "offer")}
           />
         </div>
       ) : phase === "ready" ? (

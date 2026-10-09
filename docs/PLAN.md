@@ -54,6 +54,13 @@ Decided (October 2026): keep it simple for users. **Watch short sponsor videos, 
 - **Other ways to earn:** short surveys, sponsor trials, referrals, the student bonus.
 - **No user-facing pool, no "watch for others", no per-country promises.** Users never need to understand rates by country. Behind the scenes, Wanlly can still top up low-rate regions from revenue already received, under the global safety cap, but that's an internal lever, not a feature.
 
+**How it works today (built):** balances live in the ledger in Neon, never in the browser.
+- `POST /api/earn/start` opens a view and returns a one-time id; `POST /api/earn/complete` pays for it only if the same person finishes it after the full video length, within 10 minutes, once. The first paid video of the UTC day gets the 8-credit bonus; every other gets 4.
+- Limits: 30 paid videos a day, 4 video starts a minute.
+- `POST /api/spend` prices the job from the catalog on the server and takes the credits only if the balance covers it, with a per-person lock so simultaneous jobs can't overspend.
+- Surveys, sponsor trials and streaks show as "Soon" until a partner can confirm them server to server.
+- When a real ad network is connected, its signed server callback replaces `earn/complete` as the thing that pays.
+
 ## Student-friendly advertisers
 
 Students and early-career creators are an audience advertisers want and pay extra to reach. Wanlly sells to them directly once it has numbers.

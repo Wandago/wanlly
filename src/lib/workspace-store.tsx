@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 import {
-  FLOOR_CREDITS,
   IMAGE_MODEL_NAME,
   TOOLS,
   getModel,
@@ -10,7 +9,7 @@ import {
   type ToolId,
 } from "./catalog";
 
-/* Front-end only: jobs are simulated with timers until the backend lands (Phase 3). */
+/* Credits live on the server (the ledger). Job results are still simulated with timers until chat is connected. */
 
 export type SpotState = "idle" | "playing" | "earned";
 
@@ -27,9 +26,12 @@ export type Job = {
 };
 
 type State = {
+  /** The server balance, refreshed from /api/me and after every earn or spend. */
   credits: number;
-  /** Today's community floor. Locked until the first video of the day. */
+  /** Whether today's first-video bonus has been claimed. */
   floorUnlocked: boolean;
+  /** False until the first balance arrives from the server. */
+  synced: boolean;
   modelId: string;
   tool: ToolId;
   jobs: Job[];
@@ -48,8 +50,8 @@ type Action =
   | { type: "addJob"; job: Job; cost: number }
   | { type: "finishJob"; id: string }
   | { type: "setSpot"; id: string; spot: SpotState }
-  | { type: "earn"; amount: number; note?: string }
-  | { type: "unlockFloor" }
+  | { type: "account"; credits: number; floorUnlocked: boolean; toast?: string }
+  | { type: "dropJob"; id: string; toast: string }
   | { type: "openGate"; needed: number }
   | { type: "closeGate" }
   | { type: "setEarnOpen"; open: boolean }
@@ -73,10 +75,11 @@ function sampleJob(tool: ToolId, id: string, modelName: string, credits: number)
   };
 }
 
-/** No free credits: everyone starts at zero and unlocks the day with one video. */
+/** No free credits: everyone starts at zero and earns by watching sponsor videos. */
 const initialState: State = {
   credits: 0,
   floorUnlocked: false,
+  synced: false,
   modelId: "haiku",
   tool: "chat",
   jobs: [
@@ -113,23 +116,22 @@ function reducer(state: State, action: Action): State {
       return { ...state, jobs: state.jobs.map((j) => (j.id === action.id ? { ...j, status: "done" } : j)) };
     case "setSpot":
       return { ...state, jobs: state.jobs.map((j) => (j.id === action.id ? { ...j, spot: action.spot } : j)) };
-    case "earn":
+    case "account":
       return {
         ...state,
-        credits: state.credits + action.amount,
-        toast: { id: state.nextId, text: `+${action.amount} credits${action.note ? ` · ${action.note}` : ""}` },
+        credits: action.credits,
+        floorUnlocked: action.floorUnlocked,
+        synced: true,
+        toast: action.toast ? { id: state.nextId, text: action.toast } : state.toast,
         nextId: state.nextId + 1,
       };
-    case "unlockFloor":
-      return state.floorUnlocked
-        ? state
-        : {
-            ...state,
-            floorUnlocked: true,
-            credits: state.credits + FLOOR_CREDITS,
-            toast: { id: state.nextId, text: `Today's floor unlocked · +${FLOOR_CREDITS} credits` },
-            nextId: state.nextId + 1,
-          };
+    case "dropJob":
+      return {
+        ...state,
+        jobs: state.jobs.filter((j) => j.id !== action.id),
+        toast: { id: state.nextId, text: action.toast },
+        nextId: state.nextId + 1,
+      };
     case "openGate":
       return { ...state, gate: { needed: action.needed } };
     case "closeGate":
@@ -184,14 +186,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "openGate", needed: price });
       return;
     }
-    const id = `job-${state.nextId}`;
+    const id = `job-${crypto.randomUUID()}`;
     dispatch({
       type: "addJob",
       cost: price,
       job: { id, tool: state.tool, prompt, status: "working", modelName, credits: price, sample: false, startedAt: Date.now(), spot: "idle" },
     });
+    // Charged on the server; the balance shown above is corrected from its answer.
+    fetch("/api/spend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tool: state.tool, modelId: state.modelId, jobId: id }) })
+      .then(async (r) => {
+        const b = await r.json().catch(() => ({}));
+        if (r.ok) return dispatch({ type: "account", credits: b.credits, floorUnlocked: state.floorUnlocked });
+        dispatch({ type: "dropJob", id, toast: r.status === 402 ? "Not enough credits for that. Watch a video to earn more" : "Couldn't start that. Try again" });
+        if (typeof b.credits === "number") dispatch({ type: "account", credits: b.credits, floorUnlocked: state.floorUnlocked });
+      })
+      .catch(() => dispatch({ type: "dropJob", id, toast: "You're offline. Try again" }));
     timers.current.push(window.setTimeout(() => dispatch({ type: "finishJob", id }), tool.durationMs));
-  }, [state.draft, state.credits, state.nextId, state.tool, price, modelName, tool.durationMs]);
+  }, [state.draft, state.credits, state.floorUnlocked, state.modelId, state.tool, price, modelName, tool.durationMs]);
 
   useEffect(() => {
     const pending = timers.current;
