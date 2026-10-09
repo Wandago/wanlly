@@ -568,8 +568,18 @@ export function DesignEditor({ id }: { id: number }) {
             </div>
           )}
           {editing && (
-            <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-1 pl-3.5 text-xs shadow-soft">
-              <span className="text-muted max-sm:hidden">{editReady ? "Editing · click any text to change it" : editStuck ? "This page didn't respond." : "Turning on editing…"}</span>
+            <div className="absolute top-3 left-1/2 z-10 flex max-w-[calc(100%-16px)] -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-1 pl-3.5 text-xs whitespace-nowrap shadow-soft">
+              <span className="min-w-0 truncate text-muted max-sm:hidden">
+                {editReady ? (
+                  <>
+                    Editing<span className="max-xl:hidden"> · click any text to change it</span>
+                  </>
+                ) : editStuck ? (
+                  "This page didn't respond."
+                ) : (
+                  "Turning on editing…"
+                )}
+              </span>
               {editStuck && !editReady && (
                 <button
                   type="button"
@@ -586,7 +596,11 @@ export function DesignEditor({ id }: { id: number }) {
                 Cancel
               </button>
               <button type="button" onClick={saveEdit} className="rounded-full bg-fg px-3 py-1 font-semibold text-bg disabled:opacity-60" disabled={!!working || !editReady}>
-                {working || "Save as new version"}
+                {working || (
+                  <>
+                    Save<span className="max-xl:hidden"> as new version</span>
+                  </>
+                )}
               </button>
             </div>
           )}

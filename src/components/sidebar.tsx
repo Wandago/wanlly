@@ -57,7 +57,9 @@ function useFolded(): [boolean, (v: boolean) => void] {
     },
     () => {
       try {
-        return localStorage.getItem(CARD_KEY) === "folded";
+        const saved = localStorage.getItem(CARD_KEY);
+        // No choice yet: folded on short screens (laptops at 125-150% zoom), so Recents stay visible.
+        return saved ? saved === "folded" : window.innerHeight < 800;
       } catch {
         return false;
       }

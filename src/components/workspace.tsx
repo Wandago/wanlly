@@ -94,13 +94,16 @@ export function Workspace() {
   );
 }
 
-/** Chat on the left and, when a preview is open, the canvas beside it (over it on phones). */
+/**
+ * Chat on the left and, when a preview is open, the canvas beside it on wide screens (1536px+).
+ * On laptops it opens over the chat, so neither is squeezed; on phones it fills the screen.
+ */
 function WithCanvas({ children }: { children: ReactNode }) {
   const canvas = useCanvas();
   const { jobs, tool } = useWorkspace();
   const shown = !!canvas?.openId && jobs.some((j) => j.id === canvas.openId && j.tool === tool);
   return (
-    <div className={`grid h-full min-h-0 min-w-0 ${shown ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : "grid-cols-1"}`}>
+    <div className={`relative grid h-full min-h-0 min-w-0 ${shown ? "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : "grid-cols-1"}`}>
       {children}
       {shown && <ProjectCanvas />}
     </div>

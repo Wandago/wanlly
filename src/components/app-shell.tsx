@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
@@ -97,16 +97,20 @@ function PhoneBanner() {
 
 /**
  * Every signed-in page: sidebar on the left, the page in the middle, and a sponsor panel on the
- * right from 1280px. The panels are part of the layout, so ads never cover or push the work.
+ * right from 1280px. The design editor needs the width for its preview, so there the panel waits
+ * for 1536px screens. The panels are part of the layout, so ads never cover or push the work.
  */
 export function AppShell({ children }: { children: ReactNode }) {
+  const roomy = usePathname().startsWith("/design/");
   return (
     <WorkspaceProvider>
       <AdsProvider>
-        <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 xl:grid-cols-[240px_minmax(0,1fr)_344px]">
+        <div
+          className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[240px_minmax(0,1fr)_344px]" : "xl:grid-cols-[240px_minmax(0,1fr)_344px]"}`}
+        >
           <Sidebar />
           <div className="min-h-0 min-w-0">{children}</div>
-          <AdRail />
+          <AdRail wideOnly={roomy} />
           <PhoneBanner />
         </div>
         <EarnDialog />

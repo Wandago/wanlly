@@ -155,7 +155,7 @@ function EarnMini() {
 }
 
 /** Right side panel, on every page from 1280px wide. Always running, refreshed while visible. */
-export function AdRail() {
+export function AdRail({ wideOnly = false }: { wideOnly?: boolean }) {
   const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
   // Who gets each slot: a sold campaign booked for it always shows; otherwise the ad network;
@@ -167,7 +167,7 @@ export function AdRail() {
   const has = (s: NetworkSize) => !!network?.sizes.includes(s);
   const bannerSize: NetworkSize | null = tall && has("300x600") ? "300x600" : has("300x250") ? "300x250" : null;
   return (
-    <aside aria-label="Sponsored" className="hidden min-h-0 border-l border-line bg-side xl:block">
+    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
         {network && has("300x250") && !top.campaignId && turn % 2 === 1 ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
         <div className="hidden [@media(min-height:860px)]:block">

@@ -155,7 +155,7 @@ export function ProjectCanvas() {
     </button>
   );
   return (
-    <section aria-label={`${project.title} preview`} className="flex min-h-0 min-w-0 flex-col border-line bg-side max-lg:fixed max-lg:inset-0 max-lg:z-40 lg:border-l">
+    <section aria-label={`${project.title} preview`} className="flex min-h-0 min-w-0 flex-col border-line bg-side max-md:fixed max-md:inset-0 max-md:z-40 md:max-2xl:absolute md:max-2xl:inset-0 md:max-2xl:z-30 2xl:border-l">
       <header className="flex items-center gap-2 border-b border-line px-3 py-2">
         <b className="min-w-0 flex-1 truncate text-[14px] font-semibold">{project.title}</b>
         <div className="flex rounded-[10px] bg-hover p-0.5">
