@@ -1,5 +1,6 @@
 "use client";
 
+import { SpinMark } from "./spin-mark";
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
@@ -21,28 +22,7 @@ const PAGES: { href: string; label: string; icon: IconName }[] = [
 const row = "flex min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px]";
 
 function Mark() {
-  // The app icon (public/brand/wanlly-app-icon.svg), drawn inline so it follows the theme.
-  return (
-    <svg viewBox="0 0 64 64" className="size-[22px]" aria-hidden="true">
-      <defs>
-        <mask id="sidebar-node" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
-          <rect width="64" height="64" fill="#fff" />
-          <circle cx="32" cy="26" r="8.8" fill="#000" />
-        </mask>
-      </defs>
-      <rect width="64" height="64" rx="16" className="fill-fg" />
-      <path
-        d="M11 21 L21 44 L32 26 L43 44 L53 21"
-        mask="url(#sidebar-node)"
-        fill="none"
-        strokeWidth={6.5}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="stroke-bg"
-      />
-      <circle cx="32" cy="26" r="6.2" className="fill-accent" />
-    </svg>
-  );
+  return <SpinMark size={22} tile />;
 }
 
 const CARD_KEY = "wanlly-credits-card";
