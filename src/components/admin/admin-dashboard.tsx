@@ -172,6 +172,7 @@ export function AdminDashboard() {
         <header className="flex flex-wrap items-center gap-3">
           <h1 className="font-display text-[26px] font-semibold tracking-[-0.02em]">Admin</h1>
           <span className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-xs text-muted">Sample data · design preview</span>
+          <a href="/admin" className="text-[13px] text-muted underline underline-offset-2 hover:text-fg">Back to the real admin</a>
           <div className="ml-auto flex gap-0.5 rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Date range">
             {([7, 30] as const).map((r) => (
               <button

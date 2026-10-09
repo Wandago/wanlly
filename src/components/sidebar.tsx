@@ -123,7 +123,7 @@ function Account({ onNavigate, active }: { onNavigate: () => void; active: boole
 }
 
 export function Sidebar() {
-  const { sidebarOpen, tool, dispatch } = useWorkspace();
+  const { sidebarOpen, tool, me, dispatch } = useWorkspace();
   const path = usePathname();
   const close = () => dispatch({ type: "setSidebar", open: false });
 
@@ -179,6 +179,12 @@ export function Sidebar() {
               </Link>
             );
           })}
+          {me?.role && me.role !== "user" && (
+            <Link href="/admin" onClick={close} className={`${row} text-muted hover:bg-hover hover:text-fg`}>
+              <Icon name="shield" size={16} />
+              Admin
+            </Link>
+          )}
         </nav>
 
         <div className="px-2.5 pt-3 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Recent</div>

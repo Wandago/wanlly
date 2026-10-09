@@ -1,3 +1,4 @@
+import { blockedReason } from "@/lib/admin";
 import { completeView } from "@/lib/earn";
 import { smallJson, field } from "@/lib/forms";
 import { account } from "@/lib/ledger";
@@ -7,6 +8,8 @@ import { signedInUserId } from "@/lib/session";
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const blocked = await blockedReason(userId).catch(() => null);
+  if (blocked) return Response.json({ error: blocked }, { status: 403 });
   const data = await smallJson(req);
   const viewId = data ? field(data, "viewId", 64) : "";
   if (!viewId) return Response.json({ error: "Bad request" }, { status: 400 });

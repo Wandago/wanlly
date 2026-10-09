@@ -10,7 +10,7 @@ export async function GET(req: Request) {
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
     const user = await ensureUser(userId, req.headers.get("cf-ipcountry"));
-    return Response.json({ id: user.id, country: user.country, status: user.status, ...(await account(user.id)) });
+    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, ...(await account(user.id)) });
   } catch (e) {
     console.error("api/me failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });

@@ -149,6 +149,8 @@ export const betaApplications = pgTable(
     inviteCode: text("invite_code").notNull(),
     networkCountry: text("network_country"),
     status: text("status", { enum: ["pending", "approved", "declined"] }).notNull().default("pending"),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: text("reviewed_by"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("beta_email").on(t.email), uniqueIndex("beta_invite_code").on(t.inviteCode)],
@@ -162,5 +164,20 @@ export const contactMessages = pgTable("contact_messages", {
   topic: text("topic").notNull(),
   message: text("message").notNull(),
   networkCountry: text("network_country"),
+  handledAt: timestamp("handled_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Every change made from the admin page: who did what to whom, and why. Never edited. */
+export const adminActions = pgTable(
+  "admin_actions",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    actorId: text("actor_id").notNull(),
+    action: text("action").notNull(),
+    target: text("target").notNull(),
+    detail: jsonb("detail").notNull().default({}),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("admin_actions_time").on(t.createdAt)],
+);

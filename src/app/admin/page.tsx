@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { AdminDashboard } from "@/components/admin/admin-dashboard";
+import { AdminConsole } from "@/components/admin/admin-console";
 
 export const metadata: Metadata = {
   title: "Admin · Wanlly",
   robots: { index: false },
 };
 
-// Design preview with sample data. Sign-in and role checks arrive with Clerk (Step 2).
+// Signed-in staff only: every request behind this page checks the person's role on the server.
 export default function AdminPage() {
-  return <AdminDashboard />;
+  return <AdminConsole />;
 }

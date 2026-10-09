@@ -37,7 +37,7 @@ type State = {
   /** Spending against the daily and weekly limits. Null until synced. */
   usage: Usage | null;
   /** Network country and account status, from /api/me. */
-  me: { country: string | null; status: string } | null;
+  me: { country: string | null; status: string; role?: string } | null;
   /** Profile preferences from the server. Null until loaded. */
   settings: Settings | null;
   modelId: string;
