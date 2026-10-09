@@ -2,10 +2,11 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
-import { SPOT_REWARD, SPOT_SECONDS, type Sponsor } from "@/lib/catalog";
+import { SPOT_REWARD, SPOT_SECONDS, SPOT_SPONSOR, type Sponsor } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { openSponsor, useNetwork } from "@/lib/ads-context";
 import { Icon } from "../icon";
+import { Cover } from "./cover";
 import { DisplayCreative, VideoFrame, useWidth } from "./creatives";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { NetworkUnit } from "./network-unit";
@@ -25,6 +26,27 @@ function Logo({ sponsor, small = false }: { sponsor: Sponsor; small?: boolean })
   );
 }
 
+/** The campaign's picture; tapping it opens their link like the button does. */
+function CoverLink({ sponsor }: { sponsor: Sponsor }) {
+  const { dispatch } = useWorkspace();
+  return (
+    <button
+      type="button"
+      aria-label={`${sponsor.name}: ${sponsor.cta}`}
+      onClick={() => openSponsor(sponsor, "job_card") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+      className="block shrink-0 overflow-hidden sm:w-[42%] sm:max-w-[300px]"
+    >
+      {sponsor.image ? (
+        // Their whole picture, never cropped; the brand colour fills any gap.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={sponsor.image} alt="" className="block h-auto w-full sm:h-full sm:min-h-[150px] sm:object-contain" style={{ background: sponsor.color }} />
+      ) : (
+        <Cover sponsor={sponsor} className="h-full sm:aspect-auto sm:min-h-[150px]" />
+      )}
+    </button>
+  );
+}
+
 /** Placeholder for the sponsor's link until real ad sources are wired up. */
 function SponsorLink({ sponsor, className }: { sponsor: Sponsor; className: string }) {
   const { dispatch } = useWorkspace();
@@ -35,7 +57,7 @@ function SponsorLink({ sponsor, className }: { sponsor: Sponsor; className: stri
   );
 }
 
-export function WatchButton({ onClick, earned = false, className = "" }: { onClick?: () => void; earned?: boolean; className?: string }) {
+export function WatchButton({ onClick, earned = false, className = "", generic = false }: { onClick?: () => void; earned?: boolean; className?: string; generic?: boolean }) {
   return (
     <button
       type="button"
@@ -51,7 +73,7 @@ export function WatchButton({ onClick, earned = false, className = "" }: { onCli
       ) : (
         <>
           <Icon name="play" size={15} />
-          Watch 20s <span className="font-mono font-medium text-accent">+{SPOT_REWARD}</span>
+          {generic ? "Watch a video" : "Watch 20s"} <span className="font-mono font-medium text-accent">+{SPOT_REWARD}</span>
         </>
       )}
     </button>
@@ -222,13 +244,17 @@ export function SponsorCard({
   onSpotDone?: (result: ViewResult) => void;
   progress?: number;
 }) {
+  // Sold campaigns bring a picture, not a video: their card shows the picture, and Watch plays
+  // one of Wanlly's own videos so it never looks like the advertiser's.
+  const sold = !!sponsor.campaignId;
   if (spot === "playing") {
+    const video = sold ? SPOT_SPONSOR : sponsor;
     return (
       <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface">
         {progress !== undefined ? (
-          <VideoSpot aspect={spotAspect} sponsor={sponsor} progress={progress} />
+          <VideoSpot aspect={spotAspect} sponsor={video} progress={progress} />
         ) : (
-          <RewardedSpot aspect={spotAspect} sponsor={sponsor} placement="job_card" onDone={(r) => onSpotDone?.(r)} />
+          <RewardedSpot aspect={spotAspect} sponsor={video} placement="job_card" onDone={(r) => onSpotDone?.(r)} />
         )}
       </div>
     );
@@ -236,7 +262,20 @@ export function SponsorCard({
 
   return (
     <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface">
-      {format === "native" ? (
+      {sold ? (
+        <div className="flex flex-col sm:flex-row">
+          <CoverLink sponsor={sponsor} />
+          <div className="flex min-w-0 flex-col gap-1 p-3.5">
+            <span className={eyebrow}>While you wait · Sponsored</span>
+            <div className="flex items-center gap-2">
+              <Logo sponsor={sponsor} small />
+              <b className="text-[13px] font-semibold">{sponsor.name}</b>
+            </div>
+            <h3 className="font-display text-[16px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
+            {sponsor.text && <p className="text-[13px] text-muted">{sponsor.text}</p>}
+          </div>
+        </div>
+      ) : format === "native" ? (
         <div className="flex items-start gap-3 p-3.5">
           <Logo sponsor={sponsor} />
           <div className="flex min-w-0 flex-col gap-0.5">
@@ -254,13 +293,13 @@ export function SponsorCard({
         </div>
       )}
       <div className="flex flex-wrap items-center gap-2 border-t border-line px-3.5 py-2.5">
-        {format === "native" && (
+        {(format === "native" || sold) && (
           <SponsorLink
             sponsor={sponsor}
             className="rounded-[9px] border border-line bg-surface px-[11px] py-[7px] text-[13px] font-medium hover:border-faint"
           />
         )}
-        <WatchButton onClick={onWatch} earned={spot === "earned"} className="ml-auto" />
+        <WatchButton onClick={onWatch} earned={spot === "earned"} generic={sold} className="ml-auto" />
       </div>
     </div>
   );

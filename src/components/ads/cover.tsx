@@ -136,7 +136,7 @@ export function Cover({ sponsor, className = "" }: { sponsor: Sponsor; className
   const [failed, setFailed] = useState<string | null>(null);
   if (sponsor.image && failed !== sponsor.image)
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={sponsor.image} alt="" onError={() => setFailed(sponsor.image ?? null)} className={`block aspect-video w-full bg-code object-cover ${className}`} />;
+    return <img src={sponsor.image} alt="" onError={() => setFailed(sponsor.image ?? null)} className={`block aspect-video w-full object-contain ${className}`} style={{ background: sponsor.color }} />;
   const c = sponsor.color;
   const id = `cv-${sponsor.name.replace(/\W/g, "")}`;
   return (
