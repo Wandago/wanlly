@@ -50,7 +50,7 @@ function Option({
 /** Account-level earning. Jobs use the inline slot on their working card instead. */
 export function EarnDialog() {
   const { earnOpen, floorUnlocked, dispatch } = useWorkspace();
-  const [playing, setPlaying] = useState<null | "self" | "pool">(null);
+  const [playing, setPlaying] = useState<null | "self">(null);
   const close = () => dispatch({ type: "setEarnOpen", open: false });
 
   return (
@@ -72,8 +72,7 @@ export function EarnDialog() {
                   aspect="16:9"
                   sponsor={SPOT_SPONSOR}
                   onDone={() => {
-                    if (playing === "pool") dispatch({ type: "toast", text: "Thank you. Your video went to the community pool" });
-                    else dispatch(floorUnlocked ? { type: "earn", amount: SPOT_REWARD } : { type: "unlockFloor" });
+                    dispatch(floorUnlocked ? { type: "earn", amount: SPOT_REWARD } : { type: "unlockFloor" });
                     setPlaying(null);
                     close();
                   }}
@@ -113,7 +112,6 @@ export function EarnDialog() {
                 gain={30}
                 onClick={() => dispatch({ type: "toast", text: "Opens a survey. Credits arrive once it's confirmed" })}
               />
-              <Option icon="users" title="Watch to fund a creator" detail="Your video goes to the community pool. 4,200 builds funded this month" gain="Pool" onClick={() => setPlaying("pool")} />
               <Option icon="flame" title="Daily streak · 3 of 5" detail="Two more days for a bonus Fable 5.1 answer" gain={10}>
                 <span className="mt-1.5 flex gap-1.5" aria-label="3 of 5 days">
                   {[0, 1, 2, 3, 4].map((i) => (

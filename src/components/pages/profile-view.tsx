@@ -189,7 +189,7 @@ export function ProfileView() {
             </div>
           </Panel>
 
-          <Panel title="Credits and standing" note="Credits are the only limit. Every one was paid for by an ad or the community pool.">
+          <Panel title="Credits and standing" note="Credits are the only limit. Every one was paid for by a sponsor.">
             <div id="credits" className="grid gap-3 sm:grid-cols-3">
               {[
                 ["Balance", `${credits} credits`],
@@ -229,9 +229,6 @@ export function ProfileView() {
                 })}
               </div>
             </div>
-            <Field label="Extra videos go to">
-              <Seg label="Extra videos go to" options={["My credits", "Community pool"]} initial="My credits" />
-            </Field>
             <div className="border-t border-line pt-3">
               <Switch label="Personalised ads" detail="Use your topics and country to pick ads. Off means only ads matched to the page." initial />
               <Switch label="Sound on for videos" detail="Videos start muted unless you turn this on." />

@@ -44,7 +44,7 @@ function ChatResult({ job }: { job: Job }) {
       <ol className="flex list-decimal flex-col gap-1 pl-5">
         <li>No free credits: one video a day unlocks a small floor that&apos;s the same for everyone.</li>
         <li>Opt-in sponsor videos that top up credits for bigger models.</li>
-        <li>A community pool, funded by higher-paying regions, that keeps the floor fair everywhere.</li>
+        <li>The same small floor for everyone, wherever they live.</li>
       </ol>
       <pre className={pre}>
         <span className="text-faint">{"// credits are integer half-cents"}</span>

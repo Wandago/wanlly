@@ -25,7 +25,7 @@ function UnlockCard() {
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <b className="font-display text-base font-semibold tracking-[-0.01em]">Start today with one video</b>
             <p className="text-[13px] text-muted">
-              Watch 20 seconds to unlock today&apos;s floor: {FLOOR_CREDITS} credits, about an hour of Haiku. Everyone gets the same floor, wherever they live.
+              Watch 20 seconds to unlock today&apos;s floor: {FLOOR_CREDITS} credits, about 30 minutes of building with a fast model. Everyone gets the same floor, wherever they live.
             </p>
           </div>
           <button

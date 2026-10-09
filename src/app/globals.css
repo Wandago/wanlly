@@ -114,38 +114,8 @@ button:not(:disabled) {
   }
 }
 
-/* Landing page motion. Every element is fully visible at rest; motion only adds drift and polish. */
-@keyframes aurora-a {
-  0%, 100% { transform: translate3d(-8%, -6%, 0) scale(1); }
-  50% { transform: translate3d(10%, 8%, 0) scale(1.15); }
-}
-@keyframes aurora-b {
-  0%, 100% { transform: translate3d(8%, 4%, 0) scale(1.1); }
-  50% { transform: translate3d(-10%, -8%, 0) scale(0.95); }
-}
-@keyframes float-y {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes marquee {
-  to { transform: translateX(-50%); }
-}
+/* Landing page motion: a short rise on load. Everything is fully visible at rest. */
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(10px); }
 }
-@keyframes shimmer {
-  to { background-position: 200% center; }
-}
-.anim-aurora-a { animation: aurora-a 18s ease-in-out infinite; }
-.anim-aurora-b { animation: aurora-b 22s ease-in-out infinite; }
-.anim-float { animation: float-y 6s ease-in-out infinite; }
-.anim-marquee { animation: marquee 40s linear infinite; }
-.anim-rise { animation: rise-in 0.8s cubic-bezier(.2,.8,.2,1) both; }
-.text-shimmer {
-  background: linear-gradient(90deg, #ff8a5c, #ffd3bd, #b9a6ff, #ff8a5c);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: shimmer 8s linear infinite;
-}
+.anim-rise { animation: rise-in 0.6s cubic-bezier(.2,.8,.2,1) both; }

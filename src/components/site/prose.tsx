@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 export function ProsePage({ eyebrow, title, intro, children }: { eyebrow: string; title: string; intro?: string; children: ReactNode }) {
   return (
     <>
-      <section className="relative isolate overflow-hidden border-b border-line bg-side">
-        <div aria-hidden="true" className="anim-aurora-a absolute -top-1/2 right-0 -z-10 h-[200%] w-1/2 rounded-full bg-[radial-gradient(closest-side,var(--accent-soft),transparent)] blur-2xl" />
+      <section className="border-b border-line bg-side">
         <div className="mx-auto flex max-w-[760px] flex-col gap-3 px-4 py-16 sm:px-6">
           <span className="text-xs font-medium tracking-[0.08em] text-accent uppercase">{eyebrow}</span>
           <h1 className="font-display text-[clamp(30px,4.4vw,46px)] leading-[1.05] font-semibold tracking-[-0.035em] text-balance">{title}</h1>

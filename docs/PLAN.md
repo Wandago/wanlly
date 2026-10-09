@@ -22,7 +22,7 @@ Wanlly gives people frontier AI with four tools (Chat, Code, Design, Images) in 
 | Who it's for | **Students and under-resourced creators anywhere in the world**: people with ideas and no budget for AI subscriptions. Not one region. |
 | Who pays | **Ads only at launch.** Then **student-friendly advertisers** buy directly (see "Student-friendly advertisers" below) once there are users to show. |
 | Free tier | **None.** New accounts start at zero credits. Each day a person unlocks their allowance by watching one video, which is also a bot check. |
-| Community pool | **Everyone gets the same daily floor, wherever they live**, paid from a share of ad revenue already received. Higher-paying regions and sponsors fund it; see "Community pool" below. |
+| Daily floor | **8 credits a day, the same for everyone, wherever they live**, unlocked by one video. Paid quietly from a share of ad revenue already received; there is no user-facing pool or "watch for others" option. |
 | Paywall | None for now. A Plus plan is an optional extra for later. |
 | Own API keys | Not offered. The point of Wanlly is free access. |
 | Models | **Haiku 5.5** first for quick work and the bulk steps of every build. **Sonnet 5.5** is the default for building. **Opus 5.5** for the hard parts. **Fable 5.1** for a few big prompts. GPT, Codex and Grok follow the same rules once added. |
@@ -52,7 +52,7 @@ The goal: a student in Lagos and a student in Boston who watch the same ads get 
 **How it works**
 1. Every ad view earns its owner their normal share (70% of what that view paid).
 2. **15% of last month's actual ad revenue** (from the house share, plus a set slice of every direct sponsorship) goes into the pool. The pool is money already in the bank, never a promise against future revenue.
-3. Each morning the pool is divided into a **daily floor** for every active, verified person. Starting target: **about 1 hour of Haiku building, or 8 Sonnet messages** (10 minutes of Sonnet-equivalent, about $0.08). The floor moves with the pool, and can only go down by a set amount per week, so it never collapses overnight.
+3. Each morning the pool is divided into a **daily floor** for every active, verified person. Decided: **8 credits a day** (about $0.04), roughly 30 minutes of building with a fast model. The floor moves with the pool, and can only go down by a set amount per week, so it never collapses overnight.
 4. A person's allowance for the day is the bigger of the floor or what their own ads earned. In Africa and South Asia most people use the floor; in the US and Europe most people's own ads earn more than it.
 5. The floor is **unlocked by watching one video a day.** That keeps "no free tier" true, proves a human is there, and keeps bots from draining the pool.
 
@@ -61,8 +61,6 @@ The goal: a student in Lagos and a student in Boston who watch the same ads get 
 - One floor per verified person (phone, device and sign-in checks from `docs/SECURITY.md`). Farmed accounts are the main threat to the pool.
 - The floor is the same for everyone from day one and works on every model. It can't be saved up, and getting it needs a real phone, a new device and a video every day, so fake accounts aren't worth making (`docs/SECURITY.md`).
 - Pool funding, size, the floor and how many people it reached are on the admin dashboard every day.
-
-**"Watch to fund a creator"**: anyone can choose to watch extra videos into the pool instead of for themselves. The pool's impact is public: "This month, viewers and sponsors funded 4,200 builds by students in 61 countries." It's a growth story, a sponsor story and a grant story at once. Credits still can't be sent to a specific person, so they stay non-transferable.
 
 **What it costs** (from `docs/ad-economics.html`, Daily use): with a global student mix (about a third of users in North America, Europe and East Asia), a 10-minute floor leaves about 20% of ad revenue for hosting and margin. With the earlier Africa-heavy mix, the same floor leaves about 7%, so the floor starts at 10 minutes and only rises as the mix and sponsors allow.
 

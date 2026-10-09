@@ -122,7 +122,7 @@ export function BetaPage() {
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight font-semibold tracking-[-0.03em] text-balance">How it&apos;s paid for, in plain numbers.</h2>
             <p className="max-w-[52ch] text-muted">
-              Everyone gets the same daily floor, paid from a community pool. Extra videos earn on top. Sponsors sit beside your work, never inside an answer, and never change what a model says.
+              Everyone gets the same daily floor, wherever they live. Extra videos earn on top. Sponsors sit beside your work, never inside an answer, and never change what a model says.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
