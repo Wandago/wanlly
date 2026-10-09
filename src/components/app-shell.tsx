@@ -11,6 +11,7 @@ import { DisplayCreative } from "./ads/creatives";
 import { Tracked } from "./ads/tracked";
 import { AdsProvider, creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
 import { EarnDialog } from "./earn-dialog";
+import { Interstitial } from "./ads/interstitial";
 import { Sidebar } from "./sidebar";
 
 function Toast() {
@@ -92,6 +93,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <PhoneBanner />
         </div>
         <EarnDialog />
+        <Interstitial />
         <Toast />
         <AccountSync />
       </AdsProvider>

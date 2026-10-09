@@ -13,6 +13,7 @@ import { AttachmentTray, DropOverlay } from "./attachment-tray";
 import { forSending, useAttachments } from "@/lib/attach";
 import { Icon, type IconName } from "./icon";
 import { ModelPicker } from "./top-bar";
+import { naturalBreak } from "./ads/interstitial";
 
 /*
  * One design file: ask for a design on the left, see it on the right as it's written, and step
@@ -195,6 +196,7 @@ export function DesignEditor({ id }: { id: number }) {
             setShown(v);
             setPrompt("");
             files.clear();
+            naturalBreak();
             if (ev.cutShort) setNote("This one hit the length limit, so the end may be missing. Ask for a shorter version or fewer slides.");
           } else if (ev.type === "error") {
             account(ev);

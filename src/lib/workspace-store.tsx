@@ -326,6 +326,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
               dispatch({ type: "jobText", id, text: ev.text });
             } else if (ev.type === "done") {
               dispatch({ type: "jobDone", id, charged: ev.charged, stop: ev.stop });
+              window.dispatchEvent(new Event("wanlly:break"));
               const acct = accountFrom(ev);
               if (acct) dispatch(acct);
             } else if (ev.type === "error") {
