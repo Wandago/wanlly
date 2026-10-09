@@ -2,8 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { sizeOf, type NetworkSize } from "@/lib/ad-network";
-import { markNetworkEmpty } from "@/lib/ads-context";
+import { markNetworkEmpty, useNetwork } from "@/lib/ads-context";
 import { Tracked } from "./tracked";
+
+/**
+ * Banners served from Wanlly itself run with no origin at all. Banners from a separate banner
+ * host may keep their own origin there (so the network's script can use storage): it's another
+ * site, so it still can't read or change anything of Wanlly's.
+ */
+export const frameSandbox = (host: string) =>
+  `allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms${host && typeof location !== "undefined" && host !== location.origin ? " allow-same-origin" : ""}`;
 
 /**
  * One banner from the ad network, in a sandboxed frame of exactly its size. The frame's page
@@ -15,6 +23,7 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   const { w, h } = sizeOf(size);
   const frame = useRef<HTMLIFrameElement>(null);
   const [filled, setFilled] = useState(false);
+  const host = useNetwork()?.host ?? "";
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
@@ -29,10 +38,10 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     <iframe
       ref={frame}
       title="Advertisement"
-      src={`/api/ads/unit?size=${size}`}
+      src={`${host}/api/ads/unit?size=${size}`}
       width={w}
       height={h}
-      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
+      sandbox={frameSandbox(host)}
       className={`block border-0 transition-opacity ${filled ? "opacity-100" : "opacity-0"}`}
       style={{ width: w, height: h, colorScheme: "normal" }}
     />

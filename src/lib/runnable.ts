@@ -7,9 +7,15 @@
 
 export type Block = { lang: string; name: string; code: string; closed: boolean };
 export type Project = { kind: "html" | "react"; title: string; html: string; files: Block[]; complete: boolean };
+/** Code that needs a server or a toolchain to run (Flask, Express, PHP…): downloaded as files. */
+export type ServerProject = { kind: "server"; title: string; stack: string; files: { name: string; code: string }[]; complete: boolean };
+
+/** Template tags that a server fills in: Jinja/Django, EJS, PHP, Handlebars blocks. */
+const TEMPLATE = /\{%[\s\S]*?%\}|<%[\s\S]*?%>|<\?php|\{\{\s*(url_for|request\.|form\.|csrf_token|#each|#if)/;
 
 const FENCE = /(^|\n)```([\w+#.-]*)[^\n]*\n([\s\S]*?)(\n```|$(?![\s\S]))/g;
-const NAME = /([\w./-]+\.(html?|css|m?jsx?|tsx?))\W*$/i;
+/** A line that is only a file name, e.g. "index.html", "**app.py**", "`style.css`", "File: src/x.ts". */
+const NAME = /^[\s`*#>_-]*(?:file(?:name)?:\s*)?([\w./-]+\.[A-Za-z0-9]{1,8})[\s`*:_]*$/i;
 
 /** Fenced code blocks, each with the file name written on the line before it, if any. */
 export function codeBlocks(md: string): Block[] {
@@ -111,7 +117,7 @@ try {
 /** The runnable project in a reply, or null when it has nothing a browser can run. */
 export function findProject(md: string): Project | null {
   const blocks = codeBlocks(md).filter((b) => b.code.trim());
-  const pages = blocks.filter(isHtml);
+  const pages = blocks.filter((b) => isHtml(b) && !TEMPLATE.test(b.code));
   if (pages.length) {
     // The largest HTML block is the page; CSS and browser JavaScript from the same reply join it.
     const page = pages.reduce((a, b) => (b.code.length > a.code.length ? b : a));
@@ -130,3 +136,94 @@ export function findProject(md: string): Project | null {
 
 /** A file name from the project title, e.g. "Budget Planner" → "budget-planner.html". */
 export const projectFileName = (p: Project) => `${p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "project"}.html`;
+
+const EXT: Record<string, string> = { python: "py", py: "py", javascript: "js", js: "js", typescript: "ts", ts: "ts", jsx: "jsx", tsx: "tsx", html: "html", css: "css", json: "json", bash: "sh", sh: "sh", shell: "sh", sql: "sql", php: "php", go: "go", rust: "rs", java: "java", yaml: "yml", yml: "yml", toml: "toml", text: "txt", txt: "txt", markdown: "md", md: "md", dockerfile: "Dockerfile" };
+
+function stackOf(files: { name: string; code: string }[]): string {
+  const all = files.map((f) => f.code).join("\n");
+  if (/from flask|import flask/i.test(all)) return "Python (Flask)";
+  if (/django/i.test(all)) return "Python (Django)";
+  if (/from fastapi/i.test(all)) return "Python (FastAPI)";
+  if (/express\(|from ['"]express/.test(all)) return "Node.js (Express)";
+  if (/<\?php/.test(all)) return "PHP";
+  if (files.some((f) => f.name.endsWith(".py"))) return "Python";
+  if (files.some((f) => f.name === "package.json")) return "Node.js";
+  return "a server";
+}
+
+/** A multi-file project that can't run in the browser, as named files ready to zip. */
+export function findServerProject(md: string): ServerProject | null {
+  if (findProject(md)) return null;
+  const blocks = codeBlocks(md).filter((b) => b.code.trim());
+  const named = blocks.filter((b) => b.name);
+  const template = blocks.some((b) => isHtml(b) && TEMPLATE.test(b.code));
+  if (named.length < 2 && !template) return null;
+  const used = new Set<string>();
+  const files = blocks.map((b, i) => {
+    let name = b.name || (isHtml(b) && template ? "templates/index.html" : `file${i + 1}.${EXT[b.lang] ?? "txt"}`);
+    // Flask looks for page templates in templates/.
+    if (template && isHtml(b) && b.name && !b.name.includes("/")) name = `templates/${b.name}`;
+    while (used.has(name)) name = name.replace(/(\.\w+)?$/, (e) => `-${i}${e}`);
+    used.add(name);
+    return { name, code: b.code };
+  });
+  const stack = stackOf(files);
+  return { kind: "server", title: files.find((f) => /app\.py|main\.py|server\.js|index\.js/.test(f.name))?.name.replace(/\.\w+$/, "") || "project", stack, files, complete: blocks.every((b) => b.closed) };
+}
+
+/* A small ZIP writer (stored, no compression): enough for a handful of text files. */
+const CRC = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+const crc32 = (b: Uint8Array) => {
+  let c = 0xffffffff;
+  for (const x of b) c = CRC[(c ^ x) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+};
+
+export function zipFiles(files: { name: string; code: string }[]): Blob {
+  const enc = new TextEncoder();
+  const parts: Uint8Array[] = [];
+  const central: Uint8Array[] = [];
+  let offset = 0;
+  for (const f of files) {
+    const name = enc.encode(f.name);
+    const data = enc.encode(f.code);
+    const crc = crc32(data);
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true); // UTF-8 names
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, name.length, true);
+    parts.push(new Uint8Array(local.buffer), name, data);
+    const cen = new DataView(new ArrayBuffer(46));
+    cen.setUint32(0, 0x02014b50, true);
+    cen.setUint16(4, 20, true);
+    cen.setUint16(6, 20, true);
+    cen.setUint16(8, 0x0800, true);
+    cen.setUint32(16, crc, true);
+    cen.setUint32(20, data.length, true);
+    cen.setUint32(24, data.length, true);
+    cen.setUint16(28, name.length, true);
+    cen.setUint32(42, offset, true);
+    central.push(new Uint8Array(cen.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const size = central.reduce((n, p) => n + p.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, size, true);
+  end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)] as BlobPart[], { type: "application/zip" });
+}

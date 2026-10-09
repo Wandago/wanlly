@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Bar, Card, Chip, Empty, Kpi, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
+import { useEffect, useRef, useState } from "react";
+import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
+import { frameSandbox } from "../ads/network-unit";
 import { NETWORK_SIZES as UNIT_SIZES, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 
@@ -170,13 +171,28 @@ type Ads = {
   creatives: { creative: string; impressions: number; clicks: number }[];
 };
 
-/** Ads: the network setup first (it doesn't wait for the stats), then performance, then the size test. */
+/** Ads in two parts: a dashboard of how ads perform, and the setup of the ad network. */
 export function AdsTab({ days }: { days: 7 | 30 }) {
+  const [part, setPart] = useState<"dashboard" | "setup">("dashboard");
   return (
     <div className="flex flex-col gap-4">
-      <AdNetwork />
-      <AdStats days={days} />
-      <NetworkTest />
+      <Pills
+        label="Ads section"
+        value={part}
+        onChange={setPart}
+        options={[
+          ["dashboard", "Dashboard"],
+          ["setup", "Setup"],
+        ]}
+      />
+      {part === "dashboard" ? (
+        <AdStats days={days} />
+      ) : (
+        <>
+          <AdNetwork />
+          <NetworkTest />
+        </>
+      )}
     </div>
   );
 }
@@ -263,6 +279,7 @@ function AdNetwork() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(0);
+  const [added, setAdded] = useState<NetworkSize[]>([]);
   useEffect(() => {
     api<{ network: NetworkConfig }>("/api/admin/network")
       .then((b) => {
@@ -325,6 +342,10 @@ function AdNetwork() {
             ))}
           </span>
         </div>
+        <label className="flex min-w-[240px] flex-1 flex-col gap-1 text-[13px] font-medium">
+          Banner host <span className="font-normal text-faint">optional</span>
+          <input className={field} value={cfg.host ?? ""} onChange={(e) => set({ host: e.target.value })} placeholder="https://wanlly-ads.yourname.workers.dev" />
+        </label>
         <button type="button" className={`${btnGhost} ml-auto`} onClick={save} disabled={busy}>
           {busy ? "Saving…" : "Save"}
         </button>
@@ -332,7 +353,7 @@ function AdNetwork() {
       {note && <p className="text-[13px] text-muted">{note}</p>}
       <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. Slots with a network size take turns between network banners and your sponsors.</p>
       <ul className="flex flex-col">
-        {UNIT_SIZES.map((size) => {
+        {UNIT_SIZES.filter((size) => cfg.units[size] !== undefined || added.includes(size)).map((size) => {
           const { w, h } = sizeOf(size);
           const live = saved?.audience !== "off" && !!saved?.units[size];
           return (
@@ -347,25 +368,56 @@ function AdNetwork() {
                 placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
                 spellCheck={false}
               />
-              {live && (
-                <div className="overflow-x-auto pb-1">
-                  <iframe
-                    key={preview}
-                    title={`${w}×${h} banner preview`}
-                    src={`/api/ads/unit?size=${size}`}
-                    width={w}
-                    height={h}
-                    sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
-                    className="block border border-dashed border-line"
-                    style={{ width: w, height: h }}
-                  />
-                </div>
-              )}
+              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} />}
             </li>
           );
         })}
       </ul>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="text-xs text-muted">Add a size:</span>
+        {UNIT_SIZES.filter((size) => cfg.units[size] === undefined && !added.includes(size)).map((size) => (
+          <button key={size} type="button" title={WHERE[size]} onClick={() => setAdded((xs) => [...xs, size])} className="rounded-full border border-dashed border-line px-2.5 py-0.5 font-mono text-xs text-muted hover:border-faint hover:text-fg">
+            + {size.replace("x", "×")}
+          </button>
+        ))}
+      </div>
     </Card>
+  );
+}
+
+/** One saved banner, live, with what happened in this browser: shown, empty, blocked or failed. */
+function BannerPreview({ size, host }: { size: NetworkSize; host: string }) {
+  const { w, h } = sizeOf(size);
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [status, setStatus] = useState<{ kind: string; detail?: string }>({ kind: "loading" });
+  useEffect(() => {
+    const on = (e: MessageEvent) => {
+      if (e.source !== ref.current?.contentWindow) return;
+      const m = e.data as { wanllyAd?: string; detail?: string };
+      if (!m?.wanllyAd) return;
+      // Keep the first problem; "filled" always wins.
+      setStatus((s) => (m.wanllyAd === "filled" || s.kind === "loading" || (s.kind === "empty" && m.wanllyAd !== "empty") ? { kind: m.wanllyAd!, detail: m.detail } : s));
+    };
+    window.addEventListener("message", on);
+    return () => window.removeEventListener("message", on);
+  }, []);
+  const text: Record<string, string> = {
+    loading: "Loading…",
+    filled: "Showing an ad.",
+    empty: "No ad came back. The network had nothing to show, or the site isn't serving yet.",
+    blocked: "The network's script didn't load in this browser, usually an ad-blocking extension. Try a private window with extensions off.",
+    error: "The network's script failed while running. If it mentions storage, cookies or SecurityError, set up a banner host (see the docs).",
+  };
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="overflow-x-auto pb-1">
+        <iframe ref={ref} title={`${w}×${h} banner preview`} src={`${host}/api/ads/unit?size=${size}`} width={w} height={h} sandbox={frameSandbox(host)} className="block border border-dashed border-line" style={{ width: w, height: h }} />
+      </div>
+      <small className={`text-xs ${status.kind === "filled" ? "text-good" : status.kind === "loading" ? "text-faint" : "text-bad"}`}>
+        {text[status.kind] ?? status.kind}
+        {status.detail && <code className="ml-1 font-mono text-[11px] break-all text-muted">{status.detail}</code>}
+      </small>
+    </div>
   );
 }
 

@@ -24,7 +24,9 @@ export async function GET(req: Request) {
     const network = await loadNetwork();
     return Response.json(
       {
-        network: network.audience === "off" ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units) },
+        // The visitor's own network country, so the team can see why a campaign isn't shown.
+        country,
+        network: network.audience === "off" ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units), host: network.host },
         ads: rows.map((r) => ({
           campaignId: Number(r.id),
           name: String(r.advertiser),
@@ -40,7 +42,7 @@ export async function GET(req: Request) {
           cap: r.frequency_cap === null ? undefined : Number(r.frequency_cap),
         })),
       },
-      { headers: { "cache-control": "public, max-age=300" } },
+      { headers: { "cache-control": "private, max-age=300", vary: "cf-ipcountry" } },
     );
   } catch (e) {
     console.error("ads GET failed", e);

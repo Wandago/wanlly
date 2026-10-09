@@ -140,13 +140,16 @@ function Preview({ c }: { c: Partial<Campaign> }) {
 }
 
 /** Why an active campaign might not be showing right now, or null when it should be. */
-function notShowing(c: Campaign): string | null {
+function notShowing(c: Campaign, country: string | null, served: Set<number> | null): string | null {
   if (c.status !== "active") return null;
+  if (country !== null && c.countries.length && !c.countries.includes(country))
+    return `Not shown to you: it's for ${c.countries.join(", ")}, and your network says ${country || "unknown country"}${country ? "" : " (VPN or private relay?)"}`;
   const now = Date.now();
   if (c.startsAt && new Date(c.startsAt).getTime() > now) return `Starts ${when(c.startsAt)}`;
   if (c.endsAt && new Date(c.endsAt).getTime() <= now) return "Past its end date";
   if (c.maxImpressions !== null && c.impressions >= c.maxImpressions) return "Reached its view limit";
   if (c.frequencyCap && seenToday(`campaign:${c.id}`) >= c.frequencyCap) return `Hidden for you today: you've seen it ${c.frequencyCap}× (its daily limit per person)`;
+  if (served && !served.has(c.id)) return "Not being served right now. Check its dates and view limit, then press Pause and Start again.";
   return null;
 }
 
@@ -376,9 +379,15 @@ export function AdvertisersTab() {
   const [error, setError] = useState("");
   const [editing, setEditing] = useState<Partial<Campaign> | null>(null);
   const [tick, setTick] = useState(0);
+  // What the live ad server sends this browser right now, and the network country it sees.
+  const [serving, setServing] = useState<{ country: string; ids: Set<number> } | null>(null);
 
   useEffect(() => {
     let live = true;
+    fetch("/api/ads", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((b: { country?: string; ads?: { campaignId: number }[] }) => live && setServing({ country: (b.country ?? "").toUpperCase(), ids: new Set((b.ads ?? []).map((a) => a.campaignId)) }))
+      .catch(() => {});
     Promise.all([api<{ applications: Application[] }>(`/api/admin/advertisers${status === "all" ? "" : `?status=${status}`}`), api<{ campaigns: Campaign[] }>("/api/admin/campaigns")])
       .then(([a, c]) => {
         if (!live) return;
@@ -441,7 +450,7 @@ export function AdvertisersTab() {
 
       <Card
         title="Campaigns"
-        note="Active campaigns replace the house sponsors in the slots they're booked for. Earned = views × the agreed price."
+        note={`Active campaigns replace the house sponsors in the slots they're booked for. Earned = views × the agreed price.${serving ? ` Serving to you now: ${serving.ids.size} campaign${serving.ids.size === 1 ? "" : "s"} (your network country: ${serving.country || "unknown"}).` : ""}`}
         actions={
           <button type="button" className={btnDark} onClick={() => setEditing({ placements: ["rail_cover", "sidebar_card"], color: "#2a78d6", cta: "Learn more" })}>
             <Icon name="plus" size={14} /> New campaign
@@ -461,10 +470,10 @@ export function AdvertisersTab() {
                   {c.endsAt && ` · ends ${when(c.endsAt)}`}
                   {c.frequencyCap ? ` · ${c.frequencyCap}× a day per person` : ""}
                 </small>
-                {notShowing(c) && (
+                {notShowing(c, serving?.country ?? null, serving?.ids ?? null) && (
                   <small className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-bad">
-                    {notShowing(c)}
-                    {notShowing(c)?.startsWith("Hidden for you") && (
+                    {notShowing(c, serving?.country ?? null, serving?.ids ?? null)}
+                    {notShowing(c, serving?.country ?? null, serving?.ids ?? null)?.startsWith("Hidden for you") && (
                       <button
                         type="button"
                         className="text-muted underline underline-offset-2"

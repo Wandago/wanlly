@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { saveBlob } from "@/lib/export";
-import { findProject, projectFileName, type Project } from "@/lib/runnable";
+import { findProject, findServerProject, projectFileName, zipFiles, type Project, type ServerProject } from "@/lib/runnable";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 
@@ -37,7 +37,7 @@ export function ProjectCard({ job }: { job: Job }) {
     autoOpened.add(job.id);
     canvas.open(job.id);
   }, [project, canvas, streaming, job.id, job.tool]);
-  if (!project) return null;
+  if (!project) return <ServerCard job={job} />;
   const open = canvas?.openId === job.id;
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-3">
@@ -66,6 +66,47 @@ export function ProjectCard({ job }: { job: Job }) {
           <Icon name="down" size={14} /> .html
         </button>
       </div>
+    </div>
+  );
+}
+
+const RUN: Record<string, string> = {
+  "Python (Flask)": "Unzip, then run: pip install flask && python app.py, and open http://localhost:5000",
+  "Python (FastAPI)": "Unzip, then run: pip install fastapi uvicorn && uvicorn main:app --reload",
+  "Python (Django)": "Unzip, then run: pip install django && python manage.py runserver",
+  Python: "Unzip, then run the main .py file with Python 3.",
+  "Node.js (Express)": "Unzip, then run: npm install && node server.js (or the main .js file)",
+  "Node.js": "Unzip, then run: npm install && npm start",
+  PHP: "Unzip, then run: php -S localhost:8000",
+};
+
+/** Code that needs a server to run (Flask, Express, PHP…): no browser preview, but every file in one zip. */
+function ServerCard({ job }: { job: Job }) {
+  const p: ServerProject | null = useMemo(() => findServerProject(job.text ?? ""), [job.text]);
+  if (!p) return null;
+  const ready = p.complete && job.status !== "working";
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-hover text-muted">
+          <Icon name="folder" size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <b className="block truncate text-[14px] font-semibold">
+            {p.files.length} files · {p.stack}
+          </b>
+          <span className="text-xs text-muted">{ready ? "Runs on your computer, not in the browser, so there's no live preview." : "Being written…"}</span>
+        </div>
+        <button
+          type="button"
+          disabled={!ready}
+          onClick={() => saveBlob(zipFiles(p.files), `${p.title}.zip`)}
+          className="flex items-center gap-1.5 rounded-[9px] bg-fg px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-50"
+        >
+          <Icon name="down" size={14} /> .zip
+        </button>
+      </div>
+      {ready && <p className="font-mono text-[11px] text-muted">{RUN[p.stack] ?? "Unzip and follow the steps in the reply."}</p>}
     </div>
   );
 }

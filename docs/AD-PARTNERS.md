@@ -124,3 +124,7 @@ Where network banners go, taking turns with sponsors every 45 s:
 - Empty chat, under the chat box (tablet and up): 728×90 or 468×60.
 
 Recommended: **Adsterra** banners only (no popunder, Social Bar or Direct Link), with **A-ADS** as a no-signup fallback. Ezoic, Media.net, EthicalAds and Carbon don't take new low-traffic sites; Monetag and HilltopAds are mostly pop formats. Apply with a real domain rather than workers.dev.
+
+### Banner host (optional)
+
+Banners served by Wanlly run with no origin (no cookies or storage). If a network's script needs storage and shows nothing (Admin → Ads shows "failed while running" under the preview), deploy `workers/ad-frame/worker.js` as its own Cloudflare Worker (Workers & Pages → Create → Worker → paste → Deploy) and put its address in **Banner host**. Banners then keep that Worker's origin: a different site, so they still can't reach Wanlly. Only Wanlly may frame it (`frame-ancestors`).

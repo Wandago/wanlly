@@ -15,8 +15,11 @@ export async function GET(req: Request) {
   const { w, h } = sizeOf(size);
   // After the network's code, a check tells the slot whether an ad actually appeared, so an
   // empty answer (no ad to show, or a site still in review) can hand the slot back to sponsors.
+  // Problems are reported too, so the team can see them in Admin: a network script that didn't
+  // load (often an ad blocker) or that failed to run.
+  const watch = `<script>addEventListener("error",function(e){var t=e.target;parent.postMessage(t&&t.tagName==="SCRIPT"?{wanllyAd:"blocked",detail:String(t.src).slice(0,120)}:{wanllyAd:"error",detail:String(e.message).slice(0,200)},"*")},true)</script>`;
   const report = `<script>(function(){var n=0;function seen(){var ok=false;document.querySelectorAll("iframe,img,ins,canvas,video,object,embed,a,div").forEach(function(e){var r=e.getBoundingClientRect();if(r.width>=40&&r.height>=20)ok=true});return ok}function check(){if(seen()){parent.postMessage({wanllyAd:"filled"},"*");return}if(++n<8)setTimeout(check,1000);else parent.postMessage({wanllyAd:"empty"},"*")}setTimeout(check,800)})()</script>`;
-  const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}"><meta name="referrer" content="origin"><meta name="color-scheme" content="light dark"><style>html,body{margin:0;padding:0;width:${w}px;height:${h}px;overflow:hidden;background:transparent}</style></head><body>${code}${report}</body></html>`;
+  const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}"><meta name="referrer" content="origin"><meta name="color-scheme" content="light dark"><style>html,body{margin:0;padding:0;width:${w}px;height:${h}px;overflow:hidden;background:transparent}</style>${watch}</head><body>${code}${report}</body></html>`;
   return new Response(page, {
     headers: {
       "content-type": "text/html; charset=utf-8",

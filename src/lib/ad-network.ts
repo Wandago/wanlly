@@ -15,9 +15,25 @@ export type NetworkConfig = {
   audience: "off" | "staff" | "everyone";
   /** Banner code per size. */
   units: Partial<Record<NetworkSize, string>>;
+  /**
+   * Optional separate address that serves the banners (the small "ad frame" Worker in
+   * workers/ad-frame). Banners there get their own origin, so they may use storage without any
+   * access to Wanlly. Empty: banners come from Wanlly itself, fully sandboxed.
+   */
+  host?: string;
 };
 
 export const NO_NETWORK: NetworkConfig = { name: "", audience: "off", units: {} };
+
+function httpsOrigin(v: unknown): string | undefined {
+  if (typeof v !== "string" || !v.trim()) return undefined;
+  try {
+    const u = new URL(v.trim());
+    return u.protocol === "https:" ? u.origin : undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export const sizeOf = (s: NetworkSize) => {
   const [w, h] = s.split("x").map(Number);
@@ -35,5 +51,6 @@ export function cleanNetwork(v: unknown): NetworkConfig {
     name: typeof o.name === "string" ? o.name.trim().toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 30) : "",
     audience: o.audience === "staff" || o.audience === "everyone" ? o.audience : "off",
     units,
+    host: httpsOrigin(o.host),
   };
 }
