@@ -7,7 +7,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { NewProject, type DesignKind, type Preset, type Project } from "./pages/projects-view";
 import { STYLES } from "@/lib/design-styles";
-import { StyleThumb } from "./style-picker";
+import { StylePreview, StyleThumb } from "./style-picker";
 
 /*
  * The Design tool's home: start something new from one of four kinds, then find your design
@@ -174,6 +174,8 @@ export function DesignHome() {
   const open = (p: Project) => router.push(`/design/${p.id}`);
   /** A style picked from "Start from a look", applied to the design that's created next. */
   const [look, setLook] = useState<string | null>(null);
+  /** The style shown large, before the person decides to use it. */
+  const [preview, setPreview] = useState<string | null>(null);
   const rename = async (p: Project) => {
     const name = window.prompt("Rename", p.name)?.trim();
     if (!name || name === p.name) return;
@@ -363,10 +365,7 @@ export function DesignHome() {
               <button
                 key={st.id}
                 type="button"
-                onClick={() => {
-                  setLook(st.id);
-                  setCreating("design");
-                }}
+                onClick={() => setPreview(st.id)}
                 className="group flex w-[168px] shrink-0 snap-start flex-col gap-2 text-left sm:w-auto"
               >
                 <span className="block aspect-[4/3] overflow-hidden rounded-xl border border-line transition-transform group-hover:-translate-y-0.5 group-hover:border-faint">
@@ -444,6 +443,16 @@ export function DesignHome() {
           ))
         )}
       </div>
+
+      <StylePreview
+        id={preview}
+        onIdChange={setPreview}
+        onUse={(id) => {
+          setPreview(null);
+          setLook(id);
+          setCreating("design");
+        }}
+      />
 
       <NewProject
         key={creating ?? "none"}
