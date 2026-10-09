@@ -4,7 +4,7 @@ import { signedInUserId } from "@/lib/session";
 
 const KINDS = new Set(["impression", "click"]);
 const FORMATS = new Set(["native", "display"]);
-const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line"]);
+const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial"]);
 /** Above this many events a minute from one account, the rest are dropped. */
 const PER_MINUTE = 120;
 

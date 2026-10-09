@@ -243,3 +243,56 @@ export const designVersions = pgTable(
   },
   (t) => [index("design_versions_project").on(t.projectId, t.id)],
 );
+
+/** Businesses applying to advertise, from the public /advertise page. Reviewed in Admin. */
+export const advertiserApplications = pgTable("advertiser_applications", {
+  id: bigserial("id", { mode: "number" }).primaryKey(),
+  company: text("company").notNull(),
+  contactName: text("contact_name").notNull(),
+  email: text("email").notNull(),
+  website: text("website"),
+  country: text("country"),
+  category: text("category").notNull(),
+  budget: text("budget"),
+  formats: jsonb("formats").notNull().default([]),
+  message: text("message").notNull().default(""),
+  networkCountry: text("network_country"),
+  status: text("status", { enum: ["pending", "approved", "declined"] }).notNull().default("pending"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  reviewedBy: text("reviewed_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
+ * Directly sold ads. An active campaign is shown in the placements it's booked for, to people
+ * in its countries (all when empty), between its dates, until it reaches its impressions.
+ * Ad events record it as creative "campaign:<id>".
+ */
+export const campaigns = pgTable(
+  "campaigns",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    applicationId: integer("application_id").references(() => advertiserApplications.id),
+    advertiser: text("advertiser").notNull(),
+    name: text("name").notNull(),
+    status: text("status", { enum: ["draft", "active", "paused", "ended"] }).notNull().default("draft"),
+    headline: text("headline").notNull(),
+    body: text("body").notNull().default(""),
+    cta: text("cta").notNull().default("Learn more"),
+    url: text("url").notNull(),
+    color: text("color").notNull().default("#2a78d6"),
+    cover: text("cover"),
+    /** Optional picture for the card, as a small data URL (uploaded in Admin). */
+    image: text("image"),
+    placements: jsonb("placements").notNull().default([]),
+    countries: jsonb("countries").notNull().default([]),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    maxImpressions: integer("max_impressions"),
+    /** Agreed price in US cents per 1,000 impressions, for revenue. */
+    cpmCents: integer("cpm_cents").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("campaigns_status").on(t.status)],
+);

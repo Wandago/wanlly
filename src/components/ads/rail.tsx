@@ -7,6 +7,7 @@ import { Icon } from "../icon";
 import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
 import { Tracked } from "./tracked";
+import { creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -37,12 +38,12 @@ function SponsoredLabel({ sponsor }: { sponsor: Sponsor }) {
   );
 }
 
-function Cta({ sponsor, className = "" }: { sponsor: Sponsor; className?: string }) {
+function Cta({ sponsor, placement, className = "" }: { sponsor: Sponsor; placement: string; className?: string }) {
   const { dispatch } = useWorkspace();
   return (
     <button
       type="button"
-      onClick={() => dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+      onClick={() => openSponsor(sponsor, placement) || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
       className={`rounded-[9px] border border-line bg-surface px-3 py-1.5 text-[13px] font-medium hover:border-faint ${className}`}
     >
       {sponsor.cta}
@@ -53,7 +54,7 @@ function Cta({ sponsor, className = "" }: { sponsor: Sponsor; className?: string
 /** Native sponsor card with a cover image. The main side-panel unit. */
 export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Sponsor; placement?: string }) {
   return (
-    <Tracked key={sponsor.name} placement={placement} format="native" creative={sponsor.name}>
+    <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
       <article className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
         <Cover sponsor={sponsor} />
         <div className="flex flex-col gap-1.5 p-3.5">
@@ -68,7 +69,7 @@ export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Spon
           </div>
           <h3 className="font-display text-[15px] leading-tight font-semibold tracking-[-0.01em]">{sponsor.headline}</h3>
           <p className="text-[13px] leading-snug text-muted">{sponsor.text}</p>
-          <Cta sponsor={sponsor} className="mt-1 self-start" />
+          <Cta sponsor={sponsor} placement={placement} className="mt-1 self-start" />
         </div>
       </article>
     </Tracked>
@@ -77,13 +78,19 @@ export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Spon
 
 /** A network banner (300×250) placed in the same rounded frame, so it never looks pasted in. */
 function DisplayFrame({ sponsor }: { sponsor: Sponsor }) {
+  const { dispatch } = useWorkspace();
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-soft">
       <div className="px-1">
         <SponsoredLabel sponsor={sponsor} />
       </div>
-      <Tracked key={sponsor.name} placement="rail_banner" format="display" creative={sponsor.name} className="grid animate-rise place-items-center overflow-hidden rounded-xl bg-code">
-        <button type="button" aria-label={`${sponsor.name}: ${sponsor.cta}`} className="block overflow-hidden rounded-xl">
+      <Tracked key={creativeOf(sponsor)} placement="rail_banner" format="display" creative={creativeOf(sponsor)} className="grid animate-rise place-items-center overflow-hidden rounded-xl bg-code">
+        <button
+          type="button"
+          aria-label={`${sponsor.name}: ${sponsor.cta}`}
+          onClick={() => openSponsor(sponsor, "rail_banner") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+          className="block overflow-hidden rounded-xl"
+        >
           <DisplayCreative size="300x250" sponsor={sponsor} />
         </button>
       </Tracked>
@@ -116,8 +123,8 @@ function EarnMini() {
 
 /** Right side panel, on every page from 1280px wide. Always running, refreshed while visible. */
 export function AdRail() {
-  const top = useRotation(RAIL_SPONSORS, 45000);
-  const banner = useRotation(RAIL_SPONSORS, 60000, 2);
+  const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
+  const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
   return (
     <aside aria-label="Sponsored" className="hidden min-h-0 border-l border-line bg-side xl:block">
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
@@ -135,9 +142,9 @@ export function AdRail() {
 
 /** Compact sponsor card that lives in the left sidebar on every page. */
 export function SidebarAd() {
-  const sponsor = useRotation(RAIL_SPONSORS, 50000, 1);
+  const sponsor = useRotation(useSponsors("sidebar_card", RAIL_SPONSORS), 50000, 1);
   return (
-    <Tracked key={sponsor.name} placement="sidebar_card" format="native" creative={sponsor.name} className="hidden [@media(min-height:700px)]:block">
+    <Tracked key={creativeOf(sponsor)} placement="sidebar_card" format="native" creative={creativeOf(sponsor)} className="hidden [@media(min-height:700px)]:block">
       <article className="animate-rise overflow-hidden rounded-[14px] border border-line bg-surface">
         <div className="h-[72px] overflow-hidden">
           <Cover sponsor={sponsor} className="h-full" />

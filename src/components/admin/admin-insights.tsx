@@ -134,8 +134,8 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-muted">
-        <b className="font-medium text-fg">Revenue here is an estimate.</b> The ads are Wanlly&apos;s own placeholders until an ad network is connected, so nothing is paid yet
-        (reported so far: {usd(data.reportedRevenue)}). Estimates use ${e.native} per 1,000 native views, ${e.display} per 1,000 banner views and ${e.rewarded} per 1,000 finished videos.
+        <b className="font-medium text-fg">Revenue here is an estimate.</b> House ads earn nothing; directly sold campaigns and, later, ad networks bring real money
+        (real so far in this range: {usd(data.reportedRevenue)}). Estimates use ${e.native} per 1,000 native views, ${e.display} per 1,000 banner views and ${e.rewarded} per 1,000 finished videos.
         Model cost is credits used × ${data.assumptions.usdPerCredit}.
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">

@@ -9,6 +9,7 @@ import { applyTheme, type Settings } from "@/lib/settings";
 import { AdRail } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
 import { Tracked } from "./ads/tracked";
+import { AdsProvider, creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
 import { EarnDialog } from "./earn-dialog";
 import { Sidebar } from "./sidebar";
 
@@ -58,11 +59,18 @@ function AccountSync() {
 
 /** Phones have no side panels, so a 320×50 banner sits in a rounded tray at the bottom. */
 function PhoneBanner() {
+  const { dispatch } = useWorkspace();
+  const sponsor = useSponsors("phone_banner", RAIL_SPONSORS)[0];
   return (
     <div className="flex items-center justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Sponsored">
-      <Tracked placement="phone_banner" format="display" creative={RAIL_SPONSORS[0].name} className="overflow-hidden rounded-xl">
-        <button type="button" aria-label={`${RAIL_SPONSORS[0].name}: ${RAIL_SPONSORS[0].cta}`} className="block">
-          <DisplayCreative size="320x50" sponsor={RAIL_SPONSORS[0]} />
+      <Tracked key={creativeOf(sponsor)} placement="phone_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">
+        <button
+          type="button"
+          aria-label={`${sponsor.name}: ${sponsor.cta}`}
+          onClick={() => openSponsor(sponsor, "phone_banner") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+          className="block"
+        >
+          <DisplayCreative size="320x50" sponsor={sponsor} />
         </button>
       </Tracked>
     </div>
@@ -76,15 +84,17 @@ function PhoneBanner() {
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <WorkspaceProvider>
-      <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 xl:grid-cols-[240px_minmax(0,1fr)_344px]">
-        <Sidebar />
-        <div className="min-h-0 min-w-0">{children}</div>
-        <AdRail />
-        <PhoneBanner />
-      </div>
-      <EarnDialog />
-      <Toast />
-      <AccountSync />
+      <AdsProvider>
+        <div className="grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 xl:grid-cols-[240px_minmax(0,1fr)_344px]">
+          <Sidebar />
+          <div className="min-h-0 min-w-0">{children}</div>
+          <AdRail />
+          <PhoneBanner />
+        </div>
+        <EarnDialog />
+        <Toast />
+        <AccountSync />
+      </AdsProvider>
     </WorkspaceProvider>
   );
 }

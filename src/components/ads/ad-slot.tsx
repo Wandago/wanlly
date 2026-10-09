@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
 import { SPOT_REWARD, SPOT_SECONDS, type Sponsor } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
+import { openSponsor } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { DisplayCreative, VideoFrame, useWidth } from "./creatives";
 
@@ -25,7 +26,7 @@ function Logo({ sponsor, small = false }: { sponsor: Sponsor; small?: boolean })
 function SponsorLink({ sponsor, className }: { sponsor: Sponsor; className: string }) {
   const { dispatch } = useWorkspace();
   return (
-    <button type="button" className={className} onClick={() => dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}>
+    <button type="button" className={className} onClick={() => openSponsor(sponsor, "job_card") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}>
       {sponsor.cta}
     </button>
   );

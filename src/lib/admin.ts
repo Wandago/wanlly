@@ -12,6 +12,7 @@ export const CAN = {
   messages: ["owner", "admin", "support"],
   users: ["owner", "admin", "moderator"],
   switches: ["owner", "admin"],
+  advertisers: ["owner", "admin"],
 } satisfies Record<string, Role[]>;
 
 export type Staff = { id: string; role: Role };

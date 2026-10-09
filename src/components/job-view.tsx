@@ -7,6 +7,7 @@ import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
 import { Tracked } from "./ads/tracked";
 import { AttachmentTray } from "./attachment-tray";
+import { creativeOf, useSponsors } from "@/lib/ads-context";
 
 /** Real replies: a spinner and timer until the first words arrive, with Stop. */
 function Waiting({ job }: { job: Job }) {
@@ -71,7 +72,10 @@ function WorkingStatus({ job }: { job: Job }) {
  */
 export function JobView({ job }: { job: Job }) {
   const { dispatch, stop } = useWorkspace();
-  const { sponsor, adFormat, spotAspect } = TOOLS[job.tool];
+  const { adFormat, spotAspect } = TOOLS[job.tool];
+  // A booked campaign for this slot if there is one, otherwise the tool's house sponsor.
+  const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", [TOOLS[job.tool].sponsor]);
+  const sponsor = options[(job.id.length + job.prompt.length) % options.length];
   const showCard = job.status === "working" || job.spot === "playing";
 
   return (
@@ -97,7 +101,7 @@ export function JobView({ job }: { job: Job }) {
         )}
       </div>
       {showCard ? (
-        <Tracked key="card" placement="job_card" format={adFormat} creative={sponsor.name}>
+        <Tracked key="card" placement="job_card" format={adFormat} creative={creativeOf(sponsor)}>
           <SponsorCard
             sponsor={sponsor}
             format={adFormat}
@@ -108,7 +112,7 @@ export function JobView({ job }: { job: Job }) {
           />
         </Tracked>
       ) : (
-        <Tracked key="line" placement="job_line" format={adFormat} creative={sponsor.name}>
+        <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
           <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
         </Tracked>
       )}

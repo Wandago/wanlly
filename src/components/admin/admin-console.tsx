@@ -4,11 +4,12 @@ import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
+import { AdvertisersTab } from "./admin-advertisers";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when } from "./admin-ui";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
 
-type Tab = "overview" | "traffic" | "ads" | "abuse" | "users" | "beta" | "messages";
+type Tab = "overview" | "traffic" | "ads" | "advertisers" | "abuse" | "users" | "beta" | "messages";
 type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused" | "visitorsToday" | "viewsToday" | "adViewsToday" | "revenueToday" | "costToday", number>;
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
 type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string };
@@ -446,6 +447,7 @@ const TABS: [Tab, string][] = [
   ["overview", "Overview"],
   ["traffic", "Traffic"],
   ["ads", "Ads & revenue"],
+  ["advertisers", "Advertisers"],
   ["abuse", "Abuse"],
   ["users", "People"],
   ["beta", "Beta"],
@@ -528,6 +530,7 @@ export function AdminConsole() {
         {tab === "overview" && <Overview go={go} />}
         {tab === "traffic" && <TrafficTab days={days} />}
         {tab === "ads" && <AdsTab days={days} />}
+        {tab === "advertisers" && <AdvertisersTab />}
         {tab === "abuse" && (
           <AbuseTab
             onOpenPerson={(q) => {

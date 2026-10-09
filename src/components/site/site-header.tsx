@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/#product", label: "Product" },
   { href: "/#how", label: "How it's free" },
   { href: "/about", label: "About" },
+  { href: "/advertise", label: "Advertise" },
   { href: "/contact", label: "Contact" },
 ];
 

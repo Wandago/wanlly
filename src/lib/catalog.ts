@@ -25,6 +25,10 @@ export type Sponsor = {
   headline: string;
   text: string;
   cta: string;
+  /** Set for directly sold ads: where the card links, its campaign, and an uploaded picture. */
+  url?: string;
+  campaignId?: number;
+  image?: string;
 };
 
 export type Tool = {

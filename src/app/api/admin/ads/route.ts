@@ -40,7 +40,11 @@ export async function GET(req: Request) {
           count(*) filter (where kind = 'click')::int as clicks
         from ad_events where kind in ('impression', 'click') and created_at >= date_trunc('day', now()) - ${since}::interval
         group by 1 order by impressions desc limit 20`,
-      q`select coalesce(sum(revenue_micros), 0)::bigint as micros from ad_events where created_at >= date_trunc('day', now()) - ${since}::interval`,
+      // Real money so far: network-reported revenue plus directly sold campaigns at their agreed price.
+      q`select
+          (select coalesce(sum(revenue_micros), 0) from ad_events where created_at >= date_trunc('day', now()) - ${since}::interval)::bigint as micros,
+          (select coalesce(sum(c.cpm_cents), 0) from ad_events a join campaigns c on a.creative = 'campaign:' || c.id
+            where a.kind = 'impression' and a.created_at >= date_trunc('day', now()) - ${since}::interval)::bigint as cpm_cents_sum`,
     ]);
     const dailyOut = rows(daily).map((r) => {
       const native = n(r.native);
@@ -52,7 +56,7 @@ export async function GET(req: Request) {
     return Response.json({
       days,
       assumptions: ESTIMATE,
-      reportedRevenue: n(rows(real)[0]?.micros) / 1e6,
+      reportedRevenue: n(rows(real)[0]?.micros) / 1e6 + n(rows(real)[0]?.cpm_cents_sum) / 100 / 1000,
       daily: dailyOut,
       placements: rows(placements).map((r) => {
         const impressions = n(r.impressions);

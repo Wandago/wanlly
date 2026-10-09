@@ -128,6 +128,10 @@ function Art({ kind, color }: { kind: CoverKind; color: string }) {
 
 /** Full-bleed 16:9 cover for a sponsor card. The parent sets the rounding and clips it. */
 export function Cover({ sponsor, className = "" }: { sponsor: Sponsor; className?: string }) {
+  // Sold campaigns can bring their own picture.
+  if (sponsor.image)
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={sponsor.image} alt="" className={`block aspect-video w-full object-cover ${className}`} />;
   const c = sponsor.color;
   const id = `cv-${sponsor.name.replace(/\W/g, "")}`;
   return (

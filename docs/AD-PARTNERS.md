@@ -86,3 +86,10 @@ Google's rewarded ads for web report the reward in the browser only. Credits fro
 3. Join **PartnerStack**, **Impact** and **Awin** for the Stage 0 affiliate offers.
 4. Fill in the scorecard in section 1 for each, and email their publisher support about anything unclear (web support, callbacks, payout to Kenya).
 5. After a month of traffic, use section 3 to decide what to add.
+
+## 6. Direct advertisers (built)
+
+- **Public page:** `/advertise` explains the audience, the formats (sponsor cards, banners, sponsored videos, pop-up cards, sponsor trials), how pricing works and what Wanlly doesn't advertise, with an application form.
+- **Admin → Advertisers:** review applications, reply from your own email, approve, then create a campaign: picture (or an illustration), headline, one line, button, https link, colour, placements, countries, dates, a view cap and the agreed price per 1,000 views. A live preview shows the card as people will see it.
+- **Serving:** active campaigns replace the house sponsors in the slots they're booked for, by country and dates, until their view cap. Clicks open the advertiser's link with `utm_source=wanlly&utm_medium=<placement>&utm_campaign=<id>`. Views and clicks are recorded as `campaign:<id>`; earned money (views x price) shows in Advertisers and in Ads & revenue.
+- **Before the first campaign:** send the advertiser a short insertion order (dates, placements, price, cap, payment terms) and get paid up front for small tests.

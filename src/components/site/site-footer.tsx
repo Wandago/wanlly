@@ -3,7 +3,7 @@ import { Mark } from "./mark";
 
 const COLUMNS = [
   { title: "Product", links: [["Chat", "/#product"], ["Code", "/#product"], ["Design", "/#product"], ["How it's free", "/#how"]] },
-  { title: "Company", links: [["About", "/about"], ["Contact", "/contact"], ["Join the beta", "/beta"], ["Advertise", "/contact#advertise"]] },
+  { title: "Company", links: [["About", "/about"], ["Contact", "/contact"], ["Join the beta", "/beta"], ["Advertise", "/advertise"]] },
   { title: "Legal", links: [["Privacy", "/privacy"], ["Terms", "/terms"]] },
 ];
 
