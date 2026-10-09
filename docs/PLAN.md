@@ -148,7 +148,7 @@ The app on `feature/ui-shell`: sidebar, model picker, credits, one composer with
 2. **You:** open publisher accounts with the Stage 1 partners in `docs/AD-PARTNERS.md`: **AppLixir** (rewarded video for web, with signed server callbacks) and one survey offerwall. Google's rewarded web ads come later through Ad Manager.
 3. **You:** apply for AdSense once the site has a few real pages (home, about, privacy, terms, a public gallery). Approval can take days to weeks.
 4. Consent banner. Ad events logged per user and country, so allowances follow real revenue.
-5. **Community pool:** daily pool sizing job, the floor unlocked by one video a day, a "Watch to fund a creator" option, and the pool on the admin dashboard.
+5. **Daily floor:** 8 credits unlocked by one video a day, the same for everyone, tracked on the admin dashboard.
 6. Video spots: the server grants credits only after the ad network confirms the view (server-side verification, see `docs/SECURITY.md`).
 7. Phones: a pinned bottom banner. Desktop: the side panel.
 
