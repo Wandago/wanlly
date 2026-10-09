@@ -1,7 +1,6 @@
 "use client";
 
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { useEffect, useRef } from "react";
 import { IMAGE_MODEL_NAME, MODELS, TOOLS, getModel, isLive } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
@@ -74,37 +73,6 @@ function ModelPicker() {
   );
 }
 
-function CreditsPill() {
-  const { credits, dispatch } = useWorkspace();
-  const ref = useRef<HTMLButtonElement>(null);
-  const last = useRef(credits);
-
-  // Bump the pill when credits go up.
-  useEffect(() => {
-    const el = ref.current;
-    if (el && credits > last.current) {
-      el.classList.remove("animate-bump");
-      void el.offsetWidth;
-      el.classList.add("animate-bump");
-    }
-    last.current = credits;
-  }, [credits]);
-
-  return (
-    <button
-      ref={ref}
-      type="button"
-      onClick={() => dispatch({ type: "setEarnOpen", open: true })}
-      aria-label={`${credits} ${credits === 1 ? "credit" : "credits"}. Earn more`}
-      className="flex items-center gap-1.5 rounded-full border border-line bg-surface px-[11px] py-1.5 font-mono text-[13px] tabular-nums hover:border-faint"
-    >
-      <Icon name="bolt" size={15} className="text-accent" />
-      {credits}
-      <span className="max-md:hidden">{credits === 1 ? "credit" : "credits"}</span>
-    </button>
-  );
-}
-
 export function TopBar() {
   const { dispatch } = useWorkspace();
   return (
@@ -119,7 +87,6 @@ export function TopBar() {
       </button>
       <ModelPicker />
       <div className="flex-1" />
-      <CreditsPill />
     </header>
   );
 }

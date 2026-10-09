@@ -1,7 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
-import { errorKind, replyCostUsd, streamReply, type Turn } from "@/lib/ai";
+import { errorDetail, errorKind, replyCostUsd, streamReply, type Turn } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost, type ToolId } from "@/lib/catalog";
 import { field, smallJson } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
@@ -168,7 +168,13 @@ export async function POST(req: Request) {
         }
       } catch (e) {
         const kind = errorKind(e);
-        if (kind !== "aborted") console.error("chat reply failed", kind, e);
+        if (kind !== "aborted") console.error("chat reply failed", kind, errorDetail(e));
+        // The team sees the provider's own words, so problems can be fixed without digging in logs.
+        let detail = "";
+        if (kind !== "aborted") {
+          const [me] = await d.select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, userId)).limit(1).catch(() => []);
+          if (me && me.role !== "user") detail = ` (Admin detail: ${errorDetail(e)})`;
+        }
         try {
           if (reply) {
             // Part of the answer arrived: keep it and the price.
@@ -176,7 +182,7 @@ export async function POST(req: Request) {
             send({ type: "done", charged: price, stop: "interrupted", ...(await account(userId)) });
           } else {
             await release(userId, price, ref);
-            send({ type: "error", message: ERRORS[kind], refunded: true, ...(await account(userId)) });
+            send({ type: "error", message: ERRORS[kind] + detail, refunded: true, ...(await account(userId)) });
           }
         } catch (e2) {
           console.error("chat cleanup failed", e2);

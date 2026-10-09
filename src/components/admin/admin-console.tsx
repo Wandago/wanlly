@@ -37,6 +37,52 @@ function useList<T>(url: string, key: string) {
   return { items, setItems, extra, error };
 }
 
+type Check = { provider: string; model: string; ok: boolean; detail: string; ms: number };
+
+/** Sends one tiny real request to each model provider and shows exactly what came back. */
+function AiCheck() {
+  const [results, setResults] = useState<Check[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const run = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      setResults((await api<{ results: Check[] }>("/api/admin/ai-check", "POST")).results);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <Card
+      title="AI connection"
+      note="A one-word test request to each provider. Costs a fraction of a cent on paid keys."
+      actions={
+        <button type="button" className={btnGhost} onClick={run} disabled={busy}>
+          {busy ? "Checking…" : "Check now"}
+        </button>
+      }
+    >
+      {error && <p className="text-[13px] text-bad">{error}</p>}
+      {results && (
+        <ul className="flex flex-col">
+          {results.map((r) => (
+            <li key={r.provider} className="flex flex-wrap items-start gap-x-3 gap-y-1 border-t border-line py-2.5 text-[13px] first:border-t-0 first:pt-0">
+              <Chip s={r.ok ? "active" : "frozen"} label={r.ok ? "Working" : "Failing"} />
+              <b className="font-medium capitalize">{r.provider}</b>
+              {r.model && <code className="font-mono text-xs text-muted">{r.model}</code>}
+              <span className="ml-auto font-mono text-xs text-faint">{r.ms ? `${(r.ms / 1000).toFixed(1)}s` : ""}</span>
+              <span className={`basis-full break-words ${r.ok ? "text-muted" : "text-bad"}`}>{r.detail}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 function Overview({ go }: { go: (t: Tab) => void }) {
   const [data, setData] = useState<{ totals: Totals; days: Day[] } | null>(null);
   const [error, setError] = useState("");
@@ -106,6 +152,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           </table>
         </div>
       </Card>
+      <AiCheck />
       <p className="text-xs text-faint">
         Ad revenue, networks and per-country margins appear once a real ad network reports them.{" "}
         <Link href="/admin/preview" className="underline underline-offset-2 hover:text-fg">

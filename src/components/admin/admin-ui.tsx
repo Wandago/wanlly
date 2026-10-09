@@ -80,7 +80,9 @@ const STATUS_CHIP: Record<string, string> = {
   banned: "bg-bad/12 text-bad",
   deleted: "bg-hover text-faint",
 };
-export const Chip = ({ s }: { s: string }) => <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap capitalize ${STATUS_CHIP[s] ?? "bg-hover text-muted"}`}>{s}</span>;
+export const Chip = ({ s, label }: { s: string; label?: string }) => (
+  <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap capitalize ${STATUS_CHIP[s] ?? "bg-hover text-muted"}`}>{label ?? s}</span>
+);
 
 
 export const usd = (v: number) => (v === 0 ? "$0" : v < 0.01 ? "<$0.01" : v < 100 ? `$${v.toFixed(2)}` : `$${Math.round(v).toLocaleString("en-US")}`);

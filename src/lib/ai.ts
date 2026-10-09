@@ -45,6 +45,7 @@ async function geminiModel(key: string): Promise<string> {
   let model = "gemini-flash-latest";
   try {
     const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": key } });
+    if (!r.ok) console.error("gemini models list failed", r.status);
     if (r.ok) {
       const { models = [] } = (await r.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
       const flash = models
@@ -73,8 +74,13 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
     }),
   });
   if (!res.ok || !res.body) {
-    console.error("gemini error", res.status, (await res.text().catch(() => "")).slice(0, 300));
-    throw new ProviderError(res.status === 429 ? "busy" : "failed");
+    const raw = await res.text().catch(() => "");
+    let message = raw.slice(0, 300);
+    try {
+      message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message ?? message;
+    } catch {}
+    console.error("gemini error", model, res.status, message);
+    throw new ProviderError(res.status === 429 ? "busy" : "failed", `Google ${res.status} on ${model}: ${message}`);
   }
   let inputTokens = 0;
   let outputTokens = 0;
@@ -139,9 +145,51 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
 // ---------------------------------------------------------------- Shared
 
 export class ProviderError extends Error {
-  constructor(public kind: "busy" | "failed" | "unavailable") {
-    super(kind);
+  /** `detail` is the provider's own message, shown only to staff. */
+  constructor(
+    public kind: "busy" | "failed" | "unavailable",
+    public detail = "",
+  ) {
+    super(detail || kind);
   }
+}
+
+/** What went wrong, in the provider's words, for the team. */
+export function errorDetail(e: unknown): string {
+  if (e instanceof ProviderError) return e.detail || e.kind;
+  if (e instanceof Anthropic.APIError) return `Anthropic ${e.status ?? ""}: ${e.message}`.slice(0, 400);
+  return e instanceof Error ? `${e.name}: ${e.message}`.slice(0, 400) : String(e);
+}
+
+/**
+ * A tiny real call to each provider with a key, for the admin page: which model would be used,
+ * and the provider's answer or error.
+ */
+export async function checkProviders() {
+  const out: { provider: string; model: string; ok: boolean; detail: string; ms: number }[] = [];
+  const signal = AbortSignal.timeout(20_000);
+  for (const [provider, modelId] of [
+    ["google", "gemini-flash"],
+    ["anthropic", "haiku"],
+  ] as const) {
+    if (!providers()[provider]) {
+      out.push({ provider, model: "", ok: false, detail: "No API key set", ms: 0 });
+      continue;
+    }
+    const t = Date.now();
+    let text = "";
+    let model = provider === "google" ? await geminiModel(process.env.GEMINI_API_KEY!) : CLAUDE.haiku.api;
+    try {
+      for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
+        if (ev.type === "text") text += ev.text;
+        else model += ` · ${ev.inputTokens} in / ${ev.outputTokens} out · ${ev.stop}`;
+      }
+      out.push({ provider, model, ok: !!text, detail: text ? `Replied: ${text.slice(0, 60)}` : "Empty reply", ms: Date.now() - t });
+    } catch (e) {
+      out.push({ provider, model, ok: false, detail: errorDetail(e), ms: Date.now() - t });
+    }
+  }
+  return out;
 }
 
 export function streamReply(opts: { modelId: string; tool: ToolId; system: string; turns: Turn[]; signal: AbortSignal }): AsyncGenerator<ReplyEvent> {

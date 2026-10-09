@@ -5,6 +5,7 @@ import { CHEAPEST_MODEL_ID, FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOO
 import { isConnected, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
+import { CreditsButton } from "./credits-button";
 
 /** Out-of-credits message, shown inside the composer instead of a pop-up. */
 function Gate() {
@@ -157,9 +158,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
               );
             })}
           </div>
-          <span className="ml-auto font-mono text-xs whitespace-nowrap text-faint" title={from ? "Starting price. Long replies cost a little more." : undefined}>
-            {connected ? `${price}${from ? "+" : ""} cr` : "Soon"}
-          </span>
+          <div className="ml-auto">{connected ? <CreditsButton price={price} from={from} /> : <span className="px-2 font-mono text-xs text-faint">Soon</span>}</div>
           <button
             type="submit"
             aria-label="Send"
