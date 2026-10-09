@@ -1,0 +1,354 @@
+<title>Wanlly Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* The showcase cut: 30 s of what people make with Wanlly, from one sentence to a wall of real
+   designs, converging into the logo. Dark, cinematic, smooth. Every frame is a pure function of
+   time, so seeking and frame-by-frame export match playback. Pictures are the example pages in
+   public/styles. Music: showcase/wanlly-showcase-music.m4a (original, synthesized). */
+:root {
+  --ink: #0b0b0d;
+  --ink-2: #141417;
+  --line: #26262b;
+  --white: #f6f5f1;
+  --muted: #8b8f99;
+  --tang: #ff5a1f;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #050506; color: var(--white); font: 15px/1.5 var(--body); }
+.page { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.head h1 { font: 700 22px/1.2 var(--display); letter-spacing: -.02em; margin: 0; }
+.head p { margin: 0; color: var(--muted); font-size: 14px; }
+.stage-wrap { display: grid; place-items: center; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--ink); border-radius: 14px; overflow: hidden; container-type: size; isolation: isolate; }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); }
+.portrait .stage { aspect-ratio: 4 / 5; width: min(100%, 560px); }
+.layer { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+.u { --s: min(1cqw, 1.78cqh); }
+.vertical .u, .portrait .u { --s: 1cqw; }
+
+/* Ambient: a slow orange glow that breathes, and fine grain */
+.glow { position: absolute; left: 50%; top: 55%; width: 120cqmax; height: 120cqmax; translate: -50% -50%; background: radial-gradient(closest-side, rgb(255 90 31 / .16), transparent 70%); pointer-events: none; }
+.grain { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .07; mix-blend-mode: overlay; pointer-events: none; }
+
+/* A: the prompt */
+.prompt { width: min(78cqw, 140cqh); display: flex; align-items: center; gap: calc(var(--s) * 1.6); padding: calc(var(--s) * 1.6) calc(var(--s) * 1.6) calc(var(--s) * 1.6) calc(var(--s) * 3); border-radius: calc(var(--s) * 6); background: var(--ink-2); border: 1px solid var(--line); box-shadow: 0 2cqmin 8cqmin rgb(0 0 0 / .5); font: 500 calc(var(--s) * 2.6)/1.3 var(--body); }
+.vertical .prompt { font-size: 4.4cqw; }
+.prompt .typed { flex: 1; min-width: 0; }
+.caret { display: inline-block; width: .08em; height: 1em; background: var(--tang); vertical-align: -.12em; margin-left: .04em; }
+.send { flex: none; width: calc(var(--s) * 5.6); height: calc(var(--s) * 5.6); border-radius: 50%; background: var(--tang); display: grid; place-items: center; }
+.vertical .send { width: 9cqw; height: 9cqw; }
+.send svg { width: 45%; height: 45%; stroke: #fff; fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.hint { position: absolute; top: 16%; font: 500 calc(var(--s) * 1.5) var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.vertical .hint { font-size: 3cqw; top: 30%; }
+
+/* B: a browser window that builds */
+.browser { width: min(74cqw, 92cqh); aspect-ratio: 4 / 3.28; border-radius: calc(var(--s) * 1.4); background: var(--ink-2); border: 1px solid var(--line); overflow: hidden; box-shadow: 0 4cqmin 12cqmin rgb(0 0 0 / .6); display: flex; flex-direction: column; }
+.vertical .browser { width: 90cqw; }
+.chrome { flex: none; height: calc(var(--s) * 3.6); display: flex; align-items: center; gap: calc(var(--s) * .8); padding: 0 calc(var(--s) * 1.4); border-bottom: 1px solid var(--line); font: 500 calc(var(--s) * 1.3) var(--mono); color: var(--muted); }
+.vertical .chrome { height: 6cqw; font-size: 2.4cqw; }
+.chrome i { width: calc(var(--s) * 1); height: calc(var(--s) * 1); border-radius: 50%; background: var(--line); }
+.chrome span { margin-left: auto; margin-right: auto; padding: .3em 1.4em; border-radius: 999px; background: #1b1b1f; }
+.view { position: relative; flex: 1; overflow: hidden; background: #f2eee6; }
+.view img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.skel { position: absolute; inset: 0; background: #17171b; padding: 6% 7%; display: flex; flex-direction: column; gap: 4%; }
+.skel b { display: block; border-radius: calc(var(--s) * .6); background: #24242a; }
+.cap { position: absolute; top: 4.5%; font: 500 calc(var(--s) * 1.6) var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.vertical .cap { font-size: 3cqw; top: 14%; }
+
+/* C: the wall */
+.wall { position: absolute; left: 50%; top: 50%; width: 260cqmax; height: 260cqmax; margin: -130cqmax 0 0 -130cqmax; transform-style: preserve-3d; }
+.persp { position: absolute; inset: 0; perspective: 140cqmax; perspective-origin: 50% 40%; -webkit-mask-image: radial-gradient(closest-side, #000 55%, transparent); mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 50%, transparent 100%); }
+.col { position: absolute; top: 0; display: flex; flex-direction: column; gap: 1.6cqmax; width: 26cqmax; }
+.col img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: top; border-radius: 1.2cqmax; box-shadow: 0 1cqmax 3cqmax rgb(0 0 0 / .5); }
+.big { font: 800 calc(var(--s) * 8)/.95 var(--display); letter-spacing: -.05em; text-align: center; text-wrap: balance; margin: 0; padding: .3em .6em; text-shadow: 0 0 4cqmin rgb(0 0 0 / .9), 0 0 1cqmin rgb(0 0 0 / .8); background: radial-gradient(closest-side, rgb(11 11 13 / .75), transparent); }
+.vertical .big { font-size: 13cqw; }
+.big em { font-style: normal; color: var(--tang); }
+
+/* D: four beats */
+.beat { position: absolute; inset: 0; display: grid; grid-template-columns: .8fr 1.2fr; align-items: center; gap: 4cqw; padding: 0 7cqw; perspective: 120cqmax; }
+.vertical .beat, .portrait .beat { grid-template-columns: 1fr; grid-template-rows: auto auto; align-content: center; gap: 5cqw; padding: 0 6cqw; }
+.beat h2 { font: 800 calc(var(--s) * 9)/.9 var(--display); letter-spacing: -.055em; margin: 0; }
+.vertical .beat h2 { font-size: 15cqw; }
+.beat p { margin: calc(var(--s) * 1.8) 0 0; color: var(--muted); font-size: calc(var(--s) * 1.9); max-width: 34ch; }
+.vertical .beat p { font-size: 3.6cqw; }
+.beat .num { font: 500 calc(var(--s) * 1.4) var(--mono); color: var(--tang); letter-spacing: .2em; }
+.vertical .beat .num { font-size: 2.8cqw; }
+.shot { border-radius: calc(var(--s) * 1.6); overflow: hidden; box-shadow: 0 3cqmax 9cqmax rgb(0 0 0 / .6); border: 1px solid var(--line); transform-style: preserve-3d; }
+.shot img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: top; }
+
+/* E: converge */
+.fly { position: absolute; left: 50%; top: 50%; width: 22cqmax; aspect-ratio: 4 / 3; margin: -8.25cqmax 0 0 -11cqmax; border-radius: 1cqmax; overflow: hidden; box-shadow: 0 1cqmax 3cqmax rgb(0 0 0 / .5); }
+.fly img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.logo { width: min(30cqw, 42cqh); height: min(30cqw, 42cqh); }
+.flash { position: absolute; inset: 0; background: var(--tang); opacity: 0; mix-blend-mode: screen; pointer-events: none; }
+
+/* F: end card */
+.end { display: flex; flex-direction: column; align-items: center; gap: calc(var(--s) * 2.6); text-align: center; }
+.lockup { display: flex; align-items: center; gap: calc(var(--s) * 2); }
+.lockup svg { width: calc(var(--s) * 11); height: calc(var(--s) * 11); }
+.vertical .lockup svg { width: 18cqw; height: 18cqw; }
+.word { font: 800 calc(var(--s) * 10)/1 var(--display); letter-spacing: -.055em; }
+.vertical .word { font-size: 16cqw; }
+.line { font: 700 calc(var(--s) * 4)/1.05 var(--display); letter-spacing: -.035em; margin: 0; }
+.vertical .line { font-size: 7.4cqw; }
+.line em { font-style: normal; color: var(--tang); }
+.tools { font: 500 calc(var(--s) * 1.5) var(--mono); letter-spacing: .24em; text-transform: uppercase; color: var(--muted); }
+.vertical .tools { font-size: 2.8cqw; }
+.cta { display: inline-flex; align-items: center; gap: 1em; background: var(--white); color: var(--ink); border-radius: 999px; padding: .8em 1.6em; font: 600 calc(var(--s) * 2) var(--body); }
+.vertical .cta { font-size: 3.8cqw; }
+.cta span { font: 500 .85em var(--mono); color: #6b6f78; }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.btn-c { border: 1px solid var(--line); background: var(--ink-2); color: var(--white); border-radius: 8px; padding: 7px 12px; font: 500 13px/1 var(--body); cursor: pointer; }
+.btn-c.primary { background: var(--tang); border-color: var(--tang); }
+.btn-c:focus-visible, input:focus-visible { outline: 2px solid var(--tang); outline-offset: 2px; }
+.scrub { flex: 1 1 220px; min-width: 0; accent-color: var(--tang); }
+.time { font: 500 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+.note a { color: var(--white); }
+.recording body, .recording .page { padding: 0; margin: 0; max-width: none; background: var(--ink); }
+.recording .head, .recording .controls, .recording .note { display: none; }
+.recording .stage { border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; max-width: none; }
+</style>
+
+<div class="page">
+  <div class="head">
+    <h1>Wanlly showcase</h1>
+    <p>30 seconds &middot; what people make &middot; sound on</p>
+  </div>
+  <div class="stage-wrap">
+    <div class="stage u" id="stage" aria-label="Wanlly showcase animation">
+      <div class="glow" id="glow"></div>
+
+      <!-- A. One sentence -->
+      <div class="layer" id="A">
+        <p class="hint" id="hint">It starts with one sentence</p>
+        <div class="prompt" id="prompt"><span class="typed"><span id="typed"></span><span class="caret" id="caret"></span></span><span class="send" id="send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+      </div>
+
+      <!-- B. A real site builds -->
+      <div class="layer" id="B">
+        <div class="browser" id="browser">
+          <div class="chrome"><i></i><i></i><i></i><span>jiko-kitchen.app</span></div>
+          <div class="view">
+            <img id="site" src="../public/styles/restaurant.webp" alt="">
+            <div class="skel" id="skel">
+              <b style="height:6%;width:30%"></b><b style="height:20%;width:62%"></b><b style="height:7%;width:46%"></b><b style="height:9%;width:24%"></b><b style="height:30%;width:100%;margin-top:auto"></b>
+            </div>
+          </div>
+        </div>
+        <p class="cap" id="capB">One sentence. A real site.</p>
+      </div>
+
+      <!-- C. The wall of everything -->
+      <div class="layer" id="C">
+        <div class="persp"><div class="wall" id="wall"></div></div>
+        <h2 class="big" id="bigC">Anything you can <em>imagine.</em></h2>
+      </div>
+
+      <!-- D. Four beats -->
+      <div class="layer" id="D"></div>
+
+      <!-- E. Everything comes together -->
+      <div class="layer" id="E">
+        <div id="flies"></div>
+        <svg class="logo" id="logoE" viewBox="0 0 64 64" aria-hidden="true"><g id="spinE" style="transform-origin:32px 32px"><defs><mask id="spinmaskE" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spinmaskE)"/></g></svg>
+      </div>
+
+      <!-- F. End card -->
+      <div class="layer" id="F">
+        <div class="end">
+          <div class="lockup" id="lockF"><svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#151518"/><g style="transform-origin:32px 32px"><defs><mask id="spinmaskF" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#spinmaskF)"/></g></svg><span class="word">Wanlly</span></div>
+          <p class="line" id="lineF">Imagine it. <em>Build it.</em> Free.</p>
+          <p class="tools" id="toolsF">Chat &middot; Code &middot; Design</p>
+          <span class="cta" id="ctaF">Join the beta <span>wanlly.app</span></span>
+        </div>
+      </div>
+
+      <div class="flash" id="flash"></div>
+      <svg class="grain" aria-hidden="true"><filter id="gr"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#gr)"/></svg>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn-c primary" id="play" type="button">Play with sound</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="30000" step="10" value="0" aria-label="Position in the showcase">
+    <span class="time" id="time">0:00 / 0:30</span>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
+  </div>
+  <p class="note">Every design shown is an example page made for Wanlly. Music is original and synthesized, free to post anywhere. Also see <a href="teaser.html">the calm teaser</a>.</p>
+  <audio id="audio" src="showcase/wanlly-showcase-music.m4a" preload="auto"></audio>
+</div>
+
+<script>
+(function () {
+  const TOTAL = 30000;
+  const IMG = (p) => `../public/styles/${p}.webp`;
+  const WEB = ["editorial", "swiss", "product", "corporate", "dark-premium", "playful", "motion", "glass", "3d", "afro-modern", "minimal", "luxury", "brutalist", "retro", "organic", "kids", "newspaper", "sport", "bento", "restaurant"];
+  const MORE = ["slides/corporate", "slides/editorial", "slides/swiss", "slides/dark-premium", "slides/playful", "slides/afro-modern", "app/glass", "app/playful", "app/organic", "app/product", "app/kids", "app/dark-premium", "system/afro-modern", "system/playful", "codebase/playful", "codebase/dark-premium"];
+  const ALL = [...WEB, ...MORE];
+  const el = (id) => document.getElementById(id);
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  // Smooth, cinematic easing.
+  const io = (x) => { x = clamp(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+  const out = (x) => 1 - Math.pow(1 - clamp(x), 3);
+  const expo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
+  const win = (t, a, b, fade = 500) => Math.min(clamp((t - a) / fade), clamp((b - t) / fade));
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+  const typedText = "Build a website for my cousin's restaurant in Nairobi";
+
+  // C: six columns of designs, each scrolling at its own speed.
+  const wall = el("wall");
+  const cols = [];
+  for (let c = 0; c < 7; c++) {
+    const col = document.createElement("div");
+    col.className = "col";
+    col.style.left = `${8 + c * 12.4}%`;
+    for (let k = 0; k < 9; k++) {
+      const img = document.createElement("img");
+      img.src = IMG(ALL[(c * 5 + k * 3) % ALL.length]);
+      img.alt = "";
+      col.appendChild(img);
+    }
+    wall.appendChild(col);
+    cols.push(col);
+  }
+
+  // D: four beats.
+  const BEATS = [
+    ["Websites", "Landing pages, shops, portfolios, ready to share.", "dark-premium", 16000],
+    ["Apps", "Phone screens that look and feel real.", "app/glass", 17500],
+    ["Slides", "Decks for class, the boardroom and pitch day.", "slides/corporate", 19000],
+    ["Design systems", "Colours, type and components for your brand.", "system/afro-modern", 20500],
+  ];
+  const D = el("D");
+  const beats = BEATS.map(([h, p, img, at], i) => {
+    const b = document.createElement("div");
+    b.className = "beat";
+    b.innerHTML = `<div class="txt"><span class="num">0${i + 1} / 04</span><h2>${h}</h2><p>${p}</p></div><div class="shot"><img src="${IMG(img)}" alt=""></div>`;
+    D.appendChild(b);
+    return { b, txt: b.querySelector(".txt"), shot: b.querySelector(".shot"), at };
+  });
+
+  // E: twelve designs placed in a ring, flying into the centre.
+  const flies = [];
+  for (let i = 0; i < 12; i++) {
+    const f = document.createElement("div");
+    f.className = "fly";
+    f.innerHTML = `<img src="${IMG(ALL[(i * 3 + 1) % ALL.length])}" alt="">`;
+    el("flies").appendChild(f);
+    flies.push({ f, a: (i / 12) * Math.PI * 2, r: 34 + (i % 3) * 8, rot: (i % 2 ? 1 : -1) * (8 + i) });
+  }
+
+  const set = (id, o, tr) => { const n = typeof id === "string" ? el(id) : id; n.style.opacity = String(o); if (tr !== undefined) n.style.transform = tr; };
+
+  function render(t) {
+    // A: 0 – 4.4 s
+    const a = win(t, 0, 4400, 400);
+    set("A", a);
+    set("hint", out((t - 300) / 700) * (1 - clamp((t - 3600) / 400)), `translateY(${(1 - out((t - 300) / 700)) * 2}cqh)`);
+    const chars = Math.round(typedText.length * clamp((t - 600) / 2200));
+    el("typed").textContent = typedText.slice(0, chars);
+    el("caret").style.visibility = Math.floor(t / 420) % 2 ? "hidden" : "visible";
+    const press = t > 3100 && t < 3400 ? 0.88 : 1;
+    el("send").style.transform = `scale(${press})`;
+    const lift = out((t - 3500) / 900);
+    set("prompt", 1, `translateY(${-lift * 30}cqh) scale(${1 - lift * 0.4})`);
+
+    // B: 3.9 – 9.4 s
+    set("B", win(t, 3900, 9400, 500));
+    const rise = expo((t - 3900) / 1100);
+    el("browser").style.transform = `translateY(${(1 - rise) * 18}cqh) scale(${0.86 + 0.14 * rise + clamp((t - 7000) / 2400) * 0.05}) rotateX(${(1 - rise) * 14}deg)`;
+    [...el("skel").children].forEach((b, i) => (b.style.opacity = String(out((t - 4400 - i * 160) / 400))));
+    const wipe = io((t - 5600) / 1300);
+    el("skel").style.clipPath = `inset(${wipe * 100}% 0 0 0)`;
+    set("capB", out((t - 7100) / 600) * (1 - clamp((t - 8900) / 400)));
+
+    // C: 9.0 – 16.4 s, a tilted wall drifting under a slow camera.
+    const c = win(t, 9000, 16400, 700);
+    set("C", c);
+    const tc = Math.max(0, t - 9000);
+    wall.style.transform = `rotateX(${48 - tc / 900}deg) rotateZ(${-28 + tc / 1400}deg) translateZ(${-10 + tc / 420}cqmax)`;
+    cols.forEach((col, i) => (col.style.transform = `translateY(${(i % 2 ? -1 : 1) * (tc / (90 + i * 14)) - 40}cqmax)`));
+    const bc = out((t - 10600) / 900) * (1 - clamp((t - 15200) / 700));
+    set("bigC", bc, `scale(${0.94 + 0.06 * out((t - 10600) / 1600)})`);
+    el("bigC").style.filter = `blur(${(1 - out((t - 10600) / 900)) * 10}px)`;
+
+    // D: 16.0 – 22.2 s, a beat every 1.5 s, each settling in from the right.
+    set("D", win(t, 16000, 22200, 300));
+    beats.forEach(({ b, txt, shot, at }, i) => {
+      const end = i === beats.length - 1 ? 22200 : at + 1500;
+      const vis = t >= at - 200 && t < end + 200;
+      b.style.visibility = vis ? "visible" : "hidden";
+      const k = expo((t - at) / 700);
+      const leave = clamp((t - end + 250) / 450);
+      set(txt, Math.min(clamp((t - at) / 250), 1 - leave), `translateX(${(1 - k) * 8 - leave * 6}cqw)`);
+      set(shot, Math.min(clamp((t - at) / 200), 1 - leave), `translateX(${(1 - k) * 30 - leave * 12}cqw) rotateY(${(1 - k) * -24}deg) scale(${0.92 + 0.08 * k})`);
+    });
+
+    // E: 22.0 – 26.6 s, the designs fly in and turn into the spin.
+    set("E", win(t, 22000, 26600, 300));
+    const pull = io((t - 22200) / 2600);
+    flies.forEach(({ f, a, r, rot }, i) => {
+      const rr = r * (1 - pull) * (1 + 0.15 * Math.sin(i));
+      const ang = a + pull * 1.6;
+      set(f, (1 - clamp((t - 24500) / 300)) * clamp((t - 22000 - i * 40) / 300), `translate(${Math.cos(ang) * rr}cqmax, ${Math.sin(ang) * rr * 0.62}cqmax) rotate(${rot * (1 - pull)}deg) scale(${1 - pull * 0.8})`);
+    });
+    const lg = expo((t - 24500) / 900);
+    set("logoE", clamp((t - 24400) / 200), `scale(${0.3 + 0.7 * lg})`);
+    el("spinE").style.transform = `rotate(${(1 - lg) * -220}deg)`;
+    el("flash").style.opacity = String(Math.max(0, 0.35 * Math.exp(-Math.max(0, t - 24500) / 260)) * (t >= 24500 ? 1 : 0));
+
+    // F: 26.2 s – end
+    set("F", clamp((t - 26200) / 500));
+    set("lockF", out((t - 26300) / 700), `translateY(${(1 - out((t - 26300) / 700)) * 3}cqh)`);
+    set("lineF", out((t - 26800) / 700), `translateY(${(1 - out((t - 26800) / 700)) * 3}cqh)`);
+    set("toolsF", out((t - 27300) / 700));
+    set("ctaF", out((t - 27700) / 700), `scale(${0.94 + 0.06 * out((t - 27700) / 700)})`);
+
+    // Ambient
+    el("glow").style.opacity = String(0.6 + 0.4 * Math.sin(t / 1800) + (t > 24400 && t < 27000 ? 0.6 : 0));
+    el("turb").setAttribute("seed", String(Math.floor(t / 60) % 9 + 1));
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  const audio = el("audio");
+  let t = 0, playing = false, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = !audio.paused && audio.readyState >= 2 ? audio.currentTime * 1000 : Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { t = TOTAL; stop(); }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (t >= TOTAL) t = 0; playing = true; el("play").textContent = "Pause"; try { audio.currentTime = t / 1000; audio.play().catch(() => {}); } catch {} }
+  function stop() { playing = false; el("play").textContent = "Play with sound"; audio.pause(); }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); try { audio.currentTime = t / 1000; } catch {} render(t); }
+  el("play").addEventListener("click", () => (playing ? stop() : start()));
+  el("replay").addEventListener("click", () => { t = 0; start(); });
+  el("scrub").addEventListener("input", (e) => seek(+e.target.value));
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["portrait", "4:5"]];
+  let shape = 0;
+  function setShape(i) { shape = i; document.documentElement.classList.remove("vertical", "portrait"); if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]); el("shape").textContent = `Format: ${SHAPES[i][1]}`; }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-portrait") document.documentElement.classList.add("portrait");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+  render(0);
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { last = performance.now(); requestAnimationFrame(frame); });
+})();
+</script>
