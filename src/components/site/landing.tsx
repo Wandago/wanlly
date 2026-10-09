@@ -11,7 +11,7 @@ const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean
   { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5", "Fable 5.1"], live: true },
   { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
   // Open models via NVIDIA: switch to live once NVIDIA_API_KEY is set and Admin's model check passes.
-  { maker: "DeepSeek", models: ["V4.1 Flash"], live: false },
+  { maker: "DeepSeek", models: ["V4 Flash", "V4 Pro"], live: false },
   { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: false },
   { maker: "Moonshot", models: ["Kimi K3"], live: false },
   { maker: "OpenAI", models: ["GPT"], live: false },

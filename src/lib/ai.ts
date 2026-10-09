@@ -27,6 +27,7 @@ export function providers(): Providers {
     google,
     nvidia,
     xai: !!process.env.XAI_API_KEY,
+    deepseek: !!process.env.DEEPSEEK_API_KEY,
     // Auto (free) runs when any free host has a key; Gemini is its last resort.
     pool: google || POOL_HOSTS.some((h) => !!process.env[h.env]),
   };
@@ -34,7 +35,7 @@ export function providers(): Providers {
 
 /** Model cost in US dollars for one reply. Gemini and the NVIDIA-hosted models run on free tiers for now, so they're 0. */
 export function replyCostUsd(modelId: string, inputTokens: number, outputTokens: number): number {
-  const c = CLAUDE[modelId] ?? GROK[modelId];
+  const c = CLAUDE[modelId] ?? GROK[modelId] ?? DEEPSEEK[modelId];
   return c ? (inputTokens * c.usdIn + outputTokens * c.usdOut) / 1e6 : 0;
 }
 
@@ -351,6 +352,24 @@ const GROK: Record<string, { api: string; usdIn: number; usdOut: number }> = {
   "grok-top": { api: "grok-4.7", usdIn: 2, usdOut: 6 },
 };
 
+// ---------------------------------------------------------------- DeepSeek (direct)
+
+/**
+ * DeepSeek's own API: paid, but cheap. Ids to try in order (the newest name first), and US
+ * dollars per million tokens; Pro uses its standard price, not a promotion.
+ */
+const DEEPSEEK: Record<string, { api: string[]; usdIn: number; usdOut: number }> = {
+  deepseek: { api: ["deepseek-v4-flash", "deepseek-chat"], usdIn: 0.14, usdOut: 0.28 },
+  "deepseek-pro": { api: ["deepseek-v4-pro", "deepseek-reasoner"], usdIn: 1.74, usdOut: 3.48 },
+};
+const deepseekHost = (): Host => ({ name: "DeepSeek", base: (process.env.DEEPSEEK_BASE_URL || "https://api.deepseek.com/v1").replace(/\/+$/, ""), key: process.env.DEEPSEEK_API_KEY ?? "" });
+
+/** The id DeepSeek serves for one of our models, from its live list. */
+async function deepseekModel(modelId: string): Promise<string> {
+  const ids = await listModels(deepseekHost());
+  return DEEPSEEK[modelId].api.find((n) => ids.includes(n)) ?? DEEPSEEK[modelId].api[0];
+}
+
 /** One host that speaks the OpenAI chat format: where it is, its key, and its name for errors. */
 type Host = { name: string; base: string; key: string };
 const nvidiaHost = (): Host => ({ name: "NVIDIA", base: nvidiaBase(), key: process.env.NVIDIA_API_KEY ?? "" });
@@ -560,6 +579,7 @@ export async function checkProviders() {
     ["anthropic", "haiku"],
     ["nvidia", "glm-flash"],
     ["xai", "grok"],
+    ["deepseek", "deepseek"],
     ["pool", "free"],
   ] as const) {
     if (!providers()[provider]) {
@@ -575,9 +595,11 @@ export async function checkProviders() {
           ? await nvidiaModel(modelId)
           : provider === "xai"
             ? GROK.grok.api
-            : provider === "pool"
-              ? (await poolPlan()).map((p) => `${p.label} ${p.model}${p.resting ? " (resting)" : ""}`).join(" → ") || "Gemini only"
-              : CLAUDE.haiku.api;
+            : provider === "deepseek"
+              ? await deepseekModel(modelId)
+              : provider === "pool"
+                ? (await poolPlan()).map((p) => `${p.label} ${p.model}${p.resting ? " (resting)" : ""}`).join(" → ") || "Gemini only"
+                : CLAUDE.haiku.api;
     try {
       for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
         if (ev.type === "text") text += ev.text;
@@ -616,6 +638,12 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
     if (!process.env.NVIDIA_API_KEY) throw new ProviderError("unavailable");
     return (async function* () {
       yield* openaiChat(nvidiaHost(), await nvidiaModel(opts.modelId), opts.system, opts.turns, max, opts.signal);
+    })();
+  }
+  if (DEEPSEEK[opts.modelId]) {
+    if (!process.env.DEEPSEEK_API_KEY) throw new ProviderError("unavailable");
+    return (async function* () {
+      yield* openaiChat(deepseekHost(), await deepseekModel(opts.modelId), opts.system, opts.turns, max, opts.signal);
     })();
   }
   if (opts.modelId === "free") {

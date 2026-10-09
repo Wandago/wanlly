@@ -5,12 +5,12 @@ export type ToolId = "chat" | "code" | "design" | "images";
 export type Model = {
   id: string;
   name: string;
-  group: "Anthropic" | "Google" | "Open models" | "Other providers";
+  group: "Anthropic" | "Google" | "Open models" | "DeepSeek" | "Other providers";
   description: string;
   /** Credits a reply costs at least. One credit is half a US cent of model cost; long replies cost more. */
   credits: number;
   /** Who runs it. Models whose provider has no key yet show as "soon". */
-  provider: "anthropic" | "google" | "nvidia" | "xai" | "pool" | null;
+  provider: "anthropic" | "google" | "nvidia" | "xai" | "deepseek" | "pool" | null;
 };
 
 /** Which illustration the cover art draws. Real sponsors upload their own cover image. */
@@ -68,6 +68,8 @@ export const MODELS: Model[] = [
   { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", group: "Open models", description: "DeepSeek. Fast, sharp at code and maths", credits: 1, provider: "nvidia" },
   { id: "glm", name: "GLM 5.3", group: "Open models", description: "Z.ai. Strong at code and long tasks", credits: 2, provider: "nvidia" },
   { id: "kimi", name: "Kimi K3", group: "Open models", description: "Moonshot. Long documents and big builds", credits: 2, provider: "nvidia" },
+  { id: "deepseek", name: "DeepSeek V4 Flash", group: "DeepSeek", description: "Fast and very good value, strong at code", credits: 1, provider: "deepseek" },
+  { id: "deepseek-pro", name: "DeepSeek V4 Pro", group: "DeepSeek", description: "Deeper reasoning for hard problems", credits: 2, provider: "deepseek" },
   { id: "gpt", name: "GPT", group: "Other providers", description: "OpenAI, chat and Codex", credits: 2, provider: null },
   { id: "grok", name: "Grok 4.3", group: "Other providers", description: "xAI. Quick, direct answers", credits: 2, provider: "xai" },
   { id: "grok-top", name: "Grok 4.7", group: "Other providers", description: "xAI. Its most capable model", credits: 4, provider: "xai" },
@@ -76,7 +78,7 @@ export const MODELS: Model[] = [
 /** The model new accounts start on, and the one suggested when credits are short. Live on Google's free tier. */
 export const CHEAPEST_MODEL_ID = "gemini-flash";
 
-export type Providers = { anthropic: boolean; google: boolean; nvidia: boolean; xai: boolean; pool: boolean };
+export type Providers = { anthropic: boolean; google: boolean; nvidia: boolean; xai: boolean; deepseek: boolean; pool: boolean };
 /** Whether a model can run, given which providers have keys. */
 export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
 export const IMAGE_MODEL_NAME = "Gemini Image";
