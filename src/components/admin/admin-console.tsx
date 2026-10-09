@@ -106,9 +106,9 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           <Kpi label="Ad views today" value={t.adViewsToday} sub="seen for 1s or more →" />
         </button>
         <button type="button" onClick={() => go("ads")} className="text-left">
-          <Kpi label="Est. revenue today" value={usd(t.revenueToday)} sub="placeholder ads, estimate →" />
+          <Kpi label="Revenue today" value={usd(t.revenueToday)} sub="real: campaigns, Adsterra, recorded →" />
         </button>
-        <Kpi label="Est. model cost today" value={usd(t.costToday)} sub={t.revenueToday >= t.costToday ? "covered by ads" : "more than ads bring in"} />
+        <Kpi label="AI cost today" value={usd(t.costToday)} sub={t.revenueToday >= t.costToday ? "covered by ads" : "more than ads bring in"} />
       </div>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <Kpi label="People" value={t.users} sub={`${num(t.newToday)} new today`} />

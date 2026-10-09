@@ -1,6 +1,8 @@
 import { rawSql } from "@/db";
 import { CAN, requireStaff } from "@/lib/admin";
-import { ESTIMATE } from "@/lib/catalog";
+import { adsterraDaily } from "@/lib/adsterra";
+import { replyCostUsd } from "@/lib/ai";
+import { readEntries } from "@/lib/revenue-log";
 
 const num = (v: unknown) => Number(v ?? 0);
 
@@ -10,7 +12,7 @@ export async function GET(req: Request) {
   if (staff instanceof Response) return staff;
   try {
     const q = rawSql();
-    const [totals, days] = await Promise.all([
+    const [totals, days, today] = await Promise.all([
       q`select
           (select count(*) from users where status <> 'deleted')::int as users,
           (select count(*) from users where created_at >= date_trunc('day', now()))::int as new_today,
@@ -34,7 +36,19 @@ export async function GET(req: Request) {
           (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason in ('settle', 'release') and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent,
           (select count(*) from beta_applications b where b.created_at >= d.day and b.created_at < d.day + interval '1 day')::int as applications
         from d order by d.day desc`,
+      // Real money today: sold campaigns at their price, and model tokens at each model's price.
+      q`select to_char(now(), 'YYYY-MM-DD') as day,
+          (select coalesce(sum(c.cpm_cents), 0) from ad_events a join campaigns c on a.creative = 'campaign:' || c.id
+            where a.kind = 'impression' and a.created_at >= date_trunc('day', now()))::bigint as cpm_cents,
+          (select coalesce(json_agg(x), '[]') from (select model_id, sum(input_tokens)::bigint as i, sum(output_tokens)::bigint as o from messages
+            where role = 'assistant' and model_id is not null and created_at >= date_trunc('day', now()) group by model_id) x) as usage`,
     ]);
+    const td = (today as Record<string, unknown>[])[0] ?? {};
+    const day = String(td.day);
+    const [network, entries] = await Promise.all([adsterraDaily(day, day), readEntries()]);
+    const realRevenue =
+      num(td.cpm_cents) / 100 / 1000 + (network?.days ?? []).filter((x) => x.day === day).reduce((a, x) => a + x.usd, 0) + entries.filter((e) => e.day === day).reduce((a, e) => a + e.usd, 0);
+    const realCost = ((td.usage ?? []) as { model_id: string; i: number; o: number }[]).reduce((a, u) => a + replyCostUsd(u.model_id, num(u.i), num(u.o)), 0);
     const t = (totals as Record<string, unknown>[])[0] ?? {};
     return Response.json({
       role: staff.role,
@@ -52,9 +66,8 @@ export async function GET(req: Request) {
         visitorsToday: num(t.visitors_today),
         viewsToday: num(t.views_today),
         adViewsToday: num(t.native_today) + num(t.display_today),
-        revenueToday:
-          (num(t.native_today) / 1000) * ESTIMATE.ecpm.native + (num(t.display_today) / 1000) * ESTIMATE.ecpm.display + (num(t.videos_today) / 1000) * ESTIMATE.ecpm.rewarded,
-        costToday: num(t.spent_today) * ESTIMATE.usdPerCredit,
+        revenueToday: realRevenue,
+        costToday: realCost,
       },
       days: (days as Record<string, unknown>[]).map((d) => ({ day: String(d.day), signups: num(d.signups), active: num(d.active), videos: num(d.videos), spent: num(d.spent), applications: num(d.applications) })),
     });

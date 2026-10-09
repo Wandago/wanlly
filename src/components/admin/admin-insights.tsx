@@ -6,6 +6,7 @@ import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
 import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
+import { MoneyPanel } from "./admin-money";
 
 /* Traffic, ads and revenue, and abuse: the admin tabs that read what the app records. */
 
@@ -173,7 +174,7 @@ type Ads = {
 
 /** Ads in two parts: a dashboard of how ads perform, and the setup of the ad network. */
 export function AdsTab({ days }: { days: 7 | 30 }) {
-  const [part, setPart] = useState<"dashboard" | "setup">("dashboard");
+  const [part, setPart] = useState<"money" | "dashboard" | "setup">("money");
   return (
     <div className="flex flex-col gap-4">
       <Pills
@@ -181,11 +182,14 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
         value={part}
         onChange={setPart}
         options={[
-          ["dashboard", "Dashboard"],
+          ["money", "Money"],
+          ["dashboard", "Ad views"],
           ["setup", "Setup"],
         ]}
       />
-      {part === "dashboard" ? (
+      {part === "money" ? (
+        <MoneyPanel days={days} />
+      ) : part === "dashboard" ? (
         <AdStats days={days} />
       ) : (
         <>
@@ -207,8 +211,8 @@ function AdStats({ days }: { days: 7 | 30 }) {
   return (
     <div className="flex flex-col gap-4">
       <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-muted">
-        <b className="font-medium text-fg">Revenue here is an estimate.</b> House ads earn nothing; directly sold campaigns and, later, ad networks bring real money
-        (real so far in this range: {usd(data.reportedRevenue)}). Estimates use ${e.native} per 1,000 native views, ${e.display} per 1,000 banner views and ${e.rewarded} per 1,000 finished videos.
+        <b className="font-medium text-fg">This page plans with estimates; real money is under Money.</b> House ads earn nothing; sold campaigns, Adsterra and recorded income are the real figures
+        (sold campaigns in this range: {usd(data.reportedRevenue)}). Estimates use ${e.native} per 1,000 native views, ${e.display} per 1,000 banner views and ${e.rewarded} per 1,000 finished videos.
         Model cost is credits used × ${data.assumptions.usdPerCredit}.
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">

@@ -1,5 +1,5 @@
 import { desc, eq, sql } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost, taskCredits } from "@/lib/catalog";
@@ -132,6 +132,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
           const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · bigger task`) : 0;
           const [row] = await d.insert(v).values({ projectId: id, prompt: request, html, modelId: model.id, credits: price + extra }).returning({ id: v.id, createdAt: v.createdAt });
           await d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
+          // Tokens for Admin's usage view; the columns come with migration 0014, so skip quietly before it.
+          await rawSql()`update design_versions set input_tokens = ${usage.inputTokens}, output_tokens = ${usage.outputTokens} where id = ${row.id}`.catch(() => {});
           send({ type: "done", versionId: row.id, createdAt: row.createdAt, charged: price + extra, cutShort: !isComplete(reply), ...(await account(userId)) });
         }
       } catch (e) {
