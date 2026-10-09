@@ -63,10 +63,20 @@ export function unpackAssets(html: string, assets: Map<string, string>) {
   return html.replace(/asset:(keep|img)-\d+/g, (m) => assets.get(m) ?? m);
 }
 
+/** A design system's styles (its <style> blocks), for building other designs on it. */
+export function systemStyles(html: string): string {
+  const css = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1].trim()).join("\n\n");
+  return css.length > 24_000 ? css.slice(0, 24_000) : css;
+}
+
 /** The request for one version: the brief, the current design if there is one, and the change. */
-export function userPrompt(opts: { name: string; brief: string; request: string; current: string | null; images?: { key: string; name: string }[]; files?: string }) {
+export function userPrompt(opts: { name: string; brief: string; request: string; current: string | null; images?: { key: string; name: string }[]; files?: string; system?: { name: string; css: string } }) {
   const parts = [`Project: ${opts.name}`];
   if (opts.brief.trim()) parts.push(`Brief:\n${opts.brief.trim()}`);
+  if (opts.system?.css)
+    parts.push(
+      `Build this on the "${opts.system.name}" design system. Copy its CSS custom properties into your <style> and use them, and follow its type, spacing, radii and component styles:\n<design_system>\n${opts.system.css}\n</design_system>`,
+    );
   if (opts.images?.length)
     parts.push(
       `Attached images (you can see them above). To place one in the page, use its address exactly, for example <img src="${opts.images[0].key}" alt="…">. Use them where they fit the request; don't invent other image addresses:\n` +

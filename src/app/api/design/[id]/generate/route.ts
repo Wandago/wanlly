@@ -4,7 +4,7 @@ import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost } from "@/lib/catalog";
 import { MAX_BODY, readAttachments } from "@/lib/attachments";
-import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packAssets, systemPrompt, unpackAssets, userPrompt } from "@/lib/design";
+import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packAssets, systemPrompt, systemStyles, unpackAssets, userPrompt } from "@/lib/design";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
@@ -39,12 +39,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const model = MODELS.find((m) => m.id === data?.modelId);
   const jobId = data ? field(data, "jobId", 64) : "";
   const baseVersion = data && Number.isSafeInteger(data.baseVersionId) ? (data.baseVersionId as number) : null;
+  const systemId = data && Number.isSafeInteger(data.systemId) ? (data.systemId as number) : null;
   if (!id || !request || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: "Bad request" }, { status: 400 });
 
   const d = db();
   const v = schema.designVersions;
   let file: Awaited<ReturnType<typeof designFile>>;
   let current: string | null = null;
+  let system: { name: string; css: string } | undefined;
   try {
     file = await designFile(userId, id);
     if (!file) return Response.json({ error: "Not found" }, { status: 404 });
@@ -56,6 +58,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
       .orderBy(desc(v.id))
       .limit(1);
     current = row?.html ?? null;
+    // The design system to build on: one of this person's own Design System files.
+    if (systemId && systemId !== id) {
+      const sys = await designFile(userId, systemId);
+      if (sys?.kind === "system") {
+        const [latest] = await d.select({ html: v.html }).from(v).where(eq(v.projectId, systemId)).orderBy(desc(v.id)).limit(1);
+        if (latest) system = { name: sys.name, css: systemStyles(latest.html) };
+      }
+    }
   } catch (e) {
     console.error("design setup failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });
@@ -80,7 +90,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const turns = [
     {
       role: "user" as const,
-      text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current: current ? packed : null, images, files: attached.text }),
+      text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current: current ? packed : null, images, files: attached.text, system }),
       files: attached.files.map((f) => ({ mime: f.mime, data: f.data })),
     },
   ];

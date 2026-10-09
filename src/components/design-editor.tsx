@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TOOLS, getModel, jobCost, type Usage } from "@/lib/catalog";
 import { previewDoc, withBody } from "@/lib/design-preview";
 import { DRIVE_SCOPE, buildPptx, driveUpload, fileName, saveBlob, type MeasuredSlide } from "@/lib/export";
+import { extractTokens, htmlToJsx, tokensToCss, tokensToJson, tokensToTailwind } from "@/lib/design-export";
 import { limitReached, useWorkspace } from "@/lib/workspace-store";
 import { CreditsButton } from "./credits-button";
 import { AttachmentTray, DropOverlay } from "./attachment-tray";
@@ -63,6 +64,24 @@ export function DesignEditor({ id }: { id: number }) {
   const [full, setFull] = useState<false | "view" | "present">(false);
   const [slide, setSlide] = useState({ index: 0, count: 0 });
   const [copied, setCopied] = useState(false);
+  /** On phones the preview and the prompt take turns; side by side from 1024 px. */
+  const [pane, setPane] = useState<"preview" | "ask">("preview");
+  const [codeAs, setCodeAs] = useState<"html" | "react">("html");
+  const [systems, setSystems] = useState<{ id: number; name: string }[]>([]);
+  const [systemId, setSystemIdState] = useState<number | null>(() => {
+    try {
+      return Number(localStorage.getItem(`wanlly-ds-${id}`)) || null;
+    } catch {
+      return null;
+    }
+  });
+  const setSystemId = (v: number | null) => {
+    setSystemIdState(v);
+    try {
+      if (v) localStorage.setItem(`wanlly-ds-${id}`, String(v));
+      else localStorage.removeItem(`wanlly-ds-${id}`);
+    } catch {}
+  };
   const [editing, setEditing] = useState(false);
   const [frameKey, setFrameKey] = useState(0);
   const [working, setWorking] = useState("");
@@ -86,6 +105,11 @@ export function DesignEditor({ id }: { id: number }) {
         if (!r.ok) return setError(r.status === 404 ? "This design file doesn't exist or isn't yours." : (b.error ?? "Couldn't open this design."));
         setFile(b.file);
         setVersions(b.versions);
+        if (b.file.kind !== "system")
+          fetch("/api/projects?tool=design", { cache: "no-store" })
+            .then((x) => (x.ok ? x.json() : { projects: [] }))
+            .then((x: { projects: { id: number; name: string; kind?: string }[] }) => alive && setSystems(x.projects.filter((p) => p.kind === "system").map((p) => ({ id: p.id, name: p.name }))))
+            .catch(() => {});
         setShown(b.latest);
         if (!b.latest && (b.file.about || b.file.instructions)) setPrompt(KIND[b.file.kind as Kind].first);
       })
@@ -156,6 +180,7 @@ export function DesignEditor({ id }: { id: number }) {
     setLive("");
     setLiveDoc("");
     setView("preview");
+    setPane("preview");
     const c = new AbortController();
     ctrl.current = c;
     const account = (b: { credits?: number; floorUnlocked?: boolean; usage?: Usage }) =>
@@ -164,7 +189,7 @@ export function DesignEditor({ id }: { id: number }) {
       const r = await fetch(`/api/design/${id}/generate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null, attachments: forSending(sending) }),
+        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null, attachments: forSending(sending), systemId: systems.some((x) => x.id === systemId) ? systemId : null }),
         signal: c.signal,
       });
       if (!r.ok || !r.body) {
@@ -267,6 +292,18 @@ export function DesignEditor({ id }: { id: number }) {
 
   const downloadHtml = () => shown && file && saveBlob(new Blob([shown.html], { type: "text/html" }), `${fileName(file.name)}.html`);
 
+  const downloadJsx = () => shown && file && saveBlob(new Blob([htmlToJsx(shown.html, file.name)], { type: "text/plain" }), `${fileName(file.name)}.jsx`);
+
+  /** Design-system tokens in the format a codebase wants. */
+  const downloadTokens = (format: "css" | "tailwind" | "json") => {
+    if (!shown || !file) return;
+    const tokens = extractTokens(shown.html);
+    if (!tokens.length) return dispatch({ type: "toast", text: "No colour or size tokens found. Ask for “define the tokens as CSS variables on :root”." });
+    const [text, ext, type] =
+      format === "css" ? [tokensToCss(tokens), "tokens.css", "text/css"] : format === "tailwind" ? [tokensToTailwind(tokens), "theme.css", "text/css"] : [tokensToJson(tokens), "tokens.json", "application/json"];
+    saveBlob(new Blob([text], { type }), `${fileName(file.name)}-${ext}`);
+  };
+
   const printPdf = () => {
     setView("preview");
     window.setTimeout(() => frame.current?.contentWindow?.postMessage({ wanlly: "print" }, "*"), 50);
@@ -335,6 +372,7 @@ export function DesignEditor({ id }: { id: number }) {
   if (!file) return <main className="grid h-full place-items-center text-[13px] text-muted">Opening…</main>;
 
   const k = KIND[file.kind];
+  const codeText = view === "code" && shown ? (codeAs === "react" && file.kind !== "slides" && file.kind !== "system" ? htmlToJsx(shown.html, file.name) : shown.html) : "";
   const sizeKb = Math.round(live.length / 1024);
 
   return (
@@ -352,7 +390,7 @@ export function DesignEditor({ id }: { id: number }) {
         <span className="rounded-full bg-hover px-2 py-0.5 text-xs text-muted max-sm:hidden">{k.label}</span>
         <div className="ml-auto flex flex-wrap items-center gap-1.5">
           {file.kind !== "slides" && view === "preview" && (
-            <div className="flex gap-0.5 rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Screen size">
+            <div className="flex gap-0.5 rounded-[10px] bg-hover p-[3px] max-md:hidden" role="group" aria-label="Screen size">
               <button type="button" aria-pressed={device === "desktop"} onClick={() => setDevice("desktop")} className={seg(device === "desktop")}>
                 Desktop
               </button>
@@ -389,6 +427,14 @@ export function DesignEditor({ id }: { id: number }) {
               <Menu.Content align="end" sideOffset={6} className="z-40 min-w-[220px] rounded-xl border border-line bg-surface p-1 text-fg shadow-soft">
                 {[
                   ...(file.kind === "slides" ? [["PowerPoint (.pptx)", "Editable slides", exportPptx] as const] : []),
+                  ...(file.kind === "codebase" || file.kind === "design" ? [["React component (.jsx)", "Paste into a React or Next.js app", downloadJsx] as const] : []),
+                  ...(file.kind === "system"
+                    ? [
+                        ["CSS variables", "tokens.css for any project", () => downloadTokens("css")] as const,
+                        ["Tailwind theme", "@theme block for Tailwind v4", () => downloadTokens("tailwind")] as const,
+                        ["Design tokens (JSON)", "For Figma plugins and Style Dictionary", () => downloadTokens("json")] as const,
+                      ]
+                    : []),
                   ["PDF", file.kind === "slides" ? "One slide per page" : "Print, then Save as PDF", printPdf] as const,
                   ["Google Drive", file.kind === "slides" ? "Opens as Google Slides" : "Saves the HTML file", saveToDrive] as const,
                   ["HTML file", "The page itself", downloadHtml] as const,
@@ -404,18 +450,41 @@ export function DesignEditor({ id }: { id: number }) {
         </div>
       </header>
 
-      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[320px_minmax(0,1fr)] lg:grid-rows-1">
+      <div className="flex border-b border-line p-1.5 lg:hidden" role="tablist" aria-label="Show">
+        {(
+          [
+            ["preview", "Preview"],
+            ["ask", versions.length ? `Ask & versions (${versions.length})` : "Ask"],
+          ] as const
+        ).map(([key, label]) => (
+          <button key={key} type="button" role="tab" aria-selected={pane === key} onClick={() => setPane(key)} className={`flex-1 rounded-lg py-1.5 text-[13px] ${pane === key ? "bg-hover font-medium" : "text-muted"}`}>
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="grid min-h-0 flex-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[320px_minmax(0,1fr)]">
         {/* Preview */}
-        <section className="relative min-h-[320px] bg-code lg:order-2">
+        <section className={`relative min-h-[320px] bg-code lg:order-2 ${pane === "preview" ? "" : "max-lg:hidden"}`}>
           {view === "code" && shown ? (
             <div className="absolute inset-0 flex flex-col">
               <div className="flex items-center gap-2 border-b border-line px-3 py-1.5 font-mono text-[11px] text-faint">
-                {Math.round(shown.html.length / 1024)} KB · HTML
+                {file.kind !== "slides" && file.kind !== "system" ? (
+                  <span className="flex gap-0.5 rounded-md bg-hover p-0.5" role="group" aria-label="Code as">
+                    {(["html", "react"] as const).map((k) => (
+                      <button key={k} type="button" aria-pressed={codeAs === k} onClick={() => setCodeAs(k)} className={`rounded px-1.5 py-0.5 ${codeAs === k ? "bg-surface text-fg" : ""}`}>
+                        {k === "html" ? "HTML" : "React"}
+                      </button>
+                    ))}
+                  </span>
+                ) : (
+                  "HTML"
+                )}
+                <span>{Math.round(shown.html.length / 1024)} KB</span>
                 <button
                   type="button"
                   className="ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-hover hover:text-fg"
                   onClick={() =>
-                    navigator.clipboard?.writeText(shown.html).then(() => {
+                    navigator.clipboard?.writeText(codeText).then(() => {
                       setCopied(true);
                       window.setTimeout(() => setCopied(false), 1500);
                     })
@@ -424,7 +493,7 @@ export function DesignEditor({ id }: { id: number }) {
                   <Icon name={copied ? "check" : "copy"} size={12} /> {copied ? "Copied" : "Copy"}
                 </button>
               </div>
-              <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-[12px] leading-[1.55] whitespace-pre-wrap">{shown.html}</pre>
+              <pre className="min-h-0 flex-1 overflow-auto p-4 font-mono text-[12px] leading-[1.55] whitespace-pre-wrap">{codeText}</pre>
             </div>
           ) : srcDoc ? (
             <div className={full ? "fixed inset-0 z-50 bg-black" : `absolute inset-0 flex justify-center ${device === "phone" && file.kind !== "slides" ? "py-4" : ""}`}>
@@ -481,8 +550,8 @@ export function DesignEditor({ id }: { id: number }) {
         </section>
 
         {/* Brief, versions and the prompt */}
-        <aside className="flex min-h-0 flex-col border-line max-lg:border-t lg:order-1 lg:border-r">
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 max-lg:max-h-[220px]">
+        <aside className={`flex min-h-0 flex-col border-line lg:order-1 lg:border-r ${pane === "ask" ? "max-lg:row-span-2" : "max-lg:hidden"}`}>
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
             {(file.about || file.instructions) && (
               <details className="rounded-xl border border-line bg-surface px-3 py-2 text-[13px]" open={!versions.length}>
                 <summary className="cursor-pointer font-medium">Brief</summary>
@@ -563,6 +632,21 @@ export function DesignEditor({ id }: { id: number }) {
                 }}
               />
               <ModelPicker />
+              {file.kind !== "system" && systems.length > 0 && (
+                <select
+                  aria-label="Design system"
+                  value={systems.some((x) => x.id === systemId) ? String(systemId) : ""}
+                  onChange={(e) => setSystemId(Number(e.target.value) || null)}
+                  className="max-w-[150px] truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-muted outline-none hover:text-fg"
+                >
+                  <option value="">No design system</option>
+                  {systems.map((x) => (
+                    <option key={x.id} value={x.id}>
+                      {x.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from={model.provider === "anthropic"} />
                 {editing ? (

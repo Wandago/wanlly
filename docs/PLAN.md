@@ -264,4 +264,8 @@ The Build Pass ad load (side panel on, a video about every 15 minutes) roughly t
 - **Live editing:** Edit turns the preview into an editable page (click any text and type); Save stores the edited body as a new, free version with the original <head> untouched.
 - **Exports:** PowerPoint built in the browser from the slides as rendered (shapes and real text boxes, PptxGenJS 3.12.0 from jsDelivr with an integrity hash); PDF through the preview's print (one 16:9 slide per page); Google Drive (slides become Google Slides via the .pptx; other designs upload as .html) using the person's own Google access with the `drive.file` scope, requested through Clerk the first time; HTML download.
 - **Google Drive setup (once):** in Clerk, Google needs custom credentials from a Google Cloud OAuth client with the Google Drive API enabled and the `https://www.googleapis.com/auth/drive.file` scope allowed.
+- **Design systems:** any design can be built on one of the person's Design System files (picker next to the model); its styles go to the model with the request. Design systems export CSS variables, a Tailwind v4 theme and W3C design tokens (JSON).
+- **Codebase:** Design in codebase and Design export a React component (.jsx), also shown in Code view as HTML or React.
+- **Phones:** the editor shows Preview and Ask as tabs below 1024 px.
+- **Attachments:** images (placed in the page), PDFs and text files can be dropped, pasted or picked.
 - **Not yet:** connecting a real repository for Design in codebase, and sharing.
