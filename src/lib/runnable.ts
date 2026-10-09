@@ -227,3 +227,18 @@ export function zipFiles(files: { name: string; code: string }[]): Blob {
   end.setUint32(16, offset, true);
   return new Blob([...parts, ...central, new Uint8Array(end.buffer)] as BlobPart[], { type: "application/zip" });
 }
+
+/*
+ * The preview runs in a frame with no origin of its own (so it can't reach Wanlly), where
+ * localStorage, sessionStorage and cookies throw. Apps that save data would crash there, so the
+ * preview gets in-memory stand-ins. Only the preview: the downloaded file uses the real ones.
+ */
+const STORAGE_SHIM = `<script>(function(){function mem(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){var c="";try{Object.defineProperty(document,"cookie",{get:function(){return c},set:function(v){c=String(v).split(";")[0]},configurable:true})}catch(_){}}})()</script>`;
+
+/** The page as the canvas shows it: the project plus the storage stand-ins, first thing in <head>. */
+export function previewHtml(html: string): string {
+  if (!html) return "";
+  if (/<head(\s[^>]*)?>/i.test(html)) return html.replace(/<head(\s[^>]*)?>/i, (m) => m + STORAGE_SHIM);
+  if (/<html(\s[^>]*)?>/i.test(html)) return html.replace(/<html(\s[^>]*)?>/i, (m) => `${m}<head>${STORAGE_SHIM}</head>`);
+  return STORAGE_SHIM + html;
+}

@@ -1,8 +1,8 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { saveBlob } from "@/lib/export";
-import { findProject, findServerProject, projectFileName, zipFiles, type Project, type ServerProject } from "@/lib/runnable";
+import { findProject, findServerProject, previewHtml, projectFileName, zipFiles, type Project, type ServerProject } from "@/lib/runnable";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 
@@ -122,12 +122,31 @@ export function ProjectCanvas() {
   const [doc, setDoc] = useState("");
   const streaming = job?.status === "working";
 
-  // While the reply is still being written, the preview refreshes every 1.5 s, not on every word.
+  // While the reply is being written, the preview catches up at most every 1.5 s (a steady pace,
+  // even when words arrive non-stop). A finished reply shows straight away.
+  const latest = useRef("");
+  const pending = useRef<number | null>(null);
+  const last = useRef(0);
   useEffect(() => {
-    if (!project) return;
-    const t = window.setTimeout(() => setDoc(project.html), streaming ? 1500 : 0);
-    return () => window.clearTimeout(t);
+    latest.current = project?.html ?? "";
+    if (!streaming || !project || pending.current) return;
+    pending.current = window.setTimeout(
+      () => {
+        pending.current = null;
+        last.current = Date.now();
+        setDoc(latest.current);
+      },
+      Math.max(0, 1500 - (Date.now() - last.current)),
+    );
   }, [project, streaming]);
+  useEffect(
+    () => () => {
+      if (pending.current) window.clearTimeout(pending.current);
+      pending.current = null;
+    },
+    [],
+  );
+  const shown = useMemo(() => previewHtml(streaming ? doc : (project?.html ?? "")), [streaming, doc, project]);
 
   if (!canvas?.openId || !job || !project) return null;
   const tab = (k: "preview" | "code", label: string) => (
@@ -162,11 +181,12 @@ export function ProjectCanvas() {
       <div className="relative min-h-0 flex-1">
         {view === "preview" ? (
           <iframe
-            key={reload}
+            // A fresh load when the reply finishes, so scripts that ran on a half-written page start clean.
+            key={`${job.id}:${reload}:${streaming ? "live" : "done"}`}
             title={`${project.title} preview`}
             sandbox="allow-scripts allow-modals allow-forms allow-popups"
             referrerPolicy="no-referrer"
-            srcDoc={doc}
+            srcDoc={shown}
             className="absolute inset-0 h-full w-full bg-white"
           />
         ) : (
