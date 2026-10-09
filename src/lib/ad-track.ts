@@ -29,6 +29,14 @@ export function seenToday(creative: string): number {
   }
 }
 
+/** Forgets this browser's view counts, so capped campaigns show again (for the team, testing). */
+export function resetSeen() {
+  try {
+    localStorage.removeItem(SEEN);
+  } catch {}
+  window.dispatchEvent(new Event(SEEN));
+}
+
 /** Counts a view of a sold campaign, so frequency caps hold across pages and tabs. */
 function countView(creative: string) {
   if (!creative.startsWith("campaign:")) return;

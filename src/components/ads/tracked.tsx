@@ -8,11 +8,11 @@ import { trackAd, type AdEvent } from "@/lib/ad-track";
  * (the industry's viewable standard), once per creative, and a click on any button or link
  * inside it except ones marked data-ad-ignore (the "Sponsored" label, Watch).
  */
-export function Tracked({ placement, format, creative, className, children }: Omit<AdEvent, "kind"> & { className?: string; children: ReactNode }) {
+export function Tracked({ placement, format, creative, className, children, paused = false }: Omit<AdEvent, "kind"> & { className?: string; children: ReactNode; paused?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
+    if (!el || paused) return;
     let t: number | null = null;
     const io = new IntersectionObserver(
       ([entry]) => {
@@ -33,7 +33,7 @@ export function Tracked({ placement, format, creative, className, children }: Om
       io.disconnect();
       if (t) window.clearTimeout(t);
     };
-  }, [placement, format, creative]);
+  }, [placement, format, creative, paused]);
 
   return (
     <div

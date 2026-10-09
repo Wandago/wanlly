@@ -10,7 +10,7 @@ import { AdRail } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
 import { Tracked } from "./ads/tracked";
 import { NetworkSlot, useNetworkTest } from "./ads/network-slot";
-import { AdsProvider, creativeOf, openSponsor, useNetwork, useSponsors, useTick } from "@/lib/ads-context";
+import { AdsProvider, creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { NetworkUnit } from "./ads/network-unit";
 import { EarnDialog } from "./earn-dialog";
 import { Interstitial } from "./ads/interstitial";
@@ -66,9 +66,8 @@ function PhoneBanner() {
   const sponsor = useSponsors("phone_banner", RAIL_SPONSORS)[0];
   const networkTest = useNetworkTest();
   const network = useNetwork();
-  // With a network on, the phone bar alternates between its banner and a sponsor.
-  const turn = useTick(45000);
-  if (network?.sizes.includes("320x50") && turn % 2 === 0 && !networkTest)
+  // A sold campaign keeps the phone bar; otherwise the network's banner, then house sponsors.
+  if (network?.sizes.includes("320x50") && !sponsor.campaignId && !networkTest)
     return (
       <div className="flex justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Advertisement">
         <NetworkUnit size="320x50" network={network.name} placement="phone_banner" />

@@ -158,8 +158,9 @@ function EarnMini() {
 export function AdRail() {
   const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
-  // With an ad network on, the two slots take turns: one shows a network banner while the other
-  // shows a sponsor card, and they swap every 45 seconds. Tall screens get the 300×600 size.
+  // Who gets each slot: a sold campaign booked for it always shows; otherwise the ad network;
+  // Wanlly's own house sponsors only fill what's left (or a network size that came back empty).
+  // With no campaigns, the cover slot takes turns between network and house so the panel varies.
   const network = useNetwork();
   const turn = useTick(45000);
   const tall = useTall();
@@ -168,9 +169,9 @@ export function AdRail() {
   return (
     <aside aria-label="Sponsored" className="hidden min-h-0 border-l border-line bg-side xl:block">
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
-        {network && has("300x250") && turn % 2 === 1 ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
+        {network && has("300x250") && !top.campaignId && turn % 2 === 1 ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
         <div className="hidden [@media(min-height:860px)]:block">
-          {network && bannerSize && turn % 2 === 0 ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
+          {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
         </div>
         <div className="mt-auto">
           <EarnMini />

@@ -4,6 +4,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useState, type ReactNode } from "react";
 import type { CoverKind } from "@/lib/catalog";
 import { Cover } from "../ads/cover";
+import { resetSeen, seenToday } from "@/lib/ad-track";
 import { CountryPicker } from "./country-picker";
 import { Icon } from "../icon";
 import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when } from "./admin-ui";
@@ -136,6 +137,17 @@ function Preview({ c }: { c: Partial<Campaign> }) {
       </div>
     </article>
   );
+}
+
+/** Why an active campaign might not be showing right now, or null when it should be. */
+function notShowing(c: Campaign): string | null {
+  if (c.status !== "active") return null;
+  const now = Date.now();
+  if (c.startsAt && new Date(c.startsAt).getTime() > now) return `Starts ${when(c.startsAt)}`;
+  if (c.endsAt && new Date(c.endsAt).getTime() <= now) return "Past its end date";
+  if (c.maxImpressions !== null && c.impressions >= c.maxImpressions) return "Reached its view limit";
+  if (c.frequencyCap && seenToday(`campaign:${c.id}`) >= c.frequencyCap) return `Hidden for you today: you've seen it ${c.frequencyCap}× (its daily limit per person)`;
+  return null;
 }
 
 const dateInput = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 10) : "");
@@ -447,7 +459,25 @@ export function AdvertisersTab() {
                 <small className="text-xs text-muted">
                   {c.advertiser} · {c.countries.length ? c.countries.join(", ") : "all countries"}
                   {c.endsAt && ` · ends ${when(c.endsAt)}`}
+                  {c.frequencyCap ? ` · ${c.frequencyCap}× a day per person` : ""}
                 </small>
+                {notShowing(c) && (
+                  <small className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-bad">
+                    {notShowing(c)}
+                    {notShowing(c)?.startsWith("Hidden for you") && (
+                      <button
+                        type="button"
+                        className="text-muted underline underline-offset-2"
+                        onClick={() => {
+                          resetSeen();
+                          reload();
+                        }}
+                      >
+                        Reset my views
+                      </button>
+                    )}
+                  </small>
+                )}
               </span>,
               <Chip key="s" s={STATUS_CHIP[c.status]} label={c.status} />,
               `${num(c.impressions)}${c.maxImpressions ? ` / ${num(c.maxImpressions)}` : ""}`,

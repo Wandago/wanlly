@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import { seenToday } from "./ad-track";
 import type { NetworkSize } from "./ad-network";
 import { useWorkspace } from "./workspace-store";
@@ -63,9 +63,40 @@ export function useSponsors(placement: string, fallback: Sponsor[]): Sponsor[] {
   }, [ads, seen, placement, fallback]);
 }
 
-/** The network banner sizes this person may see; empty when there's no network. */
+/* Sizes the network just answered with no ad. They're skipped for 10 minutes so the slot shows
+   a sponsor instead of an empty box, then tried again. */
+const EMPTY_FOR = 10 * 60_000;
+const emptySizes = new Set<string>();
+let emptyVersion = 0;
+const emptyListeners = new Set<() => void>();
+const changed = () => {
+  emptyVersion++;
+  emptyListeners.forEach((fn) => fn());
+};
+export function markNetworkEmpty(size: string) {
+  if (emptySizes.has(size)) return;
+  emptySizes.add(size);
+  changed();
+  window.setTimeout(() => {
+    emptySizes.delete(size);
+    changed();
+  }, EMPTY_FOR);
+}
+const subscribeEmpty = (fn: () => void) => {
+  emptyListeners.add(fn);
+  return () => emptyListeners.delete(fn);
+};
+
+/** The network banner sizes this person may see right now; null when there's no network. */
 export function useNetwork() {
-  return useContext(AdsContext).network;
+  const network = useContext(AdsContext).network;
+  const version = useSyncExternalStore(subscribeEmpty, () => emptyVersion, () => 0);
+  return useMemo(() => {
+    void version;
+    if (!network) return null;
+    const sizes = network.sizes.filter((s) => !emptySizes.has(s));
+    return sizes.length ? { name: network.name, sizes } : null;
+  }, [network, version]);
 }
 
 /** A counter that ticks every `ms` while the page is visible, for alternating ads in a slot. */

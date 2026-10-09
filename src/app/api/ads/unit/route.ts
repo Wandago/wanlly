@@ -13,7 +13,10 @@ export async function GET(req: Request) {
   const code = network.audience === "off" ? undefined : network.units[size];
   if (!code) return new Response(null, { status: 404 });
   const { w, h } = sizeOf(size);
-  const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}"><meta name="referrer" content="origin"><style>html,body{margin:0;padding:0;width:${w}px;height:${h}px;overflow:hidden;background:transparent}</style></head><body>${code}</body></html>`;
+  // After the network's code, a check tells the slot whether an ad actually appeared, so an
+  // empty answer (no ad to show, or a site still in review) can hand the slot back to sponsors.
+  const report = `<script>(function(){var n=0;function seen(){var ok=false;document.querySelectorAll("iframe,img,ins,canvas,video,object,embed,a,div").forEach(function(e){var r=e.getBoundingClientRect();if(r.width>=40&&r.height>=20)ok=true});return ok}function check(){if(seen()){parent.postMessage({wanllyAd:"filled"},"*");return}if(++n<8)setTimeout(check,1000);else parent.postMessage({wanllyAd:"empty"},"*")}setTimeout(check,800)})()</script>`;
+  const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=${w}"><meta name="referrer" content="origin"><meta name="color-scheme" content="light dark"><style>html,body{margin:0;padding:0;width:${w}px;height:${h}px;overflow:hidden;background:transparent}</style></head><body>${code}${report}</body></html>`;
   return new Response(page, {
     headers: {
       "content-type": "text/html; charset=utf-8",

@@ -168,7 +168,7 @@ function FittedDisplay({ sizes, sponsor, align = "center" }: { sizes: (keyof typ
   const network = useNetwork();
   // A network banner when the network has a size that fits; otherwise the sponsor's banner.
   const netSize = width && network ? (sizes.filter((x) => network.sizes.includes(x as NetworkSize)) as NetworkSize[]).find((x) => DISPLAY_SIZES[x as keyof typeof DISPLAY_SIZES].w <= width) : undefined;
-  if (network && netSize && !networkTest) {
+  if (network && netSize && !sponsor.campaignId && !networkTest) {
     return (
       <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>
         <NetworkUnit size={netSize} network={network.name} placement="job_card" />
