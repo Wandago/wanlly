@@ -12,9 +12,9 @@ import type { Sponsor } from "./catalog";
  */
 
 type Served = Sponsor & { placements: string[] };
-type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; host?: string; direct?: Record<string, string> } | null;
+type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; host?: string; direct?: Record<string, string>; codes?: Record<string, string> } | null;
 const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
-type NetInfo = { name: string; sizes: NetworkSize[]; host: string; direct: Record<string, string> };
+type NetInfo = { name: string; sizes: NetworkSize[]; host: string; direct: Record<string, string>; codes: Record<string, string> };
 const AdsContext = createContext<{ ads: Served[]; seen: number; network: NetInfo | null }>({ ads: [], seen: 0, network: null });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
@@ -43,7 +43,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   // "staff" networks are being checked by the team; everyone else keeps seeing sponsors.
-  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? JSON.stringify({ name: net.name, sizes: net.sizes, host: net.host ?? "", direct: net.direct ?? {} }) : "";
+  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? JSON.stringify({ name: net.name, sizes: net.sizes, host: net.host ?? "", direct: net.direct ?? {}, codes: net.codes ?? {} }) : "";
   const value = useMemo(() => ({ ads, seen, network: netKey ? (JSON.parse(netKey) as NetInfo) : null }), [ads, seen, netKey]);
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }

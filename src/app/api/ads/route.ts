@@ -32,13 +32,15 @@ export async function GET(req: Request) {
         network: (() => {
           if (network.audience === "off") return null;
           const direct: Record<string, string> = {};
+          const codes: Record<string, string> = {};
           const sizes: string[] = [];
           for (const [size, code] of Object.entries(network.units)) {
             const src = directSrc(code);
             if (src) direct[size] = src;
+            else if (network.host && code) codes[size] = code;
             if (src || network.host) sizes.push(size);
           }
-          return sizes.length ? { name: network.name, audience: network.audience, sizes, host: network.host, direct } : null;
+          return sizes.length ? { name: network.name, audience: network.audience, sizes, host: network.host, direct, codes } : null;
         })(),
         ads: rows.map((r) => ({
           campaignId: Number(r.id),

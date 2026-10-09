@@ -386,10 +386,26 @@ type Delivery = {
     views: number;
     maxImpressions: number | null;
     frequencyCap: number | null;
+    hasImage: boolean;
     checks: { active: boolean; started: boolean; notEnded: boolean; country: boolean; viewsLeft: boolean; placements: boolean };
     served: boolean;
   }[];
 };
+
+/** Loads the campaign's picture the way the app does, and says if this browser blocks it. */
+function PictureCheck({ id }: { id: number }) {
+  const [state, setState] = useState<"loading" | "ok" | "blocked">("loading");
+  return (
+    <span className="flex items-center gap-2 text-xs">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`/api/ads/image/${id}`} alt="" onLoad={() => setState("ok")} onError={() => setState("blocked")} className={`h-8 w-14 rounded border border-line object-contain ${state === "blocked" ? "hidden" : ""}`} />
+      {state === "ok" && <span className="text-muted">✓ Picture loads in this browser</span>}
+      {state === "blocked" && (
+        <span className="text-bad">✗ This browser blocked the picture, usually an ad-blocking extension. Visitors without one see it; the card shows an illustration instead.</span>
+      )}
+    </span>
+  );
+}
 
 /** The ad server's rules for each campaign, checked for you right now: why it is or isn't showing. */
 function DeliveryCheck({ tick, onReset }: { tick: number; onReset: () => void }) {
@@ -444,6 +460,7 @@ function DeliveryCheck({ tick, onReset }: { tick: number; onReset: () => void })
                     </button>
                   )}
                 </div>
+                {c.hasImage && <PictureCheck id={c.id} />}
                 <small className="text-xs text-muted">
                   Shows in: {c.placements.length ? c.placements.map((k) => PLACEMENTS.find(([x]) => x === k)?.[1] ?? k).join(", ") : "nowhere"}
                   {PLACEMENTS.some(([k]) => !c.placements.includes(k)) && (

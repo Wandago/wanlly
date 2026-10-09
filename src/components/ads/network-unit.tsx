@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { sizeOf, type NetworkSize } from "@/lib/ad-network";
+import { frameUrl, sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { markNetworkEmpty, useNetwork } from "@/lib/ads-context";
 import { Tracked } from "./tracked";
 
@@ -30,6 +30,9 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   const host = net?.host ?? "";
   // Iframe-only banners load straight from the network's own site.
   const direct = net?.direct?.[size] ?? "";
+  // Script banners: from the banner host when there is one (its own origin), else from Wanlly.
+  const code = net?.codes?.[size];
+  const src = direct || (host && code ? frameUrl(host, code) : `/api/ads/unit?size=${size}`);
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
@@ -44,7 +47,7 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     <iframe
       ref={frame}
       title="Advertisement"
-      src={direct || `${host}/api/ads/unit?size=${size}`}
+      src={src}
       width={w}
       height={h}
       sandbox={direct ? DIRECT_SANDBOX : frameSandbox(host)}

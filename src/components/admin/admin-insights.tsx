@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
-import { NETWORK_SIZES as UNIT_SIZES, directSrc, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
+import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 
 /* Traffic, ads and revenue, and abuse: the admin tabs that read what the app records. */
@@ -373,7 +373,7 @@ function AdNetwork() {
                 placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
                 spellCheck={false}
               />
-              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} direct={directSrc(saved?.units[size]) ?? ""} />}
+              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} direct={directSrc(saved?.units[size]) ?? ""} code={saved?.units[size] ?? ""} />}
             </li>
           );
         })}
@@ -391,7 +391,7 @@ function AdNetwork() {
 }
 
 /** One saved banner, live, with what happened in this browser: shown, empty, blocked or failed. */
-function BannerPreview({ size, host, direct }: { size: NetworkSize; host: string; direct: string }) {
+function BannerPreview({ size, host, direct, code }: { size: NetworkSize; host: string; direct: string; code: string }) {
   const { w, h } = sizeOf(size);
   const ref = useRef<HTMLIFrameElement>(null);
   const [status, setStatus] = useState<{ kind: string; detail?: string }>({ kind: "loading" });
@@ -420,7 +420,7 @@ function BannerPreview({ size, host, direct }: { size: NetworkSize; host: string
         <iframe
           ref={ref}
           title={`${w}×${h} banner preview`}
-          src={direct || `${host}/api/ads/unit?size=${size}`}
+          src={direct || (host ? frameUrl(host, code) : `/api/ads/unit?size=${size}`)}
           width={w}
           height={h}
           sandbox={direct ? DIRECT_SANDBOX : frameSandbox(host)}

@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   try {
     const q = rawSql();
     const rows = (await q`
-      select c.id, c.name, c.advertiser, c.status, c.placements, c.countries, c.starts_at, c.ends_at, c.max_impressions,
+      select c.id, c.name, c.advertiser, c.status, c.placements, (c.image is not null) as has_image, c.countries, c.starts_at, c.ends_at, c.max_impressions,
         (to_jsonb(c)->>'frequency_cap')::int as frequency_cap,
         (c.starts_at is null or c.starts_at <= now()) as started,
         (c.ends_at is null or c.ends_at > now()) as not_ended,
@@ -46,6 +46,7 @@ export async function GET(req: Request) {
           views,
           maxImpressions: max,
           frequencyCap: r.frequency_cap === null ? null : Number(r.frequency_cap),
+          hasImage: !!r.has_image,
           checks,
           served: Object.values(checks).every(Boolean),
         };

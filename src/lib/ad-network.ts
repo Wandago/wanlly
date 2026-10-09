@@ -54,6 +54,17 @@ export function directSrc(code: string | undefined): string | null {
   }
 }
 
+/**
+ * The banner host's page for one banner: the code travels after "#", which browsers never send
+ * to a server, so the host just returns the same small page every time.
+ */
+export function frameUrl(host: string, code: string): string {
+  const bytes = new TextEncoder().encode(code);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return `${host}/frame#${btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "")}`;
+}
+
 export const sizeOf = (s: NetworkSize) => {
   const [w, h] = s.split("x").map(Number);
   return { w, h };
