@@ -1,0 +1,376 @@
+<title>Wanlly Teaser</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 16:9 stage (or 9:16 for phones) driven by a seekable timeline; calm, typographic motion on warm paper. */
+:root {
+  --paper: #f6f5f1;
+  --card: #ffffff;
+  --ink: #15171c;
+  --muted: #6b6f78;
+  --line: #e2e0d8;
+  --tang: #ff5a1f;
+  --tang-text: #c2410c;
+  --tang-soft: #ffece3;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.5 var(--body); }
+.page { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 18px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; }
+.head h1 { font: 600 22px/1.2 var(--display); letter-spacing: -.02em; margin: 0; }
+.head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+/* Stage */
+.stage-wrap { width: 100%; display: grid; place-items: center; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; max-width: 100%; background: var(--paper); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; container-type: size; }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); }
+.scene { position: absolute; inset: 0; display: grid; place-items: center; padding: 6cqmin; opacity: 0; pointer-events: none; }
+.col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 3cqmin; max-width: 100%; }
+
+/* Motion: every element's opacity, rise, blur and scale are set from the timeline in script,
+   so any moment can be shown exactly (seeking, and frame-by-frame video export). */
+[data-at] { will-change: opacity, transform, filter; }
+/* Phones: the same layouts, set larger so they fill a 9:16 frame */
+.vertical .col, .vertical .build { zoom: 1.32; }
+
+.big { font: 600 10cqmin/1.02 var(--display); letter-spacing: -.045em; margin: 0; text-wrap: balance; }
+.mid { font: 600 6.6cqmin/1.08 var(--display); letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+.sub { font: 400 3.3cqmin/1.4 var(--body); color: var(--muted); margin: 0; max-width: 62cqmin; text-wrap: balance; }
+.dot { color: var(--tang); }
+.word { display: inline-block; }
+.caret { display: inline-block; width: .08em; height: .9em; margin-left: .06em; background: var(--tang); vertical-align: -.08em; }
+
+/* Scene 2: price strike */
+.price { position: relative; display: inline-block; }
+.price i { position: absolute; left: -4%; right: -4%; top: 52%; height: .09em; background: var(--tang); transform-origin: left; transform: scaleX(var(--s, 0)); border-radius: 1em; }
+
+/* Scene 3: logo */
+.mark { width: 22cqmin; height: 22cqmin; }
+.mark .tile { fill: var(--ink); }
+.mark .w { fill: none; stroke: var(--paper); stroke-width: 6.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 120; }
+.mark .node { fill: var(--tang); transform-origin: 32px 26px; transform: scale(var(--n, 0)); }
+.wordmark { font: 600 9cqmin/1 var(--display); letter-spacing: -.04em; }
+
+/* Scene 4: video unlock card */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 2.4cqmin; }
+.unlock { width: min(78cqmin, 100%); padding: 4cqmin; display: flex; flex-direction: column; gap: 3cqmin; text-align: left; }
+.video { position: relative; aspect-ratio: 16 / 9; border-radius: 1.6cqmin; background: #1e7a55; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; padding: 3cqmin; color: #fff; }
+.video small { position: absolute; top: 2.4cqmin; left: 2.4cqmin; font: 500 1.8cqmin/1 var(--body); letter-spacing: .08em; text-transform: uppercase; background: rgb(0 0 0 / .25); padding: .8cqmin 1.2cqmin; border-radius: .8cqmin; }
+.video b { font: 600 4cqmin/1.1 var(--display); letter-spacing: -.02em; }
+.bar { height: 1.1cqmin; border-radius: 1cqmin; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: calc(var(--p, 0) * 100%); background: var(--tang); border-radius: inherit; }
+.unlock-row { display: flex; align-items: baseline; justify-content: space-between; gap: 2cqmin; }
+.unlock-row > span { font: 400 2.6cqmin/1.3 var(--body); color: var(--muted); }
+.unlock-row b { font: 600 5.6cqmin/1 var(--display); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.unlock-row b em { font-style: normal; font: 500 2.4cqmin/1 var(--body); color: var(--muted); margin-left: .6cqmin; }
+
+/* Scene 5: build */
+.build { width: min(96cqmin, 100%); display: grid; grid-template-columns: 1.15fr .85fr; gap: 3cqmin; align-items: center; }
+.vertical .build { grid-template-columns: 1fr; }
+.panel { padding: 3cqmin; display: flex; flex-direction: column; gap: 2.2cqmin; text-align: left; }
+.composer { display: flex; align-items: center; gap: 1.6cqmin; border: 1px solid var(--line); border-radius: 2cqmin; padding: 1.8cqmin 2cqmin; font: 400 2.5cqmin/1.35 var(--body); min-height: 7cqmin; }
+.composer .typed { flex: 1; min-width: 0; }
+.composer .send { flex: none; width: 4.6cqmin; height: 4.6cqmin; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
+.composer .send svg { width: 2.4cqmin; height: 2.4cqmin; stroke: #fff; fill: none; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 1.6cqmin; }
+.steps li { display: flex; align-items: center; gap: 1.6cqmin; padding: 1.4cqmin 2cqmin; border-top: 1px solid var(--line); font: 400 2.3cqmin/1.2 var(--body); }
+.steps li:first-child { border-top: 0; }
+.tick { flex: none; width: 2.8cqmin; height: 2.8cqmin; border-radius: 50%; background: var(--ink); display: grid; place-items: center; }
+.tick svg { width: 1.7cqmin; height: 1.7cqmin; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.steps li small { margin-left: auto; font: 400 1.9cqmin/1 var(--mono); color: var(--muted); }
+.model-tag { align-self: flex-start; font: 400 1.9cqmin/1 var(--mono); color: var(--muted); background: #efede7; padding: .9cqmin 1.4cqmin; border-radius: 4cqmin; }
+.phone { justify-self: center; width: 30cqmin; aspect-ratio: 9 / 18.5; border-radius: 4.4cqmin; background: var(--ink); padding: 1.3cqmin; }
+.vertical .phone { width: 34cqmin; }
+.phone-screen { height: 100%; border-radius: 3.2cqmin; background: #fff8f3; padding: 3cqmin 2.4cqmin; display: flex; flex-direction: column; gap: 1.6cqmin; text-align: left; }
+.phone-screen small { font: 500 1.6cqmin/1 var(--mono); color: var(--muted); }
+.phone-screen b { font: 600 3.4cqmin/1.05 var(--display); letter-spacing: -.02em; }
+.slots { display: grid; grid-template-columns: 1fr 1fr; gap: 1cqmin; }
+.slots span { border: 1px solid var(--line); border-radius: 1cqmin; padding: 1cqmin 0; text-align: center; font: 500 1.7cqmin/1 var(--body); background: #fff; }
+.slots span.pick { background: var(--tang); border-color: var(--tang); color: #fff; }
+.phone-screen .btn { margin-top: auto; background: var(--ink); color: #fff; border-radius: 1.4cqmin; text-align: center; padding: 1.6cqmin 0; font: 600 1.9cqmin/1 var(--body); }
+
+/* Scene 6: models */
+.chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.6cqmin; max-width: 130cqmin; }
+.chip { display: inline-flex; align-items: baseline; gap: 1cqmin; padding: 1.4cqmin 2.4cqmin; border: 1px solid var(--line); background: var(--card); border-radius: 5cqmin; font: 600 2.9cqmin/1 var(--display); letter-spacing: -.01em; }
+.chip span { font: 400 2.2cqmin/1 var(--body); color: var(--muted); }
+
+/* Scene 7: cities */
+.cities { list-style: none; margin: 0; padding: 0; width: min(70cqmin, 100%); display: flex; flex-direction: column; }
+.cities li { display: flex; align-items: baseline; justify-content: space-between; padding: 1.8cqmin 0; border-top: 1px solid var(--line); font: 500 3.2cqmin/1 var(--body); }
+.cities li:last-child { border-bottom: 1px solid var(--line); }
+.cities li b { font: 600 4.4cqmin/1 var(--display); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.cities li b em { font-style: normal; font: 400 2cqmin/1 var(--body); color: var(--muted); margin-left: .8cqmin; }
+
+/* Scene 8: end card */
+.lockup { display: flex; align-items: center; gap: 2.4cqmin; }
+.lockup .mark { width: 12cqmin; height: 12cqmin; }
+.lockup .wordmark { font-size: 8cqmin; }
+.cta { display: inline-flex; align-items: center; gap: 1.6cqmin; background: var(--ink); color: #fff; border-radius: 5cqmin; padding: 1.8cqmin 3.2cqmin; font: 600 2.8cqmin/1 var(--body); }
+.cta span { font: 400 2.2cqmin/1 var(--mono); opacity: .7; }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.btn-c { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 8px; padding: 7px 12px; font: 500 13px/1 var(--body); cursor: pointer; }
+.btn-c.primary { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn-c:focus-visible, input:focus-visible { outline: 2px solid var(--tang); outline-offset: 2px; }
+.scrub { flex: 1 1 220px; min-width: 0; accent-color: var(--tang); }
+.time { font: 400 12px/1 var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.chapters { display: flex; flex-wrap: wrap; gap: 6px; }
+.chapters button { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 4px 10px; font: 400 12px/1.2 var(--body); cursor: pointer; }
+.chapters button[aria-current="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+
+/* Recording mode (#record, #record-vertical): the stage fills the window, no chrome */
+.recording body, .recording .page { padding: 0; margin: 0; max-width: none; }
+.recording .head, .recording .controls, .recording .chapters, .recording .note { display: none; }
+.recording .stage { border: 0; border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; max-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-at] { filter: none !important; }
+}
+</style>
+
+<div class="page">
+  <div class="head">
+    <h1>Wanlly teaser</h1>
+    <p>40 seconds · eight scenes · made for TikTok, Reels and X</p>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage" aria-label="Wanlly teaser animation">
+
+      <section class="scene" data-start="0" data-end="4200">
+        <div class="col">
+          <h2 class="big"><span class="word" data-at="200">You</span> <span class="word" data-at="380">have</span> <span class="word" data-at="560">an</span> <span class="word" data-at="740">idea<span class="dot">.</span></span><span class="caret" data-at="1100"></span></h2>
+          <p class="sub" data-at="1700">An app. A shop page. A tool for your community.</p>
+        </div>
+      </section>
+
+      <section class="scene" data-start="4200" data-end="9000">
+        <div class="col">
+          <h2 class="mid" data-at="150">The AI that could build it costs</h2>
+          <p class="big" data-at="600"><span class="price" id="price">$20 a month<i></i></span></p>
+          <p class="sub" data-at="2400">For a lot of students, that&rsquo;s a week of food.</p>
+        </div>
+      </section>
+
+      <section class="scene" data-start="9000" data-end="13000">
+        <div class="col">
+          <svg class="mark" viewBox="0 0 64 64" aria-hidden="true" data-at="0">
+            <defs><mask id="m3" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
+            <rect class="tile" width="64" height="64" rx="16"/>
+            <path class="w" id="wpath" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m3)"/>
+            <circle class="node" id="node" cx="32" cy="26" r="6.2"/>
+          </svg>
+          <span class="wordmark" data-at="1500">Wanlly</span>
+          <p class="sub" data-at="2100">Frontier AI for everyone with an idea.</p>
+        </div>
+      </section>
+
+      <section class="scene" data-start="13000" data-end="19000">
+        <div class="col">
+          <h2 class="mid" data-at="100">Watch one 20&#8209;second video.</h2>
+          <div class="card unlock pop" data-at="500">
+            <div class="video"><small>Sponsored</small><b>Notes that organize themselves.</b></div>
+            <div class="bar"><i id="vbar"></i></div>
+            <div class="unlock-row"><span>Today&rsquo;s credits</span><b><span id="count">0</span><em>credits</em></b></div>
+          </div>
+          <p class="sub" data-at="4200">No card. No subscription. Unlocked.</p>
+        </div>
+      </section>
+
+      <section class="scene" data-start="19000" data-end="26000">
+        <div class="build">
+          <div class="card panel" data-at="100">
+            <div class="composer"><span class="typed"><span id="typed"></span><span class="caret"></span></span><span class="send"><svg viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg></span></div>
+            <ul class="steps">
+              <li data-at="3000"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Planned the page<small>0:04</small></li>
+              <li data-at="3500"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Built the booking form<small>0:19</small></li>
+              <li data-at="4000"><span class="tick"><svg viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span>Ready to share<small>0:26</small></li>
+            </ul>
+            <span class="model-tag" data-at="600">Gemini Flash · 1 credit</span>
+          </div>
+          <div class="phone pop" data-at="4500">
+            <div class="phone-screen">
+              <small>salon-amani.app</small>
+              <b>Book your Saturday slot.</b>
+              <div class="slots"><span>9:00</span><span class="pick">10:30</span><span>12:00</span><span>14:30</span></div>
+              <small>Pay with M-Pesa when you arrive</small>
+              <span class="btn">Book 10:30</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene" data-start="26000" data-end="30500">
+        <div class="col">
+          <h2 class="big"><span class="word" data-at="100">Chat.</span> <span class="word" data-at="400">Code.</span> <span class="word" data-at="700">Design.</span></h2>
+          <div class="chips">
+            <span class="chip" data-at="1300"><span>Claude</span>Haiku</span>
+            <span class="chip" data-at="1450"><span>Claude</span>Sonnet</span>
+            <span class="chip" data-at="1600"><span>Claude</span>Opus</span>
+            <span class="chip" data-at="1750"><span>Claude</span>Fable</span>
+            <span class="chip" data-at="1900"><span>Gemini</span>Flash</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene" data-start="30500" data-end="35000">
+        <div class="col">
+          <h2 class="mid" data-at="100">The same credits, everywhere.</h2>
+          <ul class="cities">
+            <li data-at="700">Nairobi<b>8<em>a day</em></b></li>
+            <li data-at="900">Lagos<b>8<em>a day</em></b></li>
+            <li data-at="1100">Dhaka<b>8<em>a day</em></b></li>
+            <li data-at="1300">S&atilde;o Paulo<b>8<em>a day</em></b></li>
+            <li data-at="1500">Boston<b>8<em>a day</em></b></li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="scene" data-start="35000" data-end="40000">
+        <div class="col">
+          <div class="lockup" data-at="100">
+            <svg class="mark" viewBox="0 0 64 64" aria-hidden="true">
+              <defs><mask id="m8" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64"><rect width="64" height="64" fill="#fff"/><circle cx="32" cy="26" r="8.8" fill="#000"/></mask></defs>
+              <rect class="tile" width="64" height="64" rx="16"/>
+              <path class="w" d="M11 21 L21 44 L32 26 L43 44 L53 21" mask="url(#m8)" style="stroke-dashoffset:0"/>
+              <circle class="node" cx="32" cy="26" r="6.2" style="--n:1"/>
+            </svg>
+            <span class="wordmark">Wanlly</span>
+          </div>
+          <h2 class="mid" data-at="600">Build the thing you keep thinking about<span class="dot">.</span></h2>
+          <span class="cta" data-at="1200">Join the beta <span>wanlly.louiswandago.workers.dev</span></span>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="btn-c primary" id="play" type="button">Pause</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="40000" step="10" value="0" aria-label="Position in the teaser">
+    <span class="time" id="time">0:00 / 0:40</span>
+    <button class="btn-c" id="shape" type="button">Show 9:16</button>
+  </div>
+  <div class="chapters" id="chapters"></div>
+  <p class="note">Captions are on screen, so it works with sound off. Add a soft music bed when you post it.</p>
+</div>
+
+<script>
+(function () {
+  const TOTAL = 40000;
+  const stage = document.getElementById("stage");
+  const scenes = [...stage.querySelectorAll(".scene")].map((el) => ({
+    el,
+    start: +el.dataset.start,
+    end: +el.dataset.end,
+    items: [...el.querySelectorAll("[data-at]")].map((n) => ({ n, at: +n.dataset.at })),
+  }));
+  const NAMES = ["Idea", "Price", "Logo", "Unlock", "Build", "Models", "Everywhere", "Join"];
+  const typedText = "Build a booking page for my cousin's salon";
+  const el = (id) => document.getElementById(id);
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+
+  // Chapters
+  const chapters = el("chapters");
+  scenes.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = NAMES[i];
+    b.addEventListener("click", () => seek(s.start));
+    chapters.appendChild(b);
+  });
+
+  // Everything on screen is a pure function of time, so seeking always lands on the right frame.
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function render(t) {
+    scenes.forEach((s, i) => {
+      const last = i === scenes.length - 1;
+      const active = t >= s.start && (t < s.end || last);
+      // Scenes fade through the paper: 450 ms in, 450 ms out.
+      const fadeIn = i === 0 ? 1 : ease((t - s.start) / 450);
+      const fadeOut = last ? 1 : ease((s.end - t) / 450);
+      s.el.style.opacity = active ? String(Math.min(fadeIn, fadeOut)) : "0";
+      s.el.style.visibility = active ? "visible" : "hidden";
+      const local = t - s.start;
+      s.items.forEach(({ n, at }) => {
+        const k = reduced ? (local >= at ? 1 : 0) : ease((local - at) / 850);
+        n.style.opacity = String(k);
+        const rise = (1 - k) * 3.2;
+        n.style.transform = n.classList.contains("pop") ? `scale(${0.92 + 0.08 * k})` : `translateY(${rise}cqmin)`;
+        n.style.filter = k >= 1 || reduced ? "none" : `blur(${(1 - k) * 6}px)`;
+      });
+      chapters.children[i].setAttribute("aria-current", active ? "true" : "false");
+    });
+    document.querySelectorAll(".caret").forEach((c) => (c.style.visibility = Math.floor(t / 500) % 2 ? "hidden" : "visible"));
+    // Scene 2: the price gets struck through
+    el("price").style.setProperty("--s", ease((t - 4200 - 1500) / 600));
+    // Scene 3: the W draws, then the node lands
+    el("wpath").style.strokeDashoffset = String(120 * (1 - ease((t - 9000 - 150) / 1100)));
+    el("node").style.setProperty("--n", ease((t - 9000 - 1200) / 450));
+    // Scene 4: the video plays and credits count up
+    const p = ease((t - 13000 - 900) / 2600);
+    el("vbar").style.setProperty("--p", p);
+    el("count").textContent = String(Math.round(8 * ease((t - 13000 - 3300) / 700)));
+    // Scene 5: the prompt types itself
+    const chars = Math.round(typedText.length * Math.min(1, Math.max(0, (t - 19000 - 500) / 2200)));
+    el("typed").textContent = typedText.slice(0, chars);
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  let t = 0, playing = true, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { playing = false; el("play").textContent = "Play"; }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); render(t); }
+  el("play").addEventListener("click", () => {
+    if (t >= TOTAL) t = 0;
+    playing = !playing;
+    el("play").textContent = playing ? "Pause" : "Play";
+  });
+  el("replay").addEventListener("click", () => { t = 0; playing = true; el("play").textContent = "Pause"; });
+  el("scrub").addEventListener("input", (e) => { seek(+e.target.value); });
+  el("shape").addEventListener("click", () => {
+    const v = document.documentElement.classList.toggle("vertical");
+    el("shape").textContent = v ? "Show 16:9" : "Show 9:16";
+  });
+
+  // Recording mode for exporting video: #record (16:9) or #record-vertical (9:16)
+  const recording = location.hash === "#record" || location.hash === "#record-vertical";
+  if (recording) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#record-vertical") document.documentElement.classList.add("vertical");
+  }
+  if (location.hash === "#vertical") { document.documentElement.classList.add("vertical"); el("shape").textContent = "Show 16:9"; }
+
+  // Frame-by-frame export: #capture exposes a seek function and stops the clock.
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+
+  render(0);
+  // Wait for the fonts so the first frames are set in the right typefaces.
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => {
+    last = performance.now();
+    requestAnimationFrame(frame);
+  });
+})();
+</script>
