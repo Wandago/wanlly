@@ -33,7 +33,7 @@ const SYSTEM: Record<"chat" | "code", string> = {
 const ERRORS = {
   busy: "The model is busy right now. Your credits were refunded; try again in a moment.",
   failed: "Something went wrong getting that reply. Your credits were refunded.",
-  unavailable: "That model isn't switched on yet. Try Gemini Flash.",
+  unavailable: "That model isn't available right now. Your credits were refunded; try another model.",
   aborted: "Stopped.",
 } as const;
 

@@ -80,7 +80,9 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
       message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message ?? message;
     } catch {}
     console.error("gemini error", model, res.status, message);
-    throw new ProviderError(res.status === 429 ? "busy" : "failed", `Google ${res.status} on ${model}: ${message}`);
+    // 402/403: billing or key problems on Wanlly's side, not something the person can retry.
+    const kind = res.status === 429 ? "busy" : res.status === 402 || res.status === 403 ? "unavailable" : "failed";
+    throw new ProviderError(kind, `Google ${res.status} on ${model}: ${message}`);
   }
   let inputTokens = 0;
   let outputTokens = 0;

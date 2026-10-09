@@ -2,13 +2,14 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { FLOOR_CREDITS, TOOLS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { SidebarAd } from "./ads/rail";
 import { Icon, type IconName } from "./icon";
 import { UsageMeters } from "./usage-meters";
+import { Ring } from "./credits-button";
 
 
 const TOOL_LINKS: ToolId[] = ["chat", "code", "design", "images"];
@@ -44,23 +45,65 @@ function Mark() {
   );
 }
 
+const CARD_KEY = "wanlly-credits-card";
+const cardListeners = new Set<() => void>();
+
+/** Whether the credits card is folded, remembered on this device. */
+function useFolded(): [boolean, (v: boolean) => void] {
+  const folded = useSyncExternalStore(
+    (cb) => {
+      cardListeners.add(cb);
+      return () => cardListeners.delete(cb);
+    },
+    () => {
+      try {
+        return localStorage.getItem(CARD_KEY) === "folded";
+      } catch {
+        return false;
+      }
+    },
+    () => false,
+  );
+  const set = (v: boolean) => {
+    try {
+      localStorage.setItem(CARD_KEY, v ? "folded" : "open");
+    } catch {}
+    cardListeners.forEach((cb) => cb());
+  };
+  return [folded, set];
+}
+
 function TodayCard() {
   const { credits, floorUnlocked, synced, usage, dispatch } = useWorkspace();
+  const [folded, setFolded] = useFolded();
+  const dayUsed = usage ? usage.dayUsed / usage.dayLimit : 0;
   return (
-    <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-surface p-3">
-      <div className="flex items-baseline justify-between">
-        <span className="text-[13px] text-muted">Credits</span>
-        <b className="font-mono text-[13px] font-medium tabular-nums">{synced ? credits : "–"}</b>
-      </div>
-      <UsageMeters usage={usage} />
+    <div className={`flex flex-col rounded-[14px] border border-line bg-surface ${folded ? "p-1" : "gap-3 p-3 pt-1.5"}`}>
       <button
         type="button"
-        onClick={() => dispatch({ type: "setEarnOpen", open: true })}
-        className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
+        aria-expanded={!folded}
+        aria-label={folded ? "Show credits and limits" : "Hide credits and limits"}
+        onClick={() => setFolded(!folded)}
+        className={`-mx-1.5 flex items-center gap-2 rounded-lg px-1.5 py-1.5 text-left hover:bg-hover ${folded ? "mx-0 px-2" : ""}`}
       >
-        <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
-        {floorUnlocked ? "Earn more credits" : `Watch a video · +${FLOOR_CREDITS} today`}
+        {folded && <Ring used={dayUsed} />}
+        <span className="text-[13px] text-muted">Credits</span>
+        <b className="ml-auto font-mono text-[13px] font-medium tabular-nums">{synced ? credits : "–"}</b>
+        <Icon name="down" size={14} className={`text-faint transition-transform ${folded ? "-rotate-90" : ""}`} />
       </button>
+      {!folded && (
+        <>
+          <UsageMeters usage={usage} />
+          <button
+            type="button"
+            onClick={() => dispatch({ type: "setEarnOpen", open: true })}
+            className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
+          >
+            <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
+            {floorUnlocked ? "Earn more credits" : `Watch a video · +${FLOOR_CREDITS} today`}
+          </button>
+        </>
+      )}
     </div>
   );
 }

@@ -8,7 +8,7 @@ import { Icon } from "./icon";
 import { UsageMeters } from "./usage-meters";
 
 /** A small ring for today's usage, like a context meter. Fills as the daily limit is used. */
-function Ring({ used, size = 18 }: { used: number; size?: number }) {
+export function Ring({ used, size = 18 }: { used: number; size?: number }) {
   const r = (size - 4) / 2;
   const c = 2 * Math.PI * r;
   const pct = Math.min(1, Math.max(0, used));
