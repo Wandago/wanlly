@@ -7,7 +7,9 @@ import {
   getModel,
   jobCost,
   type ToolId,
+  type Usage,
 } from "./catalog";
+import type { Settings } from "./settings";
 
 /* Credits live on the server (the ledger). Job results are still simulated with timers until chat is connected. */
 
@@ -32,6 +34,12 @@ type State = {
   floorUnlocked: boolean;
   /** False until the first balance arrives from the server. */
   synced: boolean;
+  /** Spending against the daily and weekly limits. Null until synced. */
+  usage: Usage | null;
+  /** Network country and account status, from /api/me. */
+  me: { country: string | null; status: string } | null;
+  /** Profile preferences from the server. Null until loaded. */
+  settings: Settings | null;
   modelId: string;
   tool: ToolId;
   jobs: Job[];
@@ -50,8 +58,9 @@ type Action =
   | { type: "addJob"; job: Job; cost: number }
   | { type: "finishJob"; id: string }
   | { type: "setSpot"; id: string; spot: SpotState }
-  | { type: "account"; credits: number; floorUnlocked: boolean; toast?: string }
+  | { type: "account"; credits: number; floorUnlocked: boolean; usage: Usage; me?: State["me"]; toast?: string }
   | { type: "dropJob"; id: string; toast: string }
+  | { type: "settings"; settings: Settings; first?: boolean }
   | { type: "openGate"; needed: number }
   | { type: "closeGate" }
   | { type: "setEarnOpen"; open: boolean }
@@ -80,6 +89,9 @@ const initialState: State = {
   credits: 0,
   floorUnlocked: false,
   synced: false,
+  usage: null,
+  me: null,
+  settings: null,
   modelId: "haiku",
   tool: "chat",
   jobs: [
@@ -121,10 +133,17 @@ function reducer(state: State, action: Action): State {
         ...state,
         credits: action.credits,
         floorUnlocked: action.floorUnlocked,
+        usage: action.usage,
+        me: action.me ?? state.me,
         synced: true,
         toast: action.toast ? { id: state.nextId, text: action.toast } : state.toast,
         nextId: state.nextId + 1,
       };
+    case "settings":
+      // The first load also opens the workspace on the person's default tool and model.
+      return action.first
+        ? { ...state, settings: action.settings, modelId: action.settings.defaultModel, tool: action.settings.startIn }
+        : { ...state, settings: action.settings };
     case "dropJob":
       return {
         ...state,
@@ -168,6 +187,23 @@ type Workspace = State & {
   modelName: string;
 };
 
+/** "in 5 hr 12 min", "Mon 3:00 AM": when a limit window resets, in the viewer's time. */
+export function resetLabel(iso: string, style: "relative" | "weekday"): string {
+  const at = new Date(iso);
+  if (style === "weekday") return at.toLocaleString(undefined, { weekday: "short", hour: "numeric", minute: "2-digit" });
+  const mins = Math.max(1, Math.round((at.getTime() - Date.now()) / 60000));
+  const h = Math.floor(mins / 60);
+  return `in ${h ? `${h} hr ` : ""}${mins % 60} min`;
+}
+
+/** The message to show when a job of this price would go over a limit, or null. */
+export function limitReached(usage: Usage | null, price: number): string | null {
+  if (!usage) return null;
+  if (usage.dayUsed + price > usage.dayLimit) return `You've reached today's limit. It resets ${resetLabel(usage.dayResetsAt, "relative")}`;
+  if (usage.weekUsed + price > usage.weekLimit) return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}`;
+  return null;
+}
+
 const WorkspaceContext = createContext<Workspace | null>(null);
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
@@ -182,6 +218,11 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const submit = useCallback(() => {
     const prompt = state.draft.trim();
     if (!prompt) return;
+    const limit = limitReached(state.usage, price);
+    if (limit) {
+      dispatch({ type: "toast", text: limit });
+      return;
+    }
     if (price > state.credits) {
       dispatch({ type: "openGate", needed: price });
       return;
@@ -196,13 +237,14 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     fetch("/api/spend", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ tool: state.tool, modelId: state.modelId, jobId: id }) })
       .then(async (r) => {
         const b = await r.json().catch(() => ({}));
-        if (r.ok) return dispatch({ type: "account", credits: b.credits, floorUnlocked: state.floorUnlocked });
-        dispatch({ type: "dropJob", id, toast: r.status === 402 ? "Not enough credits for that. Watch a video to earn more" : "Couldn't start that. Try again" });
-        if (typeof b.credits === "number") dispatch({ type: "account", credits: b.credits, floorUnlocked: state.floorUnlocked });
+        if (typeof b.credits === "number") dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked, usage: b.usage });
+        if (r.ok) return;
+        const why = b.reason === "credits" ? "Not enough credits for that. Watch a video to earn more" : b.reason === "day" || b.reason === "week" ? limitReached(b.usage, price) : null;
+        dispatch({ type: "dropJob", id, toast: why ?? "Couldn't start that. Try again" });
       })
       .catch(() => dispatch({ type: "dropJob", id, toast: "You're offline. Try again" }));
     timers.current.push(window.setTimeout(() => dispatch({ type: "finishJob", id }), tool.durationMs));
-  }, [state.draft, state.credits, state.floorUnlocked, state.modelId, state.tool, price, modelName, tool.durationMs]);
+  }, [state.draft, state.credits, state.usage, state.modelId, state.tool, price, modelName, tool.durationMs]);
 
   useEffect(() => {
     const pending = timers.current;

@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { FLOOR_CREDITS, SPOT_REWARD, SPOT_SECONDS } from "./catalog";
+import { DAILY_VIDEO_CAP, FLOOR_CREDITS, SPOT_REWARD, SPOT_SECONDS } from "./catalog";
 import { post } from "./ledger";
 
 /*
@@ -12,8 +12,6 @@ import { post } from "./ledger";
 
 /** Our own placeholder spots, until a partner's SDK takes over. */
 const PARTNER = "house";
-/** Most completed videos a person can be paid for in one UTC day. */
-export const DAILY_VIDEO_CAP = 30;
 /** A view must be finished within this long of starting. */
 const MAX_VIEW_MS = 10 * 60 * 1000;
 /** Allows for network delay at the start and end of a view. */
@@ -31,7 +29,7 @@ async function completedToday(userId: string): Promise<number> {
 
 export async function startView(userId: string, placement: string, country: string | null) {
   if (!PLACEMENTS.has(placement)) return { error: "Unknown placement", status: 400 } as const;
-  if ((await completedToday(userId)) >= DAILY_VIDEO_CAP) return { error: "That's today's limit. Come back tomorrow.", status: 429 } as const;
+  if ((await completedToday(userId)) >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
   // At most four starts a minute: stops one person farming many tabs at once.
   const [recent] = await db()
     .select({ n: sql<number>`count(*)::int` })
@@ -53,7 +51,7 @@ export async function completeView(userId: string, viewId: string, country: stri
   if (!started) return { error: "Unknown video", status: 404 } as const;
   if (started.ms < MIN_VIEW_MS) return { error: "The video wasn't finished", status: 409 } as const;
   if (started.ms > MAX_VIEW_MS) return { error: "That video expired. Start a new one.", status: 410 } as const;
-  if ((await completedToday(userId)) >= DAILY_VIDEO_CAP) return { error: "That's today's limit. Come back tomorrow.", status: 429 } as const;
+  if ((await completedToday(userId)) >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
 
   // One completion per view, enforced by the unique (partner, transaction_id) index.
   const done = await db()

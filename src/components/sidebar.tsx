@@ -8,6 +8,7 @@ import { FLOOR_CREDITS, TOOLS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { SidebarAd } from "./ads/rail";
 import { Icon, type IconName } from "./icon";
+import { UsageMeters } from "./usage-meters";
 
 const RECENTS: { tool: ToolId; title: string }[] = [
   { tool: "chat", title: "Pricing a free AI app" },
@@ -50,19 +51,14 @@ function Mark() {
 }
 
 function TodayCard() {
-  const { credits, floorUnlocked, synced, dispatch } = useWorkspace();
+  const { credits, floorUnlocked, synced, usage, dispatch } = useWorkspace();
   return (
-    <div className="flex flex-col gap-2 rounded-[14px] border border-line bg-surface p-3">
+    <div className="flex flex-col gap-3 rounded-[14px] border border-line bg-surface p-3">
       <div className="flex items-baseline justify-between">
         <span className="text-[13px] text-muted">Credits</span>
         <b className="font-mono text-[13px] font-medium tabular-nums">{synced ? credits : "–"}</b>
       </div>
-      <div className="h-1.5 overflow-hidden rounded-full bg-hover">
-        <i
-          className="block h-full rounded-full bg-accent transition-[width] duration-700 ease-[cubic-bezier(.2,.8,.2,1)]"
-          style={{ width: `${Math.min(100, (credits / FLOOR_CREDITS) * 100)}%` }}
-        />
-      </div>
+      <UsageMeters usage={usage} />
       <button
         type="button"
         onClick={() => dispatch({ type: "setEarnOpen", open: true })}

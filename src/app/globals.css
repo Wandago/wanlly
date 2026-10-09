@@ -21,8 +21,9 @@
   --shadow: 0 1px 2px rgb(20 24 35 / 0.04), 0 8px 24px rgb(20 24 35 / 0.06);
 }
 
+/* Dark follows the system unless the person picked a theme in settings (data-theme on <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #111216;
     --surface: #17181d;
     --side: #0c0d10;
@@ -41,6 +42,43 @@
     --series-2: #d95926;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
     color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #111216;
+  --surface: #17181d;
+  --side: #0c0d10;
+  --line: #272930;
+  --hover: #1f2127;
+  --fg: #ecedf1;
+  --muted: #979daa;
+  --faint: #686e7a;
+  --accent: #ff6a33;
+  --accent-soft: #2c160d;
+  --accent-line: #5a2a16;
+  --good: #3ccb85;
+  --bad: #ff6b6f;
+  --code: #0e0f13;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.35);
+  color-scheme: dark;
+}
+
+/* Matters when the system is dark but the person picked light. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+@custom-variant dark {
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+  &:where([data-theme="dark"] *) {
+    @slot;
   }
 }
 

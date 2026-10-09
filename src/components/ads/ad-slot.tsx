@@ -136,7 +136,7 @@ export function RewardedSpot({
             return null;
           }
           const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first video today" : ""}` : undefined;
-          dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, toast: text });
+          dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, usage: body.usage, toast: text });
           return body.earned ? { earned: body.earned as number, credits: body.credits as number } : null;
         })
         .catch(() => {

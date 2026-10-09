@@ -1,136 +1,61 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import type { ToolId } from "@/lib/catalog";
+import * as Dialog from "@radix-ui/react-dialog";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, type ReactNode } from "react";
+import { MODELS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
-import { Icon, type IconName } from "../icon";
+import { Icon } from "../icon";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
 
 type Project = {
-  id: string;
+  id: number;
   name: string;
   tool: ToolId;
   about: string;
-  updated: string;
-  model: string;
-  source?: string;
-  chats: number;
-  files: number;
-  credits: number;
-  people: string[];
-  coworkers: string[];
   instructions: string;
+  modelId: string;
+  createdAt: string;
+  updatedAt: string;
 };
 
-/* Sample projects for the design. Real ones come from the projects table in Step 2. */
-const PROJECTS: Project[] = [
-  {
-    id: "salon",
-    name: "Salon booking app",
-    tool: "code",
-    about: "Bookings, stylists and M-Pesa reminders for a salon in Nairobi.",
-    updated: "2 hours ago",
-    model: "Sonnet 5.5",
-    source: "wandago/salon-booking",
-    chats: 12,
-    files: 18,
-    credits: 214,
-    people: ["L", "A"],
-    coworkers: ["QA tester", "Launch writer"],
-    instructions: "Next.js and Postgres. Keep it simple enough for a salon owner to use on a phone. Prices in KES. Never send an SMS without asking me first.",
-  },
-  {
-    id: "habit",
-    name: "Habit app onboarding",
-    tool: "design",
-    about: "Three onboarding screens: warm, confident, one action each.",
-    updated: "Yesterday",
-    model: "Sonnet 5.5",
-    chats: 5,
-    files: 4,
-    credits: 38,
-    people: ["L"],
-    coworkers: [],
-    instructions: "Warm colours, big type, one clear action per screen. Mobile first.",
-  },
-  {
-    id: "farm",
-    name: "Farm price tracker",
-    tool: "code",
-    about: "Daily market prices for maize and beans, by county.",
-    updated: "3 days ago",
-    model: "Haiku 5.5",
-    source: "wandago/farm-prices",
-    chats: 7,
-    files: 11,
-    credits: 64,
-    people: ["L", "K", "M"],
-    coworkers: ["Researcher"],
-    instructions: "Data comes from public county reports. Show the source on every price.",
-  },
-  {
-    id: "launch",
-    name: "Launch posts for Wanlly",
-    tool: "chat",
-    about: "Build-in-public posts for X, TikTok and LinkedIn.",
-    updated: "Last week",
-    model: "Haiku 5.5",
-    chats: 9,
-    files: 3,
-    credits: 22,
-    people: ["L"],
-    coworkers: ["Launch writer"],
-    instructions: "Plain, human, no hype words. Short sentences. Always end with one question.",
-  },
-  {
-    id: "mugs",
-    name: "Mug product shots",
-    tool: "images",
-    about: "Photos for a ceramics shop's first online catalogue.",
-    updated: "Last week",
-    model: "Wanlly Image",
-    chats: 3,
-    files: 12,
-    credits: 27,
-    people: ["L", "W"],
-    coworkers: [],
-    instructions: "Natural morning light, wooden surfaces, no props with logos.",
-  },
-  {
-    id: "study",
-    name: "Study planner",
-    tool: "design",
-    about: "A revision timetable that adapts to exam dates.",
-    updated: "2 weeks ago",
-    model: "Haiku 5.5",
-    chats: 4,
-    files: 2,
-    credits: 15,
-    people: ["L"],
-    coworkers: [],
-    instructions: "For students on cheap Android phones. Fast, readable, works offline.",
-  },
-];
-
 const LABEL: Record<ToolId, string> = { chat: "Chat", code: "Code", design: "Design", images: "Images" };
+const TOOLS: ToolId[] = ["chat", "code", "design", "images"];
 const FILTERS: ("all" | ToolId)[] = ["all", "code", "design", "chat", "images"];
+const LIVE_MODELS = MODELS.filter((m) => m.id !== "gpt" && m.id !== "grok");
+const input = "w-full rounded-lg border border-line bg-surface px-3 py-1.5 text-[13px] outline-none focus:border-faint";
+
+async function api<T>(url: string, method = "GET", body?: object): Promise<T> {
+  const r = await fetch(url, { method, cache: "no-store", headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error ?? "Something went wrong. Try again");
+  return data as T;
+}
+
+function ago(iso: string) {
+  const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  const h = Math.round(mins / 60);
+  if (h < 24) return `${h} hr ago`;
+  const d = Math.round(h / 24);
+  if (d === 1) return "Yesterday";
+  if (d < 7) return `${d} days ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 
 /** Small preview of what's inside, drawn per tool. */
-function Thumb({ p }: { p: Project }) {
+function Thumb({ p }: { p: Pick<Project, "tool"> }) {
   if (p.tool === "code")
     return (
       <div className="flex h-full flex-col gap-1.5 bg-[#101216] p-4 font-mono text-[11px] leading-relaxed text-[#9aa3b2]">
         <span>
-          <span className="text-[#ff8a5c]">export</span> <span className="text-[#7cc4ff]">async function</span> book(slot) {"{"}
+          <span className="text-[#ff8a5c]">export</span> <span className="text-[#7cc4ff]">function</span> App() {"{"}
         </span>
-        <span className="pl-4">const ok = await db.reserve(slot);</span>
         <span className="pl-4">
-          if (ok) <span className="text-[#5ee0a0]">sms.remind</span>(slot.client);
+          return <span className="text-[#5ee0a0]">&lt;Home /&gt;</span>;
         </span>
         <span>{"}"}</span>
-        <span className="mt-auto flex items-center gap-1.5 text-[#5ee0a0]">
-          <i className="size-1.5 rounded-full bg-current" /> 31 tests pass
-        </span>
       </div>
     );
   if (p.tool === "design")
@@ -147,8 +72,8 @@ function Thumb({ p }: { p: Project }) {
   if (p.tool === "images")
     return (
       <div className="grid h-full grid-cols-2 gap-1 p-1">
-        {["#f2b48a,#e06a3b", "#bfd8d2,#5e8c7f", "#f4e3b5,#d99a2b", "#d7c9f0,#7d62c4"].map((g) => (
-          <i key={g} className="rounded-md" style={{ background: `linear-gradient(140deg, ${g})` }} />
+        {["#e88a5c", "#7fa89c", "#e4b860", "#a08bd6"].map((c) => (
+          <i key={c} className="rounded-md" style={{ background: c }} />
         ))}
       </div>
     );
@@ -163,22 +88,6 @@ function Thumb({ p }: { p: Project }) {
   );
 }
 
-function Avatars({ people }: { people: string[] }) {
-  return (
-    <span className="flex -space-x-1.5">
-      {people.map((p, i) => (
-        <span
-          key={i}
-          className={`grid size-6 place-items-center rounded-full border-2 border-surface text-[10px] font-semibold ${i === 0 ? "bg-fg text-bg" : "text-white"}`}
-          style={i === 0 ? undefined : { background: ["#2a78d6", "#11955a", "#b4235a"][(i - 1) % 3] }}
-        >
-          {p}
-        </span>
-      ))}
-    </span>
-  );
-}
-
 function ProjectCard({ p, onOpen }: { p: Project; onOpen: () => void }) {
   return (
     <button type="button" onClick={onOpen} className="group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface text-left hover:border-faint hover:shadow-soft">
@@ -190,36 +99,129 @@ function ProjectCard({ p, onOpen }: { p: Project; onOpen: () => void }) {
           <Icon name={p.tool} size={15} className="text-faint" />
           <b className="truncate font-semibold">{p.name}</b>
         </div>
-        <p className="line-clamp-2 text-[13px] text-muted">{p.about}</p>
+        <p className="line-clamp-2 min-h-[2lh] text-[13px] text-muted">{p.about || "No description yet."}</p>
         <div className="mt-1 flex items-center gap-2 text-xs text-faint">
           <span className={chip}>{LABEL[p.tool]}</span>
-          <span>{p.updated}</span>
-          <span className="ml-auto">
-            <Avatars people={p.people} />
-          </span>
+          <span>{ago(p.updatedAt)}</span>
         </div>
       </div>
     </button>
   );
 }
 
-function Row({ icon, title, detail, right }: { icon: IconName; title: string; detail?: string; right?: ReactNode }) {
+function Label({ text, children }: { text: string; children: ReactNode }) {
   return (
-    <div className="flex items-center gap-3 border-t border-line py-2.5 first:border-t-0 first:pt-0">
-      <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-hover text-muted">
-        <Icon name={icon} size={15} />
-      </span>
-      <div className="min-w-0 flex-1 text-[13px]">
-        <span className="block truncate">{title}</span>
-        {detail && <small className="block truncate text-xs text-muted">{detail}</small>}
-      </div>
-      {right}
-    </div>
+    <label className="flex flex-col gap-1.5 text-[13px] font-medium">
+      {text}
+      {children}
+    </label>
   );
 }
 
-function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
+function NewProject({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (p: Project) => void }) {
+  const [tool, setTool] = useState<ToolId>("code");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const submit = async (form: FormData) => {
+    setBusy(true);
+    setError("");
+    try {
+      const { project } = await api<{ project: Project }>("/api/projects", "POST", {
+        name: form.get("name"),
+        about: form.get("about"),
+        instructions: form.get("instructions"),
+        tool,
+      });
+      onCreated(project);
+      onOpenChange(false);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-[rgb(8_9_12/0.45)]" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100dvh-32px)] w-[480px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-4 overflow-y-auto rounded-[20px] border border-line bg-surface p-5 text-fg shadow-soft">
+          <header className="flex items-start gap-3">
+            <div>
+              <Dialog.Title className="font-display text-lg font-semibold tracking-[-0.02em]">New project</Dialog.Title>
+              <Dialog.Description className="mt-0.5 text-[13px] text-muted">Keep chats and instructions together for one thing you&apos;re building.</Dialog.Description>
+            </div>
+            <Dialog.Close aria-label="Close" className="ml-auto grid size-[34px] place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">
+              <Icon name="x" />
+            </Dialog.Close>
+          </header>
+          <form action={submit} className="flex flex-col gap-3.5">
+            <Label text="Name">
+              <input name="name" required maxLength={80} className={input} placeholder="My class revision app" autoFocus />
+            </Label>
+            <div className="flex flex-col gap-1.5 text-[13px] font-medium">
+              Mostly for
+              <div className="inline-flex flex-wrap gap-0.5 self-start rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Tool">
+                {TOOLS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={tool === t}
+                    onClick={() => setTool(t)}
+                    className={`rounded-lg px-3 py-1 font-normal ${tool === t ? "bg-surface font-medium text-fg shadow-[0_1px_2px_rgb(0_0_0/0.08)]" : "text-muted"}`}
+                  >
+                    {LABEL[t]}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <Label text="What it is (optional)">
+              <input name="about" maxLength={300} className={input} placeholder="One line, so you can find it later" />
+            </Label>
+            <Label text="Instructions (optional)">
+              <textarea name="instructions" maxLength={4000} className={`${input} min-h-24 resize-y font-normal`} placeholder="Every chat in this project follows these. For example: for students on cheap Android phones; keep it fast and simple." />
+            </Label>
+            {error && <p className="text-[13px] text-bad">{error}</p>}
+            <div className="flex justify-end gap-2">
+              <Dialog.Close className={btnGhost}>Cancel</Dialog.Close>
+              <button type="submit" disabled={busy} className={`${btnDark} disabled:opacity-60`}>
+                {busy ? "Creating…" : "Create project"}
+              </button>
+            </div>
+          </form>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
+  );
+}
+
+function ProjectDetail({ p, onBack, onChange, onDelete }: { p: Project; onBack: () => void; onChange: (p: Project) => void; onDelete: () => void }) {
   const { dispatch } = useWorkspace();
+  const router = useRouter();
+  const toast = (text: string) => dispatch({ type: "toast", text });
+
+  const save = async (patch: Partial<Pick<Project, "name" | "about" | "instructions" | "modelId">>) => {
+    if (Object.entries(patch).every(([k, v]) => p[k as keyof Project] === v)) return;
+    try {
+      const { project } = await api<{ project: Project }>(`/api/projects/${p.id}`, "PATCH", patch);
+      onChange(project);
+      toast("Saved");
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  };
+  const remove = async () => {
+    if (!window.confirm(`Delete "${p.name}"? You can ask us to restore it within 30 days.`)) return;
+    try {
+      await api(`/api/projects/${p.id}`, "DELETE");
+      onDelete();
+      toast("Project deleted");
+    } catch (e) {
+      toast((e as Error).message);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
@@ -227,70 +229,63 @@ function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
           ← All projects
         </button>
         <span className={chip}>{LABEL[p.tool]}</span>
-        {p.source && (
-          <span className="inline-flex items-center gap-1.5 font-mono text-xs text-muted">
-            <Icon name="github" size={14} /> {p.source}
-          </span>
-        )}
+        <span className="text-xs text-faint">Updated {ago(p.updatedAt).replace(/^(Just|Yesterday)/, (w) => w.toLowerCase())}</span>
         <button
           type="button"
-          onClick={() => dispatch({ type: "toast", text: `Opens a new ${LABEL[p.tool]} chat inside ${p.name}` })}
+          onClick={() => {
+            dispatch({ type: "setTool", tool: p.tool });
+            if (p.tool !== "images") dispatch({ type: "setModel", modelId: p.modelId });
+            router.push("/app");
+          }}
           className={`${btnDark} ml-auto`}
         >
-          <Icon name="plus" size={15} /> New chat in project
+          <Icon name="plus" size={15} /> Start a chat
         </button>
       </div>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="flex min-w-0 flex-col gap-4">
-          <Panel title="Instructions" note="Every chat and coworker in this project follows these.">
-            <p className="rounded-xl border border-line bg-code px-3.5 py-3 text-[13px]">{p.instructions}</p>
+          <Panel title="Details" note="Changes save when you click away.">
+            <Label text="Name">
+              <input key={`n${p.updatedAt}`} className={input} defaultValue={p.name} maxLength={80} onBlur={(e) => e.target.value.trim() && save({ name: e.target.value.trim() })} />
+            </Label>
+            <Label text="What it is">
+              <input key={`a${p.updatedAt}`} className={input} defaultValue={p.about} maxLength={300} onBlur={(e) => save({ about: e.target.value.trim() })} />
+            </Label>
           </Panel>
-          <Panel title="Conversations" note={`${p.chats} in this project`}>
-            <div className="flex flex-col">
-              {["Add M-Pesa payment reminders to bookings", "Stylist schedule page", "Fix double bookings on Saturdays", "Explain the database to Amina"].slice(0, Math.min(4, p.chats)).map((t, i) => (
-                <Row key={t} icon={p.tool} title={t} detail={["Sonnet 5.5 · 2 hours ago", "Haiku 5.5 · yesterday", "Opus 5.5 · 3 days ago", "Haiku 5.5 · last week"][i]} />
-              ))}
-            </div>
+          <Panel title="Instructions" note="Every chat in this project follows these.">
+            <textarea
+              key={`i${p.updatedAt}`}
+              className={`${input} min-h-36 resize-y`}
+              defaultValue={p.instructions}
+              maxLength={4000}
+              placeholder="Who it's for, the style you want, things to always or never do."
+              onBlur={(e) => save({ instructions: e.target.value.trim() })}
+            />
           </Panel>
         </div>
         <div className="flex min-w-0 flex-col gap-4">
-          <Panel title="Knowledge" note="Files every chat can read.">
-            <div className="flex flex-col">
-              {[
-                ["Price list.pdf", "2 pages"],
-                ["Brand colours.png", "Image"],
-                ["Opening hours.md", "Notes"],
-              ].map(([t, d]) => (
-                <Row key={t} icon="clip" title={t} detail={d} />
-              ))}
-            </div>
-            <button type="button" className={`${btnGhost} self-start`}>
-              <Icon name="plus" size={15} /> Add files
-            </button>
+          {p.tool !== "images" && (
+            <Panel title="Model" note="What chats in this project start on.">
+              <select className={input} value={p.modelId} onChange={(e) => save({ modelId: e.target.value })}>
+                {LIVE_MODELS.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name} · {m.credits} cr
+                  </option>
+                ))}
+              </select>
+            </Panel>
+          )}
+          <Panel title="Conversations" note="Chats saved to this project will show here once chat is connected.">
+            <span className="text-[13px] text-muted">None yet</span>
           </Panel>
-          <Panel title="Coworkers" note="AI teammates assigned to this project.">
-            <div className="flex flex-wrap gap-2">
-              {p.coworkers.length ? p.coworkers.map((c) => <span key={c} className={chip}>{c}</span>) : <span className="text-[13px] text-muted">None yet</span>}
-            </div>
-          </Panel>
-          <Panel title="People" note="Invite teammates to build with you. Each person uses their own credits.">
-            <div className="flex items-center gap-3">
-              <Avatars people={p.people} />
-              <button type="button" className={`${btnGhost} ml-auto`}>
-                <Icon name="users" size={15} /> Invite
-              </button>
+          <Panel title="Files, people and coworkers">
+            <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">
+              Shared files, teammates and coworkers for projects <span className={chip}>Soon</span>
             </div>
           </Panel>
-          <Panel title="This week">
-            <div className="flex items-baseline justify-between text-[13px]">
-              <span className="text-muted">Credits used</span>
-              <b className="font-mono tabular-nums">{p.credits}</b>
-            </div>
-            <div className="flex items-baseline justify-between text-[13px]">
-              <span className="text-muted">Usual model</span>
-              <b className="font-medium">{p.model}</b>
-            </div>
-          </Panel>
+          <button type="button" onClick={remove} className="self-start rounded-[10px] border border-bad/40 px-3.5 py-2 text-[13px] font-medium text-bad">
+            Delete project
+          </button>
         </div>
       </div>
     </div>
@@ -298,25 +293,75 @@ function ProjectDetail({ p, onBack }: { p: Project; onBack: () => void }) {
 }
 
 export function ProjectsView() {
+  const [projects, setProjects] = useState<Project[] | null>(null);
+  const [error, setError] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
-  const [open, setOpen] = useState<string | null>(null);
-  const project = PROJECTS.find((p) => p.id === open);
-  const shown = PROJECTS.filter((p) => filter === "all" || p.tool === filter);
+  const [open, setOpen] = useState<number | null>(null);
+  const [creating, setCreating] = useState(false);
+
+  useEffect(() => {
+    api<{ projects: Project[] }>("/api/projects")
+      .then((d) => setProjects(d.projects))
+      .catch((e: Error) => setError(e.message));
+  }, []);
+
+  const project = projects?.find((p) => p.id === open);
+  const shown = projects?.filter((p) => filter === "all" || p.tool === filter) ?? [];
+  const replace = (next: Project) => setProjects((ps) => [next, ...(ps ?? []).filter((x) => x.id !== next.id)]);
 
   return (
     <PageFrame
       title={project ? project.name : "Projects"}
-      subtitle={project ? project.about : "Keep chats, files, instructions and coworkers together for each thing you're building."}
+      subtitle={project ? project.about || undefined : "Keep chats and instructions together for each thing you're building."}
       actions={
         !project && (
-          <button type="button" className={btnDark}>
+          <button type="button" className={btnDark} onClick={() => setCreating(true)}>
             <Icon name="plus" size={15} /> New project
           </button>
         )
       }
     >
+      <NewProject
+        open={creating}
+        onOpenChange={setCreating}
+        onCreated={(p) => {
+          replace(p);
+          setOpen(p.id);
+        }}
+      />
       {project ? (
-        <ProjectDetail p={project} onBack={() => setOpen(null)} />
+        <ProjectDetail
+          p={project}
+          onBack={() => setOpen(null)}
+          onChange={replace}
+          onDelete={() => {
+            setProjects((ps) => (ps ?? []).filter((x) => x.id !== project.id));
+            setOpen(null);
+          }}
+        />
+      ) : error ? (
+        <Panel>
+          <p className="text-[13px] text-bad">Couldn&apos;t load your projects. {error}</p>
+        </Panel>
+      ) : projects === null ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading projects">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-[214px] animate-pulse rounded-2xl border border-line bg-surface" />
+          ))}
+        </div>
+      ) : projects.length === 0 ? (
+        <Panel>
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <span className="grid size-12 place-items-center rounded-2xl bg-hover text-muted">
+              <Icon name="plus" size={20} />
+            </span>
+            <b className="font-semibold">No projects yet</b>
+            <p className="max-w-[360px] text-[13px] text-muted">A project keeps your instructions and chats for one thing together: an app, a class, a shop.</p>
+            <button type="button" className={btnDark} onClick={() => setCreating(true)}>
+              Create your first project
+            </button>
+          </div>
+        </Panel>
       ) : (
         <>
           <div className="flex gap-0.5 self-start rounded-[10px] bg-hover p-[3px]" role="group" aria-label="Filter">
@@ -332,11 +377,15 @@ export function ProjectsView() {
               </button>
             ))}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {shown.map((p) => (
-              <ProjectCard key={p.id} p={p} onOpen={() => setOpen(p.id)} />
-            ))}
-          </div>
+          {shown.length ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((p) => (
+                <ProjectCard key={p.id} p={p} onOpen={() => setOpen(p.id)} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-[13px] text-muted">No {LABEL[filter as ToolId]} projects yet.</p>
+          )}
         </>
       )}
     </PageFrame>

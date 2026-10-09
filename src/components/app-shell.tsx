@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
+import { applyTheme, type Settings } from "@/lib/settings";
 import { AdRail } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
 import { EarnDialog } from "./earn-dialog";
@@ -40,8 +41,14 @@ function AccountSync() {
     fetch("/api/me", { cache: "no-store" })
       .then(async (r) => {
         const b = await r.json().catch(() => ({}));
-        if (r.ok) dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked });
-        else console.warn("Account sync:", r.status, b?.error);
+        if (!r.ok) return console.warn("Account sync:", r.status, b?.error);
+        dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked, usage: b.usage, me: { country: b.country, status: b.status } });
+        // Settings load after /api/me, which creates the account row on a first visit.
+        const s = await fetch("/api/me/settings", { cache: "no-store" });
+        if (!s.ok) return;
+        const settings: Settings = await s.json();
+        applyTheme(settings.theme);
+        dispatch({ type: "settings", settings, first: true });
       })
       .catch(() => console.warn("Account sync: network error"));
   }, [isSignedIn, userId, dispatch]);

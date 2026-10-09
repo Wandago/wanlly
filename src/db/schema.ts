@@ -19,6 +19,8 @@ export const users = pgTable("users", {
     .notNull()
     .default("active"),
   riskScore: integer("risk_score").notNull().default(0),
+  /** Preferences from the profile page. Shape and defaults live in src/lib/settings.ts. */
+  settings: jsonb("settings").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -99,9 +101,14 @@ export const projects = pgTable("projects", {
     .references(() => users.id),
   name: text("name").notNull(),
   tool: text("tool", { enum: ["chat", "code", "design", "images"] }).notNull(),
+  about: text("about").notNull().default(""),
   instructions: text("instructions").notNull().default(""),
+  modelId: text("model_id").notNull().default("haiku"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  /** Set when deleted. Rows are kept 30 days so a mistake can be undone, then purged. */
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+}, (t) => [index("projects_owner").on(t.ownerId, t.updatedAt)]);
 
 export const conversations = pgTable("conversations", {
   id: bigserial("id", { mode: "number" }).primaryKey(),

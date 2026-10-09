@@ -1,6 +1,7 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, rawSql, schema } from "@/db";
+import { DAILY_SPEND_LIMIT, DAILY_VIDEO_CAP, WEEKLY_SPEND_LIMIT, type Usage } from "./catalog";
 
 type Reason = (typeof schema.ledgerEntries.$inferInsert)["reason"];
 
@@ -27,34 +28,73 @@ export async function post(userId: string, delta: number, reason: Reason, refId:
   return rows.length > 0;
 }
 
-/** Whether this person has unlocked today's community floor (UTC day). */
-export async function floorUnlockedToday(userId: string): Promise<boolean> {
-  const rows = await db()
-    .select({ day: schema.dailyFloors.day })
-    .from(schema.dailyFloors)
-    .where(and(eq(schema.dailyFloors.userId, userId), eq(schema.dailyFloors.day, sql`current_date`)))
-    .limit(1);
-  return rows.length > 0;
+function nextResets(now = new Date()) {
+  const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  const daysToMonday = (8 - now.getUTCDay()) % 7 || 7;
+  const week = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysToMonday));
+  return { dayResetsAt: day.toISOString(), weekResetsAt: week.toISOString() };
 }
 
+export type Account = { credits: number; floorUnlocked: boolean; usage: Usage };
+
+/** Balance, today's bonus and usage against the limits, in one round trip. */
+export async function account(userId: string): Promise<Account> {
+  const q = rawSql();
+  const rows = (await q`
+    select
+      coalesce(sum(delta), 0)::int as credits,
+      coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('day', now())), 0)::int as day_used,
+      coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('week', now())), 0)::int as week_used,
+      (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
+      exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
+    from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
+  const r = rows[0] ?? {};
+  return {
+    credits: Number(r.credits ?? 0),
+    floorUnlocked: Boolean(r.floor),
+    usage: {
+      dayUsed: Number(r.day_used ?? 0),
+      dayLimit: DAILY_SPEND_LIMIT,
+      weekUsed: Number(r.week_used ?? 0),
+      weekLimit: WEEKLY_SPEND_LIMIT,
+      videos: Number(r.videos ?? 0),
+      videoCap: DAILY_VIDEO_CAP,
+      ...nextResets(),
+    },
+  };
+}
+
+export type SpendResult = { ok: true } | { ok: false; reason: "credits" | "day" | "week" | "duplicate" };
+
 /**
- * Takes credits for a job, only if the balance covers it. A per-person lock makes jobs sent at the
- * same moment wait their turn, so they can never spend the same credits twice.
- * Returns the new balance, or null when there weren't enough credits (or the job was already charged).
+ * Takes credits for a job, only if the balance covers it and it stays within the daily and weekly
+ * limits. A per-person lock makes jobs sent at the same moment wait their turn, so they can never
+ * spend the same credits, or the same limit, twice.
  */
-export async function spend(userId: string, amount: number, refId: string, note: string): Promise<number | null> {
+export async function spend(userId: string, amount: number, refId: string, note: string): Promise<SpendResult> {
   const q = rawSql();
   const [, rows] = await q.transaction([
     q`select pg_advisory_xact_lock(hashtext(${userId}))`,
-    q`with bal as (select coalesce(sum(delta), 0)::int as total from ledger_entries where user_id = ${userId}),
+    q`with cur as (
+        select
+          coalesce(sum(delta), 0)::int as total,
+          coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('day', now())), 0)::int as day,
+          coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('week', now())), 0)::int as week
+        from ledger_entries where user_id = ${userId}
+      ),
       ins as (
         insert into ledger_entries (user_id, delta, reason, ref_id, note)
-        select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from bal where bal.total >= ${amount}
+        select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
+        where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
         on conflict (ref_id, reason) do nothing
         returning delta
       )
-      select ((select total from bal) + coalesce((select sum(delta) from ins), 0))::int as credits, (select count(*) from ins)::int as charged`,
+      select cur.total, cur.day, cur.week, (select count(*) from ins)::int as charged from cur`,
   ]);
-  const row = (rows as Record<string, unknown>[])[0] as { credits: number; charged: number } | undefined;
-  return row && row.charged > 0 ? Number(row.credits) : null;
+  const r = (rows as Record<string, unknown>[])[0] ?? {};
+  if (Number(r.charged) > 0) return { ok: true };
+  if (Number(r.total) < amount) return { ok: false, reason: "credits" };
+  if (Number(r.day) + amount > DAILY_SPEND_LIMIT) return { ok: false, reason: "day" };
+  if (Number(r.week) + amount > WEEKLY_SPEND_LIMIT) return { ok: false, reason: "week" };
+  return { ok: false, reason: "duplicate" };
 }

@@ -59,6 +59,27 @@ export const IMAGE_MODEL_NAME = "Wanlly Image";
 export const FLOOR_CREDITS = 8;
 export const SPOT_REWARD = 4;
 export const SPONSOR_TRIAL_REWARD = 25;
+
+/*
+ * Usage limits, the same for everyone. They cap what anyone can spend however many credits they
+ * have saved, so no single account can run up the model bill. Days and weeks are UTC; weeks start Monday.
+ */
+export const DAILY_SPEND_LIMIT = 100;
+export const WEEKLY_SPEND_LIMIT = 500;
+/** Most paid videos per day. */
+export const DAILY_VIDEO_CAP = 30;
+
+export type Usage = {
+  dayUsed: number;
+  dayLimit: number;
+  weekUsed: number;
+  weekLimit: number;
+  videos: number;
+  videoCap: number;
+  /** ISO times when the day and week windows reset. */
+  dayResetsAt: string;
+  weekResetsAt: string;
+};
 /** Demo spots are short; real ones run 15 to 20 seconds. */
 export const SPOT_SECONDS = 5;
 

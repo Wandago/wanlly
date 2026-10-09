@@ -35,9 +35,15 @@ const clerkAppearance = {
   },
 };
 
+const THEME_SCRIPT = `try{var t=localStorage.getItem("wanlly-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`}>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`} suppressHydrationWarning>
+      <head>
+        {/* Applies a chosen light or dark theme before first paint, so the page never flashes. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="h-full">
         <ClerkProvider appearance={clerkAppearance}>{children}</ClerkProvider>
       </body>

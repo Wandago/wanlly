@@ -20,6 +20,6 @@ export async function ensureUser(userId: string, country: string | null) {
       target: schema.users.id,
       set: { email, name, phoneVerified, country: sql`coalesce(${schema.users.country}, excluded.country)`, updatedAt: sql`now()` },
     })
-    .returning();
+    .returning({ id: schema.users.id, country: schema.users.country, status: schema.users.status });
   return row;
 }

@@ -57,6 +57,7 @@ Decided (October 2026): keep it simple for users. **Watch short sponsor videos, 
 **How it works today (built):** balances live in the ledger in Neon, never in the browser.
 - `POST /api/earn/start` opens a view and returns a one-time id; `POST /api/earn/complete` pays for it only if the same person finishes it after the full video length, within 10 minutes, once. The first paid video of the UTC day gets the 8-credit bonus; every other gets 4.
 - Limits: 30 paid videos a day, 4 video starts a minute.
+- **Usage limits, the same for everyone:** at most 100 credits spent a day and 500 a week (UTC; weeks start Monday), however many are saved. Shown as Today and This week meters with reset times in the sidebar and on Profile. Tune `DAILY_SPEND_LIMIT` and `WEEKLY_SPEND_LIMIT` in `src/lib/catalog.ts`.
 - `POST /api/spend` prices the job from the catalog on the server and takes the credits only if the balance covers it, with a per-person lock so simultaneous jobs can't overspend.
 - Surveys, sponsor trials and streaks show as "Soon" until a partner can confirm them server to server.
 - When a real ad network is connected, its signed server callback replaces `earn/complete` as the thing that pays.
