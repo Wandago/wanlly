@@ -74,8 +74,12 @@ export async function geminiModels(key: string): Promise<string[]> {
   return [...new Set([...pinned, ...geminiPick.models])];
 }
 
+/** Models resting after a timeout or overload, until this time. */
+const resting = new Map<string, number>();
+
 /** Google's "too busy" answers: worth another try, or another model. */
-const RETRYABLE = new Set([429, 500, 503, 504]);
+// 502 and the 52x codes are Google's gateway timing out or failing on a slow model: try another.
+const RETRYABLE = new Set([429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529]);
 
 const pause = (ms: number, signal: AbortSignal) =>
   new Promise<void>((resolve, reject) => {
@@ -95,7 +99,10 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   });
   // A busy model gets one more try after a pause, then the next model is tried. All of this
   // happens before any words arrive, so the person only sees a slightly longer wait.
-  const models = await geminiModels(key);
+  // Models that recently timed out or were overloaded go to the back of the line for a while.
+  const all = await geminiModels(key);
+  const now = Date.now();
+  const models = [...all.filter((m) => (resting.get(m) ?? 0) <= now), ...all.filter((m) => (resting.get(m) ?? 0) > now)];
   const tries = [models[0], ...models].slice(0, 5);
   let res: Response | null = null;
   let error: ProviderError | null = null;
@@ -124,6 +131,12 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
     // Busy models and ones this key can't use (404) move on to the next; anything else stops.
     if (!RETRYABLE.has(r.status) && r.status !== 404) break;
     if (r.status === 404 && tries[i + 1] === model) i++;
+    // Overloaded or timed out: rest this model for 10 minutes. A timeout already took long, so
+    // don't wait on the same model again; go straight to the next one.
+    if (r.status === 503 || r.status >= 520) {
+      resting.set(model, Date.now() + 10 * 60_000);
+      if (r.status >= 520 && tries[i + 1] === model) i++;
+    }
   }
   if (!res?.body) throw error ?? new ProviderError("failed");
   let inputTokens = 0;
