@@ -27,7 +27,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/conversations/[i
       .limit(200);
     return Response.json({
       conversation: convo,
-      messages: rows.map((r) => ({ id: r.id, role: r.role, text: String((r.content as { text?: string })?.text ?? ""), stop: (r.content as { stop?: string })?.stop ?? null, modelId: r.modelId, credits: r.credits, createdAt: r.createdAt })),
+      messages: rows.map((r) => ({ id: r.id, role: r.role, text: String((r.content as { text?: string })?.text ?? ""), stop: (r.content as { stop?: string })?.stop ?? null, attachments: (r.content as { attachments?: unknown[] })?.attachments ?? [], modelId: r.modelId, credits: r.credits, createdAt: r.createdAt })),
     });
   } catch (e) {
     console.error("conversation GET failed", e);

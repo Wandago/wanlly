@@ -7,7 +7,8 @@ import type { Providers, ToolId } from "./catalog";
  * route doesn't care which model answered. Keys live only in Cloudflare secrets.
  */
 
-export type Turn = { role: "user" | "assistant"; text: string };
+/** One turn of a conversation. `files` are images or PDFs, as base64, for this turn only. */
+export type Turn = { role: "user" | "assistant"; text: string; files?: { mime: string; data: string }[] };
 export type ReplyEvent = { type: "text"; text: string } | { type: "done"; inputTokens: number; outputTokens: number; stop: string };
 
 /** Claude models: API id and US dollars per million tokens (input, output). */
@@ -69,7 +70,10 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
     headers: { "content-type": "application/json", "x-goog-api-key": key },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
-      contents: turns.map((t) => ({ role: t.role === "assistant" ? "model" : "user", parts: [{ text: t.text }] })),
+      contents: turns.map((t) => ({
+        role: t.role === "assistant" ? "model" : "user",
+        parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
+      })),
       generationConfig: { maxOutputTokens: maxTokens },
     }),
   });
@@ -130,7 +134,21 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
       model: m.api,
       max_tokens: maxTokens,
       system,
-      messages: turns.map((t) => ({ role: t.role, content: t.text })),
+      messages: turns.map((t) =>
+        t.files?.length
+          ? {
+              role: t.role,
+              content: [
+                ...t.files.map((f) =>
+                  f.mime === "application/pdf"
+                    ? ({ type: "document", source: { type: "base64", media_type: "application/pdf", data: f.data } } as const)
+                    : ({ type: "image", source: { type: "base64", media_type: f.mime as "image/png" | "image/jpeg" | "image/webp" | "image/gif", data: f.data } } as const),
+                ),
+                { type: "text" as const, text: t.text },
+              ],
+            }
+          : { role: t.role, content: t.text },
+      ),
       output_config: { effort: tool === "chat" ? "low" : "medium" },
       ...(m.fallbacks ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
     },

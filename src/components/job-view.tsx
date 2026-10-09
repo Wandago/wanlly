@@ -6,6 +6,7 @@ import { isConnected, useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
 import { Tracked } from "./ads/tracked";
+import { AttachmentTray } from "./attachment-tray";
 
 /** Real replies: a spinner and timer until the first words arrive, with Stop. */
 function Waiting({ job }: { job: Job }) {
@@ -75,7 +76,10 @@ export function JobView({ job }: { job: Job }) {
 
   return (
     <div className="flex flex-col gap-3.5">
-      <div className="max-w-[min(560px,85%)] self-end rounded-[18px_18px_6px_18px] bg-hover px-[15px] py-2.5">{job.prompt}</div>
+      <div className="flex max-w-[min(560px,85%)] flex-col items-end gap-2 self-end">
+        {job.files?.length ? <AttachmentTray items={job.files} small /> : null}
+        {job.prompt && <div className="rounded-[18px_18px_6px_18px] bg-hover px-[15px] py-2.5 whitespace-pre-wrap">{job.prompt}</div>}
+      </div>
       <div className={`flex min-w-0 flex-col gap-3 ${job.status === "done" && !job.sample ? "animate-rise" : ""}`}>
         {job.status !== "working" ? (
           <JobResult job={job} />

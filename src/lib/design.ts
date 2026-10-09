@@ -41,10 +41,38 @@ export function systemPrompt(kind: DesignKind) {
   return `${BASE}\n\n${KIND[kind]}`;
 }
 
+/** Largest page a version may be, images included. */
+export const MAX_PAGE = 3_000_000;
+
+/**
+ * Images inside a page are stored as data URLs. Before a page goes back to the model they're
+ * swapped for short names (asset:keep-1…), and swapped back after, so the model never has to
+ * read or rewrite image data.
+ */
+export function packAssets(html: string) {
+  const assets = new Map<string, string>();
+  const packed = html.replace(/data:image\/[a-z+.-]+;base64,[A-Za-z0-9+/=]+/g, (m) => {
+    const key = `asset:keep-${assets.size + 1}`;
+    assets.set(key, m);
+    return key;
+  });
+  return { packed, assets };
+}
+
+export function unpackAssets(html: string, assets: Map<string, string>) {
+  return html.replace(/asset:(keep|img)-\d+/g, (m) => assets.get(m) ?? m);
+}
+
 /** The request for one version: the brief, the current design if there is one, and the change. */
-export function userPrompt(opts: { name: string; brief: string; request: string; current: string | null }) {
+export function userPrompt(opts: { name: string; brief: string; request: string; current: string | null; images?: { key: string; name: string }[]; files?: string }) {
   const parts = [`Project: ${opts.name}`];
   if (opts.brief.trim()) parts.push(`Brief:\n${opts.brief.trim()}`);
+  if (opts.images?.length)
+    parts.push(
+      `Attached images (you can see them above). To place one in the page, use its address exactly, for example <img src="${opts.images[0].key}" alt="…">. Use them where they fit the request; don't invent other image addresses:\n` +
+        opts.images.map((i) => `- ${i.key}: ${i.name}`).join("\n"),
+    );
+  if (opts.files) parts.push(`Attached files:${opts.files}`);
   if (opts.current) {
     parts.push(`Current design:\n\`\`\`html\n${opts.current}\n\`\`\``);
     parts.push(`Change to make:\n${opts.request}\n\nReturn the full updated document, not just the changed part.`);

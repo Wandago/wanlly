@@ -1,6 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { designFile, idParam } from "@/lib/design";
+import { MAX_PAGE, designFile, idParam } from "@/lib/design";
 import { signedInUserId } from "@/lib/session";
 
 /** Saves a version edited by hand in the preview. Free: no model is involved. */
@@ -9,7 +9,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/ver
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   const id = idParam((await ctx.params).id);
   const text = await req.text();
-  if (!id || text.length > 450_000) return Response.json({ error: "That page is too large to save." }, { status: 413 });
+  if (!id || text.length > MAX_PAGE + 1000) return Response.json({ error: "That page is too large to save." }, { status: 413 });
   let html = "";
   try {
     const body = JSON.parse(text) as { html?: unknown };

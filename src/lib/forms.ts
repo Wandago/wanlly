@@ -19,3 +19,17 @@ export async function smallJson(req: Request): Promise<Record<string, unknown> |
     return null;
   }
 }
+
+/** Reads a JSON body up to `max` characters, for requests that carry attachments. */
+export async function jsonUpTo(req: Request, max: number): Promise<Record<string, unknown> | null> {
+  const len = Number(req.headers.get("content-length") ?? 0);
+  if (len > max) return null;
+  const text = await req.text();
+  if (text.length > max) return null;
+  try {
+    const v = JSON.parse(text);
+    return v && typeof v === "object" ? (v as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}

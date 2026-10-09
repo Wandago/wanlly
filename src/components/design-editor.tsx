@@ -9,6 +9,8 @@ import { previewDoc, withBody } from "@/lib/design-preview";
 import { DRIVE_SCOPE, buildPptx, driveUpload, fileName, saveBlob, type MeasuredSlide } from "@/lib/export";
 import { limitReached, useWorkspace } from "@/lib/workspace-store";
 import { CreditsButton } from "./credits-button";
+import { AttachmentTray, DropOverlay } from "./attachment-tray";
+import { forSending, useAttachments } from "@/lib/attach";
 import { Icon, type IconName } from "./icon";
 import { ModelPicker } from "./top-bar";
 
@@ -66,6 +68,9 @@ export function DesignEditor({ id }: { id: number }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const waiting = useRef(new Map<string, (data: Record<string, unknown>) => void>());
   const { user } = useUser();
+  const toast = useCallback((text: string) => dispatch({ type: "toast", text }), [dispatch]);
+  const files = useAttachments(toast);
+  const picker = useRef<HTMLInputElement>(null);
   const ctrl = useRef<AbortController | null>(null);
 
   const model = getModel(modelId);
@@ -140,7 +145,8 @@ export function DesignEditor({ id }: { id: number }) {
 
   const generate = async () => {
     const text = prompt.trim();
-    if (!text || busy || !file) return;
+    if ((!text && !files.items.length) || busy || !file || files.busy) return;
+    const sending = files.items;
     const limit = limitReached(usage, price);
     if (limit) return dispatch({ type: "toast", text: limit });
     if (price > credits) return dispatch({ type: "setEarnOpen", open: true });
@@ -157,7 +163,7 @@ export function DesignEditor({ id }: { id: number }) {
       const r = await fetch(`/api/design/${id}/generate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null }),
+        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null, attachments: forSending(sending) }),
         signal: c.signal,
       });
       if (!r.ok || !r.body) {
@@ -185,9 +191,10 @@ export function DesignEditor({ id }: { id: number }) {
           } else if (ev.type === "done") {
             account(ev);
             const v = await fetch(`/api/design/${id}/versions/${ev.versionId}`, { cache: "no-store" }).then((x) => x.json());
-            setVersions((xs) => [{ id: ev.versionId, prompt: text, modelId, credits: ev.charged, createdAt: ev.createdAt }, ...xs]);
+            setVersions((xs) => [{ id: ev.versionId, prompt: text || `Used ${sending.length} attached file${sending.length > 1 ? "s" : ""}`, modelId, credits: ev.charged, createdAt: ev.createdAt }, ...xs]);
             setShown(v);
             setPrompt("");
+            files.clear();
             if (ev.cutShort) setNote("This one hit the length limit, so the end may be missing. Ask for a shorter version or fewer slides.");
           } else if (ev.type === "error") {
             account(ev);
@@ -329,7 +336,8 @@ export function DesignEditor({ id }: { id: number }) {
   const sizeKb = Math.round(live.length / 1024);
 
   return (
-    <main className="flex h-full min-h-0 min-w-0 flex-col">
+    <main className="relative flex h-full min-h-0 min-w-0 flex-col" {...(editing ? {} : files.dropProps)}>
+      {files.dragging && <DropOverlay label="Drop images or files to use in this design" />}
       <header className="flex flex-wrap items-center gap-2 border-b border-line px-3 py-2.5 sm:px-4">
         <button type="button" aria-label="Open sidebar" onClick={() => dispatch({ type: "setSidebar", open: true })} className="grid rounded-[10px] p-2 hover:bg-hover md:hidden">
           <Icon name="menu" />
@@ -512,6 +520,7 @@ export function DesignEditor({ id }: { id: number }) {
           >
             {note && <p className="rounded-lg bg-code px-2.5 py-2 text-xs text-muted">{note}</p>}
             {shown && versions[0] && shown.id !== versions[0].id && <p className="text-xs text-faint">Changes start from the version you&apos;re looking at.</p>}
+            <AttachmentTray items={files.items} onRemove={files.remove} small />
             <label htmlFor="design-prompt" className="sr-only">
               Describe the design
             </label>
@@ -520,6 +529,7 @@ export function DesignEditor({ id }: { id: number }) {
               rows={3}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
+              onPaste={files.onPaste}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
@@ -530,6 +540,26 @@ export function DesignEditor({ id }: { id: number }) {
               className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2 text-[13px] outline-none focus:border-faint"
             />
             <div className="flex flex-wrap items-center gap-1">
+              <button
+                type="button"
+                aria-label="Attach images or files"
+                title="Attach a logo, photos, a screenshot to copy, or a PDF brief. You can also drop or paste them."
+                onClick={() => picker.current?.click()}
+                className="grid size-8 place-items-center rounded-full text-muted hover:bg-hover hover:text-fg"
+              >
+                <Icon name="clip" size={17} />
+              </button>
+              <input
+                ref={picker}
+                type="file"
+                multiple
+                hidden
+                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/*,.md,.csv,.json,.html,.css"
+                onChange={(e) => {
+                  files.add(Array.from(e.target.files ?? []));
+                  e.target.value = "";
+                }}
+              />
               <ModelPicker />
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from={model.provider === "anthropic"} />
@@ -540,7 +570,7 @@ export function DesignEditor({ id }: { id: number }) {
                     Stop
                   </button>
                 ) : (
-                  <button type="submit" disabled={!prompt.trim()} className="rounded-lg bg-fg px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-30">
+                  <button type="submit" disabled={(!prompt.trim() && !files.items.length) || files.busy} className="rounded-lg bg-fg px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-30">
                     {shown ? "Update" : "Design it"}
                   </button>
                 )}

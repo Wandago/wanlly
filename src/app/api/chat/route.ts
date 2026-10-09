@@ -3,7 +3,8 @@ import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply, type Turn } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost, type ToolId } from "@/lib/catalog";
-import { field, smallJson } from "@/lib/forms";
+import { MAX_BODY, readAttachments } from "@/lib/attachments";
+import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
 
@@ -43,9 +44,13 @@ export async function POST(req: Request) {
   const blocked = await blockedReason(userId, "spend").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
 
-  const data = await smallJson(req);
-  if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
-  const text = typeof data.message === "string" ? data.message.trim().slice(0, 6000) : "";
+  const data = await jsonUpTo(req, MAX_BODY);
+  if (!data) return Response.json({ error: "That's too much to send at once. Attach smaller or fewer files." }, { status: 413 });
+  const attached = readAttachments(data.attachments);
+  if (!attached) return Response.json({ error: "Those files can't be sent. Use images, PDFs or text files, up to 4 at a time." }, { status: 400 });
+  const typed = typeof data.message === "string" ? data.message.trim().slice(0, 6000) : "";
+  // A message can be just files; the model still needs a sentence to go on.
+  const text = typed || (attached.meta.length ? "Take a look at what I've attached." : "");
   const toolId = data.tool as ToolId;
   const model = MODELS.find((m) => m.id === data.modelId);
   const jobId = field(data, "jobId", 64);
@@ -115,17 +120,20 @@ export async function POST(req: Request) {
       used += t.length;
       turns.unshift({ role: r.role, text: t });
     }
-    await d.insert(schema.messages).values({ conversationId: convo.id, role: "user", content: { text } });
+    await d.insert(schema.messages).values({ conversationId: convo.id, role: "user", content: { text, attachments: attached.meta } });
   } catch (e) {
     console.error("chat history failed", e);
     await release(userId, price, ref).catch(() => {});
     return Response.json({ error: "Database unavailable" }, { status: 503 });
   }
-  turns.push({ role: "user", text });
+  turns.push({ role: "user", text: text + attached.text, files: attached.files.map((f) => ({ mime: f.mime, data: f.data })) });
   // Providers want turns to alternate and start with the person, so merge any repeats.
   turns = turns.reduce<Turn[]>((acc, t) => {
     const last = acc[acc.length - 1];
-    if (last && last.role === t.role) last.text += `\n\n${t.text}`;
+    if (last && last.role === t.role) {
+      last.text += `\n\n${t.text}`;
+      if (t.files?.length) last.files = [...(last.files ?? []), ...t.files];
+    }
     else acc.push({ ...t });
     return acc;
   }, []);

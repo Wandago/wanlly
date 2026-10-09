@@ -13,6 +13,7 @@ import {
   type ToolId,
   type Usage,
 } from "./catalog";
+import { forSending, type Attachment } from "./attach";
 import type { Settings } from "./settings";
 
 /*
@@ -38,6 +39,8 @@ export type Job = {
   error?: string;
   /** "max_tokens" or "interrupted" when the reply was cut short. */
   stop?: string;
+  /** Files sent with the prompt. Their contents stay in memory only, for Ask again. */
+  files?: Attachment[];
 };
 
 export type Recent = { id: number; title: string; tool: string; projectId: number | null };
@@ -221,7 +224,7 @@ function reducer(state: State, action: Action): State {
 
 type Workspace = State & {
   dispatch: React.Dispatch<Action>;
-  submit: () => void;
+  submit: (files?: Attachment[]) => void;
   /** Stops a reply that's still streaming. */
   stop: (jobId: string) => void;
   /** Sends a job's prompt again as a new message. */
@@ -352,7 +355,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   );
 
   const send = useCallback(
-    (prompt: string, toolId: ToolId) => {
+    (prompt: string, toolId: ToolId, files: Attachment[] = []) => {
       const s = live.current;
       const m = getModel(s.modelId);
       const cost = jobCost(TOOLS[toolId], m);
@@ -367,19 +370,30 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       dispatch({
         type: "addJob",
         cost,
-        job: { id, tool: toolId, prompt, status: "working", modelName: m.name, credits: cost, sample: false, startedAt: Date.now(), spot: "idle", text: "" },
+        job: { id, tool: toolId, prompt, status: "working", modelName: m.name, credits: cost, sample: false, startedAt: Date.now(), spot: "idle", text: "", files },
       });
-      run(id, { message: prompt, tool: toolId, modelId: m.id, jobId: id, conversationId: s.conversationId, projectId: s.conversationId ? null : s.projectId });
+      run(id, {
+        message: prompt,
+        tool: toolId,
+        modelId: m.id,
+        jobId: id,
+        conversationId: s.conversationId,
+        projectId: s.conversationId ? null : s.projectId,
+        attachments: forSending(files.filter((f) => f.data || f.text)),
+      });
     },
     [run],
   );
 
-  const submit = useCallback(() => {
-    const prompt = live.current.draft.trim();
-    if (prompt) send(prompt, live.current.tool);
-  }, [send]);
+  const submit = useCallback(
+    (files: Attachment[] = []) => {
+      const prompt = live.current.draft.trim();
+      if (prompt || files.length) send(prompt, live.current.tool, files);
+    },
+    [send],
+  );
 
-  const retry = useCallback((job: Job) => send(job.prompt, job.tool), [send]);
+  const retry = useCallback((job: Job) => send(job.prompt, job.tool, job.files), [send]);
   const stop = useCallback((jobId: string) => streams.current.get(jobId)?.abort(), []);
 
   const openConversation = useCallback(async (id: number) => {
@@ -388,13 +402,26 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       if (!r.ok) throw new Error();
       const { conversation, messages } = (await r.json()) as {
         conversation: { id: number; tool: ToolId };
-        messages: { id: number; role: "user" | "assistant"; text: string; stop: string | null; modelId: string | null; credits: number | null; createdAt: string }[];
+        messages: { id: number; role: "user" | "assistant"; text: string; stop: string | null; modelId: string | null; credits: number | null; createdAt: string; attachments?: { name: string; mime: string; size: number }[] }[];
       };
       // Pair each message with the reply that followed it.
       const jobs: Job[] = [];
       for (const msg of messages) {
         if (msg.role === "user") {
-          jobs.push({ id: `m-${msg.id}`, tool: conversation.tool, prompt: msg.text, status: "error", error: "No reply was saved for this message.", modelName: "", credits: 0, sample: false, startedAt: 0, spot: "idle" });
+          jobs.push({
+            id: `m-${msg.id}`,
+            tool: conversation.tool,
+            prompt: msg.text,
+            status: "error",
+            error: "No reply was saved for this message.",
+            modelName: "",
+            credits: 0,
+            sample: false,
+            startedAt: 0,
+            spot: "idle",
+            // Only the names were saved; the files themselves aren't kept.
+            files: msg.attachments?.map((a, i) => ({ ...a, id: `${msg.id}-${i}` })),
+          });
         } else {
           const last = jobs[jobs.length - 1];
           if (last && last.status === "error") {

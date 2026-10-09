@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { CHEAPEST_MODEL_ID, FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
 import { isConnected, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 import { CreditsButton } from "./credits-button";
+import { AttachmentTray, DropOverlay } from "./attachment-tray";
+import { useAttachments } from "@/lib/attach";
 
 /** Out-of-credits message, shown inside the composer instead of a pop-up. */
 function Gate() {
@@ -77,8 +79,16 @@ function Gate() {
 export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   const { tool, draft, price, gate, modelId, dispatch, submit } = useWorkspace();
   const ta = useRef<HTMLTextAreaElement>(null);
+  const picker = useRef<HTMLInputElement>(null);
   const config = TOOLS[tool];
   const connected = isConnected(tool);
+  const toast = useCallback((text: string) => dispatch({ type: "toast", text }), [dispatch]);
+  const files = useAttachments(toast);
+  const send = () => {
+    if (files.busy) return;
+    submit(files.items);
+    files.clear();
+  };
   // Claude replies can cost more than the starting price when they run long.
   const from = getModel(modelId).provider === "anthropic" && tool !== "images";
 
@@ -109,18 +119,21 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
         </div>
       )}
       <form
-        className="flex flex-col gap-2 rounded-[20px] border border-line bg-surface p-3 pb-2.5 shadow-soft focus-within:border-faint"
+        {...(connected ? files.dropProps : {})}
+        className="relative flex flex-col gap-2 rounded-[20px] border border-line bg-surface p-3 pb-2.5 shadow-soft focus-within:border-faint"
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          send();
         }}
       >
+        {files.dragging && <DropOverlay />}
         {gate && <Gate key={`${gate.needed}-${tool}`} />}
         {!connected && (
           <p className="rounded-xl bg-code px-3 py-2 text-[13px] text-muted">
             <b className="font-medium text-fg">{config.label} is coming soon.</b> What you see here is a sample. Chat and Code work today.
           </p>
         )}
+        <AttachmentTray items={files.items} onRemove={files.remove} />
         <label htmlFor="composer-input" className="sr-only">
           Message
         </label>
@@ -131,15 +144,40 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
           value={draft}
           placeholder={config.placeholder}
           onChange={(e) => dispatch({ type: "setDraft", draft: e.target.value })}
+          onPaste={connected ? files.onPaste : undefined}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              submit();
+              send();
             }
           }}
           className="max-h-[200px] min-h-7 w-full resize-none bg-transparent px-1 py-0.5 text-base text-fg md:text-sm outline-none placeholder:text-faint focus-visible:outline-none"
         />
         <div className="flex items-center gap-1.5">
+          {connected && (
+            <>
+              <button
+                type="button"
+                aria-label="Attach files"
+                title="Attach images, PDFs or text files. You can also drop or paste them."
+                onClick={() => picker.current?.click()}
+                className="grid size-[34px] shrink-0 place-items-center rounded-full text-muted hover:bg-hover hover:text-fg"
+              >
+                <Icon name="clip" />
+              </button>
+              <input
+                ref={picker}
+                type="file"
+                multiple
+                hidden
+                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/*,.md,.csv,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.sql,.yaml,.yml"
+                onChange={(e) => {
+                  files.add(Array.from(e.target.files ?? []));
+                  e.target.value = "";
+                }}
+              />
+            </>
+          )}
           <div role="group" aria-label="Tool" className="flex min-w-0 gap-0.5 rounded-xl bg-hover p-[3px]">
             {TOOL_ORDER.map((id) => {
               const active = id === tool;
@@ -162,7 +200,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
           <button
             type="submit"
             aria-label="Send"
-            disabled={!draft.trim() || !connected}
+            disabled={(!draft.trim() && !files.items.length) || !connected || files.busy}
             className="grid size-9 shrink-0 place-items-center rounded-full bg-fg text-bg disabled:opacity-25"
           >
             <Icon name="up" />

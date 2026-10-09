@@ -3,8 +3,9 @@ import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost } from "@/lib/catalog";
-import { CONTINUE, designFile, extractHtml, idParam, isComplete, systemPrompt, userPrompt } from "@/lib/design";
-import { field, smallJson } from "@/lib/forms";
+import { MAX_BODY, readAttachments } from "@/lib/attachments";
+import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packAssets, systemPrompt, unpackAssets, userPrompt } from "@/lib/design";
+import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
 
@@ -29,8 +30,12 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const blocked = await blockedReason(userId, "spend").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
   const id = idParam((await ctx.params).id);
-  const data = await smallJson(req);
-  const request = data && typeof data.prompt === "string" ? data.prompt.trim().slice(0, 4000) : "";
+  const data = await jsonUpTo(req, MAX_BODY);
+  if (!data) return Response.json({ error: "That's too much to send at once. Attach smaller or fewer files." }, { status: 413 });
+  const attached = readAttachments(data.attachments);
+  if (!attached) return Response.json({ error: "Those files can't be sent. Use images, PDFs or text files, up to 4 at a time." }, { status: 400 });
+  const typed = typeof data.prompt === "string" ? data.prompt.trim().slice(0, 4000) : "";
+  const request = typed || (attached.meta.length ? "Use what I've attached." : "");
   const model = MODELS.find((m) => m.id === data?.modelId);
   const jobId = data ? field(data, "jobId", 64) : "";
   const baseVersion = data && Number.isSafeInteger(data.baseVersionId) ? (data.baseVersionId as number) : null;
@@ -68,7 +73,17 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
 
   const abort = new AbortController();
   const enc = new TextEncoder();
-  const turns = [{ role: "user" as const, text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current }) }];
+  // Images already in the page and newly attached ones travel as short names (see packAssets).
+  const { packed, assets } = packAssets(current ?? "");
+  const images = attached.files.filter((f) => f.mime.startsWith("image/")).map((f, n) => ({ key: `asset:img-${n + 1}`, name: f.name, url: `data:${f.mime};base64,${f.data}` }));
+  for (const i of images) assets.set(i.key, i.url);
+  const turns = [
+    {
+      role: "user" as const,
+      text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current: current ? packed : null, images, files: attached.text }),
+      files: attached.files.map((f) => ({ mime: f.mime, data: f.data })),
+    },
+  ];
 
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -94,10 +109,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
           // Continuations must not reopen the code fence.
           reply = reply.replace(/\n```\s*$/, "");
         }
-        const html = extractHtml(reply);
-        if (!html) {
+        const found = extractHtml(reply);
+        const html = found ? unpackAssets(found, assets) : null;
+        if (!html || html.length > MAX_PAGE) {
           await release(userId, price, ref);
-          send({ type: "error", message: ERRORS.nohtml, ...(await account(userId)) });
+          send({ type: "error", message: html ? "That page came out too large to save. Your credits were refunded; try fewer or smaller images." : ERRORS.nohtml, ...(await account(userId)) });
         } else {
           const actual = Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit);
           const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · long design`) : 0;
