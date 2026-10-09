@@ -29,7 +29,7 @@ export function ModelPicker() {
   return (
     <Menu.Root>
       <Menu.Trigger className="flex items-center gap-2 rounded-[10px] px-2.5 py-[7px] text-sm font-semibold outline-none hover:bg-hover focus-visible:outline-2 data-[state=open]:bg-hover">
-        {model.name} <CreditTag credits={model.credits} from={model.provider === "anthropic"} />
+        {model.name} <CreditTag credits={model.credits} from />
         <Icon name="down" size={15} className="text-faint" />
       </Menu.Trigger>
       <Menu.Portal>
@@ -58,7 +58,7 @@ export function ModelPicker() {
                       </Menu.ItemIndicator>
                     </b>
                     <span className="col-start-2 row-span-2 row-start-1 self-center">
-                      <CreditTag credits={on ? m.credits : "Soon"} from={m.provider === "anthropic"} />
+                      <CreditTag credits={on ? m.credits : "Soon"} from />
                     </span>
                     <small className="col-start-1 text-[13px] text-muted">{m.description}</small>
                   </Menu.RadioItem>

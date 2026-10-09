@@ -34,7 +34,7 @@ export function Ring({ used, size = 18 }: { used: number; size?: number }) {
  * Credits and usage, under the message box. The ring shows how much of today's limit is used;
  * opening it shows the balance, today's and this week's limits, and a way to earn more.
  */
-export function CreditsButton({ price, from }: { price: number; from: boolean }) {
+export function CreditsButton({ price, from, rate }: { price: number; from: boolean; rate?: number }) {
   const { credits, synced, usage, floorUnlocked, dispatch } = useWorkspace();
   const ref = useRef<HTMLButtonElement>(null);
   const last = useRef(credits);
@@ -94,7 +94,7 @@ export function CreditsButton({ price, from }: { price: number; from: boolean })
             <Icon name="play" size={15} />
             {floorUnlocked ? `Watch a video · +${SPOT_REWARD}` : `First video today · +${FLOOR_CREDITS}`}
           </Popover.Close>
-          {from && <p className="text-xs text-faint">Claude replies start at this price; long replies cost a little more.</p>}
+          {from && <p className="text-xs text-faint">This is the starting price. Bigger tasks cost more, by how much the model writes and reads: about {rate ?? 1} more for every 1,500 words it writes, and never more than {(rate ?? 1) * 40} for one task.</p>}
         </Popover.Content>
       </Popover.Portal>
     </Popover.Root>

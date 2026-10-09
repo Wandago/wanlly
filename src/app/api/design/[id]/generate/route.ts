@@ -2,7 +2,7 @@ import { desc, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
-import { ESTIMATE, MODELS, TOOLS, jobCost } from "@/lib/catalog";
+import { ESTIMATE, MODELS, TOOLS, jobCost, taskCredits } from "@/lib/catalog";
 import { MAX_BODY, readAttachments } from "@/lib/attachments";
 import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packAssets, systemPrompt, systemStyles, unpackAssets, userPrompt } from "@/lib/design";
 import { field, jsonUpTo } from "@/lib/forms";
@@ -125,8 +125,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
           await release(userId, price, ref);
           send({ type: "error", message: html ? "That page came out too large to save. Your credits were refunded; try fewer or smaller images." : ERRORS.nohtml, ...(await account(userId)) });
         } else {
-          const actual = Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit);
-          const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · long design`) : 0;
+          // Bigger tasks cost more: the work the model did, never less than the starting price.
+        const actual = taskCredits(price, model, usage.inputTokens, usage.outputTokens, Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit));
+          const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · bigger task`) : 0;
           const [row] = await d.insert(v).values({ projectId: id, prompt: request, html, modelId: model.id, credits: price + extra }).returning({ id: v.id, createdAt: v.createdAt });
           await d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
           send({ type: "done", versionId: row.id, createdAt: row.createdAt, charged: price + extra, cutShort: !isComplete(reply), ...(await account(userId)) });

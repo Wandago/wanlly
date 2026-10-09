@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { SPOT_SPONSOR } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { RewardedSpot } from "./ads/ad-slot";
@@ -10,6 +10,7 @@ import { JobView } from "./job-view";
 import { TopBar } from "./top-bar";
 import { DesignHome } from "./design-home";
 import { HomeBanner } from "./ads/home-banner";
+import { CanvasProvider, ProjectCanvas, useCanvas } from "./project-canvas";
 
 /** First thing every day: there are no free credits, so one video unlocks the community floor. */
 function UnlockCard() {
@@ -65,26 +66,43 @@ export function Workspace() {
   if (tool === "design") return <DesignHome />;
 
   return (
-    <main className="flex h-full min-h-0 min-w-0 flex-col">
-      <TopBar />
-      <div ref={scroller} className={`min-h-0 overflow-auto px-4 ${empty ? "mt-auto flex-[0_1_auto]" : "flex-1"}`}>
-        <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-[30px] pt-5 pb-3">
-          {empty ? (
-            <h1 className="pt-2 text-center font-display text-[clamp(24px,3vw,30px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
-              What are we <em className="text-accent not-italic">making</em> today?
-            </h1>
-          ) : (
-            visible.map((job) => <JobView key={job.id} job={job} />)
-          )}
-        </div>
-      </div>
-      <div className={`px-4 pt-1.5 pb-[calc(14px+env(safe-area-inset-bottom,0px))] ${empty ? "mb-auto pb-[12vh]" : ""}`}>
-        <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-3">
-          {synced && !floorUnlocked && <UnlockCard />}
-          <Composer showSuggestions={empty || tool !== "chat"} />
-          {empty && <HomeBanner />}
-        </div>
-      </div>
-    </main>
+    <CanvasProvider>
+      <WithCanvas>
+        <main className="flex h-full min-h-0 min-w-0 flex-col">
+          <TopBar />
+          <div ref={scroller} className={`min-h-0 overflow-auto px-4 ${empty ? "mt-auto flex-[0_1_auto]" : "flex-1"}`}>
+            <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-[30px] pt-5 pb-3">
+              {empty ? (
+                <h1 className="pt-2 text-center font-display text-[clamp(24px,3vw,30px)] leading-[1.1] font-semibold tracking-[-0.03em] text-balance">
+                  What are we <em className="text-accent not-italic">making</em> today?
+                </h1>
+              ) : (
+                visible.map((job) => <JobView key={job.id} job={job} />)
+              )}
+            </div>
+          </div>
+          <div className={`px-4 pt-1.5 pb-[calc(14px+env(safe-area-inset-bottom,0px))] ${empty ? "mb-auto pb-[12vh]" : ""}`}>
+            <div className="mx-auto flex w-full max-w-[800px] min-w-0 flex-col gap-3">
+              {synced && !floorUnlocked && <UnlockCard />}
+              <Composer showSuggestions={empty || tool !== "chat"} />
+              {empty && <HomeBanner />}
+            </div>
+          </div>
+        </main>
+      </WithCanvas>
+    </CanvasProvider>
+  );
+}
+
+/** Chat on the left and, when a preview is open, the canvas beside it (over it on phones). */
+function WithCanvas({ children }: { children: ReactNode }) {
+  const canvas = useCanvas();
+  const { jobs, tool } = useWorkspace();
+  const shown = !!canvas?.openId && jobs.some((j) => j.id === canvas.openId && j.tool === tool);
+  return (
+    <div className={`grid h-full min-h-0 min-w-0 ${shown ? "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : "grid-cols-1"}`}>
+      {children}
+      {shown && <ProjectCanvas />}
+    </div>
   );
 }

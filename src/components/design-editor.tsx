@@ -674,7 +674,7 @@ export function DesignEditor({ id }: { id: number }) {
                 </select>
               )}
               <div className="ml-auto flex items-center gap-1.5">
-                <CreditsButton price={price} from={model.provider === "anthropic"} />
+                <CreditsButton price={price} from rate={model.credits} />
                 {editing ? (
                   <span className="text-xs text-faint">Finish editing first</span>
                 ) : busy ? (

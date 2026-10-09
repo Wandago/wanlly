@@ -2,7 +2,7 @@ import { and, desc, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply, type Turn } from "@/lib/ai";
-import { ESTIMATE, MODELS, TOOLS, jobCost, type ToolId } from "@/lib/catalog";
+import { ESTIMATE, MODELS, TOOLS, jobCost, taskCredits, type ToolId } from "@/lib/catalog";
 import { MAX_BODY, readAttachments } from "@/lib/attachments";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
@@ -23,12 +23,19 @@ const SYSTEM: Record<"chat" | "code", string> = {
   chat:
     "You are the assistant in Wanlly, a free AI workspace for students and independent creators around the world. " +
     "Be clear, warm and practical. Answer directly, then add detail only when it helps. Use Markdown: short paragraphs, " +
-    "lists when they help, and fenced code blocks with a language tag. Many people read on a phone, so keep lines short.",
+    "lists when they help, and fenced code blocks with a language tag. Many people read on a phone, so keep lines short. " +
+    "If they ask you to build a web page or small browser app, give one complete self-contained HTML file in a ```html " +
+    "block; Wanlly previews it beside the chat and lets them download it.",
   code:
     "You are the coding assistant in Wanlly, a free AI workspace for students and independent creators. Write complete, " +
     "working code in fenced code blocks with a language tag, and put the file path on the line before each block when " +
     "there is more than one file. Prefer simple, well-known tools that run on cheap hardware. Explain briefly what you " +
-    "changed and how to run it. If something is ambiguous, make a sensible choice and say what you assumed.",
+    "changed and how to run it. If something is ambiguous, make a sensible choice and say what you assumed. " +
+    "When the person asks for something that runs in a browser (a web page, web app, game, calculator, dashboard or " +
+    "other tool), deliver it as ONE complete, self-contained HTML file in a single ```html block: CSS in a <style> tag, " +
+    "JavaScript in a <script> tag, and any libraries from a CDN such as cdnjs or jsDelivr with exact versions. Give it a " +
+    "<title>. Wanlly shows it running beside the chat and lets them download it to open in any browser. For React, " +
+    "write one App component in a single ```jsx block with a default export and Tailwind classes for styling.",
 };
 
 const ERRORS = {
@@ -157,8 +164,9 @@ export async function POST(req: Request) {
           } else usage = ev;
         }
         // Real cost in credits; anything above the upfront price is charged now.
-        const actual = Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit);
-        const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · long reply`) : 0;
+        // Bigger tasks cost more: the work the model did, never less than the starting price.
+        const actual = taskCredits(price, model, usage.inputTokens, usage.outputTokens, Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit));
+        const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · bigger task`) : 0;
         if (!reply && usage.stop !== "end") {
           await release(userId, price, ref);
           send({ type: "error", message: usage.stop === "refusal" ? "The model declined to answer that. Your credits were refunded." : ERRORS.failed, refunded: true, ...(await account(userId)) });

@@ -244,3 +244,21 @@ export function getModel(id: string): Model {
 export function jobCost(tool: Tool, model: Model): number {
   return tool.flatCredits ?? model.credits * (tool.multiplier ?? 1);
 }
+
+/** Output tokens (about 1,500 words) that cost one "model credit" of work. */
+export const OUT_PER_UNIT = 2000;
+/** Input tokens (the conversation, files and pictures read) per model credit. */
+export const IN_PER_UNIT = 20000;
+/** No single job costs more than this many times the model's credits. */
+const JOB_CAP = 40;
+
+/**
+ * What a finished job costs: the tool's starting price, or the work it took if that's more.
+ * Work is how much the model read and wrote, at the model's rate, so a one-line answer and a
+ * 30-slide deck cost what they're worth on every model. `realCredits` is the provider's actual
+ * bill in credits, so a model never runs at a loss.
+ */
+export function taskCredits(start: number, model: Model, inputTokens: number, outputTokens: number, realCredits = 0): number {
+  const work = Math.ceil(model.credits * (outputTokens / OUT_PER_UNIT + inputTokens / IN_PER_UNIT));
+  return Math.max(start, Math.min(Math.max(work, realCredits), Math.max(start, model.credits * JOB_CAP)));
+}

@@ -90,7 +90,8 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
     files.clear();
   };
   // Claude replies can cost more than the starting price when they run long.
-  const from = getModel(modelId).provider === "anthropic" && tool !== "images";
+  // Every model scales with the size of the task; images have a flat price.
+  const from = tool !== "images";
 
   useEffect(() => {
     const el = ta.current;
@@ -196,7 +197,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
               );
             })}
           </div>
-          <div className="ml-auto">{connected ? <CreditsButton price={price} from={from} /> : <span className="px-2 font-mono text-xs text-faint">Soon</span>}</div>
+          <div className="ml-auto">{connected ? <CreditsButton price={price} from={from} rate={getModel(modelId).credits} /> : <span className="px-2 font-mono text-xs text-faint">Soon</span>}</div>
           <button
             type="submit"
             aria-label="Send"
