@@ -15,7 +15,7 @@ const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean
   { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: false },
   { maker: "Moonshot", models: ["Kimi K3"], live: false },
   { maker: "OpenAI", models: ["GPT"], live: false },
-  { maker: "xAI", models: ["Grok"], live: false },
+  { maker: "xAI", models: ["Grok 4.3", "Grok 4.7"], live: false },
 ];
 
 function Hero() {

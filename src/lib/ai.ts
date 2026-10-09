@@ -20,12 +20,12 @@ const CLAUDE: Record<string, { api: string; usdIn: number; usdOut: number; fallb
 };
 
 export function providers(): Providers {
-  return { anthropic: !!process.env.ANTHROPIC_API_KEY, google: !!process.env.GEMINI_API_KEY, nvidia: !!process.env.NVIDIA_API_KEY };
+  return { anthropic: !!process.env.ANTHROPIC_API_KEY, google: !!process.env.GEMINI_API_KEY, nvidia: !!process.env.NVIDIA_API_KEY, xai: !!process.env.XAI_API_KEY };
 }
 
 /** Model cost in US dollars for one reply. Gemini and the NVIDIA-hosted models run on free tiers for now, so they're 0. */
 export function replyCostUsd(modelId: string, inputTokens: number, outputTokens: number): number {
-  const c = CLAUDE[modelId];
+  const c = CLAUDE[modelId] ?? GROK[modelId];
   return c ? (inputTokens * c.usdIn + outputTokens * c.usdOut) / 1e6 : 0;
 }
 
@@ -334,8 +334,24 @@ function thinkFilter() {
   };
 }
 
-async function* nvidia(modelId: string, system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
-  const model = await nvidiaModel(modelId);
+// ---------------------------------------------------------------- xAI (Grok)
+
+/** Grok models: API id and US dollars per million tokens (input, output), for prompts under 200K tokens. */
+const GROK: Record<string, { api: string; usdIn: number; usdOut: number }> = {
+  grok: { api: "grok-4.3", usdIn: 1.25, usdOut: 2.5 },
+  "grok-top": { api: "grok-4.7", usdIn: 2, usdOut: 6 },
+};
+
+/** One host that speaks the OpenAI chat format: where it is, its key, and its name for errors. */
+type Host = { name: string; base: string; key: string };
+const nvidiaHost = (): Host => ({ name: "NVIDIA", base: nvidiaBase(), key: process.env.NVIDIA_API_KEY ?? "" });
+const xaiHost = (): Host => ({ name: "xAI", base: (process.env.XAI_BASE_URL || "https://api.x.ai/v1").replace(/\/+$/, ""), key: process.env.XAI_API_KEY ?? "" });
+
+/**
+ * A reply from any OpenAI-compatible host (NVIDIA's open models, xAI's Grok). Text only: these
+ * models get a note instead of pictures and PDFs.
+ */
+async function* openaiChat(host: Host, model: string, system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
   // These models read text only. Office files and text files already arrive as text; pictures and
   // PDFs can't be read here, so the model is told, and can say so.
   const messages = [
@@ -350,13 +366,14 @@ async function* nvidia(modelId: string, system: string, turns: Turn[], maxTokens
   const body = JSON.stringify({ model, messages, max_tokens: maxTokens, stream: true, stream_options: { include_usage: true } });
   let res: Response | null = null;
   let error: ProviderError | null = null;
-  // The free tier allows about 40 requests a minute per key: one more try after a pause, then "busy".
+  // A busy host (NVIDIA's free tier allows about 40 requests a minute per key) gets one more try
+  // after a pause, then the person hears it's busy.
   for (let i = 0; i < 2 && !res; i++) {
     if (i) await pause(1500, signal);
-    const r = await fetch(`${nvidiaBase()}/chat/completions`, {
+    const r = await fetch(`${host.base}/chat/completions`, {
       method: "POST",
       signal,
-      headers: { "content-type": "application/json", authorization: `Bearer ${process.env.NVIDIA_API_KEY}`, accept: "text/event-stream" },
+      headers: { "content-type": "application/json", authorization: `Bearer ${host.key}`, accept: "text/event-stream" },
       body,
     });
     if (r.ok && r.body) {
@@ -369,9 +386,9 @@ async function* nvidia(modelId: string, system: string, turns: Turn[], maxTokens
       const j = JSON.parse(raw) as { error?: { message?: string } | string; detail?: string };
       message = (typeof j.error === "string" ? j.error : j.error?.message) ?? j.detail ?? message;
     } catch {}
-    console.error("nvidia error", model, r.status, message);
+    console.error(`${host.name} error`, model, r.status, message);
     const kind = RETRYABLE.has(r.status) ? "busy" : r.status === 401 || r.status === 402 || r.status === 403 || r.status === 404 ? "unavailable" : "failed";
-    error = new ProviderError(kind, `NVIDIA ${r.status} on ${model}: ${message}`);
+    error = new ProviderError(kind, `${host.name} ${r.status} on ${model}: ${message}`);
     if (!RETRYABLE.has(r.status)) break;
   }
   if (!res?.body) throw error ?? new ProviderError("failed");
@@ -452,6 +469,7 @@ export async function checkProviders() {
     ["google", "gemini-flash"],
     ["anthropic", "haiku"],
     ["nvidia", "glm-flash"],
+    ["xai", "grok"],
   ] as const) {
     if (!providers()[provider]) {
       out.push({ provider, model: "", ok: false, detail: "No API key set", ms: 0 });
@@ -460,7 +478,7 @@ export async function checkProviders() {
     const t = Date.now();
     let text = "";
     let model =
-      provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : provider === "nvidia" ? await nvidiaModel(modelId) : CLAUDE.haiku.api;
+      provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : provider === "nvidia" ? await nvidiaModel(modelId) : provider === "xai" ? GROK.grok.api : CLAUDE.haiku.api;
     try {
       for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
         if (ev.type === "text") text += ev.text;
@@ -497,7 +515,13 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
   }
   if (NVIDIA[opts.modelId]) {
     if (!process.env.NVIDIA_API_KEY) throw new ProviderError("unavailable");
-    return nvidia(opts.modelId, opts.system, opts.turns, max, opts.signal);
+    return (async function* () {
+      yield* openaiChat(nvidiaHost(), await nvidiaModel(opts.modelId), opts.system, opts.turns, max, opts.signal);
+    })();
+  }
+  if (GROK[opts.modelId]) {
+    if (!process.env.XAI_API_KEY) throw new ProviderError("unavailable");
+    return openaiChat(xaiHost(), GROK[opts.modelId].api, opts.system, opts.turns, max, opts.signal);
   }
   throw new ProviderError("unavailable");
 }
