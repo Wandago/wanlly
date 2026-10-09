@@ -59,9 +59,9 @@ export type Tool = {
 
 export const MODELS: Model[] = [
   { id: "haiku", name: "Haiku 5.5", group: "Anthropic", description: "Fast everyday answers", credits: 1, provider: "anthropic" },
-  { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 2, provider: "anthropic" },
-  { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4, provider: "anthropic" },
-  { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10, provider: "anthropic" },
+  { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 4, provider: "anthropic" },
+  { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 8, provider: "anthropic" },
+  { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 20, provider: "anthropic" },
   { id: "gemini-flash", name: "Gemini Flash", group: "Google", description: "Fast, good for everyday work. Start here", credits: 1, provider: "google" },
   { id: "free", name: "Auto (free)", group: "Open models", description: "Picks a fast free open model for you", credits: 1, provider: "pool" },
   { id: "glm-flash", name: "GLM 5.3 Flash", group: "Open models", description: "Z.ai. Quick everyday answers", credits: 1, provider: "nvidia" },

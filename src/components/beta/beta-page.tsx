@@ -36,7 +36,7 @@ function ProductStill() {
         </div>
         <div className="flex items-center gap-2 rounded-[20px] border border-line bg-surface p-3 shadow-soft">
           <span className="flex-1 text-[15px] text-faint">Describe what to build</span>
-          <span className="font-mono text-xs text-faint">Sonnet 5.5 · 6 cr</span>
+          <span className="font-mono text-xs text-faint">Sonnet 5.5 · 12 cr</span>
           <span className="grid size-9 place-items-center rounded-full bg-fg text-bg"><Icon name="up" /></span>
         </div>
       </div>
