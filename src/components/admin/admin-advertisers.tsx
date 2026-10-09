@@ -372,6 +372,90 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
   );
 }
 
+type Delivery = {
+  country: string;
+  campaigns: {
+    id: number;
+    name: string;
+    advertiser: string;
+    status: string;
+    countries: string[];
+    startsAt: string | null;
+    endsAt: string | null;
+    views: number;
+    maxImpressions: number | null;
+    frequencyCap: number | null;
+    checks: { active: boolean; started: boolean; notEnded: boolean; country: boolean; viewsLeft: boolean; placements: boolean };
+    served: boolean;
+  }[];
+};
+
+/** The ad server's rules for each campaign, checked for you right now: why it is or isn't showing. */
+function DeliveryCheck({ tick, onReset }: { tick: number; onReset: () => void }) {
+  const [d, setD] = useState<Delivery | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let live = true;
+    api<Delivery>("/api/admin/campaigns/delivery")
+      .then((x) => live && setD(x))
+      .catch((e: Error) => live && setError(e.message));
+    return () => {
+      live = false;
+    };
+  }, [tick]);
+  if (error) return <Card title="Delivery check"><Empty>{error}</Empty></Card>;
+  if (!d) return <Card title="Delivery check"><Empty>Checking…</Empty></Card>;
+  const fmt = (iso: string | null) => (iso ? new Date(iso).toLocaleDateString() : "");
+  return (
+    <Card title="Delivery check" note={`Each campaign against the ad server's rules, for you right now. Your network country: ${d.country || "unknown (VPN or private relay?)"}.`}>
+      {d.campaigns.length === 0 ? (
+        <Empty>No campaigns yet.</Empty>
+      ) : (
+        <ul className="flex flex-col">
+          {d.campaigns.map((c) => {
+            const capped = !!c.frequencyCap && seenToday(`campaign:${c.id}`) >= c.frequencyCap;
+            const rules: [boolean, string, string][] = [
+              [c.checks.active, "Running", c.status === "paused" ? "Paused: press Start" : c.status === "draft" ? "Still a draft: press Start" : `Status is ${c.status}`],
+              [c.checks.started, "Started", `Starts ${fmt(c.startsAt)}`],
+              [c.checks.notEnded, "Not ended", `Ended ${fmt(c.endsAt)}`],
+              [c.checks.country, `Shown in ${d.country || "your country"}`, `Only for ${c.countries.join(", ")}; you're in ${d.country || "an unknown country"}`],
+              [c.checks.viewsLeft, "Views left", `Used all ${c.maxImpressions} views`],
+              [c.checks.placements, "Has places to show", "No places picked: edit and choose where it shows"],
+              [!capped, "Under your daily limit", `You've seen it ${c.frequencyCap}× today`],
+            ];
+            const ok = c.served && !capped;
+            return (
+              <li key={c.id} className="flex flex-col gap-1.5 border-t border-line py-3 first:border-t-0 first:pt-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <b className="font-medium">{c.name}</b>
+                  <span className="text-xs text-muted">{c.advertiser}</span>
+                  <span className={`ml-auto rounded-full px-2 py-0.5 text-xs font-medium ${ok ? "bg-good/14 text-good" : "bg-bad/10 text-bad"}`}>{ok ? "Being served to you" : "Not served to you"}</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {rules.map(([pass, good, bad]) => (
+                    <span key={good} className={`rounded-full border px-2 py-0.5 text-xs ${pass ? "border-line text-muted" : "border-bad/40 text-bad"}`}>
+                      {pass ? `✓ ${good}` : `✗ ${bad}`}
+                    </span>
+                  ))}
+                  {capped && (
+                    <button type="button" onClick={onReset} className="text-xs text-muted underline underline-offset-2">
+                      Reset my views
+                    </button>
+                  )}
+                </div>
+                <small className="text-xs text-faint">
+                  {c.views} views so far{c.maxImpressions ? ` of ${c.maxImpressions}` : ""}
+                  {c.startsAt || c.endsAt ? ` · runs ${fmt(c.startsAt) || "now"} to ${fmt(c.endsAt) || "no end"}` : ""}
+                </small>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
 export function AdvertisersTab() {
   const [status, setStatus] = useState<"pending" | "approved" | "declined" | "all">("pending");
   const [apps, setApps] = useState<Application[] | null>(null);
@@ -448,6 +532,13 @@ export function AdvertisersTab() {
         </div>
       </div>
 
+      <DeliveryCheck
+        tick={tick}
+        onReset={() => {
+          resetSeen();
+          reload();
+        }}
+      />
       <Card
         title="Campaigns"
         note={`Active campaigns replace the house sponsors in the slots they're booked for. Earned = views × the agreed price.${serving ? ` Serving to you now: ${serving.ids.size} campaign${serving.ids.size === 1 ? "" : "s"} (your network country: ${serving.country || "unknown"}).` : ""}`}

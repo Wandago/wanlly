@@ -351,6 +351,11 @@ function AdNetwork() {
         </button>
       </div>
       {note && <p className="text-[13px] text-muted">{note}</p>}
+      {!saved?.host && (
+        <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
+          Network banners stay off in the app until a banner host is set: without one, Adsterra&apos;s ads load blank inside Wanlly&apos;s sandbox. Your sponsors fill those slots meanwhile.
+        </p>
+      )}
       <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. Slots with a network size take turns between network banners and your sponsors.</p>
       <ul className="flex flex-col">
         {UNIT_SIZES.filter((size) => cfg.units[size] !== undefined || added.includes(size)).map((size) => {

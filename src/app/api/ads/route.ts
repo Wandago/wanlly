@@ -26,7 +26,8 @@ export async function GET(req: Request) {
       {
         // The visitor's own network country, so the team can see why a campaign isn't shown.
         country,
-        network: network.audience === "off" ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units), host: network.host },
+        // Network banners need their own banner host: inside Wanlly's sandbox they load blank.
+        network: network.audience === "off" || !network.host ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units), host: network.host },
         ads: rows.map((r) => ({
           campaignId: Number(r.id),
           name: String(r.advertiser),

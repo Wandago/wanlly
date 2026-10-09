@@ -87,7 +87,8 @@ export function DesignEditor({ id }: { id: number }) {
   const [editing, setEditing] = useState(false);
   /** The preview confirmed it's editable. */
   const [editReady, setEditReady] = useState(false);
-  const reloaded = useRef(false);
+  /** The page never answered the edit request. */
+  const [editStuck, setEditStuck] = useState(false);
   const [frameKey, setFrameKey] = useState(0);
   const [working, setWorking] = useState("");
   const frame = useRef<HTMLIFrameElement>(null);
@@ -278,7 +279,7 @@ export function DesignEditor({ id }: { id: number }) {
   const startEdit = (on: boolean) => {
     setEditing(on);
     setEditReady(false);
-    reloaded.current = false;
+    setEditStuck(false);
     setView("preview");
     if (!on) setFrameKey((k) => k + 1); // Cancel: reload the page as it was.
   };
@@ -292,16 +293,18 @@ export function DesignEditor({ id }: { id: number }) {
     const t = window.setTimeout(sendEdit, 50);
     return () => window.clearTimeout(t);
   }, [sendEdit, view, frameKey]);
-  // No answer from the page: reload it once, which sends edit mode again when it loads.
+  // No answer yet (a big page can take a moment to load): ask again every 0.6 s, for up to 15 s.
   useEffect(() => {
     if (!editing || editReady) return;
-    const t = window.setTimeout(() => {
-      if (reloaded.current) return;
-      reloaded.current = true;
-      setFrameKey((k) => k + 1);
-    }, 1500);
-    return () => window.clearTimeout(t);
-  }, [editing, editReady]);
+    let n = 0;
+    const iv = window.setInterval(() => {
+      if (++n > 25) {
+        window.clearInterval(iv);
+        setEditStuck(true);
+      } else sendEdit();
+    }, 600);
+    return () => window.clearInterval(iv);
+  }, [editing, editReady, sendEdit]);
 
   const saveEdit = async () => {
     if (!shown) return;
@@ -566,7 +569,19 @@ export function DesignEditor({ id }: { id: number }) {
           )}
           {editing && (
             <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-1 pl-3.5 text-xs shadow-soft">
-              <span className="text-muted max-sm:hidden">{editReady ? "Editing · click any text to change it" : "Turning on editing…"}</span>
+              <span className="text-muted max-sm:hidden">{editReady ? "Editing · click any text to change it" : editStuck ? "This page didn't respond." : "Turning on editing…"}</span>
+              {editStuck && !editReady && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditStuck(false);
+                    setFrameKey((k) => k + 1);
+                  }}
+                  className="rounded-full px-2.5 py-1 font-medium hover:bg-hover"
+                >
+                  Reload
+                </button>
+              )}
               <button type="button" onClick={() => startEdit(false)} className="rounded-full px-2.5 py-1 font-medium hover:bg-hover" disabled={!!working}>
                 Cancel
               </button>

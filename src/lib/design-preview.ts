@@ -101,15 +101,28 @@ function clean(){
 }
 // Decorations with no text (glows, overlays, background shapes) often sit on top of the words.
 // While editing they let clicks through, so any visible text can be clicked and changed.
+// One pass over the page (fast even for big decks): every element that holds text or media,
+// and its ancestors, is kept clickable; the rest are decorations.
 function decorations(on){
-  Array.prototype.forEach.call(document.body.querySelectorAll('*'),function(el){
-    if(!on){el.classList.remove('wanlly-deco'); if(!el.className) el.removeAttribute('class'); return;}
-    if(el.hasAttribute('data-wanlly')||el.matches('img,svg,video,canvas,input,textarea,select,button,a')) return;
-    if(!(el.textContent||'').trim()&&!el.querySelector('img,svg,video,canvas,input,textarea')) el.classList.add('wanlly-deco');
-  });
+  var all=document.body.getElementsByTagName('*'), i;
+  if(!on){ for(i=0;i<all.length;i++){ var e=all[i]; if(e.classList&&e.classList.contains('wanlly-deco')){ e.classList.remove('wanlly-deco'); if(!e.getAttribute('class')) e.removeAttribute('class'); } } return; }
+  var keep=new Set();
+  function up(p){ while(p&&p!==document.body&&!keep.has(p)){ keep.add(p); p=p.parentElement; } }
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT), n;
+  while((n=w.nextNode())) if(n.nodeValue.trim()) up(n.parentElement);
+  var media=document.body.querySelectorAll('img,svg,video,canvas,input,textarea,select,button,a');
+  for(i=0;i<media.length;i++) up(media[i]);
+  for(i=0;i<all.length;i++){ var el=all[i]; if(!keep.has(el)&&el.classList&&!el.hasAttribute('data-wanlly')&&!(el.closest&&el.closest('svg'))) el.classList.add('wanlly-deco'); }
 }
 var editing=false;
-function edit(on){editing=on; present=false; fit(); decorations(on); document.designMode=on?'on':'off'; root.classList.toggle('wanlly-editing',on); send({wanlly:'editing',on:on});}
+function edit(on){
+  var problem='';
+  try{ editing=on; present=false; fit(); }catch(err){ problem=String(err); }
+  try{ decorations(on); }catch(err){ problem=problem||String(err); }
+  try{ document.designMode=on?'on':'off'; root.classList.toggle('wanlly-editing',on); }catch(err){ problem=problem||String(err); }
+  // Always answer, so the editor never waits forever.
+  send({wanlly:'editing',on:on,problem:problem});
+}
 // While editing, the page's own scripts (slide navigation, click handlers) don't see keys or clicks,
 // so typing a space or clicking a heading changes the text instead of moving to another slide.
 ['keydown','keyup','keypress','click','mousedown','mouseup','pointerdown','pointerup','touchstart','wheel'].forEach(function(t){
@@ -137,7 +150,8 @@ send({wanlly:'slide',index:0,count:slides().length});
 export function previewDoc(html: string, kind: string): string {
   const head = `<meta data-wanlly http-equiv="Content-Security-Policy" content="${CSP}"><meta data-wanlly name="viewport" content="width=device-width,initial-scale=1"><style data-wanlly>${BASE_CSS}${kind === "slides" ? SLIDES_CSS : ""}</style>`;
   const tail = `<script data-wanlly>${RUNTIME(kind)}</script>`;
-  let doc = html;
+  // Wanlly's policy is the only one: a policy the model wrote could block the editor's runtime.
+  let doc = html.replace(/<meta[^>]+http-equiv\s*=\s*["']?content-security-policy["']?[^>]*>/gi, "");
   // The policy has to come before anything the model wrote, inside <head>, without breaking the doctype.
   if (/<head(\s[^>]*)?>/i.test(doc)) doc = doc.replace(/<head(\s[^>]*)?>/i, (m) => m + head);
   else if (/<html(\s[^>]*)?>/i.test(doc)) doc = doc.replace(/<html(\s[^>]*)?>/i, (m) => `${m}<head>${head}</head>`);
