@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ClipboardEvent, type DragEvent } from "react";
+import { OFFICE, OLD_OFFICE, officeText } from "./office";
 
 /*
  * Attachments, ready to send: images are shrunk in the browser (longest side 1600 px, WebP so
@@ -22,7 +23,10 @@ export type Attachment = {
 
 export const MAX_FILES = 4;
 const MAX_TOTAL = 4 * 1024 * 1024;
-const MAX_PDF = 3 * 1024 * 1024;
+const MAX_PDF = 4 * 1024 * 1024;
+/** The most text one file adds to a message (about 30,000 words); the server keeps the same. */
+const MAX_TEXT = 120_000;
+const mb = (n: number) => `${(n / 1024 / 1024).toFixed(1)} MB`;
 const TEXT_EXT = /\.(txt|md|markdown|csv|tsv|json|xml|ya?ml|html?|css|scss|js|jsx|ts|tsx|py|java|kt|c|h|cpp|cs|go|rs|rb|php|swift|sql|sh|toml|ini|env|log)$/i;
 
 const toBase64 = (blob: Blob) =>
@@ -54,15 +58,28 @@ async function prepare(file: File): Promise<Attachment> {
     const { blob, mime } = await shrink(file);
     return { id, name, mime, size: blob.size, data: await toBase64(blob), preview: URL.createObjectURL(blob) };
   }
-  if (file.type === "application/pdf") {
-    if (file.size > MAX_PDF) throw new Error(`${name} is over 3 MB. Attach a smaller PDF.`);
-    return { id, name, mime: file.type, size: file.size, data: await toBase64(file) };
+  if (OFFICE.test(name)) {
+    // Word, PowerPoint and Excel: the words are read here and sent as text.
+    let text: string;
+    try {
+      text = await officeText(file);
+    } catch (e) {
+      throw new Error(e instanceof Error && e.message.startsWith("This browser") ? e.message : `${name} couldn't be read. Try saving it again, or as PDF.`);
+    }
+    if (!text.trim()) throw new Error(`${name} has no text to read (only pictures?). Try a PDF or screenshots instead.`);
+    const cut = text.length > MAX_TEXT;
+    return { id, name, mime: file.type || "application/octet-stream", size: Math.min(text.length, MAX_TEXT), text: cut ? `${text.slice(0, MAX_TEXT)}\n\n[The rest of this file was cut: it's too long to send in full.]` : text };
+  }
+  if (OLD_OFFICE.test(name)) throw new Error(`${name} is an older Office format. Open it and save as .docx, .pptx or .xlsx (or PDF), then attach it.`);
+  if (file.type === "application/pdf" || /\.pdf$/i.test(name)) {
+    if (file.size > MAX_PDF) throw new Error(`${name} is ${mb(file.size)}; PDFs can be up to 4 MB. Try a smaller PDF, or export just the pages you need.`);
+    return { id, name, mime: "application/pdf", size: file.size, data: await toBase64(file) };
   }
   if (file.type.startsWith("text/") || TEXT_EXT.test(name) || file.type === "application/json") {
     if (file.size > 400_000) throw new Error(`${name} is too long to attach.`);
     return { id, name, mime: file.type || "text/plain", size: file.size, text: await file.text() };
   }
-  throw new Error(`${name} can't be attached. Use images, PDFs, or text and code files.`);
+  throw new Error(`${name} can't be attached. Use images, PDFs, Word, PowerPoint or Excel files, or text and code files.`);
 }
 
 /** What the server receives for each attachment. */
@@ -102,7 +119,7 @@ export function useAttachments(onError: (message: string) => void) {
       const total = [...live.current, ...ready].reduce((n, a) => n + a.size, 0);
       if (total > MAX_TOTAL) {
         ready.forEach((a) => a.preview && URL.revokeObjectURL(a.preview));
-        onError("Those files are too big together. Keep attachments under 4 MB.");
+        onError(`Those files are too big together (${mb(total)}). Keep attachments under 4 MB in one message.`);
       } else setItems((xs) => [...xs, ...ready]);
       setBusy(false);
     },

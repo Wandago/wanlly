@@ -56,6 +56,8 @@ export function DesignEditor({ id }: { id: number }) {
   const [shown, setShown] = useState<{ id: number; html: string } | null>(null);
   const [error, setError] = useState("");
   const [prompt, setPrompt] = useState("");
+  /** The request being worked on: shown as sent, and put back in the box if it fails. */
+  const [asked, setAsked] = useState("");
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState("");
   const [note, setNote] = useState("");
@@ -180,6 +182,9 @@ export function DesignEditor({ id }: { id: number }) {
     if (limit) return dispatch({ type: "toast", text: limit });
     if (price > credits) return dispatch({ type: "setEarnOpen", open: true });
     setBusy(true);
+    setAsked(text);
+    setPrompt("");
+    let made = false;
     setNote("");
     setLive("");
     setLiveDoc("");
@@ -223,7 +228,7 @@ export function DesignEditor({ id }: { id: number }) {
             const v = await fetch(`/api/design/${id}/versions/${ev.versionId}`, { cache: "no-store" }).then((x) => x.json());
             setVersions((xs) => [{ id: ev.versionId, prompt: text || `Used ${sending.length} attached file${sending.length > 1 ? "s" : ""}`, modelId, credits: ev.charged, createdAt: ev.createdAt }, ...xs]);
             setShown(v);
-            setPrompt("");
+            made = true;
             files.clear();
             naturalBreak();
             if (ev.cutShort) setNote("This one hit the length limit, so the end may be missing. Ask for a shorter version or fewer slides.");
@@ -242,6 +247,9 @@ export function DesignEditor({ id }: { id: number }) {
     } finally {
       setBusy(false);
       setLiveDoc("");
+      setAsked("");
+      // Nothing was made: put the request back so it can be tried again or changed.
+      if (!made) setPrompt((p) => p || text);
       ctrl.current = null;
     }
   };
@@ -617,7 +625,12 @@ export function DesignEditor({ id }: { id: number }) {
           >
             {note && <p className="rounded-lg bg-code px-2.5 py-2 text-xs text-muted">{note}</p>}
             {shown && versions[0] && shown.id !== versions[0].id && <p className="text-xs text-faint">Changes start from the version you&apos;re looking at.</p>}
-            <AttachmentTray items={files.items} onRemove={files.remove} small />
+            {busy && asked && (
+              <div className="self-end rounded-[14px_14px_4px_14px] bg-hover px-3 py-2 text-[13px] whitespace-pre-wrap" aria-label="Your request">
+                {asked}
+              </div>
+            )}
+            <AttachmentTray items={files.items} onRemove={busy ? () => {} : files.remove} small />
             <label htmlFor="design-prompt" className="sr-only">
               Describe the design
             </label>
@@ -625,6 +638,7 @@ export function DesignEditor({ id }: { id: number }) {
               id="design-prompt"
               rows={3}
               value={prompt}
+              readOnly={busy}
               onChange={(e) => setPrompt(e.target.value)}
               onPaste={files.onPaste}
               onKeyDown={(e) => {
@@ -633,8 +647,8 @@ export function DesignEditor({ id }: { id: number }) {
                   generate();
                 }
               }}
-              placeholder={k.placeholder}
-              className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2 text-[13px] outline-none focus:border-faint"
+              placeholder={busy ? "Working on your request… you can write the next change when it's done." : k.placeholder}
+              className="w-full resize-none rounded-xl border border-line bg-surface px-3 py-2 text-[13px] outline-none read-only:opacity-60 focus:border-faint"
             />
             <div className="flex flex-wrap items-center gap-1">
               <button
@@ -651,7 +665,7 @@ export function DesignEditor({ id }: { id: number }) {
                 type="file"
                 multiple
                 hidden
-                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/*,.md,.csv,.json,.html,.css"
+                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.pdf,.docx,.pptx,.xlsx,.doc,.ppt,.xls,text/*,.md,.csv,.json,.html,.css"
                 onChange={(e) => {
                   files.add(Array.from(e.target.files ?? []));
                   e.target.value = "";

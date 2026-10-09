@@ -171,7 +171,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
                 type="file"
                 multiple
                 hidden
-                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,text/*,.md,.csv,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.sql,.yaml,.yml"
+                accept="image/png,image/jpeg,image/webp,image/gif,application/pdf,.pdf,.docx,.pptx,.xlsx,.doc,.ppt,.xls,text/*,.md,.csv,.json,.js,.jsx,.ts,.tsx,.py,.html,.css,.sql,.yaml,.yml"
                 onChange={(e) => {
                   files.add(Array.from(e.target.files ?? []));
                   e.target.value = "";

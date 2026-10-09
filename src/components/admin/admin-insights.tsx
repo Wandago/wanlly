@@ -403,7 +403,7 @@ function BannerPreview({ size, host }: { size: NetworkSize; host: string }) {
   }, []);
   const text: Record<string, string> = {
     loading: "Loading…",
-    filled: "Showing an ad.",
+    filled: "The network's ad frame loaded. If the box still looks empty, its ad needs storage, which the sandbox blocks: set up the banner host above.",
     empty: "No ad came back. The network had nothing to show, or the site isn't serving yet.",
     blocked: "The network's script didn't load in this browser, usually an ad-blocking extension. Try a private window with extensions off.",
     error: "The network's script failed while running. If it mentions storage, cookies or SecurityError, set up a banner host (see the docs).",
