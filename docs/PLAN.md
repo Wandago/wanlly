@@ -245,3 +245,11 @@ The Build Pass ad load (side panel on, a video about every 15 minutes) roughly t
 - Every ad is labeled. Rewards only for opt-in video views, never for clicks.
 - Use official provider APIs only. No proxying consumer subscriptions like Copilot or ChatGPT Plus.
 - Secrets live in environment variables, never in the repo or in chat.
+
+## Chat (built)
+
+- **Chat and Code are real.** `POST /api/chat` streams a reply as newline-delimited JSON and saves the conversation (`conversations`, `messages`). Recents in the sidebar are real; conversations can be opened and deleted, and are included in data export and account deletion.
+- **Models:** Gemini Flash runs now on Google's free tier (the server picks the newest plain Flash model the key can use, hourly; `GEMINI_MODEL` pins one). Claude Haiku, Sonnet, Opus and Fable switch on when `ANTHROPIC_API_KEY` is added in Cloudflare; until then they show "Soon". Sonnet, Opus and Fable send the server-side refusal fallback (`fallbacks: "default"`).
+- **Pricing:** each reply takes the model's starting price up front (checked against balance and the daily/weekly limits). Claude replies are then charged their real token cost in credits (one credit = $0.005), never below a zero balance; Gemini stays at its flat price while it's free. A reply that fails before any text arrives is refunded.
+- **Limits per reply:** 8,000 output tokens in Chat, 16,000 in Code; about 48,000 characters of earlier conversation are sent with each message. Projects' instructions are added to chats started from a project.
+- **Design and Images** are still samples, marked "coming soon", and take no credits.

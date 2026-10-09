@@ -3,19 +3,13 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FLOOR_CREDITS, TOOLS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { SidebarAd } from "./ads/rail";
 import { Icon, type IconName } from "./icon";
 import { UsageMeters } from "./usage-meters";
 
-const RECENTS: { tool: ToolId; title: string }[] = [
-  { tool: "chat", title: "Pricing a free AI app" },
-  { tool: "code", title: "Add credit ledger to API" },
-  { tool: "design", title: "Habit app onboarding" },
-  { tool: "images", title: "Mug product shots" },
-];
 
 const TOOL_LINKS: ToolId[] = ["chat", "code", "design", "images"];
 const PAGES: { href: string; label: string; icon: IconName }[] = [
@@ -123,9 +117,22 @@ function Account({ onNavigate, active }: { onNavigate: () => void; active: boole
 }
 
 export function Sidebar() {
-  const { sidebarOpen, tool, me, dispatch } = useWorkspace();
+  const { sidebarOpen, tool, me, synced, recents, conversationId, dispatch, openConversation, refreshRecents } = useWorkspace();
   const path = usePathname();
+  const router = useRouter();
   const close = () => dispatch({ type: "setSidebar", open: false });
+
+  useEffect(() => {
+    if (synced && recents === null) refreshRecents();
+  }, [synced, recents, refreshRecents]);
+
+  const remove = async (id: number, title: string) => {
+    if (!window.confirm(`Delete "${title}"? This can't be undone.`)) return;
+    const r = await fetch(`/api/conversations/${id}`, { method: "DELETE" }).catch(() => null);
+    if (!r?.ok) return dispatch({ type: "toast", text: "Couldn't delete that. Try again" });
+    if (id === conversationId) dispatch({ type: "newChat" });
+    refreshRecents();
+  };
 
   return (
     <>
@@ -189,16 +196,37 @@ export function Sidebar() {
 
         <div className="px-2.5 pt-3 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Recent</div>
         <nav className="flex min-h-0 flex-1 flex-col gap-px overflow-auto" aria-label="Recent">
-          {RECENTS.map((r) => (
-            <Link
-              key={r.title}
-              href="/app"
-              onClick={() => dispatch(r.tool === "chat" ? { type: "openSampleChat" } : { type: "setTool", tool: r.tool })}
-              className={`${row} text-muted hover:bg-hover hover:text-fg`}
-            >
-              <span className="truncate">{r.title}</span>
-            </Link>
-          ))}
+          {recents === null ? null : recents.length === 0 ? (
+            <p className="px-2.5 py-1.5 text-xs text-faint">Your chats will show here.</p>
+          ) : (
+            recents.map((r) => {
+              const active = r.id === conversationId && path === "/app";
+              return (
+                <div key={r.id} className={`group flex items-center rounded-lg ${active ? "bg-hover" : "hover:bg-hover"}`}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      openConversation(r.id);
+                      if (path !== "/app") router.push("/app");
+                    }}
+                    aria-current={active ? "page" : undefined}
+                    className={`${row} min-w-0 flex-1 ${active ? "font-medium text-fg" : "text-muted hover:text-fg"}`}
+                  >
+                    {r.tool === "code" && <Icon name="code" size={14} className="shrink-0 text-faint" />}
+                    <span className="truncate">{r.title}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${r.title}`}
+                    onClick={() => remove(r.id, r.title)}
+                    className="mr-1 hidden rounded-md p-1 text-faint group-hover:block hover:bg-line hover:text-fg focus-visible:block"
+                  >
+                    <Icon name="x" size={13} />
+                  </button>
+                </div>
+              );
+            })
+          )}
         </nav>
 
         <div className="flex flex-col gap-2 pt-2">

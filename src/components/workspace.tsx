@@ -53,6 +53,13 @@ export function Workspace() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [visible.length, tool]);
 
+  // Follow a streaming reply, unless the person has scrolled up to read.
+  const streamed = visible[visible.length - 1]?.text?.length ?? 0;
+  useEffect(() => {
+    const el = scroller.current;
+    if (el && el.scrollHeight - el.scrollTop - el.clientHeight < 160) el.scrollTop = el.scrollHeight;
+  }, [streamed]);
+
   return (
     <main className="flex h-full min-h-0 min-w-0 flex-col">
       <TopBar />

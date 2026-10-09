@@ -23,7 +23,7 @@ export type Settings = {
 
 export const DEFAULT_SETTINGS: Settings = {
   building: "",
-  defaultModel: "haiku",
+  defaultModel: "gemini-flash",
   startIn: "chat",
   theme: "system",
   smartPick: true,

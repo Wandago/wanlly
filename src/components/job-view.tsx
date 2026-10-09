@@ -2,10 +2,33 @@
 
 import { useEffect, useState } from "react";
 import { TOOLS } from "@/lib/catalog";
-import { useWorkspace, type Job } from "@/lib/workspace-store";
+import { isConnected, useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
 import { Tracked } from "./ads/tracked";
+
+/** Real replies: a spinner and timer until the first words arrive, with Stop. */
+function Waiting({ job }: { job: Job }) {
+  const { stop } = useWorkspace();
+  const [elapsed, setElapsed] = useState(0);
+  useEffect(() => {
+    const iv = window.setInterval(() => setElapsed(Date.now() - job.startedAt), 250);
+    return () => window.clearInterval(iv);
+  }, [job.startedAt]);
+  const secs = Math.floor(elapsed / 1000);
+  return (
+    <div className="flex items-center gap-2.5 text-[13px] text-muted" role="status" aria-live="polite">
+      <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+      <span>{job.modelName} is {job.tool === "code" ? "working" : "thinking"}</span>
+      <time className="font-mono text-xs text-faint tabular-nums">
+        {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}
+      </time>
+      <button type="button" onClick={() => stop(job.id)} className="ml-auto rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-medium hover:border-faint">
+        Stop
+      </button>
+    </div>
+  );
+}
 
 function WorkingStatus({ job }: { job: Job }) {
   const tool = TOOLS[job.tool];
@@ -46,7 +69,7 @@ function WorkingStatus({ job }: { job: Job }) {
  * the sponsor folds to one line. A spot that's still playing keeps its card until it ends.
  */
 export function JobView({ job }: { job: Job }) {
-  const { dispatch } = useWorkspace();
+  const { dispatch, stop } = useWorkspace();
   const { sponsor, adFormat, spotAspect } = TOOLS[job.tool];
   const showCard = job.status === "working" || job.spot === "playing";
 
@@ -54,7 +77,20 @@ export function JobView({ job }: { job: Job }) {
     <div className="flex flex-col gap-3.5">
       <div className="max-w-[min(560px,85%)] self-end rounded-[18px_18px_6px_18px] bg-hover px-[15px] py-2.5">{job.prompt}</div>
       <div className={`flex min-w-0 flex-col gap-3 ${job.status === "done" && !job.sample ? "animate-rise" : ""}`}>
-        {job.status === "working" ? <WorkingStatus job={job} /> : <JobResult job={job} />}
+        {job.status !== "working" ? (
+          <JobResult job={job} />
+        ) : !isConnected(job.tool) ? (
+          <WorkingStatus job={job} />
+        ) : job.text ? (
+          <>
+            <JobResult job={job} />
+            <button type="button" onClick={() => stop(job.id)} className="self-start rounded-lg border border-line bg-surface px-2.5 py-1 text-xs font-medium hover:border-faint">
+              Stop
+            </button>
+          </>
+        ) : (
+          <Waiting job={job} />
+        )}
       </div>
       {showCard ? (
         <Tracked key="card" placement="job_card" format={adFormat} creative={sponsor.name}>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CHEAPEST_MODEL_ID, FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+import { isConnected, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 
@@ -74,9 +74,12 @@ function Gate() {
 }
 
 export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
-  const { tool, draft, price, gate, dispatch, submit } = useWorkspace();
+  const { tool, draft, price, gate, modelId, dispatch, submit } = useWorkspace();
   const ta = useRef<HTMLTextAreaElement>(null);
   const config = TOOLS[tool];
+  const connected = isConnected(tool);
+  // Claude replies can cost more than the starting price when they run long.
+  const from = getModel(modelId).provider === "anthropic" && tool !== "images";
 
   useEffect(() => {
     const el = ta.current;
@@ -112,6 +115,11 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
         }}
       >
         {gate && <Gate key={`${gate.needed}-${tool}`} />}
+        {!connected && (
+          <p className="rounded-xl bg-code px-3 py-2 text-[13px] text-muted">
+            <b className="font-medium text-fg">{config.label} is coming soon.</b> What you see here is a sample. Chat and Code work today.
+          </p>
+        )}
         <label htmlFor="composer-input" className="sr-only">
           Message
         </label>
@@ -131,9 +139,6 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
           className="max-h-[200px] min-h-7 w-full resize-none bg-transparent px-1 py-0.5 text-base text-fg md:text-sm outline-none placeholder:text-faint focus-visible:outline-none"
         />
         <div className="flex items-center gap-1.5">
-          <button type="button" aria-label="Attach files" className="grid size-[34px] place-items-center rounded-full text-muted hover:bg-hover hover:text-fg">
-            <Icon name="clip" />
-          </button>
           <div role="group" aria-label="Tool" className="flex min-w-0 gap-0.5 rounded-xl bg-hover p-[3px]">
             {TOOL_ORDER.map((id) => {
               const active = id === tool;
@@ -152,11 +157,13 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
               );
             })}
           </div>
-          <span className="ml-auto font-mono text-xs whitespace-nowrap text-faint">{price} cr</span>
+          <span className="ml-auto font-mono text-xs whitespace-nowrap text-faint" title={from ? "Starting price. Long replies cost a little more." : undefined}>
+            {connected ? `${price}${from ? "+" : ""} cr` : "Soon"}
+          </span>
           <button
             type="submit"
             aria-label="Send"
-            disabled={!draft.trim()}
+            disabled={!draft.trim() || !connected}
             className="grid size-9 shrink-0 place-items-center rounded-full bg-fg text-bg disabled:opacity-25"
           >
             <Icon name="up" />

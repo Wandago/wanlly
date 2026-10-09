@@ -1,9 +1,10 @@
-import { eq, sql } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { ensureUser } from "@/lib/account";
 import { account } from "@/lib/ledger";
 import { clerk, signedInUserId } from "@/lib/session";
 import { visitorHash } from "@/lib/traffic";
+import { providers } from "@/lib/ai";
 
 /** The signed-in person's account: created on first call, then their balance, today's bonus and usage. */
 export async function GET(req: Request) {
@@ -17,7 +18,7 @@ export async function GET(req: Request) {
       .values({ userId: user.id, visitor: await visitorHash(req) })
       .onConflictDoUpdate({ target: [schema.userDevices.userId, schema.userDevices.visitor], set: { seenAt: sql`now()` } })
       .catch((e) => console.error("user device failed", e));
-    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, ...(await account(user.id)) });
+    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, providers: providers(), ...(await account(user.id)) });
   } catch (e) {
     console.error("api/me failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });
@@ -33,6 +34,12 @@ export async function DELETE(req: Request) {
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
     await db().update(schema.projects).set({ deletedAt: sql`now()` }).where(eq(schema.projects.ownerId, userId));
+    // Conversations are deleted outright.
+    const convos = await db().select({ id: schema.conversations.id }).from(schema.conversations).where(eq(schema.conversations.userId, userId));
+    if (convos.length) {
+      await db().delete(schema.messages).where(inArray(schema.messages.conversationId, convos.map((c) => c.id)));
+      await db().delete(schema.conversations).where(eq(schema.conversations.userId, userId));
+    }
     await db()
       .update(schema.users)
       .set({ status: "deleted", email: null, name: null, settings: {}, updatedAt: sql`now()` })

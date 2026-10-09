@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     const rows = await q`
       select u.id, u.email, u.name, u.country, u.role, u.status, u.created_at,
         coalesce(sum(l.delta), 0)::int as credits,
-        coalesce(-sum(l.delta) filter (where l.reason = 'settle' and l.created_at >= date_trunc('day', now())), 0)::int as spent_today,
+        coalesce(-sum(l.delta) filter (where l.reason in ('settle', 'release') and l.created_at >= date_trunc('day', now())), 0)::int as spent_today,
         max(l.created_at) as last_active
       from users u left join ledger_entries l on l.user_id = u.id
       where ${term} = '' or u.email ilike ${like} or u.name ilike ${like} or u.id = ${term}

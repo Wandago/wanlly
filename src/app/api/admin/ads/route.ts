@@ -26,7 +26,7 @@ export async function GET(req: Request) {
           (select count(*) from ad_events a where a.kind = 'impression' and a.format = 'display' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as display,
           (select count(*) from ad_events a where a.kind = 'click' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as clicks,
           (select count(*) from ad_events a where a.kind = 'reward_completed' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as videos,
-          (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason = 'settle' and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent
+          (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason in ('settle', 'release') and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent
         from d order by d.day`,
       q`select placement, format,
           count(*) filter (where kind = 'impression')::int as impressions,

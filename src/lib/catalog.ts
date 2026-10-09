@@ -7,8 +7,10 @@ export type Model = {
   name: string;
   group: "Anthropic" | "Google" | "Other providers";
   description: string;
-  /** Credits per chat message. One credit is half a US cent of model cost. */
+  /** Credits a reply costs at least. One credit is half a US cent of model cost; long replies cost more. */
   credits: number;
+  /** Who runs it. Models whose provider has no key yet show as "soon". */
+  provider: "anthropic" | "google" | null;
 };
 
 /** Which illustration the cover art draws. Real sponsors upload their own cover image. */
@@ -44,16 +46,21 @@ export type Tool = {
 };
 
 export const MODELS: Model[] = [
-  { id: "haiku", name: "Haiku 5.5", group: "Anthropic", description: "Fast everyday answers. Start here", credits: 1 },
-  { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 2 },
-  { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4 },
-  { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10 },
-  { id: "gemini-flash", name: "Gemini Flash", group: "Google", description: "Fast, good for everyday work. Testing on Google's free tier", credits: 1 },
-  { id: "gpt", name: "GPT", group: "Other providers", description: "OpenAI, chat and Codex", credits: 2 },
-  { id: "grok", name: "Grok", group: "Other providers", description: "xAI, fast with live web", credits: 2 },
+  { id: "haiku", name: "Haiku 5.5", group: "Anthropic", description: "Fast everyday answers", credits: 1, provider: "anthropic" },
+  { id: "sonnet", name: "Sonnet 5.5", group: "Anthropic", description: "Best balance for chat and code", credits: 2, provider: "anthropic" },
+  { id: "opus", name: "Opus 5.5", group: "Anthropic", description: "Deep reasoning, long tasks", credits: 4, provider: "anthropic" },
+  { id: "fable", name: "Fable 5.1", group: "Anthropic", description: "Most capable, for the hardest work", credits: 10, provider: "anthropic" },
+  { id: "gemini-flash", name: "Gemini Flash", group: "Google", description: "Fast, good for everyday work. Start here", credits: 1, provider: "google" },
+  { id: "gpt", name: "GPT", group: "Other providers", description: "OpenAI, chat and Codex", credits: 2, provider: null },
+  { id: "grok", name: "Grok", group: "Other providers", description: "xAI, fast with live web", credits: 2, provider: null },
 ];
 
-export const CHEAPEST_MODEL_ID = "haiku";
+/** The model new accounts start on, and the one suggested when credits are short. Live on Google's free tier. */
+export const CHEAPEST_MODEL_ID = "gemini-flash";
+
+export type Providers = { anthropic: boolean; google: boolean };
+/** Whether a model can run, given which providers have keys. */
+export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
 export const IMAGE_MODEL_NAME = "Wanlly Image";
 /** Bonus credits for the first video each day (about $0.04). Every later video earns SPOT_REWARD. */
 export const FLOOR_CREDITS = 8;

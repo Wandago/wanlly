@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     if (n >= MAX_PROJECTS) return Response.json({ error: `You can have up to ${MAX_PROJECTS} projects. Delete one to make room.` }, { status: 429 });
     const [project] = await db()
       .insert(p)
-      .values({ ownerId: userId, name: f.name, tool: f.tool, about: f.about ?? "", instructions: f.instructions ?? "", modelId: f.modelId ?? "haiku" })
+      .values({ ownerId: userId, name: f.name, tool: f.tool, about: f.about ?? "", instructions: f.instructions ?? "", modelId: f.modelId ?? "gemini-flash" })
       .returning(cols);
     return Response.json({ project });
   } catch (e) {

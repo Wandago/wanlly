@@ -1,113 +1,65 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import type { Job } from "@/lib/workspace-store";
+import { useEffect, useRef, useState } from "react";
+import { useWorkspace, type Job } from "@/lib/workspace-store";
+import { Markdown } from "./markdown";
 import { Icon } from "./icon";
 
 function Meta({ job }: { job: Job }) {
+  const { retry } = useWorkspace();
+  const [copied, setCopied] = useState(false);
   return (
     <div className="flex flex-wrap items-center gap-0.5 font-mono text-xs text-faint">
-      <button type="button" aria-label="Copy" className="rounded-lg p-1.5 hover:bg-hover hover:text-fg">
-        <Icon name="copy" size={15} />
-      </button>
-      <button type="button" aria-label="Retry" className="rounded-lg p-1.5 hover:bg-hover hover:text-fg">
-        <Icon name="redo" size={15} />
-      </button>
-      <span className="ml-2">
-        {job.modelName} · {job.credits} cr
-      </span>
+      {job.text && (
+        <button
+          type="button"
+          aria-label="Copy reply"
+          onClick={() =>
+            navigator.clipboard?.writeText(job.text ?? "").then(() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            })
+          }
+          className="rounded-lg p-1.5 hover:bg-hover hover:text-fg"
+        >
+          <Icon name={copied ? "check" : "copy"} size={15} />
+        </button>
+      )}
+      {!job.sample && (
+        <button type="button" aria-label="Ask again" onClick={() => retry(job)} className="rounded-lg p-1.5 hover:bg-hover hover:text-fg">
+          <Icon name="redo" size={15} />
+        </button>
+      )}
+      {job.modelName && (
+        <span className="ml-2">
+          {job.modelName} · {job.credits} cr
+        </span>
+      )}
     </div>
   );
 }
 
-const pre = "overflow-x-auto rounded-xl border border-line bg-code px-4 py-3.5 font-mono text-[13px] leading-[1.6]";
-
-function ChatResult({ job }: { job: Job }) {
-  if (!job.sample) {
+/** A real reply from Chat or Code: streams in, then shows copy, ask again and what it cost. */
+function TextResult({ job }: { job: Job }) {
+  if (job.status === "error") {
     return (
       <>
-        <p>
-          This is a design build, so replies aren&apos;t connected to a model yet. Once the backend is in,{" "}
-          <b>{job.modelName}</b> streams its answer here, in the same spot the working card held.
-        </p>
+        {job.text && <Markdown text={job.text} />}
+        <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-muted">{job.error}</p>
         <Meta job={job} />
       </>
     );
   }
+  const streaming = job.status === "working";
   return (
     <>
-      <p>
-        Treat ads as something that <b>earns credits</b>, and models as something that <b>spends</b> them. Then every
-        user has a balance you can measure in real cents.
-      </p>
-      <h4 className="mt-1 font-semibold">A setup that holds up</h4>
-      <ol className="flex list-decimal flex-col gap-1 pl-5">
-        <li>No free credits: short sponsor videos earn them, with a bonus for the first one each day.</li>
-        <li>Opt-in sponsor videos that top up credits for bigger models.</li>
-        <li>Credits work the same on every model, so people choose how to spend them.</li>
-      </ol>
-      <pre className={pre}>
-        <span className="text-faint">{"// credits are integer half-cents"}</span>
-        {"\n"}
-        <span className="text-accent">const</span>
-        {" cost = usage.input * rate.in + usage.output * rate.out;\nledger.debit(user, Math.ceil(cost / 0.005));"}
-      </pre>
-      <p>Keep sponsors beside the work, never inside the answer.</p>
-      <Meta job={job} />
-    </>
-  );
-}
-
-const STEPS = [
-  ["Read the project", "14 files · app/api/chat/route.ts", "0:12"],
-  ["Planned the change", "ledger table, debit on stream end, refund on error", "0:31"],
-  ["Edited 3 files", "+86 −4 · lib/ledger.ts, db/schema.ts, route.ts", "1:48"],
-  ["Tests pass", "vitest · 31 of 31", "2:20"],
-] as const;
-
-function CodeResult({ job }: { job: Job }) {
-  return (
-    <>
-      <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-line bg-surface px-3 py-2 text-[13px] text-muted">
-        <Icon name="github" size={15} />
-        <b className="font-mono text-xs font-medium text-fg">wandago/wanlly</b> on{" "}
-        <b className="font-mono text-xs font-medium text-fg">main</b>
-        <span className="inline-flex items-center gap-1.5 text-good">
-          <i className="size-[7px] rounded-full bg-current" />
-          Connected
-        </span>
+      <div aria-live={streaming ? "polite" : undefined} aria-busy={streaming}>
+        <Markdown text={job.text ?? ""} />
+        {streaming && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-fg/60" aria-hidden="true" />}
       </div>
-      <ol className="flex flex-col rounded-[14px] border border-line bg-surface">
-        {STEPS.map(([title, detail, time]) => (
-          <li key={title} className="grid grid-cols-[20px_minmax(0,1fr)_auto] items-start gap-3 border-t border-line px-3.5 py-2.5 text-[13px] first:border-t-0">
-            <span className="mt-px grid size-[18px] place-items-center rounded-full bg-fg text-bg">
-              <Icon name="check" size={11} className="[stroke-width:3]" />
-            </span>
-            <div>
-              {title}
-              <small className="block font-mono text-xs text-muted">{detail}</small>
-            </div>
-            <time className="font-mono text-xs text-faint">{time}</time>
-          </li>
-        ))}
-      </ol>
-      <pre className={pre}>
-        <span className="text-faint">lib/ledger.ts</span>
-        <span className="text-good">
-          {`
-+ export async function debit(userId: string, halfCents: number) {
-+   const bal = await db.balance(userId);
-+   if (bal < halfCents) throw new OutOfCredits(bal);
-+   return db.insert(entries).values({ userId, delta: -halfCents });
-+ }`}
-        </span>
-        <span className="text-bad">{"\n- // TODO: track usage"}</span>
-      </pre>
-      <button type="button" className="inline-flex items-center gap-2 self-start rounded-[10px] bg-fg px-3.5 py-2 text-[13px] font-semibold text-bg">
-        <Icon name="pr" size={15} />
-        Open pull request
-      </button>
-      <Meta job={job} />
+      {job.stop === "max_tokens" && <p className="text-xs text-faint">The reply hit its length limit. Ask it to continue.</p>}
+      {job.stop === "interrupted" && <p className="text-xs text-faint">Stopped before the end.</p>}
+      {!streaming && <Meta job={job} />}
     </>
   );
 }
@@ -203,9 +155,8 @@ function DesignResult({ job }: { job: Job }) {
 export function JobResult({ job }: { job: Job }) {
   switch (job.tool) {
     case "chat":
-      return <ChatResult job={job} />;
     case "code":
-      return <CodeResult job={job} />;
+      return <TextResult job={job} />;
     case "images":
       return <ImagesResult job={job} />;
     case "design":

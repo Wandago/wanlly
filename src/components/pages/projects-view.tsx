@@ -233,7 +233,8 @@ function ProjectDetail({ p, onBack, onChange, onDelete }: { p: Project; onBack: 
         <button
           type="button"
           onClick={() => {
-            dispatch({ type: "setTool", tool: p.tool });
+            // A fresh conversation inside this project, so its instructions apply.
+            dispatch({ type: "newChat", tool: p.tool, projectId: p.id });
             if (p.tool !== "images") dispatch({ type: "setModel", modelId: p.modelId });
             router.push("/app");
           }}
@@ -275,8 +276,8 @@ function ProjectDetail({ p, onBack, onChange, onDelete }: { p: Project; onBack: 
               </select>
             </Panel>
           )}
-          <Panel title="Conversations" note="Chats saved to this project will show here once chat is connected.">
-            <span className="text-[13px] text-muted">None yet</span>
+          <Panel title="Conversations" note="Chats you start here follow the instructions. They show in your sidebar under Recent.">
+            <span className="text-[13px] text-muted">Press Start a chat to begin one.</span>
           </Panel>
           <Panel title="Files, people and coworkers">
             <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted">

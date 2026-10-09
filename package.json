@@ -15,6 +15,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1",
     "@clerk/nextjs": "^7.9.12",
     "@neondatabase/serverless": "^1.2.0",
     "@opennextjs/cloudflare": "^1.20.9",

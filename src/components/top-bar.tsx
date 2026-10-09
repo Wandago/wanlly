@@ -2,16 +2,20 @@
 
 import * as Menu from "@radix-ui/react-dropdown-menu";
 import { useEffect, useRef } from "react";
-import { IMAGE_MODEL_NAME, MODELS, TOOLS, getModel } from "@/lib/catalog";
+import { IMAGE_MODEL_NAME, MODELS, TOOLS, getModel, isLive } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 
-export function CreditTag({ credits }: { credits: number }) {
-  return <span className="rounded-full bg-hover px-[7px] py-0.5 font-mono text-[11px] font-medium whitespace-nowrap text-muted">{credits} cr</span>;
+export function CreditTag({ credits, from = false }: { credits: number | string; from?: boolean }) {
+  return (
+    <span className="rounded-full bg-hover px-[7px] py-0.5 font-mono text-[11px] font-medium whitespace-nowrap text-muted">
+      {typeof credits === "number" ? `${credits}${from ? "+" : ""} cr` : credits}
+    </span>
+  );
 }
 
 function ModelPicker() {
-  const { modelId, tool, dispatch } = useWorkspace();
+  const { modelId, tool, providers, dispatch } = useWorkspace();
   const model = getModel(modelId);
 
   if (tool === "images") {
@@ -26,7 +30,7 @@ function ModelPicker() {
   return (
     <Menu.Root>
       <Menu.Trigger className="flex items-center gap-2 rounded-[10px] px-2.5 py-[7px] text-sm font-semibold outline-none hover:bg-hover focus-visible:outline-2 data-[state=open]:bg-hover">
-        {model.name} <CreditTag credits={model.credits} />
+        {model.name} <CreditTag credits={model.credits} from={model.provider === "anthropic"} />
         <Icon name="down" size={15} className="text-faint" />
       </Menu.Trigger>
       <Menu.Portal>
@@ -39,11 +43,14 @@ function ModelPicker() {
             {groups.map((g) => (
               <div key={g}>
                 <Menu.Label className="px-2.5 pt-2.5 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">{g}</Menu.Label>
-                {MODELS.filter((m) => m.group === g).map((m) => (
+                {MODELS.filter((m) => m.group === g).map((m) => {
+                  const on = isLive(m, providers);
+                  return (
                   <Menu.RadioItem
                     key={m.id}
                     value={m.id}
-                    className="grid cursor-pointer grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 rounded-[10px] px-2.5 py-2 outline-none data-[highlighted]:bg-hover"
+                    disabled={!on}
+                    className="grid cursor-pointer grid-cols-[1fr_auto] gap-x-3 gap-y-0.5 rounded-[10px] px-2.5 py-2 outline-none data-[disabled]:cursor-default data-[disabled]:opacity-50 data-[highlighted]:bg-hover"
                   >
                     <b className="flex items-center gap-2 font-semibold">
                       {m.name}
@@ -52,11 +59,12 @@ function ModelPicker() {
                       </Menu.ItemIndicator>
                     </b>
                     <span className="col-start-2 row-span-2 row-start-1 self-center">
-                      <CreditTag credits={m.credits} />
+                      <CreditTag credits={on ? m.credits : "Soon"} from={m.provider === "anthropic"} />
                     </span>
                     <small className="col-start-1 text-[13px] text-muted">{m.description}</small>
                   </Menu.RadioItem>
-                ))}
+                  );
+                })}
               </div>
             ))}
           </Menu.RadioGroup>

@@ -43,7 +43,7 @@ function AccountSync() {
       .then(async (r) => {
         const b = await r.json().catch(() => ({}));
         if (!r.ok) return console.warn("Account sync:", r.status, b?.error);
-        dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked, usage: b.usage, me: { country: b.country, status: b.status, role: b.role } });
+        dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked, usage: b.usage, me: { country: b.country, status: b.status, role: b.role }, providers: b.providers });
         // Settings load after /api/me, which creates the account row on a first visit.
         const s = await fetch("/api/me/settings", { cache: "no-store" });
         if (!s.ok) return;

@@ -43,8 +43,8 @@ export async function account(userId: string): Promise<Account> {
   const rows = (await q`
     select
       coalesce(sum(delta), 0)::int as credits,
-      coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('day', now())), 0)::int as day_used,
-      coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('week', now())), 0)::int as week_used,
+      coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day_used,
+      coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week_used,
       (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
       exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
     from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
@@ -78,8 +78,8 @@ export async function spend(userId: string, amount: number, refId: string, note:
     q`with cur as (
         select
           coalesce(sum(delta), 0)::int as total,
-          coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('day', now())), 0)::int as day,
-          coalesce(-sum(delta) filter (where reason = 'settle' and created_at >= date_trunc('week', now())), 0)::int as week
+          coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('day', now())), 0)::int as day,
+          coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week
         from ledger_entries where user_id = ${userId}
       ),
       ins as (
@@ -97,4 +97,30 @@ export async function spend(userId: string, amount: number, refId: string, note:
   if (Number(r.day) + amount > DAILY_SPEND_LIMIT) return { ok: false, reason: "day" };
   if (Number(r.week) + amount > WEEKLY_SPEND_LIMIT) return { ok: false, reason: "week" };
   return { ok: false, reason: "duplicate" };
+}
+
+/**
+ * Charges what a long reply cost beyond its upfront price, but never below a zero balance: if
+ * the person can't cover all of it, Wanlly absorbs the rest. Returns the credits actually taken.
+ */
+export async function chargeExtra(userId: string, amount: number, refId: string, note: string): Promise<number> {
+  if (amount <= 0) return 0;
+  const q = rawSql();
+  const [, rows] = await q.transaction([
+    q`select pg_advisory_xact_lock(hashtext(${userId}))`,
+    q`with bal as (select coalesce(sum(delta), 0)::int as total from ledger_entries where user_id = ${userId}),
+      ins as (
+        insert into ledger_entries (user_id, delta, reason, ref_id, note)
+        select ${userId}, -least(${amount}, bal.total), 'settle', ${refId}, ${note} from bal where bal.total > 0
+        on conflict (ref_id, reason) do nothing
+        returning delta
+      )
+      select coalesce(-(select sum(delta) from ins), 0)::int as taken`,
+  ]);
+  return Number((rows as Record<string, unknown>[])[0]?.taken ?? 0);
+}
+
+/** Gives back the upfront price of a reply that failed before any of it arrived. */
+export async function release(userId: string, amount: number, refId: string): Promise<void> {
+  await post(userId, amount, "release", refId, "Refund: the reply didn't arrive");
 }

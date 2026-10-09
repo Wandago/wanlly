@@ -17,7 +17,7 @@ export async function GET(req: Request) {
           (select count(distinct user_id) from ledger_entries where created_at >= date_trunc('day', now()))::int as active_today,
           (select count(*) from ad_events where kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos_today,
           (select coalesce(sum(delta) filter (where delta > 0), 0) from ledger_entries where created_at >= date_trunc('day', now()))::int as earned_today,
-          (select coalesce(-sum(delta) filter (where reason = 'settle'), 0) from ledger_entries where created_at >= date_trunc('day', now()))::int as spent_today,
+          (select coalesce(-sum(delta) filter (where reason in ('settle', 'release')), 0) from ledger_entries where created_at >= date_trunc('day', now()))::int as spent_today,
           (select count(*) from beta_applications where status = 'pending')::int as beta_pending,
           (select count(*) from beta_applications)::int as beta_total,
           (select count(*) from contact_messages where handled_at is null)::int as messages_open,
@@ -31,7 +31,7 @@ export async function GET(req: Request) {
           (select count(*) from users u where u.created_at >= d.day and u.created_at < d.day + interval '1 day')::int as signups,
           (select count(distinct l.user_id) from ledger_entries l where l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as active,
           (select count(*) from ad_events a where a.kind = 'reward_completed' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as videos,
-          (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason = 'settle' and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent,
+          (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason in ('settle', 'release') and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent,
           (select count(*) from beta_applications b where b.created_at >= d.day and b.created_at < d.day + interval '1 day')::int as applications
         from d order by d.day desc`,
     ]);
