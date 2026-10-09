@@ -13,8 +13,9 @@
  * file, Deploy. Then put its address in Admin → Ads → Setup → Banner host.
  */
 
-// The Wanlly app allowed to show these banners. Change it if the app moves to a new domain.
-const APP = "https://wanlly.louiswandago.workers.dev";
+// The Wanlly addresses allowed to show these banners. When you add a domain, add it here (keep
+// the old one until everyone has moved), then Deploy.
+const APPS = ["https://wanlly.louiswandago.workers.dev", "https://wanlly.app", "https://www.wanlly.app"];
 
 const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="origin">
 <style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style>
@@ -63,7 +64,7 @@ const worker = {
         "cache-control": "public, max-age=86400",
         "x-content-type-options": "nosniff",
         // Only Wanlly may show this page in a frame.
-        "content-security-policy": `frame-ancestors ${APP}`,
+        "content-security-policy": `frame-ancestors ${APPS.join(" ")}`,
       },
     });
   },
