@@ -1,9 +1,12 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
+import * as Menu from "@radix-ui/react-dropdown-menu";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TOOLS, getModel, jobCost, type Usage } from "@/lib/catalog";
-import { previewDoc } from "@/lib/design-preview";
+import { previewDoc, withBody } from "@/lib/design-preview";
+import { DRIVE_SCOPE, buildPptx, driveUpload, fileName, saveBlob, type MeasuredSlide } from "@/lib/export";
 import { limitReached, useWorkspace } from "@/lib/workspace-store";
 import { CreditsButton } from "./credits-button";
 import { Icon, type IconName } from "./icon";
@@ -57,7 +60,12 @@ export function DesignEditor({ id }: { id: number }) {
   const [full, setFull] = useState<false | "view" | "present">(false);
   const [slide, setSlide] = useState({ index: 0, count: 0 });
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [frameKey, setFrameKey] = useState(0);
+  const [working, setWorking] = useState("");
   const frame = useRef<HTMLIFrameElement>(null);
+  const waiting = useRef(new Map<string, (data: Record<string, unknown>) => void>());
+  const { user } = useUser();
   const ctrl = useRef<AbortController | null>(null);
 
   const model = getModel(modelId);
@@ -94,6 +102,10 @@ export function DesignEditor({ id }: { id: number }) {
       if (e.source !== frame.current?.contentWindow) return;
       const m = e.data as { wanlly?: string; index?: number; count?: number };
       if (m?.wanlly === "slide") setSlide({ index: m.index ?? 0, count: m.count ?? 0 });
+      if (m?.wanlly && waiting.current.has(m.wanlly)) {
+        waiting.current.get(m.wanlly)!(m as Record<string, unknown>);
+        waiting.current.delete(m.wanlly);
+      }
       if (m?.wanlly === "exit") leave();
     };
     addEventListener("message", onMessage);
@@ -203,15 +215,103 @@ export function DesignEditor({ id }: { id: number }) {
     else dispatch({ type: "toast", text: "Couldn't open that version" });
   };
 
-  const download = () => {
-    if (!shown || !file) return;
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(new Blob([shown.html], { type: "text/html" }));
-    a.download = `${file.name.replace(/[^\w.-]+/g, "-").replace(/^-+|-+$/g, "") || "design"}.html`;
-    a.click();
-    window.setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  /** Sends the preview a request and waits for its answer (html or pptx). */
+  const ask = (type: "serialize" | "pptx", answer: "html" | "pptx") =>
+    new Promise<Record<string, unknown>>((resolve, reject) => {
+      const t = window.setTimeout(() => {
+        waiting.current.delete(answer);
+        reject(new Error("The preview didn't answer. Try again."));
+      }, 15_000);
+      waiting.current.set(answer, (d) => {
+        window.clearTimeout(t);
+        resolve(d);
+      });
+      frame.current?.contentWindow?.postMessage({ wanlly: type }, "*");
+    });
+
+  const startEdit = (on: boolean) => {
+    setEditing(on);
+    setView("preview");
+    if (on) frame.current?.contentWindow?.postMessage({ wanlly: "edit", on: true }, "*");
+    else setFrameKey((k) => k + 1); // Cancel: reload the page as it was.
   };
 
+  const saveEdit = async () => {
+    if (!shown) return;
+    setWorking("Saving…");
+    try {
+      const { body } = await ask("serialize", "html");
+      const html = withBody(shown.html, String(body ?? ""));
+      const r = await fetch(`/api/design/${id}/versions`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ html }) });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(b.error ?? "Couldn't save");
+      setVersions((xs) => [{ id: b.id, prompt: "Edited by hand", modelId: "edit", credits: 0, createdAt: b.createdAt }, ...xs]);
+      setShown({ id: b.id, html });
+      setEditing(false);
+      dispatch({ type: "toast", text: "Saved as a new version" });
+    } catch (e) {
+      dispatch({ type: "toast", text: (e as Error).message });
+    } finally {
+      setWorking("");
+    }
+  };
+
+  const downloadHtml = () => shown && file && saveBlob(new Blob([shown.html], { type: "text/html" }), `${fileName(file.name)}.html`);
+
+  const printPdf = () => {
+    setView("preview");
+    window.setTimeout(() => frame.current?.contentWindow?.postMessage({ wanlly: "print" }, "*"), 50);
+    dispatch({ type: "toast", text: "In the print window, choose “Save as PDF”" });
+  };
+
+  const makePptx = async () => {
+    setView("preview");
+    const d = await ask("pptx", "pptx");
+    if (d.error || !Array.isArray(d.slides) || !d.slides.length) throw new Error("Couldn't read the slides for PowerPoint.");
+    return buildPptx(d.slides as MeasuredSlide[], file?.name ?? "Slides");
+  };
+
+  const exportPptx = async () => {
+    setWorking("Building PowerPoint…");
+    try {
+      saveBlob(await makePptx(), `${fileName(file?.name ?? "slides")}.pptx`);
+    } catch (e) {
+      dispatch({ type: "toast", text: (e as Error).message });
+    } finally {
+      setWorking("");
+    }
+  };
+
+  /** Google Drive: asks for permission the first time, then uploads. Slides become Google Slides. */
+  const saveToDrive = async () => {
+    if (!shown || !file) return;
+    setWorking("Saving to Google Drive…");
+    try {
+      const t = await fetch("/api/google/token", { cache: "no-store" }).then((r) => r.json());
+      if (!t.token) {
+        const google = user?.externalAccounts.find((a) => a.provider.replace("oauth_", "") === "google");
+        const back = window.location.href;
+        const acct = google
+          ? await google.reauthorize({ additionalScopes: [DRIVE_SCOPE], redirectUrl: back })
+          : await user?.createExternalAccount({ strategy: "oauth_google", additionalScopes: [DRIVE_SCOPE], redirectUrl: back });
+        const url = acct?.verification?.externalVerificationRedirectURL;
+        if (!url) throw new Error("Google Drive isn't set up for Wanlly yet.");
+        dispatch({ type: "toast", text: "Allow Google Drive, then press Save to Google Drive again" });
+        window.location.href = url.toString();
+        return;
+      }
+      const link =
+        file.kind === "slides"
+          ? await driveUpload(t.token, await makePptx(), file.name, "application/vnd.google-apps.presentation")
+          : await driveUpload(t.token, new Blob([shown.html], { type: "text/html" }), `${file.name}.html`);
+      window.open(link, "_blank", "noopener");
+      dispatch({ type: "toast", text: "Saved to your Google Drive" });
+    } catch (e) {
+      dispatch({ type: "toast", text: (e as Error).message || "Couldn't save to Google Drive" });
+    } finally {
+      setWorking("");
+    }
+  };
   if (error)
     return (
       <main className="grid h-full place-items-center p-6 text-center">
@@ -268,9 +368,29 @@ export function DesignEditor({ id }: { id: number }) {
               Full screen
             </button>
           )}
-          <button type="button" className={ghost} disabled={!shown} onClick={download} aria-label="Download HTML">
-            <Icon name="down" size={14} /> <span className="max-sm:hidden">Download</span>
+          <button type="button" className={ghost} disabled={!shown || busy || editing} onClick={() => startEdit(true)}>
+            <Icon name="design" size={14} /> <span className="max-sm:hidden">Edit</span>
           </button>
+          <Menu.Root>
+            <Menu.Trigger className={ghost} disabled={!shown || busy || !!working}>
+              <Icon name="up" size={14} /> <span className="max-sm:hidden">{working || "Export"}</span>
+            </Menu.Trigger>
+            <Menu.Portal>
+              <Menu.Content align="end" sideOffset={6} className="z-40 min-w-[220px] rounded-xl border border-line bg-surface p-1 text-fg shadow-soft">
+                {[
+                  ...(file.kind === "slides" ? [["PowerPoint (.pptx)", "Editable slides", exportPptx] as const] : []),
+                  ["PDF", file.kind === "slides" ? "One slide per page" : "Print, then Save as PDF", printPdf] as const,
+                  ["Google Drive", file.kind === "slides" ? "Opens as Google Slides" : "Saves the HTML file", saveToDrive] as const,
+                  ["HTML file", "The page itself", downloadHtml] as const,
+                ].map(([label, hint, run]) => (
+                  <Menu.Item key={label} onSelect={() => void run()} className="flex cursor-pointer flex-col rounded-lg px-2.5 py-1.5 outline-none data-[highlighted]:bg-hover">
+                    <span className="text-[13px] font-medium">{label}</span>
+                    <small className="text-xs text-muted">{hint}</small>
+                  </Menu.Item>
+                ))}
+              </Menu.Content>
+            </Menu.Portal>
+          </Menu.Root>
         </div>
       </header>
 
@@ -301,7 +421,8 @@ export function DesignEditor({ id }: { id: number }) {
               <iframe
                 ref={frame}
                 title={`${file.name} preview`}
-                sandbox="allow-scripts"
+                key={frameKey}
+                sandbox="allow-scripts allow-modals"
                 referrerPolicy="no-referrer"
                 srcDoc={srcDoc}
                 className={`h-full bg-white ${device === "phone" && file.kind !== "slides" && !full ? "w-[390px] max-w-full rounded-[22px] border-[6px] border-[#16171b] shadow-soft" : "w-full"}`}
@@ -328,6 +449,17 @@ export function DesignEditor({ id }: { id: number }) {
                 <b className="font-semibold">{busy ? "Starting…" : "Nothing here yet"}</b>
                 <p className="text-[13px] text-muted">{busy ? "The preview appears as soon as the model starts writing." : "Describe what you want on the left, and it'll be designed here."}</p>
               </div>
+            </div>
+          )}
+          {editing && (
+            <div className="absolute top-3 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface py-1 pr-1 pl-3.5 text-xs shadow-soft">
+              <span className="text-muted max-sm:hidden">Editing · click any text to change it</span>
+              <button type="button" onClick={() => startEdit(false)} className="rounded-full px-2.5 py-1 font-medium hover:bg-hover" disabled={!!working}>
+                Cancel
+              </button>
+              <button type="button" onClick={saveEdit} className="rounded-full bg-fg px-3 py-1 font-semibold text-bg disabled:opacity-60" disabled={!!working}>
+                {working || "Save as new version"}
+              </button>
             </div>
           )}
           {busy && (
@@ -364,7 +496,7 @@ export function DesignEditor({ id }: { id: number }) {
                   >
                     <span className="line-clamp-2">{v.prompt}</span>
                     <small className="font-mono text-[11px] text-faint">
-                      v{versions.length - i} · {getModel(v.modelId).name} · {v.credits} cr · {ago(v.createdAt)}
+                      v{versions.length - i} · {v.modelId === "edit" ? "Hand edit" : getModel(v.modelId).name} · {v.credits} cr · {ago(v.createdAt)}
                     </small>
                   </button>
                 ))}
@@ -401,7 +533,9 @@ export function DesignEditor({ id }: { id: number }) {
               <ModelPicker />
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from={model.provider === "anthropic"} />
-                {busy ? (
+                {editing ? (
+                  <span className="text-xs text-faint">Finish editing first</span>
+                ) : busy ? (
                   <button type="button" onClick={() => ctrl.current?.abort()} className={ghost}>
                     Stop
                   </button>

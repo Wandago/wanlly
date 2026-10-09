@@ -14,12 +14,14 @@ Rules for the document:
 - No other external files and no network requests. For pictures, use inline SVG, CSS shapes, flat colour blocks or emoji. Never link to outside images.
 - Use real, specific content that fits the brief. Never use lorem ipsum.
 - Clean, modern and calm. Strong hierarchy, generous spacing, readable contrast (WCAG AA), and no dark patterns.
-- It must look right on its own in a browser, at the sizes described below.`;
+- It must look right on its own in a browser, at the sizes described below.
+- Keep the markup compact so the whole page fits in one reply: put repeated styling in classes in one <style> block instead of long repeated utility lists, and keep it under about 60 KB.
+- Always finish the document, ending with </body></html>. A shorter complete page is better than a longer unfinished one.`;
 
 const KIND: Record<DesignKind, string> = {
   slides: `Make a slide deck.
 - Each slide is a <section class="slide"> exactly 1280px wide and 720px tall, with overflow hidden and its own background.
-- 6 to 10 slides unless the brief says otherwise. One idea per slide, big type, short lines, a clear title slide and a closing slide.
+- 6 to 8 slides unless the brief says otherwise. One idea per slide, big type, short lines, a clear title slide and a closing slide.
 - Do not add navigation, page numbers or scripts for moving between slides; Wanlly's viewer does that.`,
   design: `Design the screens for an app or website as a real, responsive page.
 - If the brief is a mobile app, design for a 390px-wide phone first and make it still look intentional on a wide screen.
@@ -52,10 +54,17 @@ export function userPrompt(opts: { name: string; brief: string; request: string;
   return parts.join("\n\n");
 }
 
+/** Whether a reply has reached the end of its page. */
+export const isComplete = (reply: string) => /<\/html>/i.test(reply);
+
+/** The follow-up that asks the model to carry on a page that was cut off. */
+export const CONTINUE =
+  "Your reply was cut off before the end of the document. Continue exactly where you stopped: output only the remaining HTML, starting with the very next character, without repeating anything and without a code fence or any explanation. Finish with </body></html>.";
+
 /** Pulls the HTML document out of a reply, whether it is fenced or not. Null if there isn't one. */
 export function extractHtml(reply: string): string | null {
-  const fenced = reply.match(/```(?:html)?\s*\n([\s\S]*?)(?:\n```|$)/i);
-  let html = (fenced ? fenced[1] : reply).trim();
+  // Drop code-fence lines anywhere, so a page continued across several replies joins up cleanly.
+  let html = reply.replace(/```[\w-]*[ \t]*\n?/g, "").trim();
   const start = html.search(/<!doctype html|<html[\s>]/i);
   if (start > 0) html = html.slice(start);
   const end = html.toLowerCase().lastIndexOf("</html>");

@@ -29,7 +29,7 @@ export function replyCostUsd(modelId: string, inputTokens: number, outputTokens:
 }
 
 /** Longest reply per tool. Code and designs need room for whole files; chat answers stay readable. */
-export const MAX_OUTPUT: Record<Extract<ToolId, "chat" | "code" | "design">, number> = { chat: 8000, code: 16000, design: 24000 };
+export const MAX_OUTPUT: Record<Extract<ToolId, "chat" | "code" | "design">, number> = { chat: 8000, code: 16000, design: 32000 };
 
 // ---------------------------------------------------------------- Google
 

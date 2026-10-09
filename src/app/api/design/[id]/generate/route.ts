@@ -3,7 +3,7 @@ import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost } from "@/lib/catalog";
-import { designFile, extractHtml, idParam, systemPrompt, userPrompt } from "@/lib/design";
+import { CONTINUE, designFile, extractHtml, idParam, isComplete, systemPrompt, userPrompt } from "@/lib/design";
 import { field, smallJson } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
@@ -81,11 +81,18 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
       let reply = "";
       try {
         let usage = { inputTokens: 0, outputTokens: 0, stop: "end" };
-        for await (const ev of streamReply({ modelId: model.id, tool: "design", system: systemPrompt(file.kind), turns, signal: abort.signal })) {
-          if (ev.type === "text") {
-            reply += ev.text;
-            send({ type: "text", text: ev.text });
-          } else usage = ev;
+        // A long page can run out of room; ask the model to carry on, up to twice.
+        for (let round = 0; round < 3; round++) {
+          const ask = round === 0 ? turns : [...turns, { role: "assistant" as const, text: reply }, { role: "user" as const, text: CONTINUE }];
+          for await (const ev of streamReply({ modelId: model.id, tool: "design", system: systemPrompt(file.kind), turns: ask, signal: abort.signal })) {
+            if (ev.type === "text") {
+              reply += ev.text;
+              send({ type: "text", text: ev.text });
+            } else usage = { inputTokens: usage.inputTokens + ev.inputTokens, outputTokens: usage.outputTokens + ev.outputTokens, stop: ev.stop };
+          }
+          if (isComplete(reply) || usage.stop === "refusal" || !reply) break;
+          // Continuations must not reopen the code fence.
+          reply = reply.replace(/\n```\s*$/, "");
         }
         const html = extractHtml(reply);
         if (!html) {
@@ -96,7 +103,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
           const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · long design`) : 0;
           const [row] = await d.insert(v).values({ projectId: id, prompt: request, html, modelId: model.id, credits: price + extra }).returning({ id: v.id, createdAt: v.createdAt });
           await d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
-          send({ type: "done", versionId: row.id, createdAt: row.createdAt, charged: price + extra, cutShort: usage.stop === "max_tokens", ...(await account(userId)) });
+          send({ type: "done", versionId: row.id, createdAt: row.createdAt, charged: price + extra, cutShort: !isComplete(reply), ...(await account(userId)) });
         }
       } catch (e) {
         const kind = errorKind(e);
