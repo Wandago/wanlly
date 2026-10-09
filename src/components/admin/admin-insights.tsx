@@ -170,7 +170,18 @@ type Ads = {
   creatives: { creative: string; impressions: number; clicks: number }[];
 };
 
+/** Ads: the network setup first (it doesn't wait for the stats), then performance, then the size test. */
 export function AdsTab({ days }: { days: 7 | 30 }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <AdNetwork />
+      <AdStats days={days} />
+      <NetworkTest />
+    </div>
+  );
+}
+
+function AdStats({ days }: { days: 7 | 30 }) {
   const { data, error } = useData<Ads>(`/api/admin/ads?days=${days}`);
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <Empty>Loading…</Empty>;
@@ -230,8 +241,6 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
           <Empty>No ad views yet.</Empty>
         )}
       </Card>
-      <AdNetwork />
-      <NetworkTest />
     </div>
   );
 }
