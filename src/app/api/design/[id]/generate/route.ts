@@ -4,6 +4,7 @@ import { blockedReason } from "@/lib/admin";
 import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
 import { ESTIMATE, MODELS, TOOLS, jobCost, taskCredits } from "@/lib/catalog";
 import { MAX_BODY, readAttachments } from "@/lib/attachments";
+import { getStyle } from "@/lib/design-styles";
 import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packAssets, systemPrompt, systemStyles, unpackAssets, userPrompt } from "@/lib/design";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
@@ -40,6 +41,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const jobId = data ? field(data, "jobId", 64) : "";
   const baseVersion = data && Number.isSafeInteger(data.baseVersionId) ? (data.baseVersionId as number) : null;
   const systemId = data && Number.isSafeInteger(data.systemId) ? (data.systemId as number) : null;
+  const style = getStyle(data?.styleId);
   if (!id || !request || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: "Bad request" }, { status: 400 });
 
   const d = db();
@@ -90,7 +92,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const turns = [
     {
       role: "user" as const,
-      text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current: current ? packed : null, images, files: attached.text, system }),
+      text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current: current ? packed : null, images, files: attached.text, system, style }),
       files: attached.files.map((f) => ({ mime: f.mime, data: f.data })),
     },
   ];

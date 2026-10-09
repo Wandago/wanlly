@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { NewProject, type DesignKind, type Preset, type Project } from "./pages/projects-view";
+import { INSPIRATION, STYLES } from "@/lib/design-styles";
 
 /*
  * The Design tool's home: start something new from one of four kinds, then find your design
@@ -347,6 +348,18 @@ export function DesignHome() {
               </button>
             ))}
           </div>
+          <p className="text-[13px] text-muted">
+            Want a certain look? Pick one of {STYLES.length} styles in the editor, or find a page you love on{" "}
+            {INSPIRATION.map((x, i) => (
+              <span key={x.url}>
+                <a href={x.url} target="_blank" rel="noopener noreferrer" title={x.what} className="text-fg underline decoration-line underline-offset-2 hover:decoration-faint">
+                  {x.name}
+                </a>
+                {i < INSPIRATION.length - 2 ? ", " : i === INSPIRATION.length - 2 ? " or " : ""}
+              </span>
+            ))}
+            , attach a screenshot and say &ldquo;in this style&rdquo;.
+          </p>
         </section>
 
         {error ? (

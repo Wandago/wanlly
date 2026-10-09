@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TOOLS, getModel, jobCost, type Usage } from "@/lib/catalog";
 import { previewDoc, withBody } from "@/lib/design-preview";
+import { STYLES, getStyle } from "@/lib/design-styles";
 import { DRIVE_SCOPE, buildPptx, driveUpload, fileName, saveBlob, type MeasuredSlide } from "@/lib/export";
 import { extractTokens, htmlToJsx, tokensToCss, tokensToJson, tokensToTailwind } from "@/lib/design-export";
 import { limitReached, useWorkspace } from "@/lib/workspace-store";
@@ -71,20 +72,24 @@ export function DesignEditor({ id }: { id: number }) {
   const [pane, setPane] = useState<"preview" | "ask">("preview");
   const [codeAs, setCodeAs] = useState<"html" | "react">("html");
   const [systems, setSystems] = useState<{ id: number; name: string }[]>([]);
-  const [systemId, setSystemIdState] = useState<number | null>(() => {
+  /** The look to build with: "style:<id>" (built in), "ds:<id>" (one of their design systems) or "". */
+  const [look, setLookState] = useState<string>(() => {
     try {
-      return Number(localStorage.getItem(`wanlly-ds-${id}`)) || null;
+      const saved = localStorage.getItem(`wanlly-ds-${id}`) ?? "";
+      return /^\d+$/.test(saved) ? `ds:${saved}` : saved;
     } catch {
-      return null;
+      return "";
     }
   });
-  const setSystemId = (v: number | null) => {
-    setSystemIdState(v);
+  const setLook = (v: string) => {
+    setLookState(v);
     try {
-      if (v) localStorage.setItem(`wanlly-ds-${id}`, String(v));
+      if (v) localStorage.setItem(`wanlly-ds-${id}`, v);
       else localStorage.removeItem(`wanlly-ds-${id}`);
     } catch {}
   };
+  const systemId = look.startsWith("ds:") ? Number(look.slice(3)) : null;
+  const styleId = look.startsWith("style:") ? look.slice(6) : null;
   const [editing, setEditing] = useState(false);
   /** The preview confirmed it's editable. */
   const [editReady, setEditReady] = useState(false);
@@ -200,7 +205,7 @@ export function DesignEditor({ id }: { id: number }) {
       const r = await fetch(`/api/design/${id}/generate`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null, attachments: forSending(sending), systemId: systems.some((x) => x.id === systemId) ? systemId : null }),
+        body: JSON.stringify({ prompt: text, modelId, jobId: `design-${crypto.randomUUID()}`, baseVersionId: shown?.id ?? null, attachments: forSending(sending), systemId: systems.some((x) => x.id === systemId) ? systemId : null, styleId: getStyle(styleId)?.id ?? null }),
         signal: c.signal,
       });
       if (!r.ok || !r.body) {
@@ -709,21 +714,31 @@ export function DesignEditor({ id }: { id: number }) {
                 }}
               />
               <ModelPicker />
-              {file.kind !== "system" && systems.length > 0 && (
-                <select
-                  aria-label="Design system"
-                  value={systems.some((x) => x.id === systemId) ? String(systemId) : ""}
-                  onChange={(e) => setSystemId(Number(e.target.value) || null)}
-                  className="max-w-[150px] truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-muted outline-none hover:text-fg"
-                >
-                  <option value="">No design system</option>
-                  {systems.map((x) => (
-                    <option key={x.id} value={x.id}>
-                      {x.name}
+              <select
+                aria-label="Style"
+                title={getStyle(styleId)?.blurb ?? "Pick a look for this design"}
+                value={getStyle(styleId) || systems.some((x) => x.id === systemId) ? look : ""}
+                onChange={(e) => setLook(e.target.value)}
+                className="max-w-[150px] truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-muted outline-none hover:text-fg"
+              >
+                <option value="">Any style</option>
+                <optgroup label="Wanlly styles">
+                  {STYLES.map((x) => (
+                    <option key={x.id} value={`style:${x.id}`}>
+                      {x.name} · {x.blurb}
                     </option>
                   ))}
-                </select>
-              )}
+                </optgroup>
+                {file.kind !== "system" && systems.length > 0 && (
+                  <optgroup label="Your design systems">
+                    {systems.map((x) => (
+                      <option key={x.id} value={`ds:${x.id}`}>
+                        {x.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+              </select>
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from rate={model.credits} />
                 {editing ? (

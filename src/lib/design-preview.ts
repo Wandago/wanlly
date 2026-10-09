@@ -2,7 +2,8 @@
  * Turns a generated design into a page that is safe to show. It always runs in an iframe with
  * sandbox="allow-scripts allow-modals" and no same-origin access, so it can't read Wanlly's
  * cookies or page. On top of that, a content security policy stops it loading anything except
- * Tailwind and Google Fonts, sending data anywhere, or submitting forms.
+ * Tailwind, Google Fonts and a few pinned animation and 3D libraries, sending data anywhere, or
+ * submitting forms.
  *
  * A small runtime is added to every page. The editor talks to it with postMessage:
  *   present (slides), edit (type into the page), serialize (send the edited body back),
@@ -15,7 +16,8 @@ const CSP = [
   "style-src 'unsafe-inline' https://fonts.googleapis.com",
   "font-src https://fonts.gstatic.com data:",
   "img-src data: blob:",
-  "script-src 'unsafe-inline' https://cdn.tailwindcss.com",
+  // The libraries built-in styles may use (lib/design-styles.ts), pinned to those exact versions.
+  "script-src 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net/npm/gsap@3.12.5/ https://cdn.jsdelivr.net/npm/animejs@3.2.2/ https://cdn.jsdelivr.net/npm/three@0.160.0/",
   "connect-src 'none'",
   "form-action 'none'",
   "base-uri 'none'",

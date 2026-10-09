@@ -1,6 +1,7 @@
 import "server-only";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { LIBS, type DesignStyle } from "./design-styles";
 
 /* What the Design tool asks the model for, per kind, and how the finished page is read back. */
 
@@ -10,13 +11,21 @@ const BASE = `You are the designer in Wanlly, a free AI workspace for students a
 Reply with exactly one complete, self-contained HTML document inside a single \`\`\`html code fence, and nothing else: no explanation before or after.
 
 Rules for the document:
-- Put CSS in a <style> tag. You may also load Tailwind with <script src="https://cdn.tailwindcss.com"></script> and fonts from Google Fonts. Load nothing else.
+- Put CSS in a <style> tag. You may also load Tailwind with <script src="https://cdn.tailwindcss.com"></script> and fonts from Google Fonts. Load nothing else, unless the chosen style names a library.
 - No other external files and no network requests. For pictures, use inline SVG, CSS shapes, flat colour blocks or emoji. Never link to outside images.
 - Use real, specific content that fits the brief. Never use lorem ipsum.
-- Clean, modern and calm. Strong hierarchy, generous spacing, readable contrast (WCAG AA), and no dark patterns.
+- Clean, modern and calm unless a style says otherwise. Strong hierarchy, generous spacing, readable contrast (WCAG AA), and no dark patterns.
 - It must look right on its own in a browser, at the sizes described below.
 - Keep the markup compact so the whole page fits in one reply: put repeated styling in classes in one <style> block instead of long repeated utility lists, and keep it under about 60 KB.
-- Always finish the document, ending with </body></html>. A shorter complete page is better than a longer unfinished one.`;
+- Always finish the document, ending with </body></html>. A shorter complete page is better than a longer unfinished one.
+
+Design like a senior designer, not a template:
+- Pick a clear point of view for the brief (who it's for, what mood) and commit to it: one type pairing, a small palette with a single accent, one corner radius, one shadow style.
+- Build hierarchy with size, weight and space before colour. Use a type scale with real contrast (display text several times the body size) and set body text at 16–18px with line-height around 1.6 and lines under 70 characters.
+- Space on a 4/8px scale, and give sections room (80–160px apart on desktop). Align everything to a grid; vary section layouts (split, offset, full-bleed, bento) instead of repeating centred stacks of cards.
+- Write specific, believable copy: real names, numbers, prices and places that fit the brief. Headlines are short and concrete.
+- Finish the details: hover and focus states, consistent icon style (simple inline SVG strokes, never emoji as icons), balanced line breaks (text-wrap: balance on headings), tabular figures for numbers.
+- Avoid the generic AI look: purple-to-blue gradients, glowing blobs everywhere, three identical feature cards with emoji, centred everything, vague copy like "Unlock your potential".`;
 
 const KIND: Record<DesignKind, string> = {
   slides: `Make a slide deck.
@@ -70,9 +79,23 @@ export function systemStyles(html: string): string {
 }
 
 /** The request for one version: the brief, the current design if there is one, and the change. */
-export function userPrompt(opts: { name: string; brief: string; request: string; current: string | null; images?: { key: string; name: string }[]; files?: string; system?: { name: string; css: string } }) {
+export function userPrompt(opts: {
+  name: string;
+  brief: string;
+  request: string;
+  current: string | null;
+  images?: { key: string; name: string }[];
+  files?: string;
+  system?: { name: string; css: string };
+  style?: DesignStyle;
+}) {
   const parts = [`Project: ${opts.name}`];
   if (opts.brief.trim()) parts.push(`Brief:\n${opts.brief.trim()}`);
+  if (opts.style)
+    parts.push(
+      `Style: "${opts.style.name}". Follow this art direction closely (the brief and request still decide the content):\n<style_guide>\n${opts.style.guide}\n</style_guide>` +
+        (opts.style.libs?.length ? `\nLibraries this style may load (exactly these addresses): ${opts.style.libs.map((l) => LIBS[l]).join("; ")}` : ""),
+    );
   if (opts.system?.css)
     parts.push(
       `Build this on the "${opts.system.name}" design system. Copy its CSS custom properties into your <style> and use them, and follow its type, spacing, radii and component styles:\n<design_system>\n${opts.system.css}\n</design_system>`,
