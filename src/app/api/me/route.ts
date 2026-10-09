@@ -34,6 +34,9 @@ export async function DELETE(req: Request) {
   if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
   try {
     await db().update(schema.projects).set({ deletedAt: sql`now()` }).where(eq(schema.projects.ownerId, userId));
+    // Generated designs are deleted outright; the project rows stay marked deleted.
+    const owned = await db().select({ id: schema.projects.id }).from(schema.projects).where(eq(schema.projects.ownerId, userId));
+    if (owned.length) await db().delete(schema.designVersions).where(inArray(schema.designVersions.projectId, owned.map((p) => p.id)));
     // Conversations are deleted outright.
     const convos = await db().select({ id: schema.conversations.id }).from(schema.conversations).where(eq(schema.conversations.userId, userId));
     if (convos.length) {

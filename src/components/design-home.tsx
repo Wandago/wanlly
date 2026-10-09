@@ -169,7 +169,7 @@ export function DesignHome() {
       .catch((e: Error) => setError(e.message));
   }, []);
 
-  const open = (p: Project) => router.push(`/projects?open=${p.id}`);
+  const open = (p: Project) => router.push(`/design/${p.id}`);
   const rename = async (p: Project) => {
     const name = window.prompt("Rename", p.name)?.trim();
     if (!name || name === p.name) return;

@@ -253,3 +253,11 @@ The Build Pass ad load (side panel on, a video about every 15 minutes) roughly t
 - **Pricing:** each reply takes the model's starting price up front (checked against balance and the daily/weekly limits). Claude replies are then charged their real token cost in credits (one credit = $0.005), never below a zero balance; Gemini stays at its flat price while it's free. A reply that fails before any text arrives is refunded.
 - **Limits per reply:** 8,000 output tokens in Chat, 16,000 in Code; about 48,000 characters of earlier conversation are sent with each message. Projects' instructions are added to chats started from a project.
 - **Design and Images** are still samples, marked "coming soon", and take no credits.
+
+## Design (built)
+
+- **Design home** (the Design tab): start Slides, a Design, a Design in codebase or a Design System; files are projects with `tool = design` and a `kind`.
+- **Editor** at `/design/[id]`: ask on the left, a live preview on the right fills in as the model writes; every result is a saved version (`design_versions`), and changes start from the version on screen. Code view, Download (.html), phone/desktop toggle, full screen, and Present mode for slides (arrows, click, Escape).
+- **How it's made:** `POST /api/design/[id]/generate` streams one self-contained HTML page per version (prompts per kind in `src/lib/design.ts`), same pricing as chat at the Design price (2 x the model's credits), refunded if no usable page arrives.
+- **Safety:** previews run in an iframe with `sandbox="allow-scripts"` (no same-origin), plus a content security policy that blocks network requests, form submissions and every outside file except Tailwind and Google Fonts (`src/lib/design-preview.ts`). Designs are never opened on Wanlly's own origin.
+- **Not yet:** connecting a real repository for Design in codebase, sharing, and exporting slides to PowerPoint or PDF.

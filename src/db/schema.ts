@@ -225,3 +225,21 @@ export const appFlags = pgTable("app_flags", {
   updatedBy: text("updated_by"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Every generated version of a Design file. The newest is what the editor shows. */
+export const designVersions = pgTable(
+  "design_versions",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    projectId: integer("project_id")
+      .notNull()
+      .references(() => projects.id),
+    /** What the person asked for in this version. */
+    prompt: text("prompt").notNull(),
+    html: text("html").notNull(),
+    modelId: text("model_id").notNull(),
+    credits: integer("credits").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("design_versions_project").on(t.projectId, t.id)],
+);

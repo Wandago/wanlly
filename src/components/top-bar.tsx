@@ -13,7 +13,7 @@ export function CreditTag({ credits, from = false }: { credits: number | string;
   );
 }
 
-function ModelPicker() {
+export function ModelPicker() {
   const { modelId, tool, providers, dispatch } = useWorkspace();
   const model = getModel(modelId);
 

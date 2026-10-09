@@ -1,0 +1,121 @@
+import { desc, eq, sql } from "drizzle-orm";
+import { db, schema } from "@/db";
+import { blockedReason } from "@/lib/admin";
+import { errorDetail, errorKind, replyCostUsd, streamReply } from "@/lib/ai";
+import { ESTIMATE, MODELS, TOOLS, jobCost } from "@/lib/catalog";
+import { designFile, extractHtml, idParam, systemPrompt, userPrompt } from "@/lib/design";
+import { field, smallJson } from "@/lib/forms";
+import { account, chargeExtra, release, spend } from "@/lib/ledger";
+import { signedInUserId } from "@/lib/session";
+
+/*
+ * Makes one new version of a design, streamed as newline-delimited JSON like chat:
+ *   {"type":"start"} {"type":"text","text":"…"} … {"type":"done","versionId":…} or {"type":"error",…}
+ * The text is the HTML as it's written, so the editor can preview it live. Same pricing as chat:
+ * the upfront price is refunded if no usable page arrives; long Claude replies pay their real cost.
+ */
+
+const ERRORS = {
+  busy: "The model is busy right now. Your credits were refunded; try again in a moment.",
+  failed: "Something went wrong making that design. Your credits were refunded.",
+  unavailable: "That model isn't available right now. Your credits were refunded; try another model.",
+  aborted: "Stopped. Your credits were refunded.",
+  nohtml: "The model didn't return a complete page. Your credits were refunded; try again or rephrase.",
+} as const;
+
+export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/generate">) {
+  const userId = await signedInUserId(req);
+  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  const blocked = await blockedReason(userId, "spend").catch(() => null);
+  if (blocked) return Response.json({ error: blocked }, { status: 403 });
+  const id = idParam((await ctx.params).id);
+  const data = await smallJson(req);
+  const request = data && typeof data.prompt === "string" ? data.prompt.trim().slice(0, 4000) : "";
+  const model = MODELS.find((m) => m.id === data?.modelId);
+  const jobId = data ? field(data, "jobId", 64) : "";
+  const baseVersion = data && Number.isSafeInteger(data.baseVersionId) ? (data.baseVersionId as number) : null;
+  if (!id || !request || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: "Bad request" }, { status: 400 });
+
+  const d = db();
+  const v = schema.designVersions;
+  let file: Awaited<ReturnType<typeof designFile>>;
+  let current: string | null = null;
+  try {
+    file = await designFile(userId, id);
+    if (!file) return Response.json({ error: "Not found" }, { status: 404 });
+    // Edit the version the person is looking at, or the newest one.
+    const [row] = await d
+      .select({ html: v.html })
+      .from(v)
+      .where(baseVersion ? sql`${v.projectId} = ${id} and ${v.id} = ${baseVersion}` : eq(v.projectId, id))
+      .orderBy(desc(v.id))
+      .limit(1);
+    current = row?.html ?? null;
+  } catch (e) {
+    console.error("design setup failed", e);
+    return Response.json({ error: "Database unavailable" }, { status: 503 });
+  }
+
+  const price = jobCost(TOOLS.design, model);
+  const ref = `job:${userId}:${jobId}`;
+  const paid = await spend(userId, price, ref, `Design · ${model.name}`).catch(() => null);
+  if (!paid || !paid.ok) {
+    const acct = await account(userId).catch(() => null);
+    const reason = paid?.reason ?? "failed";
+    const status = reason === "credits" ? 402 : reason === "day" || reason === "week" ? 429 : reason === "duplicate" ? 409 : 503;
+    return Response.json({ error: reason === "credits" ? "Not enough credits" : "Couldn't start that", reason, price, ...(acct ?? {}) }, { status });
+  }
+
+  const abort = new AbortController();
+  const enc = new TextEncoder();
+  const turns = [{ role: "user" as const, text: userPrompt({ name: file.name, brief: [file.about, file.instructions].filter(Boolean).join("\n"), request, current }) }];
+
+  const body = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const send = (o: object) => {
+        try {
+          controller.enqueue(enc.encode(JSON.stringify(o) + "\n"));
+        } catch {}
+      };
+      send({ type: "start", price });
+      let reply = "";
+      try {
+        let usage = { inputTokens: 0, outputTokens: 0, stop: "end" };
+        for await (const ev of streamReply({ modelId: model.id, tool: "design", system: systemPrompt(file.kind), turns, signal: abort.signal })) {
+          if (ev.type === "text") {
+            reply += ev.text;
+            send({ type: "text", text: ev.text });
+          } else usage = ev;
+        }
+        const html = extractHtml(reply);
+        if (!html) {
+          await release(userId, price, ref);
+          send({ type: "error", message: ERRORS.nohtml, ...(await account(userId)) });
+        } else {
+          const actual = Math.ceil(replyCostUsd(model.id, usage.inputTokens, usage.outputTokens) / ESTIMATE.usdPerCredit);
+          const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · long design`) : 0;
+          const [row] = await d.insert(v).values({ projectId: id, prompt: request, html, modelId: model.id, credits: price + extra }).returning({ id: v.id, createdAt: v.createdAt });
+          await d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
+          send({ type: "done", versionId: row.id, createdAt: row.createdAt, charged: price + extra, cutShort: usage.stop === "max_tokens", ...(await account(userId)) });
+        }
+      } catch (e) {
+        const kind = errorKind(e);
+        if (kind !== "aborted") console.error("design failed", kind, errorDetail(e));
+        let detail = "";
+        if (kind !== "aborted") {
+          const [me] = await d.select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, userId)).limit(1).catch(() => []);
+          if (me && me.role !== "user") detail = ` (Admin detail: ${errorDetail(e)})`;
+        }
+        await release(userId, price, ref).catch(() => {});
+        send({ type: "error", message: ERRORS[kind] + detail, ...(await account(userId).catch(() => ({}))) });
+      }
+      try {
+        controller.close();
+      } catch {}
+    },
+    cancel() {
+      abort.abort();
+    },
+  });
+  return new Response(body, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store", "x-content-type-options": "nosniff" } });
+}

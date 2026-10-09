@@ -15,8 +15,10 @@ export async function GET(req: Request) {
       d.select().from(schema.conversations).where(eq(schema.conversations.userId, userId)),
     ]);
     const ids = conversations.map((c) => c.id);
+    const projectIds = projects.map((p) => p.id);
+    const designs = projectIds.length ? await d.select().from(schema.designVersions).where(inArray(schema.designVersions.projectId, projectIds)) : [];
     const messages = ids.length ? await d.select().from(schema.messages).where(inArray(schema.messages.conversationId, ids)) : [];
-    const body = JSON.stringify({ exportedAt: new Date().toISOString(), account: user[0] ?? null, projects, conversations: conversations.map((c) => ({ ...c, messages: messages.filter((m) => m.conversationId === c.id) })), credits: ledger }, null, 2);
+    const body = JSON.stringify({ exportedAt: new Date().toISOString(), account: user[0] ?? null, projects: projects.map((p) => ({ ...p, designVersions: designs.filter((v) => v.projectId === p.id) })), conversations: conversations.map((c) => ({ ...c, messages: messages.filter((m) => m.conversationId === c.id) })), credits: ledger }, null, 2);
     return new Response(body, {
       headers: { "content-type": "application/json", "content-disposition": `attachment; filename="wanlly-data.json"`, "cache-control": "no-store" },
     });

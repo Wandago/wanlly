@@ -28,8 +28,8 @@ export function replyCostUsd(modelId: string, inputTokens: number, outputTokens:
   return c ? (inputTokens * c.usdIn + outputTokens * c.usdOut) / 1e6 : 0;
 }
 
-/** Longest reply per tool. Code needs room for whole files; chat answers stay readable. */
-export const MAX_OUTPUT: Record<Extract<ToolId, "chat" | "code">, number> = { chat: 8000, code: 16000 };
+/** Longest reply per tool. Code and designs need room for whole files; chat answers stay readable. */
+export const MAX_OUTPUT: Record<Extract<ToolId, "chat" | "code" | "design">, number> = { chat: 8000, code: 16000, design: 24000 };
 
 // ---------------------------------------------------------------- Google
 
@@ -131,7 +131,7 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
       max_tokens: maxTokens,
       system,
       messages: turns.map((t) => ({ role: t.role, content: t.text })),
-      output_config: { effort: tool === "code" ? "medium" : "low" },
+      output_config: { effort: tool === "chat" ? "low" : "medium" },
       ...(m.fallbacks ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
     },
     { signal },
@@ -195,7 +195,7 @@ export async function checkProviders() {
 }
 
 export function streamReply(opts: { modelId: string; tool: ToolId; system: string; turns: Turn[]; signal: AbortSignal }): AsyncGenerator<ReplyEvent> {
-  const max = MAX_OUTPUT[opts.tool === "code" ? "code" : "chat"];
+  const max = MAX_OUTPUT[opts.tool === "code" || opts.tool === "design" ? opts.tool : "chat"];
   if (opts.modelId === "gemini-flash") {
     if (!process.env.GEMINI_API_KEY) throw new ProviderError("unavailable");
     return gemini(opts.system, opts.turns, max, opts.signal);
