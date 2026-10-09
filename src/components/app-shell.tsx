@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
 import { applyTheme, type Settings } from "@/lib/settings";
@@ -14,6 +14,7 @@ import { AdsProvider, creativeOf, openSponsor, useNetwork, useSponsors } from "@
 import { NetworkUnit } from "./ads/network-unit";
 import { EarnDialog } from "./earn-dialog";
 import { Interstitial } from "./ads/interstitial";
+import { AdBlockWall } from "./ads/adblock-wall";
 import { Sidebar } from "./sidebar";
 
 function Toast() {
@@ -102,10 +103,14 @@ function PhoneBanner() {
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const roomy = usePathname().startsWith("/design/");
+  // With an ad blocker on, the app underneath can't be used until ads are allowed.
+  const [walled, setWalled] = useState(false);
   return (
     <WorkspaceProvider>
       <AdsProvider>
         <div
+          inert={walled}
+          aria-hidden={walled || undefined}
           className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[240px_minmax(0,1fr)_344px]" : "xl:grid-cols-[240px_minmax(0,1fr)_344px]"}`}
         >
           <Sidebar />
@@ -113,6 +118,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <AdRail wideOnly={roomy} />
           <PhoneBanner />
         </div>
+        <AdBlockWall onChange={setWalled} />
         <EarnDialog />
         <Interstitial />
         <Toast />
