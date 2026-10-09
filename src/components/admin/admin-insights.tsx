@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
-import { frameSandbox } from "../ads/network-unit";
-import { NETWORK_SIZES as UNIT_SIZES, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
+import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
+import { NETWORK_SIZES as UNIT_SIZES, directSrc, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 
 /* Traffic, ads and revenue, and abuse: the admin tabs that read what the app records. */
@@ -351,9 +351,9 @@ function AdNetwork() {
         </button>
       </div>
       {note && <p className="text-[13px] text-muted">{note}</p>}
-      {!saved?.host && (
+      {!saved?.host && Object.values(saved?.units ?? {}).some((code) => !directSrc(code)) && (
         <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
-          Network banners stay off in the app until a banner host is set: without one, Adsterra&apos;s ads load blank inside Wanlly&apos;s sandbox. Your sponsors fill those slots meanwhile.
+          Script banners (like Adsterra&apos;s) stay off in the app until a banner host is set: without one they load blank inside Wanlly&apos;s sandbox. Banners whose code is just an &lt;iframe&gt; (like A-ADS) run without it. Your sponsors fill the slots meanwhile.
         </p>
       )}
       <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. Slots with a network size take turns between network banners and your sponsors.</p>
@@ -373,7 +373,7 @@ function AdNetwork() {
                 placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
                 spellCheck={false}
               />
-              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} />}
+              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} direct={directSrc(saved?.units[size]) ?? ""} />}
             </li>
           );
         })}
@@ -391,13 +391,13 @@ function AdNetwork() {
 }
 
 /** One saved banner, live, with what happened in this browser: shown, empty, blocked or failed. */
-function BannerPreview({ size, host }: { size: NetworkSize; host: string }) {
+function BannerPreview({ size, host, direct }: { size: NetworkSize; host: string; direct: string }) {
   const { w, h } = sizeOf(size);
   const ref = useRef<HTMLIFrameElement>(null);
   const [status, setStatus] = useState<{ kind: string; detail?: string }>({ kind: "loading" });
   useEffect(() => {
     const on = (e: MessageEvent) => {
-      if (e.source !== ref.current?.contentWindow) return;
+      if (direct || e.source !== ref.current?.contentWindow) return;
       const m = e.data as { wanllyAd?: string; detail?: string };
       if (!m?.wanllyAd) return;
       // Keep the first problem; "filled" always wins.
@@ -405,9 +405,10 @@ function BannerPreview({ size, host }: { size: NetworkSize; host: string }) {
     };
     window.addEventListener("message", on);
     return () => window.removeEventListener("message", on);
-  }, []);
+  }, [direct]);
   const text: Record<string, string> = {
     loading: "Loading…",
+    direct: "Loaded from the network's own site. Runs in the app without a banner host.",
     filled: "The network's ad frame loaded. If the box still looks empty, its ad needs storage, which the sandbox blocks: set up the banner host above.",
     empty: "No ad came back. The network had nothing to show, or the site isn't serving yet.",
     blocked: "The network's script didn't load in this browser, usually an ad-blocking extension. Try a private window with extensions off.",
@@ -416,9 +417,19 @@ function BannerPreview({ size, host }: { size: NetworkSize; host: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="overflow-x-auto pb-1">
-        <iframe ref={ref} title={`${w}×${h} banner preview`} src={`${host}/api/ads/unit?size=${size}`} width={w} height={h} sandbox={frameSandbox(host)} className="block border border-dashed border-line" style={{ width: w, height: h }} />
+        <iframe
+          ref={ref}
+          title={`${w}×${h} banner preview`}
+          src={direct || `${host}/api/ads/unit?size=${size}`}
+          width={w}
+          height={h}
+          sandbox={direct ? DIRECT_SANDBOX : frameSandbox(host)}
+          onLoad={direct ? () => setStatus({ kind: "direct" }) : undefined}
+          className="block border border-dashed border-line"
+          style={{ width: w, height: h }}
+        />
       </div>
-      <small className={`text-xs ${status.kind === "filled" ? "text-good" : status.kind === "loading" ? "text-faint" : "text-bad"}`}>
+      <small className={`text-xs ${status.kind === "filled" || status.kind === "direct" ? "text-good" : status.kind === "loading" ? "text-faint" : "text-bad"}`}>
         {text[status.kind] ?? status.kind}
         {status.detail && <code className="ml-1 font-mono text-[11px] break-all text-muted">{status.detail}</code>}
       </small>

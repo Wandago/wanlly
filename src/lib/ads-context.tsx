@@ -12,9 +12,10 @@ import type { Sponsor } from "./catalog";
  */
 
 type Served = Sponsor & { placements: string[] };
-type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; host?: string } | null;
+type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; host?: string; direct?: Record<string, string> } | null;
 const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
-const AdsContext = createContext<{ ads: Served[]; seen: number; network: { name: string; sizes: NetworkSize[]; host: string } | null }>({ ads: [], seen: 0, network: null });
+type NetInfo = { name: string; sizes: NetworkSize[]; host: string; direct: Record<string, string> };
+const AdsContext = createContext<{ ads: Served[]; seen: number; network: NetInfo | null }>({ ads: [], seen: 0, network: null });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
   const [ads, setAds] = useState<Served[]>([]);
@@ -42,11 +43,8 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   // "staff" networks are being checked by the team; everyone else keeps seeing sponsors.
-  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? `${net.name}|${net.sizes.join(",")}|${net.host ?? ""}` : "";
-  const value = useMemo(() => {
-    const [name, sizes, host] = netKey.split("|");
-    return { ads, seen, network: netKey ? { name, sizes: sizes.split(",") as NetworkSize[], host } : null };
-  }, [ads, seen, netKey]);
+  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? JSON.stringify({ name: net.name, sizes: net.sizes, host: net.host ?? "", direct: net.direct ?? {} }) : "";
+  const value = useMemo(() => ({ ads, seen, network: netKey ? (JSON.parse(netKey) as NetInfo) : null }), [ads, seen, netKey]);
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
@@ -95,7 +93,7 @@ export function useNetwork() {
     void version;
     if (!network) return null;
     const sizes = network.sizes.filter((s) => !emptySizes.has(s));
-    return sizes.length ? { name: network.name, sizes, host: network.host } : null;
+    return sizes.length ? { ...network, sizes } : null;
   }, [network, version]);
 }
 

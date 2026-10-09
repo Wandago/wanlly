@@ -35,6 +35,25 @@ function httpsOrigin(v: unknown): string | undefined {
   }
 }
 
+/**
+ * A banner code that is just an iframe pointing at the network's own site (A-ADS and others):
+ * its https address, or null. Such banners already run on the network's own origin, so they can
+ * be shown straight away, with no banner host and no script of theirs on Wanlly's pages.
+ */
+export function directSrc(code: string | undefined): string | null {
+  if (!code || /<script/i.test(code)) return null;
+  const frames = [...code.matchAll(/<iframe\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi)];
+  if (frames.length !== 1) return null;
+  const raw = frames[0][1].trim().replace(/&amp;/g, "&");
+  const url = raw.startsWith("//") ? `https:${raw}` : raw;
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" ? u.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export const sizeOf = (s: NetworkSize) => {
   const [w, h] = s.split("x").map(Number);
   return { w, h };

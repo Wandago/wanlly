@@ -13,6 +13,9 @@ import { Tracked } from "./tracked";
 export const frameSandbox = (host: string) =>
   `allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms${host && typeof location !== "undefined" && host !== location.origin ? " allow-same-origin" : ""}`;
 
+/** A network's own page in a frame: its own origin, so it keeps its storage but can't touch Wanlly. */
+export const DIRECT_SANDBOX = "allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms";
+
 /**
  * One banner from the ad network, in a sandboxed frame of exactly its size. The frame's page
  * comes from /api/ads/unit with its own sandbox policy, so the network's script can open a new
@@ -23,7 +26,10 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   const { w, h } = sizeOf(size);
   const frame = useRef<HTMLIFrameElement>(null);
   const [filled, setFilled] = useState(false);
-  const host = useNetwork()?.host ?? "";
+  const net = useNetwork();
+  const host = net?.host ?? "";
+  // Iframe-only banners load straight from the network's own site.
+  const direct = net?.direct?.[size] ?? "";
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
@@ -38,10 +44,11 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     <iframe
       ref={frame}
       title="Advertisement"
-      src={`${host}/api/ads/unit?size=${size}`}
+      src={direct || `${host}/api/ads/unit?size=${size}`}
       width={w}
       height={h}
-      sandbox={frameSandbox(host)}
+      sandbox={direct ? DIRECT_SANDBOX : frameSandbox(host)}
+      onLoad={direct ? () => setFilled(true) : undefined}
       className={`block border-0 transition-opacity ${filled ? "opacity-100" : "opacity-0"}`}
       style={{ width: w, height: h, colorScheme: "normal" }}
     />

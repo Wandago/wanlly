@@ -380,6 +380,7 @@ type Delivery = {
     advertiser: string;
     status: string;
     countries: string[];
+    placements: string[];
     startsAt: string | null;
     endsAt: string | null;
     views: number;
@@ -443,6 +444,12 @@ function DeliveryCheck({ tick, onReset }: { tick: number; onReset: () => void })
                     </button>
                   )}
                 </div>
+                <small className="text-xs text-muted">
+                  Shows in: {c.placements.length ? c.placements.map((k) => PLACEMENTS.find(([x]) => x === k)?.[1] ?? k).join(", ") : "nowhere"}
+                  {PLACEMENTS.some(([k]) => !c.placements.includes(k)) && (
+                    <span className="text-faint"> · not in: {PLACEMENTS.filter(([k]) => !c.placements.includes(k)).map(([, l]) => l).join(", ")}</span>
+                  )}
+                </small>
                 <small className="text-xs text-faint">
                   {c.views} views so far{c.maxImpressions ? ` of ${c.maxImpressions}` : ""}
                   {c.startsAt || c.endsAt ? ` · runs ${fmt(c.startsAt) || "now"} to ${fmt(c.endsAt) || "no end"}` : ""}

@@ -1,4 +1,5 @@
 import { rawSql } from "@/db";
+import { directSrc } from "@/lib/ad-network";
 import { loadNetwork } from "@/lib/ad-network-server";
 
 /**
@@ -26,8 +27,19 @@ export async function GET(req: Request) {
       {
         // The visitor's own network country, so the team can see why a campaign isn't shown.
         country,
-        // Network banners need their own banner host: inside Wanlly's sandbox they load blank.
-        network: network.audience === "off" || !network.host ? null : { name: network.name, audience: network.audience, sizes: Object.keys(network.units), host: network.host },
+        // Iframe-only banners (A-ADS…) run on the network's own site and need nothing more. Script
+        // banners (Adsterra…) need the banner host: inside Wanlly's sandbox they load blank.
+        network: (() => {
+          if (network.audience === "off") return null;
+          const direct: Record<string, string> = {};
+          const sizes: string[] = [];
+          for (const [size, code] of Object.entries(network.units)) {
+            const src = directSrc(code);
+            if (src) direct[size] = src;
+            if (src || network.host) sizes.push(size);
+          }
+          return sizes.length ? { name: network.name, audience: network.audience, sizes, host: network.host, direct } : null;
+        })(),
         ads: rows.map((r) => ({
           campaignId: Number(r.id),
           name: String(r.advertiser),
