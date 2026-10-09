@@ -7,7 +7,8 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TOOLS, getModel, jobCost, type Usage } from "@/lib/catalog";
 import { previewDoc, withBody } from "@/lib/design-preview";
-import { STYLES, getStyle } from "@/lib/design-styles";
+import { getStyle } from "@/lib/design-styles";
+import { StylePicker } from "./style-picker";
 import { DRIVE_SCOPE, buildPptx, driveUpload, fileName, saveBlob, type MeasuredSlide } from "@/lib/export";
 import { extractTokens, htmlToJsx, tokensToCss, tokensToJson, tokensToTailwind } from "@/lib/design-export";
 import { limitReached, useWorkspace } from "@/lib/workspace-store";
@@ -714,31 +715,7 @@ export function DesignEditor({ id }: { id: number }) {
                 }}
               />
               <ModelPicker />
-              <select
-                aria-label="Style"
-                title={getStyle(styleId)?.blurb ?? "Pick a look for this design"}
-                value={getStyle(styleId) || systems.some((x) => x.id === systemId) ? look : ""}
-                onChange={(e) => setLook(e.target.value)}
-                className="max-w-[150px] truncate rounded-lg border border-line bg-surface px-2 py-1 text-xs text-muted outline-none hover:text-fg"
-              >
-                <option value="">Any style</option>
-                <optgroup label="Wanlly styles">
-                  {STYLES.map((x) => (
-                    <option key={x.id} value={`style:${x.id}`}>
-                      {x.name} · {x.blurb}
-                    </option>
-                  ))}
-                </optgroup>
-                {file.kind !== "system" && systems.length > 0 && (
-                  <optgroup label="Your design systems">
-                    {systems.map((x) => (
-                      <option key={x.id} value={`ds:${x.id}`}>
-                        {x.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
+              <StylePicker value={getStyle(styleId) || systems.some((x) => x.id === systemId) ? look : ""} onChange={setLook} systems={file.kind === "system" ? [] : systems} />
               <div className="ml-auto flex items-center gap-1.5">
                 <CreditsButton price={price} from rate={model.credits} />
                 {editing ? (
