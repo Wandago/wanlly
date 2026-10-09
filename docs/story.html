@@ -1,0 +1,303 @@
+<title>Wanlly Story</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Geist+Mono:wght@500&display=swap">
+<style>
+/* The story film: about 56 s, paced like a product launch ad. One idea per frame, long holds,
+   slow fades, big quiet type on near-black, one orange accent. Every frame is a pure function of
+   time (seekable, exportable). Music: story/wanlly-story-music.m4a (original, synthesized). */
+:root {
+  --ink: #0a0a0b;
+  --ink-2: #131316;
+  --line: #24242a;
+  --white: #f5f4f0;
+  --dim: #8d8f97;
+  --tang: #ff5a1f;
+  --sans: "Inter Tight", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #050506; color: var(--white); font: 15px/1.5 var(--sans); }
+.page { max-width: 1120px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 16px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+.head h1 { font: 600 22px/1.2 var(--sans); letter-spacing: -.02em; margin: 0; }
+.head p { margin: 0; color: var(--dim); font-size: 14px; }
+.stage-wrap { display: grid; place-items: center; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--ink); border-radius: 14px; overflow: hidden; container-type: size; isolation: isolate; --s: min(1cqw, 1.78cqh); }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); --s: 1.9cqw; }
+.portrait .stage { aspect-ratio: 4 / 5; width: min(100%, 560px); --s: 1.2cqw; }
+.layer { position: absolute; inset: 0; display: grid; place-items: center; padding: 0 7cqw; pointer-events: none; }
+.glow { position: absolute; left: 50%; top: 60%; width: 140cqmax; height: 140cqmax; translate: -50% -50%; background: radial-gradient(closest-side, rgb(255 90 31 / .13), transparent 70%); opacity: 0; pointer-events: none; }
+
+/* Type */
+.t { margin: 0; text-align: center; text-wrap: balance; will-change: opacity, transform, filter; }
+.xl { font: 600 calc(var(--s) * 6.4)/1.04 var(--sans); letter-spacing: -.045em; }
+.xxl { font: 700 calc(var(--s) * 15)/.9 var(--sans); letter-spacing: -.06em; }
+.lg { font: 600 calc(var(--s) * 4.6)/1.08 var(--sans); letter-spacing: -.04em; }
+.md { font: 500 calc(var(--s) * 2.6)/1.3 var(--sans); letter-spacing: -.02em; color: var(--dim); }
+.dim { color: var(--dim); }
+.tang { color: var(--tang); }
+.stack { display: flex; flex-direction: column; align-items: center; gap: calc(var(--s) * 1.6); }
+
+/* The idea, sketched */
+.sketch { width: min(62cqw, 92cqh); aspect-ratio: 16 / 10; position: relative; }
+.vertical .sketch { width: 86cqw; }
+.sketch svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.sketch rect, .sketch line, .sketch circle { fill: none; stroke: #3a3a42; stroke-width: 1.4; stroke-dasharray: 5 6; vector-effect: non-scaling-stroke; }
+.sketch .cursor { stroke: var(--tang); stroke-dasharray: none; stroke-width: 2.2; }
+
+/* Prices */
+.prices { display: flex; align-items: baseline; justify-content: center; gap: calc(var(--s) * 5); margin-top: calc(var(--s) * 2); flex-wrap: wrap; }
+.price { font: 600 calc(var(--s) * 9)/1 var(--sans); letter-spacing: -.05em; font-variant-numeric: tabular-nums; }
+.price small { font: 500 calc(var(--s) * 2.2) var(--sans); letter-spacing: 0; color: var(--dim); margin-left: .3em; }
+
+/* Logo */
+.lockup { display: flex; flex-direction: column; align-items: center; gap: calc(var(--s) * 2.4); }
+.lockup svg { width: calc(var(--s) * 14); height: calc(var(--s) * 14); }
+.word { font: 700 calc(var(--s) * 8)/1 var(--sans); letter-spacing: -.055em; }
+
+/* Models */
+.models { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(var(--s) * 1.2) calc(var(--s) * 3.2); max-width: 88cqw; }
+.models span { font: 500 calc(var(--s) * 3.4)/1.2 var(--sans); letter-spacing: -.03em; }
+.models b { font-weight: 600; }
+
+/* How it works */
+.how { display: grid; grid-template-columns: auto auto auto; align-items: center; gap: calc(var(--s) * 3); }
+.vertical .how { grid-template-columns: 1fr; justify-items: center; }
+.card { background: var(--ink-2); border: 1px solid var(--line); border-radius: calc(var(--s) * 1.6); padding: calc(var(--s) * 1.6); }
+.vid { width: calc(var(--s) * 26); }
+.vid .scr { aspect-ratio: 16 / 9; border-radius: calc(var(--s) * 1); background: #1d2a4d; display: grid; place-items: center; position: relative; overflow: hidden; }
+.vid .scr i { width: calc(var(--s) * 4.4); height: calc(var(--s) * 4.4); border-radius: 50%; background: #fff; display: block; }
+.vid .bar { height: calc(var(--s) * .6); border-radius: 9px; background: var(--line); margin-top: calc(var(--s) * 1.2); overflow: hidden; }
+.vid .bar i { display: block; height: 100%; width: 0; background: var(--tang); }
+.vid p { margin: calc(var(--s) * 1) 0 0; font: 500 calc(var(--s) * 1.4) var(--mono); color: var(--dim); display: flex; justify-content: space-between; }
+.arrow { font: 500 calc(var(--s) * 3) var(--sans); color: var(--dim); }
+.vertical .arrow { rotate: 90deg; }
+.credits { font: 600 calc(var(--s) * 7)/1 var(--sans); letter-spacing: -.05em; color: var(--tang); text-align: center; }
+.credits small { display: block; font: 500 calc(var(--s) * 1.6) var(--mono); color: var(--dim); letter-spacing: .14em; text-transform: uppercase; margin-top: calc(var(--s) * 1); }
+
+/* Her work */
+.frame { position: absolute; inset: 0; overflow: hidden; }
+.frame img { position: absolute; inset: -3%; width: 106%; height: 106%; object-fit: cover; object-position: top; }
+.frame::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 45%, rgb(10 10 11 / .82)); }
+.vertical .frame img { object-fit: contain; object-position: center 30%; background: var(--ink); }
+.caption { position: absolute; left: 0; right: 0; bottom: 9%; z-index: 2; }
+.tag { font: 500 calc(var(--s) * 1.5) var(--mono); letter-spacing: .24em; text-transform: uppercase; color: var(--dim); }
+
+/* End card */
+.cta { display: inline-block; margin-top: calc(var(--s) * 1.4); background: var(--white); color: var(--ink); border-radius: 999px; padding: .75em 1.6em; font: 600 calc(var(--s) * 2) var(--sans); }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.btn-c { border: 1px solid var(--line); background: var(--ink-2); color: var(--white); border-radius: 8px; padding: 7px 12px; font: 500 13px/1 var(--sans); cursor: pointer; }
+.btn-c.primary { background: var(--tang); border-color: var(--tang); }
+.btn-c:focus-visible, input:focus-visible { outline: 2px solid var(--tang); outline-offset: 2px; }
+.scrub { flex: 1 1 220px; min-width: 0; accent-color: var(--tang); }
+.time { font: 500 12px/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 13px; margin: 0; }
+.note a { color: var(--white); }
+.recording body, .recording .page { padding: 0; margin: 0; max-width: none; background: var(--ink); }
+.recording .head, .recording .controls, .recording .note { display: none; }
+.recording .stage { border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; max-width: none; }
+</style>
+
+<div class="page">
+  <div class="head">
+    <h1>Wanlly: the story</h1>
+    <p>56 seconds &middot; sound on</p>
+  </div>
+  <div class="stage-wrap">
+    <div class="stage" id="stage" aria-label="Wanlly story film">
+      <div class="glow" id="glow"></div>
+
+      <!-- 1. Somewhere in Nairobi -->
+      <div class="layer"><div class="stack">
+        <p class="t xl" data-in="800" data-out="4300">Somewhere in Nairobi,</p>
+        <p class="t xl dim" data-in="2100" data-out="4300">a student has an idea.</p>
+      </div></div>
+
+      <!-- 2. She can see it -->
+      <div class="layer"><div class="stack">
+        <div class="sketch" id="sketch" data-in="4700" data-out="9500">
+          <svg viewBox="0 0 160 100" preserveAspectRatio="none">
+            <rect x="0" y="0" width="160" height="100" rx="3"/>
+            <line x1="10" y1="12" x2="40" y2="12"/><line x1="110" y1="12" x2="150" y2="12"/>
+            <rect x="10" y="26" width="70" height="20" rx="2"/><line x1="10" y1="54" x2="60" y2="54"/>
+            <rect x="10" y="62" width="26" height="8" rx="4"/><rect x="92" y="24" width="58" height="50" rx="3"/>
+            <circle cx="121" cy="49" r="13"/><rect x="10" y="80" width="140" height="12" rx="2"/>
+            <line class="cursor" id="cur" x1="12" y1="28" x2="12" y2="44"/>
+          </svg>
+        </div>
+        <p class="t md" data-in="5800" data-out="9300">She can already see it.</p>
+      </div></div>
+
+      <!-- 3. The price -->
+      <div class="layer"><div class="stack">
+        <p class="t lg dim" data-in="10000" data-out="14600">But the best AI tools cost</p>
+        <div class="prices">
+          <span class="t price" data-in="11100" data-out="14600">$20</span>
+          <span class="t price" data-in="11800" data-out="14600">$100</span>
+          <span class="t price tang" data-in="12500" data-out="14600">$200<small>a month</small></span>
+        </div>
+      </div></div>
+      <div class="layer"><p class="t xl" data-in="15000" data-out="17600">For most students here,<br><span class="dim">that&rsquo;s more than a month&rsquo;s rent.</span></p></div>
+
+      <!-- 4. The truth -->
+      <div class="layer"><div class="stack">
+        <p class="t xl" data-in="18000" data-out="23000">Talent is everywhere.</p>
+        <p class="t xl dim" data-in="19900" data-out="23000">Access isn&rsquo;t.</p>
+      </div></div>
+
+      <!-- 5. Until now -->
+      <div class="layer"><p class="t xl" data-in="24300" data-out="26700">Until now.</p></div>
+      <div class="layer"><div class="lockup" data-in="27000" data-out="29800">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><g id="spinA" style="transform-origin:32px 32px"><defs><mask id="storyA" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#storyA)"/></g></svg>
+        <span class="word">Wanlly</span>
+      </div></div>
+
+      <!-- 6. The models, free -->
+      <div class="layer"><div class="stack" style="gap:calc(var(--s) * 3)">
+        <p class="t lg" data-in="30200" data-out="34200">The world&rsquo;s most capable AI.</p>
+        <div class="models">
+          <span class="t" data-in="31100" data-out="34200"><b>Claude</b> Opus</span>
+          <span class="t" data-in="31600" data-out="34200"><b>Claude</b> Sonnet</span>
+          <span class="t" data-in="32100" data-out="34200"><b>Gemini</b></span>
+          <span class="t" data-in="32600" data-out="34200"><b>DeepSeek</b></span>
+          <span class="t" data-in="33100" data-out="34200"><b>Kimi</b></span>
+        </div>
+      </div></div>
+      <div class="layer"><p class="t xxl" data-in="34600" data-out="37600">Free<span class="tang">.</span></p></div>
+
+      <!-- 7. How -->
+      <div class="layer"><div class="stack" style="gap:calc(var(--s) * 3.4)">
+        <div class="how" data-in="38000" data-out="43200">
+          <div class="card vid"><div class="scr"><i></i></div><div class="bar"><i id="vbar"></i></div><p><span>Sponsored</span><span id="vsec">0:00 / 0:20</span></p></div>
+          <span class="arrow">&rarr;</span>
+          <div class="credits" id="cr">+4<small>credits</small></div>
+        </div>
+        <p class="t lg" id="howline" data-in="38200" data-out="43200"><span id="h1">Watch a short sponsor video.</span></p>
+      </div></div>
+
+      <!-- 8. What she builds -->
+      <div class="layer" style="padding:0" id="work"></div>
+
+      <!-- 9. End -->
+      <div class="layer"><div class="stack" style="gap:calc(var(--s) * 2.2)">
+        <div class="lockup" data-in="51200" data-out="99999" style="gap:calc(var(--s) * 1.6)">
+          <svg viewBox="0 0 64 64" aria-hidden="true" style="width:calc(var(--s) * 10);height:calc(var(--s) * 10)"><g style="transform-origin:32px 32px"><defs><mask id="storyB" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#storyB)"/></g></svg>
+        </div>
+        <p class="t xl" data-in="51800" data-out="99999">Frontier AI.</p>
+        <p class="t lg dim" data-in="52800" data-out="99999">Free for everyone with an idea.</p>
+        <span class="t cta" data-in="54000" data-out="99999">Join the beta</span>
+      </div></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn-c primary" id="play" type="button">Play with sound</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="58000" step="10" value="0" aria-label="Position in the film">
+    <span class="time" id="time">0:00 / 0:58</span>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
+  </div>
+  <p class="note">Models are named as the ones Wanlly runs; the designs are example pages made for Wanlly. Music is original and synthesized. See also <a href="showcase.html">the showcase</a>.</p>
+  <audio id="audio" src="story/wanlly-story-music.m4a" preload="auto"></audio>
+</div>
+
+<script>
+(function () {
+  const TOTAL = 58000;
+  const el = (id) => document.getElementById(id);
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const smooth = (x) => { x = clamp(x); return x * x * (3 - 2 * x); };
+  const out = (x) => 1 - Math.pow(1 - clamp(x), 3);
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+  const IMG = (p) => `../public/styles/${p}.webp`;
+
+  // Her work: slow crossfades with a gentle push-in, each with a quiet caption.
+  const WORK = [
+    ["restaurant", "She built hers on a Saturday.", 43600, 46400, "lg"],
+    ["app/kids", "Apps.", 46000, 48000, "lg"],
+    ["slides/afro-modern", "Slides.", 47600, 49600, "lg"],
+    ["organic", "Websites.", 49200, 51000, "lg"],
+  ];
+  const work = el("work");
+  const frames = WORK.map(([img, cap, a, b, kind]) => {
+    const f = document.createElement("div");
+    f.className = "frame";
+    f.innerHTML = `<img src="${IMG(img)}" alt=""><div class="caption"><p class="t ${kind}" style="text-align:center">${cap}</p></div>`;
+    work.appendChild(f);
+    return { f, img: f.querySelector("img"), cap: f.querySelector(".caption"), a, b };
+  });
+
+  // Every [data-in] fades in slowly (rise and un-blur) and out the same way.
+  const items = [...document.querySelectorAll("[data-in]")].map((n) => ({ n, a: +n.dataset.in, b: +n.dataset.out }));
+  const HOW = [["Watch a short sponsor video.", 38200], ["Earn credits.", 39900], ["Build anything.", 41500]];
+
+  function render(t) {
+    for (const { n, a, b } of items) {
+      const k = Math.min(smooth((t - a) / 900), smooth((b - t) / 700));
+      n.style.opacity = String(k);
+      n.style.transform = `translateY(${(1 - smooth((t - a) / 900)) * 1.6}cqh)`;
+      n.style.filter = k < 1 ? `blur(${(1 - k) * 8}px)` : "none";
+    }
+    // The idea draws itself: dashes march, a cursor blinks.
+    el("sketch").querySelectorAll("rect,line,circle").forEach((s, i) => { if (s.id !== "cur") s.style.strokeDashoffset = String(-t / 40 + i * 3); });
+    el("cur").style.opacity = Math.floor(t / 530) % 2 ? "0" : "1";
+    // The logo turns gently into place.
+    el("spinA").style.transform = `rotate(${(1 - out((t - 27000) / 1800)) * -120}deg)`;
+    // How: the video plays, credits land, the line changes.
+    const p = clamp((t - 38400) / 1500);
+    el("vbar").style.width = `${p * 100}%`;
+    el("vsec").textContent = `0:${String(Math.round(p * 20)).padStart(2, "0")} / 0:20`;
+    const c = out((t - 39900) / 500);
+    el("cr").style.opacity = String(c);
+    el("cr").style.transform = `scale(${0.8 + 0.2 * c})`;
+    const now = HOW.filter(([, at]) => t >= at).pop() ?? HOW[0];
+    if (el("h1").textContent !== now[0]) el("h1").textContent = now[0];
+    const since = t - now[1];
+    el("h1").style.opacity = String(smooth(since / 500));
+    // Her work: crossfades and a slow push.
+    for (const { f, img, cap, a, b } of frames) {
+      const k = Math.min(smooth((t - a) / 900), smooth((b - t) / 900));
+      f.style.opacity = String(k);
+      img.style.transform = `scale(${1 + clamp((t - a) / (b - a)) * 0.06})`;
+      cap.style.opacity = String(Math.min(smooth((t - a - 500) / 800), smooth((b - t) / 600)));
+    }
+    // A warm glow arrives with "Until now" and stays for the rest of the film.
+    el("glow").style.opacity = String(smooth((t - 24300) / 2500) * (0.75 + 0.25 * Math.sin(t / 2200)));
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  const audio = el("audio");
+  let t = 0, playing = false, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = !audio.paused && audio.readyState >= 2 ? audio.currentTime * 1000 : Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { t = TOTAL; stop(); }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (t >= TOTAL) t = 0; playing = true; el("play").textContent = "Pause"; try { audio.currentTime = t / 1000; audio.play().catch(() => {}); } catch {} }
+  function stop() { playing = false; el("play").textContent = "Play with sound"; audio.pause(); }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); try { audio.currentTime = t / 1000; } catch {} render(t); }
+  el("play").addEventListener("click", () => (playing ? stop() : start()));
+  el("replay").addEventListener("click", () => { t = 0; start(); });
+  el("scrub").addEventListener("input", (e) => seek(+e.target.value));
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["portrait", "4:5"]];
+  let shape = 0;
+  function setShape(i) { shape = i; document.documentElement.classList.remove("vertical", "portrait"); if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]); el("shape").textContent = `Format: ${SHAPES[i][1]}`; }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-portrait") document.documentElement.classList.add("portrait");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+  render(0);
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { last = performance.now(); requestAnimationFrame(frame); });
+})();
+</script>
