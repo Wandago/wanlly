@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { readFirstTouch } from "@/lib/first-touch";
 import { Icon } from "../icon";
 
 const COUNTRIES = ["Kenya", "Nigeria", "Ghana", "Uganda", "Tanzania", "Rwanda", "South Africa", "Egypt", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Brazil", "Mexico", "United Kingdom", "United States", "Other"];
@@ -72,9 +73,10 @@ export function BetaPage() {
 
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const body = Object.fromEntries(new FormData(e.currentTarget));
+    const body: Record<string, unknown> = Object.fromEntries(new FormData(e.currentTarget));
     const ref = new URLSearchParams(window.location.search).get("ref");
     if (ref && !body.ref) body.ref = ref;
+    body.firstTouch = readFirstTouch();
     setBusy(true);
     setError("");
     try {
@@ -172,7 +174,7 @@ export function BetaPage() {
                 <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-build">What do you want to build?
                   <textarea id="b-build" name="build" required rows={3} placeholder="A booking app for my cousin's salon, a study planner, a portfolio…" className={`${field} resize-none`} />
                 </label>
-                <SelectOrType id="b-source" name="source" label="How did you hear about Wanlly?" options={SOURCES} placeholder="Tell us where" field={field} />
+                <SelectOrType id="b-source" name="source" label="How did you hear about Wanlly?" options={SOURCES} placeholder="Tell us where" required field={field} />
                 <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-ref">Invite code <span className="font-normal text-faint">optional</span>
                   <input id="b-ref" name="ref" className={field} />
                 </label>

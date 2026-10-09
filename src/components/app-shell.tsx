@@ -9,6 +9,7 @@ import { applyTheme, type Settings } from "@/lib/settings";
 import { AdRail } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
 import { Tracked } from "./ads/tracked";
+import { NetworkSlot, useNetworkTest } from "./ads/network-slot";
 import { AdsProvider, creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
 import { EarnDialog } from "./earn-dialog";
 import { Interstitial } from "./ads/interstitial";
@@ -62,6 +63,13 @@ function AccountSync() {
 function PhoneBanner() {
   const { dispatch } = useWorkspace();
   const sponsor = useSponsors("phone_banner", RAIL_SPONSORS)[0];
+  const networkTest = useNetworkTest();
+  if (networkTest)
+    return (
+      <div className="flex justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden">
+        <NetworkSlot w={320} h={50} label="Phone banner" />
+      </div>
+    );
   return (
     <div className="flex items-center justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Sponsored">
       <Tracked key={creativeOf(sponsor)} placement="phone_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">

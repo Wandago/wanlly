@@ -57,6 +57,13 @@
       "when": 1791538915154,
       "tag": "0007_advertisers",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791540444241,
+      "tag": "0008_beta_first_touch",
+      "breakpoints": true
     }
   ]
 }

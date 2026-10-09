@@ -34,60 +34,98 @@ export const MAX_OUTPUT: Record<Extract<ToolId, "chat" | "code" | "design">, num
 
 // ---------------------------------------------------------------- Google
 
-let geminiPick: { model: string; at: number } | null = null;
+let geminiPick: { models: string[]; at: number } | null = null;
+
+/** Fallbacks every key can use, tried last. */
+const GEMINI_FALLBACKS = ["gemini-flash-latest", "gemini-2.5-flash"];
+
+/** Plain Flash models, best first: newest stable ones, then one preview, then the fallbacks. */
+export function flashOrder(names: string[]): string[] {
+  const version = (n: string) => {
+    const [major, minor = "0"] = n.slice(7).split("-")[0].split(".");
+    return Number(major) * 1000 + Number(minor);
+  };
+  const flash = names
+    .filter((n) => /^gemini-\d+(\.\d+)?-flash(-[\w-]+)?$/.test(n) && !/lite|image|tts|live|audio|exp|thinking|8b/.test(n))
+    .sort((a, b) => version(b) - version(a) || a.length - b.length);
+  const stable = flash.filter((n) => /-flash(-\d{3})?$/.test(n));
+  const preview = flash.filter((n) => !stable.includes(n));
+  return [...new Set([...stable.slice(0, 2), ...preview.slice(0, 1), ...GEMINI_FALLBACKS])];
+}
 
 /**
- * The newest plain Flash model this key can stream from, checked at most once an hour.
- * GEMINI_MODEL pins one instead.
+ * Flash models to try for this key, checked at most once an hour. GEMINI_MODEL pins the first
+ * choice; the others stay as fallbacks.
  */
-async function geminiModel(key: string): Promise<string> {
-  if (process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
-  if (geminiPick && Date.now() - geminiPick.at < 3600_000) return geminiPick.model;
-  let model = "gemini-flash-latest";
-  try {
-    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { "x-goog-api-key": key } });
-    if (!r.ok) console.error("gemini models list failed", r.status);
-    if (r.ok) {
-      const { models = [] } = (await r.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
-      const flash = models
-        .filter((m) => m.supportedGenerationMethods?.includes("streamGenerateContent"))
-        .map((m) => m.name.replace(/^models\//, ""))
-        .filter((n) => /^gemini-\d+(\.\d+)?-flash$/.test(n))
-        .sort((a, b) => parseFloat(b.slice(7)) - parseFloat(a.slice(7)));
-      if (flash[0]) model = flash[0];
-    }
-  } catch {}
-  geminiPick = { model, at: Date.now() };
-  return model;
+export async function geminiModels(key: string): Promise<string[]> {
+  const pinned = process.env.GEMINI_MODEL ? [process.env.GEMINI_MODEL] : [];
+  if (!geminiPick || Date.now() - geminiPick.at > 3600_000) {
+    let models = GEMINI_FALLBACKS;
+    try {
+      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000", { headers: { "x-goog-api-key": key } });
+      if (!r.ok) console.error("gemini models list failed", r.status);
+      if (r.ok) {
+        const { models: list = [] } = (await r.json()) as { models?: { name: string; supportedGenerationMethods?: string[] }[] };
+        models = flashOrder(list.filter((m) => m.supportedGenerationMethods?.includes("generateContent")).map((m) => m.name.replace(/^models\//, "")));
+      }
+    } catch {}
+    geminiPick = { models, at: Date.now() };
+  }
+  return [...new Set([...pinned, ...geminiPick.models])];
 }
+
+/** Google's "too busy" answers: worth another try, or another model. */
+const RETRYABLE = new Set([429, 500, 503, 504]);
+
+const pause = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve, reject) => {
+    const t = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => (clearTimeout(t), reject(signal.reason)), { once: true });
+  });
 
 async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
   const key = process.env.GEMINI_API_KEY!;
-  const model = await geminiModel(key);
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
-    method: "POST",
-    signal,
-    headers: { "content-type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: turns.map((t) => ({
-        role: t.role === "assistant" ? "model" : "user",
-        parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
-      })),
-      generationConfig: { maxOutputTokens: maxTokens },
-    }),
+  const body = JSON.stringify({
+    systemInstruction: { parts: [{ text: system }] },
+    contents: turns.map((t) => ({
+      role: t.role === "assistant" ? "model" : "user",
+      parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
+    })),
+    generationConfig: { maxOutputTokens: maxTokens },
   });
-  if (!res.ok || !res.body) {
-    const raw = await res.text().catch(() => "");
+  // A busy model gets one more try after a pause, then the next model is tried. All of this
+  // happens before any words arrive, so the person only sees a slightly longer wait.
+  const models = await geminiModels(key);
+  const tries = [models[0], ...models].slice(0, 5);
+  let res: Response | null = null;
+  let error: ProviderError | null = null;
+  for (let i = 0; i < tries.length && !res; i++) {
+    const model = tries[i];
+    if (i > 0) await pause(i === 1 ? 1200 : 300, signal);
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
+      method: "POST",
+      signal,
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body,
+    });
+    if (r.ok && r.body) {
+      res = r;
+      break;
+    }
+    const raw = await r.text().catch(() => "");
     let message = raw.slice(0, 300);
     try {
       message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message ?? message;
     } catch {}
-    console.error("gemini error", model, res.status, message);
+    console.error("gemini error", model, r.status, message);
     // 402/403: billing or key problems on Wanlly's side, not something the person can retry.
-    const kind = res.status === 429 ? "busy" : res.status === 402 || res.status === 403 ? "unavailable" : "failed";
-    throw new ProviderError(kind, `Google ${res.status} on ${model}: ${message}`);
+    const kind = RETRYABLE.has(r.status) ? "busy" : r.status === 402 || r.status === 403 ? "unavailable" : "failed";
+    error = new ProviderError(kind, `Google ${r.status} on ${model}: ${message}${i ? ` (try ${i + 1})` : ""}`);
+    // Busy models and ones this key can't use (404) move on to the next; anything else stops.
+    if (!RETRYABLE.has(r.status) && r.status !== 404) break;
+    if (r.status === 404 && tries[i + 1] === model) i++;
   }
+  if (!res?.body) throw error ?? new ProviderError("failed");
   let inputTokens = 0;
   let outputTokens = 0;
   let stop = "end";
@@ -198,7 +236,7 @@ export async function checkProviders() {
     }
     const t = Date.now();
     let text = "";
-    let model = provider === "google" ? await geminiModel(process.env.GEMINI_API_KEY!) : CLAUDE.haiku.api;
+    let model = provider === "google" ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ") : CLAUDE.haiku.api;
     try {
       for await (const ev of streamReply({ modelId, tool: "chat", system: "Reply with one word.", turns: [{ role: "user", text: "Say hello." }], signal })) {
         if (ev.type === "text") text += ev.text;

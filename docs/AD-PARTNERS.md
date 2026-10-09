@@ -93,3 +93,22 @@ Google's rewarded ads for web report the reward in the browser only. Credits fro
 - **Admin → Advertisers:** review applications, reply from your own email, approve, then create a campaign: picture (or an illustration), headline, one line, button, https link, colour, placements, countries, dates, a view cap and the agreed price per 1,000 views. A live preview shows the card as people will see it.
 - **Serving:** active campaigns replace the house sponsors in the slots they're booked for, by country and dates, until their view cap. Clicks open the advertiser's link with `utm_source=wanlly&utm_medium=<placement>&utm_campaign=<id>`. Views and clicks are recorded as `campaign:<id>`; earned money (views x price) shows in Advertisers and in Ads & revenue.
 - **Before the first campaign:** send the advertiser a short insertion order (dates, placements, price, cap, payment terms) and get paid up front for small tests.
+
+## 7. Network test mode and ad sizes (built)
+
+Admin → Ads → **Ad network test** loads Google's public sample ad unit (`/6355419/Travel/Europe/France/Paris`) through Google Publisher Tag, the same code real AdSense or Ad Manager ads use. It never pays. "Show test ads in the app" turns it on for staff, on that device only: the side panel, job cards and phone bar then show Google test ads with their size printed above.
+
+| Size | Name | Where it fits in Wanlly | Google test fill |
+|---|---|---|---|
+| 300×250 | Medium rectangle | Side panel, job cards | Yes |
+| 336×280 | Large rectangle | Job cards on wide screens | No (box shown) |
+| 320×50 | Mobile banner | Phone bar | Yes |
+| 320×100 | Large mobile banner | Not used yet | No |
+| 300×600 | Half page | Side panel on tall screens, not used yet | No |
+| 728×90 | Leaderboard | Not used yet | Yes |
+| 160×600 | Wide skyscraper | Not used | Yes |
+| 970×250 | Billboard | Public pages only, if ever | No |
+
+When an AdSense or Ad Manager account is approved, swap `TEST_UNIT` in `src/components/ads/network-slot.tsx` for the real ad unit paths and decide who sees network ads.
+
+**Meta and TikTok.** Neither sells ads on websites like Wanlly. Meta Audience Network and TikTok's Pangle only serve ads inside mobile apps, so they become options if Wanlly ships an Android or iOS app. Until then, use them the other way round: buy ads on Instagram, Facebook and TikTok that bring people to Wanlly, with `utm_source` set so they show up in Admin → Traffic.

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
+import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { TrendChart } from "./trend-chart";
 
 /* Traffic, ads and revenue, and abuse: the admin tabs that read what the app records. */
@@ -54,6 +55,8 @@ type Traffic = {
   sources: { source: string; views: number; visitors: number }[];
   countries: { country: string; visitors: number; signups: number }[];
   devices: { device: string; visitors: number }[];
+  applicants: { channel: string; stated: string; applications: number; approved: number }[];
+  campaigns: { campaign: string; channel: string; applications: number; approved: number }[];
 };
 
 export function TrafficTab({ days }: { days: 7 | 30 }) {
@@ -112,6 +115,48 @@ export function TrafficTab({ days }: { days: 7 | 30 }) {
           <p className="text-xs text-faint">Tip: add ?utm_source=tiktok (or instagram, x, whatsapp) to links you share, so each channel shows up above.</p>
         </Card>
       </div>
+      <ApplicantSources data={data} />
+    </div>
+  );
+}
+
+/** Where beta applicants came from: what the link or referring site says, next to what they told us. */
+function ApplicantSources({ data }: { data: Traffic }) {
+  const byChannel = new Map<string, { applications: number; approved: number }>();
+  for (const r of data.applicants) {
+    const c = byChannel.get(r.channel) ?? { applications: 0, approved: 0 };
+    byChannel.set(r.channel, { applications: c.applications + r.applications, approved: c.approved + r.approved });
+  }
+  const channels = [...byChannel].sort((a, b) => b[1].applications - a[1].applications);
+  const max = channels[0]?.[1].applications ?? 0;
+  const total = data.applicants.reduce((a, r) => a + r.applications, 0);
+  return (
+    <div className="grid gap-4 lg:grid-cols-2">
+      <Card title="Where beta applicants come from" note="Detected from their first visit: the utm_source on the link, or the site that sent them. Direct means no link or referrer.">
+        {channels.length ? (
+          <Table
+            head={["Channel", "Applications", "Share", "Approved", ""]}
+            numeric={[1, 2, 3]}
+            rows={channels.map(([c, v]) => [c, num(v.applications), pct(v.applications / Math.max(1, total)), num(v.approved), <Bar key="b" value={v.applications} max={max} />])}
+          />
+        ) : (
+          <Empty>No applications in this period.</Empty>
+        )}
+      </Card>
+      <Card title="Detected vs what they said" note="The channel we detected, next to their answer to “How did you hear about Wanlly?”. A gap usually means word of mouth or a shared screenshot.">
+        {data.applicants.length ? (
+          <Table
+            head={["Detected", "They said", "Applications", "Approved"]}
+            numeric={[2, 3]}
+            rows={data.applicants.map((r) => [r.channel, r.stated, num(r.applications), `${num(r.approved)} · ${pct(r.approved / Math.max(1, r.applications))}`])}
+          />
+        ) : (
+          <Empty>No applications in this period.</Empty>
+        )}
+        {!!data.campaigns.length && (
+          <Table head={["Campaign", "Channel", "Applications", "Approved"]} numeric={[2, 3]} rows={data.campaigns.map((r) => [<code key="c" className="font-mono text-xs">{r.campaign}</code>, r.channel, num(r.applications), num(r.approved)])} />
+        )}
+      </Card>
     </div>
   );
 }
@@ -184,7 +229,64 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
           <Empty>No ad views yet.</Empty>
         )}
       </Card>
+      <NetworkTest />
     </div>
+  );
+}
+
+/** Standard network sizes and where each one fits in Wanlly today. */
+const NETWORK_SIZES: { w: number; h: number; name: string; where: string }[] = [
+  { w: 300, h: 250, name: "Medium rectangle", where: "Side panel and job cards. The size most demand buys." },
+  { w: 336, h: 280, name: "Large rectangle", where: "Job cards on wide screens." },
+  { w: 320, h: 50, name: "Mobile banner", where: "Phone bar at the bottom." },
+  { w: 320, h: 100, name: "Large mobile banner", where: "Not used yet. Would need a taller phone bar." },
+  { w: 300, h: 600, name: "Half page", where: "Not used yet. Fits the side panel on tall screens, instead of the cover card." },
+  { w: 728, h: 90, name: "Leaderboard", where: "Not used yet. Would need a strip above or below the page." },
+  { w: 160, h: 600, name: "Wide skyscraper", where: "Not used. The side panel is wide enough for 300 px ads." },
+  { w: 970, h: 250, name: "Billboard", where: "Not used. Only on the public pages, if ever." },
+];
+
+/** Google test ads in every standard size, and a switch to show them in the app on this device. */
+function NetworkTest() {
+  const [on, setOn] = useNetworkTestSwitch();
+  const [gallery, setGallery] = useState(false);
+  return (
+    <Card
+      title="Ad network test"
+      note="Google's public test ads, served by Google Publisher Tag, the same way AdSense or Ad Manager ads will be. They never pay. Use them to check sizes and layout before an account is approved."
+      actions={
+        <button type="button" className={btnGhost} onClick={() => setOn(!on)} aria-pressed={on}>
+          {on ? "Hide test ads in the app" : "Show test ads in the app"}
+        </button>
+      }
+    >
+      <p className="text-[13px] text-muted">
+        {on
+          ? "On for this device. Open chat or design: the side panel, job cards and the phone bar now show Google test ads with their size above them. Only staff see them."
+          : "Switch on to see Google test ads in the app's ad slots on this device. Only staff accounts see them; everyone else keeps seeing sponsors."}
+      </p>
+      {!gallery ? (
+        <button type="button" className={`${btnGhost} self-start`} onClick={() => setGallery(true)}>
+          Load every standard size
+        </button>
+      ) : (
+        <ul className="flex flex-col">
+          {NETWORK_SIZES.map((s) => (
+            <li key={`${s.w}x${s.h}`} className="flex flex-col gap-2 border-t border-line py-3 first:border-t-0">
+              <div className="text-[13px]">
+                <b className="font-semibold">
+                  {s.name} · {s.w}×{s.h}
+                </b>{" "}
+                <span className="text-muted">{s.where}</span>
+              </div>
+              <div className="overflow-x-auto pb-1">
+                <NetworkSlot w={s.w} h={s.h} />
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
   );
 }
 

@@ -7,6 +7,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { openSponsor } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { DisplayCreative, VideoFrame, useWidth } from "./creatives";
+import { NetworkSlot, useNetworkTest } from "./network-slot";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -161,6 +162,14 @@ function FittedDisplay({ sizes, sponsor, align = "center" }: { sizes: (keyof typ
   const [ref, width] = useWidth<HTMLDivElement>();
   const size = width ? pickSize(sizes, width) : null;
   const showSize = useContext(ShowAdSizes);
+  const networkTest = useNetworkTest();
+  if (networkTest && size) {
+    return (
+      <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>
+        <NetworkSlot w={DISPLAY_SIZES[size].w} h={DISPLAY_SIZES[size].h} label="Job card" />
+      </div>
+    );
+  }
   return (
     <div ref={ref} className={`flex w-full ${align === "center" ? "justify-center" : "justify-start"}`}>
       {size ? (

@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when } from "./admin-ui";
+import type { FirstTouch } from "@/lib/first-touch";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
 
 type Tab = "overview" | "traffic" | "ads" | "advertisers" | "abuse" | "users" | "beta" | "messages";
 type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused" | "visitorsToday" | "viewsToday" | "adViewsToday" | "revenueToday" | "costToday", number>;
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
-type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string };
+type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string; channel?: string | null; firstTouch?: FirstTouch | null };
 type Message = { id: number; name: string; email: string; topic: string; message: string; networkCountry: string | null; handledAt: string | null; createdAt: string };
 type User = { id: string; email: string | null; name: string | null; country: string | null; role: string; status: string; createdAt: string; credits: number; spentToday: number; lastActive: string | null };
 
@@ -164,6 +165,13 @@ function Overview({ go }: { go: (t: Tab) => void }) {
   );
 }
 
+/** Detected channel plus the detail behind it: campaign, referring site and first page. */
+function cameFrom(a: Application) {
+  const t = a.firstTouch;
+  const extra = [t?.campaign && `campaign ${t.campaign}`, t?.medium, t?.referrer && t.referrer !== t.source && t.referrer, t?.landing && `landed on ${t.landing}`].filter(Boolean);
+  return `${a.channel}${extra.length ? ` (${extra.join(", ")})` : ""}`;
+}
+
 function inviteMail(a: Application) {
   const site = window.location.origin;
   const first = a.name.split(" ")[0];
@@ -227,7 +235,7 @@ function Beta() {
                 </div>
                 <p className="mt-1 text-[13px] whitespace-pre-wrap">{a.build}</p>
                 <small className="mt-1 block text-xs text-faint">
-                  {[a.country && `Says ${a.country}`, a.networkCountry && `network ${a.networkCountry}`, a.source && `heard via ${a.source}`, a.referralCode && `referred by ${a.referralCode}`, `applied ${when(a.createdAt)}`, `code ${a.inviteCode}`]
+                  {[a.country && `Says ${a.country}`, a.networkCountry && `network ${a.networkCountry}`, a.source && `says heard via ${a.source}`, a.channel && `came from ${cameFrom(a)}`, a.referralCode && `referred by ${a.referralCode}`, `applied ${when(a.createdAt)}`, `code ${a.inviteCode}`]
                     .filter(Boolean)
                     .join(" · ")}
                 </small>

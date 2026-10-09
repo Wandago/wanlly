@@ -152,6 +152,10 @@ export const betaApplications = pgTable(
     referralCode: text("referral_code"),
     inviteCode: text("invite_code").notNull(),
     networkCountry: text("network_country"),
+    /** utm tags, referring site and landing page from their first visit. */
+    firstTouch: jsonb("first_touch"),
+    /** The channel worked out from firstTouch, for grouping: TikTok, Search, Direct… */
+    channel: text("channel"),
     status: text("status", { enum: ["pending", "approved", "declined"] }).notNull().default("pending"),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewedBy: text("reviewed_by"),

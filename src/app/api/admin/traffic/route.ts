@@ -3,8 +3,9 @@ import { CAN, rangeDays, requireStaff } from "@/lib/admin";
 
 const rows = (r: unknown) => r as Record<string, unknown>[];
 const n = (v: unknown) => Number(v ?? 0);
+const orEmpty = (p: PromiseLike<unknown>) => Promise.resolve(p).catch(() => []);
 
-/** Visitors and page views by day, page, source, country and device. */
+/** Visitors and page views by day, page, source, country and device, and where beta applicants came from. */
 export async function GET(req: Request) {
   const staff = await requireStaff(req, CAN.view);
   if (staff instanceof Response) return staff;
@@ -12,7 +13,7 @@ export async function GET(req: Request) {
   const since = `${days - 1} days`;
   try {
     const q = rawSql();
-    const [daily, pages, sources, countries, devices] = await Promise.all([
+    const [daily, pages, sources, countries, devices, applicants, campaigns] = await Promise.all([
       q`with d as (select generate_series(date_trunc('day', now()) - ${since}::interval, date_trunc('day', now()), interval '1 day') as day)
         select to_char(d.day, 'YYYY-MM-DD') as day, count(v.id)::int as views, count(distinct v.visitor)::int as visitors
         from d left join page_views v on v.created_at >= d.day and v.created_at < d.day + interval '1 day'
@@ -31,6 +32,15 @@ export async function GET(req: Request) {
         order by v.visitors desc limit 20`,
       q`select device, count(distinct visitor)::int as visitors from page_views
         where created_at >= date_trunc('day', now()) - ${since}::interval group by device order by visitors desc`,
+      // Empty until migration 0008 adds the channel columns.
+      orEmpty(q`select coalesce(channel, 'Not tracked') as channel, coalesce(source, 'Not said') as stated, count(*)::int as applications,
+          count(*) filter (where status = 'approved')::int as approved
+        from beta_applications where created_at >= date_trunc('day', now()) - ${since}::interval
+        group by 1, 2 order by applications desc limit 30`),
+      orEmpty(q`select first_touch->>'campaign' as campaign, coalesce(channel, 'Direct') as channel, count(*)::int as applications,
+          count(*) filter (where status = 'approved')::int as approved
+        from beta_applications where first_touch->>'campaign' is not null and created_at >= date_trunc('day', now()) - ${since}::interval
+        group by 1, 2 order by applications desc limit 15`),
     ]);
     return Response.json({
       days,
@@ -39,6 +49,8 @@ export async function GET(req: Request) {
       sources: rows(sources).map((r) => ({ source: String(r.source), views: n(r.views), visitors: n(r.visitors) })),
       countries: rows(countries).map((r) => ({ country: String(r.country), visitors: n(r.visitors), signups: n(r.signups) })),
       devices: rows(devices).map((r) => ({ device: String(r.device), visitors: n(r.visitors) })),
+      applicants: rows(applicants).map((r) => ({ channel: String(r.channel), stated: String(r.stated), applications: n(r.applications), approved: n(r.approved) })),
+      campaigns: rows(campaigns).map((r) => ({ campaign: String(r.campaign), channel: String(r.channel), applications: n(r.applications), approved: n(r.approved) })),
     });
   } catch (e) {
     console.error("admin traffic failed", e);

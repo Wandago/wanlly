@@ -7,6 +7,7 @@ import { Icon } from "../icon";
 import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
 import { Tracked } from "./tracked";
+import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { creativeOf, openSponsor, useSponsors } from "@/lib/ads-context";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
@@ -79,6 +80,12 @@ export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Spon
 /** A network banner (300×250) placed in the same rounded frame, so it never looks pasted in. */
 function DisplayFrame({ sponsor }: { sponsor: Sponsor }) {
   const { dispatch } = useWorkspace();
+  if (useNetworkTest())
+    return (
+      <div className="rounded-2xl border border-line bg-surface p-2 py-3 shadow-soft">
+        <NetworkSlot w={300} h={250} label="Side panel" />
+      </div>
+    );
   return (
     <div className="flex flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-soft">
       <div className="px-1">
