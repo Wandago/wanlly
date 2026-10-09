@@ -1,0 +1,42 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:1080px;background:#05060b;color:#f4f3ff;font:400 16px/1.5 "Space Grotesk",sans-serif;overflow:hidden;position:relative}
+canvas{position:absolute;inset:0}
+nav{position:relative;display:flex;align-items:center;gap:36px;padding:30px 60px;color:#a9a6c9}
+nav b{color:#fff;font-size:20px;font-weight:700;margin-right:auto;letter-spacing:-.02em}
+nav span.c{color:#05060b;background:#fff;padding:9px 18px;border-radius:10px;font-weight:600}
+.copy{position:absolute;left:60px;bottom:150px;width:680px}
+.tag{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:#9b8cff}
+h1{font:700 104px/.95 "Space Grotesk";letter-spacing:-.05em;margin:18px 0 22px}
+p{font-size:20px;color:#b9b6d8;width:520px}
+.btns{display:flex;gap:12px;margin-top:30px}.btns span{padding:14px 24px;border-radius:12px;font-weight:600}
+.b1{background:#7c5cff;color:#fff}.b2{border:1px solid #2c2a48;color:#d9d6f5}
+.spec{position:absolute;right:60px;bottom:150px;display:flex;flex-direction:column;gap:18px;text-align:right}
+.spec b{display:block;font:600 40px/1 "Space Grotesk";letter-spacing:-.03em}.spec small{color:#7d7aa0;letter-spacing:.12em;text-transform:uppercase;font-size:12px}
+</style></head><body>
+<canvas id="c" width="1440" height="1080"></canvas>
+<nav><b>Orbit Labs</b><span>Research</span><span>Platform</span><span>Careers</span><span class="c">Request access</span></nav>
+<div class="copy"><span class="tag">Spatial computing · Nairobi</span><h1>See your data in three dimensions.</h1><p>Turn sensor feeds from farms, fleets and factories into a living 3D model you can walk through.</p><div class="btns"><span class="b1">Book a demo</span><span class="b2">Watch the film</span></div></div>
+<div class="spec"><div><b>2.4B</b><small>Points rendered / s</small></div><div><b>38ms</b><small>Sensor to screen</small></div></div>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}</script>
+<script type="module">
+import * as THREE from "three";
+const r = new THREE.WebGLRenderer({ canvas: document.getElementById("c"), antialias: true, preserveDrawingBuffer: true });
+r.setSize(1440, 1080, false); r.setClearColor(0x05060b);
+const s = new THREE.Scene(); s.fog = new THREE.Fog(0x05060b, 6, 16);
+const cam = new THREE.PerspectiveCamera(40, 1440 / 1080, 0.1, 100); cam.position.set(0, 0.2, 8.5);
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(1.5, 0.48, 260, 40), new THREE.MeshStandardMaterial({ color: 0x7c5cff, metalness: 0.65, roughness: 0.22 }));
+knot.position.set(2.3, 0.7, 0); knot.rotation.set(0.5, 0.8, 0.2); s.add(knot);
+const wire = new THREE.Mesh(new THREE.IcosahedronGeometry(3.4, 1), new THREE.MeshBasicMaterial({ color: 0x2a2550, wireframe: true }));
+wire.position.copy(knot.position); s.add(wire);
+const g = new THREE.BufferGeometry(); const n = 2200; const p = new Float32Array(n * 3);
+for (let i = 0; i < n; i++) { p[i*3] = (Math.random() - .5) * 22; p[i*3+1] = (Math.random() - .5) * 14; p[i*3+2] = (Math.random() - .5) * 10 - 2; }
+g.setAttribute("position", new THREE.BufferAttribute(p, 3)); s.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x9b8cff, size: 0.03 })));
+s.add(new THREE.AmbientLight(0x6655aa, 0.6));
+const l1 = new THREE.DirectionalLight(0xffffff, 2.2); l1.position.set(4, 5, 6); s.add(l1);
+const l2 = new THREE.PointLight(0x00d4ff, 30, 20); l2.position.set(-2, -2, 4); s.add(l2);
+r.render(s, cam); window.__ready = true;
+</script>
+</body></html>

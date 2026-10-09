@@ -1,0 +1,43 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:1080px;background:#09090b;color:#fafafa;font:400 15px/1.5 Geist,sans-serif;overflow:hidden;position:relative}
+.glow{position:absolute;left:50%;top:-260px;width:1100px;height:700px;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(190,242,100,.18),transparent);pointer-events:none}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1px,transparent 1px);background-size:28px 28px;mask-image:linear-gradient(#000 0,transparent 70%)}
+nav{position:relative;display:flex;align-items:center;gap:36px;padding:26px 64px;color:#a1a1aa;font-weight:500}
+nav b{color:#fff;font-size:18px;font-weight:600;margin-right:auto;display:flex;align-items:center;gap:10px}
+nav b i{width:22px;height:22px;border-radius:6px;background:#bef264;display:block}
+.cta{color:#09090b;background:#fafafa;padding:8px 16px;border-radius:999px;font-weight:600}
+.hero{position:relative;text-align:center;padding:44px 0 0}
+.pill{display:inline-flex;gap:10px;align-items:center;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:6px 14px 6px 6px;font:500 13px Geist;color:#d4d4d8}
+.pill span{background:#bef264;color:#09090b;border-radius:999px;padding:2px 9px;font-weight:600}
+h1{font:600 84px/1 Geist,sans-serif;letter-spacing:-.055em;margin:26px auto 22px;max-width:1000px}
+h1 em{font-style:normal;color:#bef264}
+.sub{color:#a1a1aa;font-size:20px;max-width:620px;margin:0 auto}
+.btns{display:flex;justify-content:center;gap:12px;margin-top:34px}
+.b1{background:#bef264;color:#09090b;font-weight:600;padding:13px 22px;border-radius:999px}
+.b2{border:1px solid rgba(255,255,255,.14);padding:13px 22px;border-radius:999px;font-family:"Geist Mono";font-size:14px;color:#d4d4d8}
+.win{position:relative;margin:48px auto 0;width:1120px;height:420px;border-radius:16px;border:1px solid rgba(255,255,255,.1);background:#111113;box-shadow:0 40px 120px rgba(0,0,0,.6);overflow:hidden;display:grid;grid-template-columns:1fr 1fr}
+.bar{grid-column:1/3;height:44px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:center;gap:8px;padding:0 16px}
+.bar i{width:11px;height:11px;border-radius:50%;background:#27272a}
+.code{padding:24px 28px;font:400 14px/1.9 "Geist Mono",monospace;color:#a1a1aa;border-right:1px solid rgba(255,255,255,.08)}
+.k{color:#c4b5fd}.s{color:#bef264}.c{color:#52525b}
+.stats{padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:14px;align-content:start}
+.tile{border:1px solid rgba(255,255,255,.08);background:#161618;border-radius:12px;padding:16px}
+.tile small{color:#71717a;font:500 12px "Geist Mono"}.tile b{display:block;font-size:30px;font-weight:600;letter-spacing:-.03em;margin-top:6px}
+.tile.w{grid-column:1/3}.spark{height:58px;margin-top:10px}
+</style></head><body>
+<div class="glow"></div><div class="dots"></div>
+<nav><b><i></i>Relay</b><span>Product</span><span>Docs</span><span>Pricing</span><span>Changelog</span><span class="cta">Start free</span></nav>
+<section class="hero">
+<span class="pill"><span>New</span>Relay 2.0 — webhooks that never miss</span>
+<h1>Payments infrastructure for <em>Africa’s</em> next million apps</h1>
+<p class="sub">One API for M-Pesa, cards and bank transfers. Live in an afternoon, reliable at any scale.</p>
+<div class="btns"><span class="b1">Get your API key</span><span class="b2">npm i @relay/sdk</span></div>
+<div class="win"><div class="bar"><i></i><i></i><i></i></div>
+<div class="code"><span class="c">// charge a customer with M-Pesa</span><br><span class="k">const</span> charge = <span class="k">await</span> relay.charges.create({<br>&nbsp;&nbsp;amount: <span class="s">2500</span>,<br>&nbsp;&nbsp;currency: <span class="s">"KES"</span>,<br>&nbsp;&nbsp;method: <span class="s">"mpesa"</span>,<br>&nbsp;&nbsp;phone: <span class="s">"+254 712 345 678"</span>,<br>});<br><span class="c">// → status: "succeeded" in 4.2s</span></div>
+<div class="stats"><div class="tile"><small>UPTIME · 90D</small><b>99.99%</b></div><div class="tile"><small>MEDIAN SETTLE</small><b>4.2s</b></div>
+<div class="tile w"><small>VOLUME · THIS WEEK</small><b>KES 84.2M</b><svg class="spark" viewBox="0 0 480 58" preserveAspectRatio="none"><path d="M0 50 L40 44 80 46 120 36 160 38 200 28 240 30 280 20 320 24 360 14 400 16 440 8 480 6" fill="none" stroke="#bef264" stroke-width="2.5"/></svg></div></div>
+</div></section>
+</body></html>

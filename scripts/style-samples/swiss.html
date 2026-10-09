@@ -1,0 +1,34 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:1080px;background:#fff;color:#111;font:500 15px/1.4 "Inter Tight",sans-serif;overflow:hidden;position:relative}
+.grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(12,1fr);column-gap:20px;padding:0 48px;pointer-events:none}
+.grid i{border-left:1px solid #ececec;border-right:1px solid #ececec}
+.wrap{position:relative;padding:40px 48px;display:grid;grid-template-columns:repeat(12,1fr);column-gap:20px}
+header{grid-column:1/13;display:flex;justify-content:space-between;font-weight:700;font-size:14px;border-bottom:3px solid #111;padding-bottom:14px}
+h1{grid-column:1/10;font:900 236px/.8 "Inter Tight",sans-serif;letter-spacing:-.065em;margin-top:40px}
+.red{grid-column:10/13;grid-row:2/4;background:#e30613;margin-top:40px;color:#fff;padding:28px;display:flex;flex-direction:column;justify-content:space-between}
+.red b{font:800 120px/.8 "Inter Tight";letter-spacing:-.05em}
+.red span{font-weight:700;font-size:18px;line-height:1.2}
+.sub{grid-column:1/7;font:500 30px/1.15 "Inter Tight";letter-spacing:-.02em;margin-top:36px}
+.list{grid-column:1/13;margin-top:52px;display:grid;grid-template-columns:repeat(4,1fr);column-gap:20px;border-top:3px solid #111}
+.list div{padding-top:16px}
+.list b{display:block;font:800 52px/1 "Inter Tight";letter-spacing:-.04em;margin-bottom:12px}
+.list p{font-size:16px;color:#333}
+.arrow{font-weight:800}
+</style></head><body>
+<div class="grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="wrap">
+<header><span>Nairobi Design Week</span><span>Programme</span><span>Venues</span><span>Tickets →</span><span>12—18.03.2027</span></header>
+<h1>Design<br>Week<br>2027</h1>
+<div class="red"><b>07</b><span>Days of talks,<br>studios and<br>open workshops</span></div>
+<p class="sub">Form, function and the city. A week of design across Nairobi’s studios, streets and markets.</p>
+<div class="list">
+<div><b>01</b><p>Type in public space — signage walk through the CBD</p></div>
+<div><b>02</b><p>Grids for small screens — workshop with M-Pesa design team</p></div>
+<div><b>03</b><p>Print is not dead — risograph studio, Kilimani</p></div>
+<div><b>04</b><p class="arrow">Full programme →</p></div>
+</div>
+</div>
+</body></html>

@@ -51,6 +51,18 @@ export const STYLES: DesignStyle[] = [
 - Avoid: giant hero text inside apps, heavy colour, decorative gradients, more than two font weights per screen.`,
   },
   {
+    id: "corporate",
+    name: "Corporate",
+    blurb: "Trusted, official, data-led",
+    guide: `Art direction: a trustworthy institution, such as a bank, ministry, regulator or listed company: annual reports, official presentations and investor pages.
+- Type: a serious serif for headlines ("IBM Plex Serif" 600 or "Source Serif 4") with a clean sans for everything else ("IBM Plex Sans" 400/500/600). Calm sizes; nothing shouty.
+- Colour: deep navy (#0b2a5b) as the main colour, white and cool light greys (#f6f7f9, #dfe3ea), one restrained gold or green accent for highlights. Green for growth, red only for real declines.
+- Layout: orderly 12-column grid, generous margins, clear sections with eyebrow labels. Key numbers in a KPI strip with dividers; simple bar or line charts with labelled values and years; tables with right-aligned figures.
+- Details: 6–10px radii, thin 1px borders, soft shadows at most, source notes and dates under figures, a clear primary action (download the report, read the statement).
+- Slides: one message per slide as a full-sentence headline, the evidence (chart or 3 numbers) below it, and a small footer with the organisation and slide number.
+- Avoid: playful shapes, bright gradients, stock clichés like handshakes and globes, decorative fonts, and copying any real organisation's logo or name unless the brief is from them.`,
+  },
+  {
     id: "dark-premium",
     name: "Dark premium",
     blurb: "Sleek SaaS launch page",

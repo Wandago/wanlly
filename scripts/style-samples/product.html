@@ -1,0 +1,69 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:1080px;background:#fafafa;color:#09090b;font:400 14px/1.45 Inter,sans-serif;overflow:hidden;display:grid;grid-template-columns:248px 1fr}
+aside{border-right:1px solid #e4e4e7;background:#f4f4f5;padding:20px 14px;display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;padding:4px 10px 18px}
+.brand i{width:26px;height:26px;border-radius:7px;background:#16a34a;display:block}
+aside a{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:#52525b;font-weight:500}
+aside a.on{background:#fff;color:#09090b;box-shadow:0 1px 2px rgba(0,0,0,.06);border:1px solid #e4e4e7}
+aside a svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.7}
+aside small{margin:18px 10px 6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#a1a1aa;font-weight:600}
+main{padding:28px 36px;display:flex;flex-direction:column;gap:24px}
+.top{display:flex;align-items:center;gap:12px}
+.top h1{font-size:24px;font-weight:700;letter-spacing:-.02em;margin-right:auto}
+.btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid #e4e4e7;background:#fff;display:inline-flex;align-items:center;gap:8px;font-weight:500}
+.btn.p{background:#09090b;color:#fff;border-color:#09090b}
+.search{height:36px;width:280px;border-radius:8px;border:1px solid #e4e4e7;background:#fff;display:flex;align-items:center;padding:0 12px;color:#a1a1aa;gap:8px}
+.search kbd{margin-left:auto;font:500 11px Inter;border:1px solid #e4e4e7;border-radius:4px;padding:1px 5px;color:#71717a}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:#fff;border:1px solid #e4e4e7;border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.kpis span{color:#71717a;font-weight:500;font-size:13px}
+.kpis b{display:block;font-size:28px;font-weight:700;letter-spacing:-.02em;margin:6px 0 4px;font-variant-numeric:tabular-nums}
+.up{color:#16a34a;font-weight:600;font-size:12px}.dn{color:#dc2626;font-weight:600;font-size:12px}
+.two{display:grid;grid-template-columns:1.6fr 1fr;gap:16px}
+.chart h3,.side h3{font-size:15px;font-weight:600;margin-bottom:2px}.chart p,.side p{color:#71717a;font-size:13px}
+.bars{display:flex;align-items:flex-end;gap:14px;height:210px;margin-top:22px;border-bottom:1px solid #e4e4e7;padding:0 6px}
+.bars i{flex:1;background:#e4e4e7;border-radius:6px 6px 0 0}.bars i.h{background:#16a34a}
+.lbl{display:flex;justify-content:space-between;padding:8px 6px 0;color:#a1a1aa;font-size:12px}
+.side ul{list-style:none;padding:0;margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.side li{display:flex;align-items:center;gap:10px}.side li em{margin-left:auto;font-style:normal;font-weight:600;font-variant-numeric:tabular-nums}
+.av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:12px;color:#fff}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-weight:500;color:#71717a;font-size:12.5px;padding:10px 12px;border-bottom:1px solid #e4e4e7}
+td{padding:12px;border-bottom:1px solid #f4f4f5;font-variant-numeric:tabular-nums}.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:600}
+.ok{background:#dcfce7;color:#15803d}.wait{background:#fef3c7;color:#b45309}
+</style></head><body>
+<aside><div class="brand"><i></i>Hesabu</div>
+<a class="on"><svg viewBox="0 0 24 24"><path d="M3 12l9-8 9 8M5 10v10h14V10"/></svg>Overview</a>
+<a><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10"/></svg>Sales</a>
+<a><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16"/></svg>Stock</a>
+<a><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Customers</a>
+<a><svg viewBox="0 0 24 24"><path d="M12 3v18M17 7H9.5a3 3 0 000 6h5a3 3 0 010 6H6"/></svg>M-Pesa</a>
+<small>Reports</small>
+<a><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Monthly</a>
+<a><svg viewBox="0 0 24 24"><path d="M6 3h9l5 5v13H6z"/></svg>Tax (KRA)</a>
+</aside>
+<main>
+<div class="top"><h1>Good morning, Amina</h1><div class="search">Search sales, stock… <kbd>⌘K</kbd></div><span class="btn">Export</span><span class="btn p">+ New sale</span></div>
+<div class="kpis">
+<div class="card"><span>Sales today</span><b>KES 48,250</b><span class="up">↑ 12.4% vs last Tue</span></div>
+<div class="card"><span>M-Pesa received</span><b>KES 39,900</b><span class="up">↑ 8.1%</span></div>
+<div class="card"><span>Items low on stock</span><b>7</b><span class="dn">3 out by Friday</span></div>
+<div class="card"><span>Profit this month</span><b>KES 212k</b><span class="up">↑ 4.2%</span></div>
+</div>
+<div class="two">
+<div class="card chart"><h3>Sales this week</h3><p>Daily totals, all payment types</p>
+<div class="bars"><i style="height:48%"></i><i style="height:62%"></i><i style="height:55%"></i><i class="h" style="height:86%"></i><i style="height:70%"></i><i style="height:92%"></i><i style="height:40%"></i></div>
+<div class="lbl"><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span><span>Mon</span><span>Tue</span></div></div>
+<div class="card side"><h3>Top customers</h3><p>This month</p><ul>
+<li><span class="av" style="background:#7c3aed">JM</span>Joseph Mwangi<em>KES 18,400</em></li>
+<li><span class="av" style="background:#ea580c">FA</span>Fatuma Ali<em>KES 12,950</em></li>
+<li><span class="av" style="background:#0891b2">BK</span>Brian Kiprop<em>KES 9,300</em></li>
+<li><span class="av" style="background:#db2777">NW</span>Njeri Wambui<em>KES 7,120</em></li></ul></div>
+</div>
+<div class="card" style="padding:6px 8px"><table><tr><th>Receipt</th><th>Customer</th><th>Items</th><th>Paid with</th><th>Status</th><th style="text-align:right">Amount</th></tr>
+<tr><td>#10482</td><td>Joseph Mwangi</td><td>Cement × 4, Nails 2kg</td><td>M-Pesa</td><td><span class="pill ok">Paid</span></td><td style="text-align:right">KES 4,860</td></tr>
+<tr><td>#10481</td><td>Walk-in</td><td>Paint 4L</td><td>Cash</td><td><span class="pill ok">Paid</span></td><td style="text-align:right">KES 2,300</td></tr>
+<tr><td>#10480</td><td>Fatuma Ali</td><td>Iron sheets × 6</td><td>Credit</td><td><span class="pill wait">Due Fri</span></td><td style="text-align:right">KES 7,800</td></tr></table></div>
+</main></body></html>

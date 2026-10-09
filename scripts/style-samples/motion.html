@@ -1,0 +1,32 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;800;900&family=Geist+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:1080px;background:#0e0e0e;color:#f5f5f0;font:500 16px/1.5 "Inter Tight",sans-serif;overflow:hidden;position:relative}
+nav{display:flex;justify-content:space-between;padding:30px 56px;font:500 13px "Geist Mono";letter-spacing:.08em;text-transform:uppercase;color:#9a9a92}
+nav b{color:#f5f5f0}
+.big{position:absolute;left:40px;top:150px;font:900 250px/.82 "Inter Tight";letter-spacing:-.07em;text-transform:uppercase}
+.big span{display:inline-block}
+.l1 span:nth-child(1){transform:translateY(0)}.l1 span:nth-child(2){transform:translateY(-14px)}.l1 span:nth-child(3){transform:translateY(-30px);color:#ff4d1c}.l1 span:nth-child(4){transform:translateY(-10px)}.l1 span:nth-child(5){transform:translateY(18px)}.l1 span:nth-child(6){transform:translateY(6px)}
+.l2{opacity:1;-webkit-text-stroke:2px #f5f5f0;color:transparent;padding-left:110px}
+.l2 span{transform:translateX(var(--x,0))}
+.blur{filter:blur(3px);opacity:.5}
+.streak{position:absolute;height:3px;background:#ff4d1c;border-radius:3px}
+.side{position:absolute;right:56px;top:640px;width:360px;color:#b9b9b0;font-size:18px}
+.side b{color:#f5f5f0}
+.count{position:absolute;left:56px;bottom:120px;display:flex;gap:64px}
+.count div b{display:block;font:800 72px/1 "Inter Tight";letter-spacing:-.04em}
+.count div small{font:500 12px "Geist Mono";letter-spacing:.1em;text-transform:uppercase;color:#7a7a72}
+.strip{position:absolute;left:0;right:0;bottom:0;height:64px;border-top:1px solid #2a2a2a;display:flex;align-items:center;gap:56px;padding-left:56px;white-space:nowrap;font:700 22px "Inter Tight";color:#7a7a72;text-transform:uppercase}
+.strip i{color:#ff4d1c;font-style:normal}
+.prog{position:absolute;right:56px;bottom:120px;width:300px;height:2px;background:#2a2a2a}.prog i{display:block;width:62%;height:100%;background:#ff4d1c}
+.scroll{position:absolute;right:56px;bottom:136px;font:500 12px "Geist Mono";color:#7a7a72;letter-spacing:.1em}
+</style></head><body>
+<nav><b>Studio Kasi</b><span>Work</span><span>Studio</span><span>Journal</span><span>Contact ↗</span></nav>
+<div class="big"><div class="l1"><span>M</span><span>o</span><span>t</span><span>i</span><span>o</span><span>n</span></div><div class="l2"><span>M</span><span>a</span><span>t</span><span>t</span><span style="--x:16px" class="blur">e</span><span style="--x:36px" class="blur">r</span><span style="--x:60px" class="blur">s</span></div></div>
+<div class="streak" style="left:40px;top:470px;width:120px;opacity:.9"></div><div class="streak" style="left:20px;top:500px;width:200px;opacity:.5"></div><div class="streak" style="left:60px;top:530px;width:80px;opacity:.3"></div>
+<div class="side"><b>We make brands move.</b> Identity, motion and interactive sites for founders from Nairobi to Lagos, built to feel alive on every scroll.</div>
+<div class="count"><div><b>120+</b><small>Launches</small></div><div><b>14</b><small>Awards</small></div><div><b>9</b><small>Countries</small></div></div>
+<span class="scroll">SCROLL — 02 / 06</span><div class="prog"><i></i></div>
+<div class="strip"><span>Brand identity</span><i>✦</i><span>Motion design</span><i>✦</i><span>Web experiences</span><i>✦</i><span>Launch films</span><i>✦</i><span>Brand identity</span></div>
+</body></html>
