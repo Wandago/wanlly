@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { bigserial, boolean, date, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { bigint, bigserial, boolean, date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 /* Credits are integer half-cents of model cost. Balances are never stored: they are the sum of
    ledger entries, which are only ever added, never edited or deleted (see docs/SECURITY.md). */
@@ -136,7 +136,7 @@ export const projects = pgTable("projects", {
   instructions: text("instructions").notNull().default(""),
   modelId: text("model_id").notNull().default("haiku"),
   /** For Design projects: slides, design, codebase or system. */
-  kind: text("kind", { enum: ["slides", "design", "codebase", "system"] }),
+  kind: text("kind", { enum: ["slides", "design", "codebase", "system", "build"] }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   /** Set when deleted. Rows are kept 30 days so a mistake can be undone, then purged. */
@@ -351,4 +351,41 @@ export const images = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("images_user").on(t.userId, t.createdAt), uniqueIndex("images_ref").on(t.refId)],
+);
+
+/** The Builder's project files (src/lib/build.ts): one row per file, edited by the AI step by step. */
+export const buildFiles = pgTable(
+  "build_files",
+  {
+    projectId: bigint("project_id", { mode: "number" })
+      .notNull()
+      .references(() => projects.id),
+    path: text("path").notNull(),
+    content: text("content").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ name: "build_files_pk", columns: [t.projectId, t.path] })],
+);
+
+/**
+ * The Builder's conversation, exactly as sent to the model: a person's message, the model's
+ * reply (text, thinking and file edits) and the edit results. Kept verbatim, in order, so the
+ * next step can continue it and reuse the cache.
+ */
+export const buildSteps = pgTable(
+  "build_steps",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    projectId: bigint("project_id", { mode: "number" })
+      .notNull()
+      .references(() => projects.id),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: jsonb("content").notNull(),
+    modelId: text("model_id"),
+    inputTokens: integer("input_tokens"),
+    outputTokens: integer("output_tokens"),
+    credits: integer("credits"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("build_steps_project").on(t.projectId, t.id)],
 );

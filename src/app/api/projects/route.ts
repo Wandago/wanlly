@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, or, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { smallJson } from "@/lib/forms";
 import { MAX_PROJECTS, projectFields } from "@/lib/projects";
@@ -18,7 +18,8 @@ export async function GET(req: Request) {
     const projects = await db()
       .select(cols)
       .from(p)
-      .where(and(eq(p.ownerId, userId), isNull(p.deletedAt), tool ? eq(p.tool, tool) : undefined))
+      // Builder apps have their own page (/build).
+      .where(and(eq(p.ownerId, userId), isNull(p.deletedAt), or(isNull(p.kind), ne(p.kind, "build")), tool ? eq(p.tool, tool) : undefined))
       .orderBy(desc(p.updatedAt))
       .limit(MAX_PROJECTS);
     return Response.json({ projects });

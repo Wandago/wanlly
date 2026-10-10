@@ -299,6 +299,45 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
   yield { type: "done", inputTokens: billedInput(modelId, final.usage), outputTokens: final.usage.output_tokens, stop };
 }
 
+/** Whether a catalog model runs on Claude, which the Builder needs for its file-editing tool. */
+export const isClaudeModel = (modelId: string) => !!CLAUDE[modelId];
+
+/**
+ * One Builder step: Claude reads the conversation so far and either replies or edits files with
+ * the text editor tool. Text streams to `onText`; the finished message (with its tool calls) is
+ * returned along with the billed input (cache reads at their discount). The prompt is cached, so
+ * each step re-reads the growing conversation at a fraction of the price.
+ */
+export async function claudeBuildStep(opts: {
+  modelId: string;
+  system: string;
+  messages: Anthropic.Beta.BetaMessageParam[];
+  signal: AbortSignal;
+  onText: (text: string) => void;
+}) {
+  if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
+  anthropic ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1 });
+  const m = CLAUDE[opts.modelId];
+  if (!m) throw new ProviderError("unavailable");
+  const stream = anthropic.beta.messages.stream(
+    {
+      model: m.api,
+      max_tokens: 32000,
+      system: opts.system,
+      messages: opts.messages,
+      tools: [{ type: "text_editor_20250728", name: "str_replace_based_edit_tool", max_characters: 40000 }],
+      output_config: { effort: "medium" },
+      cache_control: { type: "ephemeral" },
+    },
+    { signal: opts.signal },
+  );
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") opts.onText(event.delta.text);
+  }
+  const message = await stream.finalMessage();
+  return { message, inputTokens: billedInput(opts.modelId, message.usage), outputTokens: message.usage.output_tokens };
+}
+
 // ---------------------------------------------------------------- NVIDIA (open models)
 
 /*

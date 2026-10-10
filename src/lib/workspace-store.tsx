@@ -298,7 +298,7 @@ export function limitReached(usage: Usage | null, price: number): string | null 
 }
 
 type Body = { credits?: number; floorUnlocked?: boolean; usage?: Usage };
-const accountFrom = (b: Body): Action | null =>
+export const accountFrom = (b: Body): Action | null =>
   typeof b.credits === "number" && b.usage ? { type: "account", credits: b.credits, floorUnlocked: !!b.floorUnlocked, usage: b.usage } : null;
 
 const WorkspaceContext = createContext<Workspace | null>(null);

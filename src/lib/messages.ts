@@ -12,3 +12,12 @@ export const SAY = {
   settingUp: "We're still setting up your account. Refresh the page in a moment.",
   refunded: "Your credits are back in your balance.",
 } as const;
+
+/** Why a job couldn't start, from ledger.spend's reason, in plain words. */
+export function spendMessage(reason: string): string {
+  if (reason === "credits") return "You need a few more credits for this. Watch an ad to top up.";
+  if (reason === "day") return "You've used this session's limit. It resets within 6 hours of your first message.";
+  if (reason === "week") return "You've reached this week's limit. It resets 7 days after it started.";
+  if (reason === "duplicate") return "That's already on its way.";
+  return SAY.busy;
+}

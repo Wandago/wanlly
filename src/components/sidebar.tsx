@@ -15,6 +15,7 @@ import { Ring } from "./credits-button";
 
 const TOOL_LINKS: ToolId[] = ["chat", "code", "design", "images"];
 const PAGES: { href: string; label: string; icon: IconName }[] = [
+  { href: "/build", label: "Builder", icon: "bolt" },
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/coworkers", label: "Coworkers", icon: "users" },
 ];
