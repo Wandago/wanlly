@@ -14,6 +14,7 @@ import { Icon } from "../icon";
 import { Markdown } from "../markdown";
 import { SpinLoader } from "../spin-mark";
 import { BuildShip } from "./build-ship";
+import { ResizeHandle, useDragWidth } from "../resize-handle";
 import { DisplaySlot } from "../ads/display-slot";
 import { RewardedBanner } from "../ads/ad-slot";
 
@@ -33,6 +34,9 @@ const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replac
 export function BuilderView({ id }: { id: number }) {
   const { providers, dispatch, credits } = useWorkspace();
   const reward = useReward();
+  // Panel widths, dragged by the handles between them and kept for next time.
+  const [filesWidth, setFilesWidth] = useDragWidth("wanlly-build-files-w", 220, 140, 420);
+  const [chatWidth, setChatWidth] = useDragWidth("wanlly-build-chat-w", 380, 300, 760);
   // The linked repository, read when a step is sent (kept in the browser by the GitHub panel).
   const repoRef = useRef("");
   useEffect(() => {
@@ -359,7 +363,7 @@ export function BuilderView({ id }: { id: number }) {
   const fixErrors = () => void run(`The preview shows these errors:\n${errors.map((e) => `- ${e}`).join("\n")}\nFind the cause and fix it.`);
 
   const chat = (
-    <section className="flex min-h-0 flex-1 flex-col border-line md:border-l">
+    <section className="flex min-h-0 flex-1 flex-col">
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {choosing ? (
           <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-sm">
@@ -564,7 +568,7 @@ export function BuilderView({ id }: { id: number }) {
   );
 
   const fileList = (
-    <nav aria-label="Files" className="flex min-h-0 flex-col overflow-y-auto py-2 md:w-[220px] md:shrink-0 md:border-r md:border-line">
+    <nav aria-label="Files" className="flex min-h-0 flex-1 flex-col overflow-y-auto py-2">
       <div className="flex items-center justify-between px-3 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">
         Files <span className="font-mono normal-case">{files.length}</span>
       </div>
@@ -687,9 +691,15 @@ export function BuilderView({ id }: { id: number }) {
         ))}
       </div>
       <div className="hidden min-h-0 flex-1 md:flex">
-        {fileList}
+        <div style={{ width: filesWidth }} className="flex min-h-0 shrink-0 flex-col">
+          {fileList}
+        </div>
+        <ResizeHandle width={filesWidth} onWidth={setFilesWidth} edge="right" label="Resize the file list" onReset={() => setFilesWidth(220)} />
         {stage}
-        <div className="flex w-[380px] shrink-0 flex-col">{chat}</div>
+        <ResizeHandle width={chatWidth} onWidth={setChatWidth} edge="left" label="Resize the chat" onReset={() => setChatWidth(380)} />
+        <div style={{ width: chatWidth }} className="flex shrink-0 flex-col">
+          {chat}
+        </div>
       </div>
       <div className="flex min-h-0 flex-1 flex-col md:hidden">{pane === "chat" ? chat : pane === "files" ? fileList : stage}</div>
     </main>

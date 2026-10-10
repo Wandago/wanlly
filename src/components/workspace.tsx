@@ -10,6 +10,7 @@ import { JobView } from "./job-view";
 import { TopBar } from "./top-bar";
 import { DesignHome } from "./design-home";
 import { HomeBanner } from "./ads/home-banner";
+import { ResizeHandle, useDragWidth } from "./resize-handle";
 import { ImagesGallery } from "./images-gallery";
 import { ComingSoon } from "./coming-soon";
 import { CanvasProvider, ProjectCanvas, useCanvas } from "./project-canvas";
@@ -135,9 +136,19 @@ function WithCanvas({ children }: { children: ReactNode }) {
   const canvas = useCanvas();
   const { jobs, tool } = useWorkspace();
   const shown = !!canvas?.openId && jobs.some((j) => j.id === canvas.openId && j.tool === tool);
+  // Side by side (1536px and up), the preview's width is dragged by the handle between them.
+  const [canvasWidth, setCanvasWidth] = useDragWidth("wanlly-canvas-w", 760, 380, 1400);
   return (
-    <div className={`relative grid h-full min-h-0 min-w-0 ${shown ? "2xl:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]" : "grid-cols-1"}`}>
+    <div
+      className={`relative grid h-full min-h-0 min-w-0 ${shown ? "2xl:grid-cols-[minmax(0,1fr)_6px_var(--canvas-w)]" : "grid-cols-1"}`}
+      style={{ "--canvas-w": `${canvasWidth}px` } as React.CSSProperties}
+    >
       {children}
+      {shown && (
+        <div className="hidden 2xl:flex">
+          <ResizeHandle width={canvasWidth} onWidth={setCanvasWidth} edge="left" label="Resize the preview" onReset={() => setCanvasWidth(760)} />
+        </div>
+      )}
       {shown && <ProjectCanvas />}
     </div>
   );
