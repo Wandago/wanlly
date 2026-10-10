@@ -20,7 +20,7 @@ const MAX_VIEW_MS = 10 * 60 * 1000;
 /** Allows for network delay at the start and end of a view. */
 const MIN_VIEW_MS = SPOT_SECONDS * 1000 - 1000;
 
-const PLACEMENTS = new Set(["unlock", "earn_dialog", "gate", "job_card"]);
+const PLACEMENTS = new Set(["unlock", "earn_dialog", "gate", "job_card", "builder"]);
 
 async function completedToday(userId: string): Promise<number> {
   const [row] = await db()

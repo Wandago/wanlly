@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MODELS, isLive } from "@/lib/catalog";
+import { MODELS, SPOT_SPONSOR, isLive } from "@/lib/catalog";
 import { buildPreview, type BuildFile } from "@/lib/build-preview";
 import { saveBlob } from "@/lib/export";
 import { SAY } from "@/lib/messages";
 import { zipFiles } from "@/lib/runnable";
 import { useLocalSetting } from "@/lib/use-local-setting";
-import { accountFrom, useWorkspace } from "@/lib/workspace-store";
+import { accountFrom, useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { Markdown } from "../markdown";
 import { SpinLoader } from "../spin-mark";
 import { BuildShip } from "./build-ship";
+import { DisplaySlot } from "../ads/display-slot";
+import { RewardedBanner } from "../ads/ad-slot";
 
 /*
  * The Builder: files on the left, the live preview or a file's code in the middle, and the
@@ -29,6 +31,7 @@ const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replac
 
 export function BuilderView({ id }: { id: number }) {
   const { providers, dispatch } = useWorkspace();
+  const reward = useReward();
   const [name, setName] = useState("");
   const [files, setFiles] = useState<BuildFile[] | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -36,6 +39,8 @@ export function BuilderView({ id }: { id: number }) {
   const [live, setLive] = useState<Live | null>(null);
   const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState<{ text: string; resume?: boolean } | null>(null);
+  // Out of credits part-way: an ad (the ad network's, when it has one) pays for the next steps.
+  const [needAd, setNeedAd] = useState<"ask" | "watching" | null>(null);
   const [draft, setDraft] = useState("");
   const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "gemini-flash");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
@@ -81,6 +86,7 @@ export function BuilderView({ id }: { id: number }) {
       }
       setRunning(true);
       setNotice(null);
+      setNeedAd(null);
       setErrors([]);
       const ctrl = new AbortController();
       abort.current = ctrl;
@@ -102,6 +108,10 @@ export function BuilderView({ id }: { id: number }) {
             const act = accountFrom(b);
             if (act) dispatch(act);
             if (b.done) break;
+            if (b.reason === "credits") {
+              setNeedAd("ask");
+              break;
+            }
             setNotice({ text: b.error ?? SAY.busy });
             break;
           }
@@ -129,7 +139,7 @@ export function BuilderView({ id }: { id: number }) {
               if (ev.type === "done") finished = ev.done;
               if (ev.type === "error") {
                 failed = true;
-                setNotice({ text: ev.message });
+                setNotice({ text: ev.message, resume: true });
               }
             }
           }
@@ -316,6 +326,11 @@ export function BuilderView({ id }: { id: number }) {
               <BuildPhase live={live} />
             </li>
           )}
+          {running && (
+            <li className="flex justify-center pt-1">
+              <DisplaySlot placement="builder_wait" sizes={["300x250", "320x100", "320x50"]} label="While you wait · Sponsored" />
+            </li>
+          )}
         </ol>
       </div>
       {report && (
@@ -339,6 +354,33 @@ export function BuilderView({ id }: { id: number }) {
               Dismiss
             </button>
           </div>
+        </div>
+      )}
+      {needAd && (
+        <div className="mx-4 mb-2 flex flex-col gap-2.5 rounded-xl border border-line bg-surface p-3 text-[13px]">
+          {needAd === "ask" ? (
+            <>
+              <b className="font-semibold">You&apos;re out of credits for this build</b>
+              <span className="text-muted">Watch a short ad to earn {reward.perAd} credits, and the Builder carries on where it stopped.</span>
+              <button type="button" onClick={() => setNeedAd("watching")} className="flex items-center justify-center gap-1.5 rounded-lg bg-fg px-3 py-2 text-xs font-semibold text-bg hover:opacity-90">
+                <Icon name="play" size={13} /> Watch an ad and continue
+              </button>
+            </>
+          ) : (
+            <RewardedBanner
+              placement="builder"
+              sponsor={SPOT_SPONSOR}
+              onDone={(result) => {
+                setNeedAd(result ? null : "ask");
+                if (result) void run("");
+              }}
+            />
+          )}
+        </div>
+      )}
+      {!running && !needAd && !choosing && (
+        <div className="mx-4 mb-1 flex justify-center">
+          <DisplaySlot placement="builder_banner" sizes={["320x100", "320x50"]} label="" />
         </div>
       )}
       {notice && (

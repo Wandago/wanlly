@@ -420,11 +420,15 @@ function toGeminiContents(messages: Anthropic.Beta.BetaMessageParam[]) {
   });
 }
 
-export async function geminiBuildStep(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void }) {
+export async function geminiBuildStep(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void; retry?: boolean }): Promise<{
+  message: { content: Anthropic.Beta.BetaContentBlock[]; stop_reason: string };
+  inputTokens: number;
+  outputTokens: number;
+}> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new ProviderError("unavailable");
   const body = (model: string, thinking: boolean) => {
-    const t = thinking ? geminiThinking(model, false) : null;
+    const t = thinking && !opts.retry ? geminiThinking(model, false) : null;
     return JSON.stringify({
       systemInstruction: { parts: [{ text: opts.system }] },
       contents: toGeminiContents(opts.messages),
@@ -507,6 +511,12 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
     }
   }
   const tidy = content.filter((b) => b.type !== "text" || b.text?.trim());
+  // Gemini sometimes ends a turn with nothing to show (all its output was thinking). That would
+  // stop the build silently, so it gets one more try, without thinking.
+  if (!tidy.length && !blocked && finish !== "MAX_TOKENS" && !opts.retry) {
+    const again = await geminiBuildStep({ ...opts, retry: true });
+    return { ...again, inputTokens: again.inputTokens + inputTokens, outputTokens: again.outputTokens + outputTokens };
+  }
   const stop_reason = blocked || /SAFETY|PROHIBITED|BLOCKLIST|RECITATION/.test(finish) ? "refusal" : finish === "MAX_TOKENS" ? "max_tokens" : tidy.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn";
   return { message: { content: tidy as unknown as Anthropic.Beta.BetaContentBlock[], stop_reason }, inputTokens, outputTokens };
 }

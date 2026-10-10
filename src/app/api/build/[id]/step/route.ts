@@ -97,6 +97,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
         const uses = (reply.content as Block[]).filter((b) => b.type === "tool_use");
         const actual = taskCredits(price, model, inputTokens, outputTokens, Math.ceil(replyCostUsd(model.id, inputTokens, outputTokens) / ESTIMATE.usdPerCredit));
         if (actual > price) charged += await chargeExtra(userId, actual - price, `${ref}:extra`, `Builder · ${model.name} · bigger step`);
+        // Nothing at all came back (even after Gemini's retry): don't charge for it, and say so.
+        if (!reply.content.length) {
+          await release(userId, charged, ref).catch(() => {});
+          saved = true;
+          send({ type: "error", message: `The model didn't answer this time. Press Continue to try again, or pick another model. ${SAY.refunded}`, ...(await account(userId)) });
+          return;
+        }
         if (reply.stop_reason === "refusal") {
           await release(userId, charged, ref).catch(() => {});
           saved = true;

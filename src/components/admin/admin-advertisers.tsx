@@ -59,6 +59,8 @@ const PLACEMENTS: [string, string][] = [
   ["sidebar_card", "Left sidebar card"],
   ["phone_banner", "Phone banner"],
   ["tablet_banner", "Tablet banner"],
+  ["builder_wait", "Builder, while it works"],
+  ["builder_banner", "Builder banner"],
   ["job_card", "While you wait card"],
   ["job_line", "After a result line"],
   ["interstitial", "Pop-up card"],

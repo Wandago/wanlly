@@ -121,19 +121,11 @@ async function postJson(url: string, body: object) {
  * A spot that plays wherever it's mounted, then calls onDone once. The server opens the view
  * when it starts and pays for it when it ends, so credits can't be earned from the browser alone.
  */
-export function RewardedSpot({
-  aspect,
-  sponsor,
-  placement,
-  onDone,
-  maxHeight,
-}: {
-  aspect: VideoAspect;
-  sponsor: Sponsor;
-  placement: Placement;
-  onDone: (result: ViewResult) => void;
-  maxHeight?: number;
-}) {
+/**
+ * A server-checked rewarded view: starts a view when shown, and after the ad's full length asks
+ * the server to pay it. `progress` runs from 0 to 1; `onDone` gets the result (null: not paid).
+ */
+function useRewardedView(placement: string, onDone: (result: ViewResult) => void) {
   const { dispatch } = useWorkspace();
   const [progress, setProgress] = useState(0);
   const done = useRef(onDone);
@@ -181,8 +173,44 @@ export function RewardedSpot({
     }, 100);
     return () => window.clearInterval(iv);
   }, [placement, dispatch]);
+  return progress;
+}
 
+export function RewardedSpot({
+  aspect,
+  sponsor,
+  placement,
+  onDone,
+  maxHeight,
+}: {
+  aspect: VideoAspect;
+  sponsor: Sponsor;
+  placement: Placement;
+  onDone: (result: ViewResult) => void;
+  maxHeight?: number;
+}) {
+  const progress = useRewardedView(placement, onDone);
   return <VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />;
+}
+
+/**
+ * A rewarded ad that shows the ad network's banner (a booked campaign first, the sponsor's video
+ * frame if no banner fits) for the ad's length, then pays it like any rewarded view.
+ */
+export function RewardedBanner({ placement, sponsor, onDone }: { placement: string; sponsor: Sponsor; onDone: (result: ViewResult) => void }) {
+  const progress = useRewardedView(placement, onDone);
+  const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
+  return (
+    <div className="flex flex-col gap-2">
+      <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" fallback={<VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} />} />
+      <div className="flex items-center gap-2 font-mono text-xs text-muted">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-hover">
+          <i className="block h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
+        </div>
+        {progress < 1 ? `${left}s` : "Adding credits…"}
+      </div>
+    </div>
+  );
 }
 
 /** The /dev/ads reference turns this on to print each banner's size under it. */
