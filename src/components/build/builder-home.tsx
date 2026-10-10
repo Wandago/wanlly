@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SAY } from "@/lib/messages";
+import { DisplaySlot } from "../ads/display-slot";
+import { SponsorLine } from "../ads/ad-slot";
+import { Tracked } from "../ads/tracked";
+import { creativeOf, useSponsors } from "@/lib/ads-context";
+import { RAIL_SPONSORS } from "@/lib/catalog";
 import { Icon } from "../icon";
 import { SpinLoader } from "../spin-mark";
 
@@ -97,6 +102,7 @@ export function BuilderHome() {
           Open
         </button>
       </form>
+      <HomeAd placement="home_banner" />
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">Your apps</h2>
         {!items ? (
@@ -123,6 +129,24 @@ export function BuilderHome() {
           <p className="text-sm text-muted">No apps yet. Your first one starts above.</p>
         )}
       </section>
+      <HomeAd placement="builder_banner" />
     </main>
+  );
+}
+
+/** A banner in the page's own flow (a booked campaign, else the ad network, else a sponsor card). */
+function HomeAd({ placement }: { placement: string }) {
+  const sponsor = useSponsors(placement, RAIL_SPONSORS)[0];
+  return (
+    <DisplaySlot
+      placement={placement}
+      sizes={["728x90", "468x60", "320x100", "320x50"]}
+      className="flex flex-col items-center gap-1"
+      fallback={
+        <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
+          <SponsorLine sponsor={sponsor} format="native" earned={false} />
+        </Tracked>
+      }
+    />
   );
 }

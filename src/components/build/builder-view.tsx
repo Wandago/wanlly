@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { MODELS, SPOT_SPONSOR, isLive } from "@/lib/catalog";
 import { replyParts } from "@/lib/followups";
+import { highlight, languageOf } from "@/lib/highlight";
 import { buildPreview, type BuildFile } from "@/lib/build-preview";
 import { saveBlob } from "@/lib/export";
 import { SAY } from "@/lib/messages";
@@ -801,6 +802,52 @@ function EditList({ edits }: { edits: { command: string; path: string; ok?: bool
   );
 }
 
+/**
+ * The code, coloured like an editor: the coloured copy sits behind a see-through text box that
+ * does the typing, and both scroll together. Line numbers run down the left.
+ */
+function CodeArea({ path, value, onChange }: { path: string; value: string; onChange: (v: string) => void }) {
+  const shown = useDeferredValue(value);
+  const pieces = useMemo(() => highlight(shown, languageOf(path)), [shown, path]);
+  const lines = useMemo(() => shown.split("\n").length, [shown]);
+  const back = useRef<HTMLPreElement>(null);
+  const gutter = useRef<HTMLDivElement>(null);
+  const pad = `calc(${String(lines).length}ch + 28px)`;
+  const text = "m-0 whitespace-pre p-3 font-mono text-[12px] leading-[1.65] [tab-size:2]";
+  return (
+    <div className="relative min-h-0 flex-1 overflow-hidden bg-code">
+      <div ref={gutter} aria-hidden="true" className="pointer-events-none absolute inset-y-0 left-0 overflow-hidden border-r border-line py-3 pr-2 pl-3 text-right font-mono text-[12px] leading-[1.65] text-faint select-none" style={{ width: pad }}>
+        {Array.from({ length: lines }, (_, i) => (
+          <div key={i}>{i + 1}</div>
+        ))}
+      </div>
+      <pre ref={back} aria-hidden="true" className={`pointer-events-none absolute inset-0 overflow-hidden text-fg ${text}`} style={{ paddingLeft: pad }}>
+        {pieces.map((p, i) => (p.kind ? <span key={i} className={`tk-${p.kind}`}>{p.text}</span> : p.text))}
+        {"\n"}
+      </pre>
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onScroll={(e) => {
+          const t = e.currentTarget;
+          if (back.current) {
+            back.current.scrollTop = t.scrollTop;
+            back.current.scrollLeft = t.scrollLeft;
+          }
+          if (gutter.current) gutter.current.scrollTop = t.scrollTop;
+        }}
+        spellCheck={false}
+        autoCapitalize="off"
+        autoCorrect="off"
+        wrap="off"
+        aria-label={`Code of ${path}`}
+        className={`absolute inset-0 resize-none overflow-auto bg-transparent text-transparent caret-fg outline-none selection:bg-accent/25 ${text}`}
+        style={{ paddingLeft: pad }}
+      />
+    </div>
+  );
+}
+
 /** A file's code, editable by hand. */
 function FileEditor({ id, file, onSaved }: { id: number; file: BuildFile; onSaved: () => void }) {
   const [text, setText] = useState(file.content);
@@ -808,7 +855,7 @@ function FileEditor({ id, file, onSaved }: { id: number; file: BuildFile; onSave
   const dirty = text !== file.content;
   return (
     <div className="flex h-full flex-col">
-      <textarea value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} className="min-h-0 flex-1 resize-none bg-code p-3 font-mono text-[12px] leading-relaxed outline-none" />
+      <CodeArea path={file.path} value={text} onChange={setText} />
       <div className="flex items-center gap-2 border-t border-line px-3 py-1.5 text-xs">
         <span className="text-faint">{state}</span>
         <button

@@ -215,3 +215,47 @@ button:not(:disabled) {
   .wl-phase { animation: none; }
   .wl-dots::after { animation: none; content: "..."; }
 }
+
+/* Code colours in the Builder's editor (lib/highlight.ts): comments, strings, keywords,
+   numbers, tags, attributes, properties, functions, headings. */
+:root {
+  --tk-c: #8a8f9b;
+  --tk-s: #1f7a3e;
+  --tk-k: #8a3fd1;
+  --tk-n: #b5540f;
+  --tk-t: #1d63c9;
+  --tk-a: #9a6a00;
+  --tk-p: #0f7d8c;
+  --tk-f: #2350b8;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --tk-c: #6c7280;
+    --tk-s: #8fd19e;
+    --tk-k: #c792ea;
+    --tk-n: #f7a35c;
+    --tk-t: #7cb7ff;
+    --tk-a: #e8c46a;
+    --tk-p: #74d0d9;
+    --tk-f: #82aaff;
+  }
+}
+:root[data-theme="dark"] {
+  --tk-c: #6c7280;
+  --tk-s: #8fd19e;
+  --tk-k: #c792ea;
+  --tk-n: #f7a35c;
+  --tk-t: #7cb7ff;
+  --tk-a: #e8c46a;
+  --tk-p: #74d0d9;
+  --tk-f: #82aaff;
+}
+.tk-c { color: var(--tk-c); font-style: italic; }
+.tk-s { color: var(--tk-s); }
+.tk-k { color: var(--tk-k); }
+.tk-n { color: var(--tk-n); }
+.tk-t { color: var(--tk-t); }
+.tk-a { color: var(--tk-a); }
+.tk-p { color: var(--tk-p); }
+.tk-f { color: var(--tk-f); }
+.tk-h { color: var(--tk-k); font-weight: 600; }
