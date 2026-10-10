@@ -28,6 +28,6 @@ export async function POST(req: Request) {
     return Response.json({ id: row?.id ?? null, createdAt: row?.createdAt ?? null, ...(await account(userId)) });
   } catch (e) {
     console.error("image save failed", e);
-    return Response.json({ error: /relation "images"/.test(String(e)) ? "Run migration 0010 (images) in Neon." : "Couldn't keep that image." }, { status: 503 });
+    return Response.json({ error: "Couldn't keep that image." }, { status: 503 });
   }
 }

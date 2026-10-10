@@ -186,13 +186,13 @@ const FEATURES: { icon: IconName; title: string; text: string; span?: string; vi
   {
     icon: "code",
     title: "Code",
-    text: "Connect GitHub. Wanlly reads your repo, makes the change, runs the tests and opens a pull request.",
+    text: "Describe an app, a tool or a fix. Wanlly writes the code, runs it in a live preview, and packs it up for you to download.",
     visual: (
       <div className="flex flex-col gap-1 font-mono text-[11px]">
         <span className="text-good">+ export async function debit()</span>
         <span className="text-bad">- // TODO: track usage</span>
         <span className="mt-1 inline-flex w-fit items-center gap-1.5 rounded-md bg-fg px-2 py-1 text-bg">
-          <Icon name="pr" size={12} /> Open pull request
+          ▶ Run preview
         </span>
       </div>
     ),
@@ -212,7 +212,7 @@ const FEATURES: { icon: IconName; title: string; text: string; span?: string; vi
   {
     icon: "folder",
     title: "Projects",
-    text: "Keep chats, files and instructions together for each thing you build, and invite teammates.",
+    text: "Keep chats, files and instructions together for each thing you build.",
     visual: (
       <div className="grid grid-cols-3 gap-1.5">
         {["Salon app", "Farm prices", "Portfolio"].map((t) => (
@@ -226,7 +226,7 @@ const FEATURES: { icon: IconName; title: string; text: string; span?: string; vi
   {
     icon: "users",
     title: "Coworkers",
-    text: "AI teammates that test your app, draft posts or research on a schedule. They always ask before anything goes out.",
+    text: "Coming soon: AI teammates that test your app, draft posts or research on a schedule. They always ask before anything goes out.",
     visual: (
       <div className="flex flex-col gap-1.5 text-[11px]">
         {[
@@ -342,7 +342,7 @@ function Promises() {
 
 const FAQ = [
   ["Is it really free?", "Yes. You never enter a card. You watch short sponsor videos and earn credits, and the sponsors pay for your AI. Need more? Watch a few more."],
-  ["Which AI models can I use?", "Claude (Haiku, Sonnet, Opus and Fable) and Gemini. You choose for every message. GPT, Grok and image models are coming."],
+  ["Which AI models can I use?", "Claude (Haiku, Sonnet, Opus and Fable), Gemini, Grok, DeepSeek, and open models like GLM and Kimi. You choose for every message. GPT and image models are coming."],
   ["How do credits work?", "Every video you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
   ["Who is it for?", "Students and creators with ideas and no budget for AI subscriptions: anyone who wants to build an app, a site, a shop page or a side project."],
   ["When can I start?", "We're letting people in weekly. Join the beta and invite friends to move up the list."],

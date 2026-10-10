@@ -17,6 +17,9 @@ import { signedInUserId } from "@/lib/session";
  * the upfront price is refunded if no usable page arrives; long Claude replies pay their real cost.
  */
 
+/** Characters of page streamed after which stopping no longer refunds (about a third of a typical page). */
+const KEEP_AFTER = 6000;
+
 const ERRORS = {
   busy: "The model is busy right now. Your credits were refunded; try again in a moment.",
   failed: "Something went wrong making that design. Your credits were refunded.",
@@ -144,8 +147,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
           const [me] = await d.select({ role: schema.users.role }).from(schema.users).where(eq(schema.users.id, userId)).limit(1).catch(() => []);
           if (me && me.role !== "user") detail = ` (Admin detail: ${errorDetail(e)})`;
         }
-        await release(userId, price, ref).catch(() => {});
-        send({ type: "error", message: ERRORS[kind] + detail, ...(await account(userId).catch(() => ({}))) });
+        // Stopping early refunds; stopping once most of the page has streamed keeps the price, as chat
+        // does, or reading the stream and cancelling before "done" would make every design free.
+        const kept = kind === "aborted" && reply.length > KEEP_AFTER;
+        if (!kept) await release(userId, price, ref).catch(() => {});
+        send({ type: "error", message: kept ? "Stopped. Most of the page had been made, so the credits were kept." : ERRORS[kind] + detail, ...(await account(userId).catch(() => ({}))) });
       }
       try {
         controller.close();

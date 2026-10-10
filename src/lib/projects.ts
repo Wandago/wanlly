@@ -5,7 +5,7 @@ import { MODELS, type ToolId } from "./catalog";
 export const MAX_PROJECTS = 50;
 const TOOLS: ToolId[] = ["chat", "code", "design", "images"];
 export const KINDS = ["slides", "design", "codebase", "system"] as const;
-const LIVE_MODELS = new Set(MODELS.filter((m) => m.id !== "gpt" && m.id !== "grok").map((m) => m.id));
+const LIVE_MODELS = new Set(MODELS.filter((m) => m.id !== "gpt").map((m) => m.id));
 
 /** The editable fields present in a request body, validated. Missing fields are left out. */
 export function projectFields(data: Record<string, unknown>) {

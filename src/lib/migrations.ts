@@ -21,13 +21,15 @@ const MARKS = [
   { file: "0012_campaign_banners", table: "campaigns", column: "banners" },
   { file: "0013_user_memory", table: "users", column: "memory" },
   { file: "0014_design_tokens", table: "design_versions", column: "input_tokens" },
-] as const;
+  { file: "0015_ad_creative_index", table: "ad_events", column: "", index: "ad_creative_kind" },
+] as { file: string; table: string; column: string; index?: string }[];
 
 /** Every migration with whether its table or column exists. */
 export async function migrationStatus() {
   const rows = (await rawSql()`SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public'`) as { table_name: string; column_name: string }[];
-  const have = new Set(rows.map((r) => `${r.table_name}.${r.column_name}`));
-  return MARKS.map((m) => ({ file: `${m.file}.sql`, applied: have.has(`${m.table}.${m.column}`) }));
+  const indexes = (await rawSql()`SELECT indexname FROM pg_indexes WHERE schemaname = 'public'`) as { indexname: string }[];
+  const have = new Set([...rows.map((r) => `${r.table_name}.${r.column_name}`), ...indexes.map((i) => `index:${i.indexname}`)]);
+  return MARKS.map((m) => ({ file: `${m.file}.sql`, applied: have.has(m.index ? `index:${m.index}` : `${m.table}.${m.column}`) }));
 }
 
 /** The Postgres error under Drizzle's wrapper, which otherwise only says "Failed query: <sql>". */
@@ -46,7 +48,7 @@ export function dbErrorMessage(e: unknown) {
   const col = /column "([^"]+)"(?: of relation "([^"]+)")? does not exist/.exec(message);
   const tbl = /relation "([^"]+)" does not exist/.exec(message);
   if (code === "42703" || code === "42P01" || col || tbl) {
-    const m = col ? MARKS.find((k) => k.column === col[1] && (!col[2] || k.table === col[2])) : tbl ? MARKS.find((k) => k.table === tbl[1]) : undefined;
+    const m = col ? MARKS.find((k) => !k.index && k.column === col[1] && (!col[2] || k.table === col[2])) : tbl ? MARKS.find((k) => k.table === tbl[1]) : undefined;
     if (m) return `The database is missing migration ${m.file}.sql. Run it in Neon's SQL editor, then try again.`;
   }
   return `Database error: ${message.slice(0, 300)}`;

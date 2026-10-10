@@ -31,8 +31,10 @@ export async function POST(req: NextRequest) {
     // Keep the row so the ledger stays whole; personal details are cleared.
     await db()
       .update(schema.users)
-      .set({ status: "deleted", email: null, name: null, updatedAt: sql`now()` })
+      .set({ status: "deleted", email: null, name: null, settings: {}, updatedAt: sql`now()` })
       .where(eq(schema.users.id, evt.data.id));
+    // What Wanlly remembered about them goes too (the column comes with migration 0013).
+    await rawSql()`update users set memory = null where id = ${evt.data.id}`.catch(() => {});
   }
 
   return new Response("ok");

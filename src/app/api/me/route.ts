@@ -1,5 +1,5 @@
 import { eq, inArray, sql } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 import { ensureUser } from "@/lib/account";
 import { account } from "@/lib/ledger";
 import { clerk, signedInUserId } from "@/lib/session";
@@ -54,6 +54,8 @@ export async function DELETE(req: Request) {
       .update(schema.users)
       .set({ status: "deleted", email: null, name: null, settings: {}, updatedAt: sql`now()` })
       .where(eq(schema.users.id, userId));
+    // What Wanlly remembered about them goes too (the column comes with migration 0013).
+    await rawSql()`update users set memory = null where id = ${userId}`.catch(() => {});
     await clerk().users.deleteUser(userId);
     return Response.json({ ok: true });
   } catch (e) {

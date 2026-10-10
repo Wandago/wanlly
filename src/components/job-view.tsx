@@ -56,7 +56,7 @@ function WorkingStatus({ job }: { job: Job }) {
       <div className="flex items-center gap-2.5 text-[13px] text-muted">
         <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
         <span>{tool.steps[step]}</span>
-        <time className="ml-auto font-mono text-xs text-faint tabular-nums">0:{String(secs).padStart(2, "0")}</time>
+        <time className="ml-auto font-mono text-xs text-faint tabular-nums">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</time>
       </div>
       <div className="h-[3px] overflow-hidden rounded-full bg-hover">
         <i

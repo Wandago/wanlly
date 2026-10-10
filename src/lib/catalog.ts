@@ -159,11 +159,11 @@ export const TOOLS: Record<ToolId, Tool> = {
   code: {
     id: "code",
     label: "Code",
-    placeholder: "Describe a change to wandago/wanlly",
+    placeholder: "Describe an app, a tool or a fix",
     multiplier: 3,
     durationMs: 7000,
-    steps: ["Reading 14 files", "Planning the change", "Editing files", "Running tests"],
-    suggestions: ["Add dark mode to settings", "Write tests for the ledger"],
+    steps: ["Reading your request", "Planning the code", "Writing files", "Checking it fits together"],
+    suggestions: ["A to-do app with dark mode", "A price list page for my shop"],
     sponsor: {
       name: "Railhouse",
       cover: "deploy",

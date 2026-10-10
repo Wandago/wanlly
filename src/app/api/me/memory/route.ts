@@ -14,8 +14,10 @@ export async function PUT(req: Request) {
     const q = rawSql();
     await q`update users set memory = ${memory ? JSON.stringify(memory) : null}::jsonb where id = ${userId}`;
     return Response.json({ memory });
-  } catch {
-    return Response.json({ error: "Run migration 0013 (memory) in Neon." }, { status: 503 });
+  } catch (e) {
+    // Before migration 0013 there's no memory column; Admin's Database card says so.
+    console.error("memory save failed", e);
+    return Response.json({ error: "Memory isn't available right now. Please try again later." }, { status: 503 });
   }
 }
 

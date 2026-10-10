@@ -87,6 +87,7 @@ export const adEvents = pgTable(
   (t) => [
     uniqueIndex("ad_txn").on(t.partner, t.transactionId).where(sql`${t.transactionId} is not null`),
     index("ad_user_time").on(t.userId, t.createdAt),
+    index("ad_creative_kind").on(t.creative, t.kind),
   ],
 );
 
