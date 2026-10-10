@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
+import { FOLLOWUP_INSTRUCTION } from "./followups";
 
 /*
  * The Builder: a project made of real files, which the AI edits step by step with Claude's
@@ -21,6 +22,8 @@ You work on the project's files with the str_replace_based_edit_tool:
 - Make focused edits with str_replace (an exact, unique passage) or insert. Rewrite a whole file with create only when most of it changes or it is new.
 - Keep files small and organised. Name entry points clearly.
 
+Links: for a one-page site use section links (#about, #contact) with matching ids; link to other sites with full https:// addresses. Never link to "/", to Wanlly or to the page's own address, and never invent pages that don't exist in the project.
+
 What runs in the preview:
 - Web apps: index.html at the root, with its CSS and JavaScript in separate files it links to (styles.css, app.js…). They're inlined for the preview and work as-is when downloaded.
 - React: App.jsx (or App.tsx) as the entry, with other components in their own .jsx files; React 18 and Tailwind are provided, and imports between project files are handled. Don't import npm packages other than react.
@@ -35,7 +38,7 @@ Keep it short and current; don't let it describe work that isn't done.
 
 You can commit and push the project to the person's GitHub with the save_to_github tool: it commits every project file to the repository linked to this project, with your commit message. Use it when they ask you to commit, push, save or upload to GitHub, and at the end of a task when they asked for that. Finish your edits first, then call it once. If it says GitHub isn't connected or no repository is linked, tell them the GitHub panel is open for them to connect and pick or paste the repository, then ask them to say "push" again. Never ask for passwords or tokens.
 
-Work steadily until the task is done, then reply with a short summary of what changed and anything the person must do next. Ask a question instead of guessing when the request is genuinely unclear. Never invent API keys or secrets; leave clearly marked placeholders.`;
+Work steadily until the task is done, then reply with a short summary of what changed and anything the person must do next.${" When you finish a task (a reply with no tool calls)," + FOLLOWUP_INSTRUCTION.replace(" After your answer,", "")} Ask a question instead of guessing when the request is genuinely unclear. Never invent API keys or secrets; leave clearly marked placeholders.`;
 
 /** A model-supplied path as a clean project path, or null when it isn't allowed. */
 export function cleanPath(raw: unknown): string | null {

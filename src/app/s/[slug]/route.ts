@@ -1,3 +1,4 @@
+import { LINK_GUARD } from "@/lib/build-preview";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { loadAffiliates } from "@/lib/affiliates-server";
@@ -29,7 +30,9 @@ export async function GET(_req: Request, ctx: RouteContext<"/s/[slug]">) {
     return u.toString();
   };
   const bar = `<div style="position:fixed;right:10px;bottom:10px;z-index:2147483647;display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#0b0b0d;color:#fbfbfc;font:500 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)"><a href="${esc(link(SITE_URL))}" target="_blank" rel="noopener" style="color:#fbfbfc;text-decoration:none">Built free with <b style="color:#ff5a1f">Wanlly</b></a>${sponsor ? `<span style="opacity:.5">·</span><a href="${esc(link(sponsor.url))}" target="_blank" rel="noopener sponsored" style="color:#fbfbfc;opacity:.8;text-decoration:none">Sponsored: ${esc(sponsor.name)}</a>` : ""}<span style="opacity:.5">·</span><a href="${esc(`${SITE_URL}/contact?topic=report&site=${encodeURIComponent(slug)}`)}" target="_blank" rel="noopener" style="color:#fbfbfc;opacity:.6;text-decoration:none">Report</a></div>`;
-  const html = /<\/body>/i.test(site.html) ? site.html.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${bar}</body>`) : site.html + bar;
+  // Pages published before the link guard existed get it here, so their links can't open Wanlly.
+  const guarded = site.html.includes("wanllyPreview:\"link\"") ? site.html : /<head(\s[^>]*)?>/i.test(site.html) ? site.html.replace(/<head(\s[^>]*)?>/i, (m) => m + LINK_GUARD) : LINK_GUARD + site.html;
+  const html = /<\/body>/i.test(guarded) ? guarded.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${bar}</body>`) : guarded + bar;
   return new Response(html, {
     headers: {
       "content-type": "text/html; charset=utf-8",

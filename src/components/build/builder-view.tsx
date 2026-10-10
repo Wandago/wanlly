@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MODELS, SPOT_SPONSOR, isLive } from "@/lib/catalog";
+import { replyParts } from "@/lib/followups";
 import { buildPreview, type BuildFile } from "@/lib/build-preview";
 import { saveBlob } from "@/lib/export";
 import { SAY } from "@/lib/messages";
@@ -30,7 +31,7 @@ const STEP_LIMIT = 25;
 const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replace: "Edited", insert: "Edited", github: "Pushed to GitHub:" };
 
 export function BuilderView({ id }: { id: number }) {
-  const { providers, dispatch } = useWorkspace();
+  const { providers, dispatch, credits } = useWorkspace();
   const reward = useReward();
   // The linked repository, read when a step is sent (kept in the browser by the GitHub panel).
   const repoRef = useRef("");
@@ -55,6 +56,8 @@ export function BuilderView({ id }: { id: number }) {
   const [notice, setNotice] = useState<{ text: string; resume?: boolean } | null>(null);
   // Out of credits part-way: an ad (the ad network's, when it has one) pays for the next steps.
   const [needAd, setNeedAd] = useState<"ask" | "watching" | null>(null);
+  // Topping up before credits run out (a warning shows when only a few steps' worth are left).
+  const [topUp, setTopUp] = useState(false);
   const [draft, setDraft] = useState("");
   const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "gemini-flash");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
@@ -284,10 +287,11 @@ export function BuilderView({ id }: { id: number }) {
       if (e.source !== frame.current?.contentWindow) return;
       const m = e.data as { wanllyPreview?: string; message?: string };
       if (m?.wanllyPreview === "error" && m.message) setErrors((xs) => (xs.includes(m.message!) ? xs : [...xs, m.message!].slice(-8)));
+      if (m?.wanllyPreview === "link" && m.message) dispatch({ type: "toast", text: m.message });
     };
     window.addEventListener("message", on);
     return () => window.removeEventListener("message", on);
-  }, []);
+  }, [dispatch]);
 
   const preview = useMemo(() => (files ? buildPreview(files) : ""), [files]);
   const current = files?.find((f) => f.path === open) ?? null;
@@ -302,8 +306,40 @@ export function BuilderView({ id }: { id: number }) {
     const text = draft.trim();
     if (!text || running) return;
     setDraft("");
+    // "pull" / "pull latest from GitHub": no AI needed.
+    if (text.length < 70 && /\b(pull|fetch|sync)\b/i.test(text) && !/\b(add|make|change|fix|create|remove|build)\b/i.test(text)) return void pull();
     void run(text);
   };
+  /** Replaces the project's files with the linked repository's latest version. */
+  const pull = async () => {
+    if (!repoRef.current) {
+      window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }));
+      return setNotice({ text: "Pick or paste the repository in the GitHub panel first." });
+    }
+    if (!window.confirm("Pull the latest version from GitHub? The project's files are replaced by the repository's; anything you haven't pushed is lost.")) return;
+    setRunning(true);
+    setNotice(null);
+    try {
+      const r = await fetch(`/api/build/${id}/github/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo: repoRef.current }) });
+      const b = await r.json().catch(() => ({}));
+      if (b.connect) {
+        window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }));
+        setNotice({ text: "Connect GitHub in the panel, then pull again." });
+      } else if (!r.ok) setNotice({ text: b.error ?? SAY.busy });
+      else {
+        await load();
+        setNotice({ text: `Pulled ${b.files} files from GitHub.` });
+      }
+    } catch {
+      setNotice({ text: SAY.offline });
+    } finally {
+      setRunning(false);
+    }
+  };
+  // Ideas for the next message: the AI's follow-ups from its last reply, then GitHub actions.
+  const lastReply = [...steps].reverse().find((x) => x.role === "assistant" && x.text);
+  const followups = lastReply ? replyParts(lastReply.text).next : [];
+  const lowCredits = !!model && credits <= model.credits * 3;
   const runChecks = async () => {
     setChecking(true);
     setReport(null);
@@ -358,7 +394,7 @@ export function BuilderView({ id }: { id: number }) {
                 <span className="whitespace-pre-wrap">{s.text}</span>
               ) : (
                 <>
-                  {s.text && <Markdown text={s.text} />}
+                  {s.text && <Markdown text={replyParts(s.text).body} />}
                   {!!s.edits?.length && <EditList edits={s.edits} />}
                   {s.credits ? <small className="text-[11px] text-faint">{s.credits} credits · {MODELS.find((m) => m.id === s.modelId)?.name ?? s.modelId}</small> : null}
                 </>
@@ -367,7 +403,7 @@ export function BuilderView({ id }: { id: number }) {
           ))}
           {live && (
             <li className="flex flex-col gap-1.5 text-sm">
-              {live.text && <Markdown text={live.text} />}
+              {live.text && <Markdown text={replyParts(live.text).body} />}
               {!!live.edits.length && <EditList edits={live.edits} />}
               <BuildPhase live={live} />
             </li>
@@ -427,6 +463,45 @@ export function BuilderView({ id }: { id: number }) {
       {!running && !needAd && !choosing && (
         <div className="mx-4 mb-1 flex justify-center">
           <DisplaySlot placement="builder_banner" sizes={["320x100", "320x50"]} label="" />
+        </div>
+      )}
+      {lowCredits && !needAd && !running && (
+        <div className="mx-4 mb-2 flex flex-col gap-2 rounded-xl border border-accent-line bg-accent-soft p-3 text-[13px]">
+          {topUp ? (
+            <RewardedBanner placement="builder" sponsor={SPOT_SPONSOR} onDone={() => setTopUp(false)} />
+          ) : (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="min-w-0 flex-1">
+                <b className="font-semibold">{credits <= 0 ? "You're out of credits." : `Only ${credits} credit${credits === 1 ? "" : "s"} left.`}</b> Top up now so your next build doesn&apos;t stop half-way.
+              </span>
+              <button type="button" onClick={() => setTopUp(true)} className="flex items-center gap-1.5 rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-bg hover:opacity-90">
+                <Icon name="play" size={12} /> Watch an ad · +{reward.perAd}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {!running && !choosing && files && files.length > 0 && (
+        <div className="mx-4 mb-1.5 flex flex-wrap gap-1.5">
+          {followups.map((f) => (
+            <button key={f} type="button" onClick={() => setDraft(f)} className="max-w-full truncate rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+              {f}
+            </button>
+          ))}
+          {repoRef.current ? (
+            <>
+              <button type="button" onClick={() => void run("push")} className="flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+                <Icon name="github" size={12} /> Push to GitHub
+              </button>
+              <button type="button" onClick={() => void pull()} className="flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+                <Icon name="github" size={12} /> Pull latest
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }))} className="flex items-center gap-1 rounded-full border border-line px-2.5 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+              <Icon name="github" size={12} /> Save to GitHub
+            </button>
+          )}
         </div>
       )}
       {notice && (

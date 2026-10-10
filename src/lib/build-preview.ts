@@ -16,7 +16,15 @@ const REPORTER = `<script>(function(){function send(m){try{parent.postMessage({w
 /** In-memory storage and cookies for the sandboxed frame or published page, where the real ones throw. */
 const STORAGE_SHIM = `<script>(function(){function mem(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){var c="";try{Object.defineProperty(document,"cookie",{get:function(){return c},set:function(v){c=String(v).split(";")[0]},configurable:true})}catch(_){}}})()</script>`;
 
-const HEAD = STORAGE_SHIM + REPORTER;
+/**
+ * Keeps the project's own links inside the project. In the preview (and on a published page)
+ * "#services", "/" or "about.html" would otherwise point at Wanlly's address and open Wanlly in
+ * the frame. Section links scroll, other sites open in a new tab, and links to pages or forms
+ * without a destination stay put (the Builder is told, so it can say why).
+ */
+export const LINK_GUARD = `<script>(function(){function tell(m){try{parent!==window&&parent.postMessage({wanllyPreview:"link",message:m},"*")}catch(e){}}document.addEventListener("click",function(e){if(e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey)return;var a=e.target&&e.target.closest&&e.target.closest("a[href]");if(!a)return;var h=a.getAttribute("href")||"";if(/^(mailto:|tel:|sms:|whatsapp:|javascript:)/i.test(h))return;if(/^https?:\/\//i.test(h)){try{if(new URL(h).host!==location.host){a.target="_blank";a.rel="noopener";return}}catch(_){}}e.preventDefault();if(h.charAt(0)==="#"){var id=decodeURIComponent(h.slice(1));var el=id?document.getElementById(id)||document.getElementsByName(id)[0]:null;if(el)el.scrollIntoView({behavior:"smooth"});else if(!id)window.scrollTo({top:0,behavior:"smooth"});return}if(h==="/"||/^(\.\/)?index\.html?$/i.test(h)){window.scrollTo({top:0,behavior:"smooth"});return}tell("A link to "+h+" was kept inside this page. Link to sections (#about) or full web addresses instead.")});document.addEventListener("submit",function(e){if(e.defaultPrevented)return;var f=e.target,act=f.getAttribute&&f.getAttribute("action")||"";if(/^https?:\/\//i.test(act))return;e.preventDefault();tell("The form has nowhere to send to yet, so it stayed on the page.")})})()</script>`;
+
+const HEAD = STORAGE_SHIM + REPORTER + LINK_GUARD;
 
 const dirOf = (p: string) => (p.includes("/") ? p.slice(0, p.lastIndexOf("/") + 1) : "");
 /** A path relative to `from`'s folder, as a project path; null when it points outside. */
