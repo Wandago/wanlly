@@ -24,3 +24,15 @@ export async function signedInUserId(req: Request): Promise<string | null> {
   if (!state.isAuthenticated) return null;
   return state.toAuth().userId ?? null;
 }
+
+/** Why a request isn't signed in, for the health check: Clerk's reason and which kind of keys are set (never the keys). */
+export async function signInProblem(req: Request) {
+  const kind = (k: string | undefined) => (k ? (k.includes("_live_") ? "live" : k.includes("_test_") ? "test" : "other") : "missing");
+  const keys = { secretKey: kind(process.env.CLERK_SECRET_KEY), publishableKey: kind(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) };
+  try {
+    const state = await clerk().authenticateRequest(req, { acceptsToken: "session_token" });
+    return { reason: state.isAuthenticated ? null : (state.reason ?? "unknown"), message: state.isAuthenticated ? null : (state.message ?? null), ...keys };
+  } catch (e) {
+    return { reason: "error", message: e instanceof Error ? e.message.slice(0, 200) : "unknown", ...keys };
+  }
+}

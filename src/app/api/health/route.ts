@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "@/db";
-import { signedInUserId } from "@/lib/session";
+import { signInProblem, signedInUserId } from "@/lib/session";
 import { SAY } from "@/lib/messages";
 
 /**
@@ -8,7 +8,7 @@ import { SAY } from "@/lib/messages";
  * answers. Signed-in only.
  */
 export async function GET(req: Request) {
-  if (!(await signedInUserId(req))) return Response.json({ error: SAY.signedOut }, { status: 401 });
+  if (!(await signedInUserId(req))) return Response.json({ error: SAY.signedOut, signIn: await signInProblem(req) }, { status: 401 });
   const has = (k: string) => Boolean(process.env[k]);
   let database: "ok" | "missing" | "error" = has("DATABASE_URL") ? "ok" : "missing";
   let tables = false;
