@@ -59,6 +59,7 @@ export function BuilderView({ id }: { id: number }) {
     setName(b.project.name);
     setFiles(b.files);
     setSteps(b.steps);
+    if (b.pending && !abort.current) setNotice((n) => n ?? { text: "The last request stopped part-way.", resume: true });
     return b as { steps: Step[] };
   }, [id]);
   useEffect(() => {

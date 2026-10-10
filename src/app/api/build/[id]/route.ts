@@ -22,6 +22,8 @@ export async function GET(req: Request, ctx: RouteContext<"/api/build/[id]">) {
     const [files, steps] = await Promise.all([loadFiles(id), loadSteps(id)]);
     return Response.json({
       project: { id: project.id, name: project.name },
+      // The last request stopped part-way (the tab closed, or the step limit): it can continue.
+      pending: steps.length > 0 && steps[steps.length - 1].role === "user",
       files: [...files].sort(([a], [b]) => a.localeCompare(b)).map(([path, content]) => ({ path, content })),
       steps: steps.flatMap((s) => {
         const blocks = (Array.isArray(s.content) ? s.content : []) as Block[];

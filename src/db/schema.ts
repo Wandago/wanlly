@@ -389,3 +389,20 @@ export const buildSteps = pgTable(
   },
   (t) => [index("build_steps_project").on(t.projectId, t.id)],
 );
+
+/** Builder apps published at /s/<slug>: one page per project, served sandboxed (app/s/[slug]). */
+export const publishedSites = pgTable("published_sites", {
+  slug: text("slug").primaryKey(),
+  projectId: bigint("project_id", { mode: "number" })
+    .notNull()
+    .unique()
+    .references(() => projects.id),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => users.id),
+  html: text("html").notNull(),
+  /** Taken down by the team (a report, or the owner's account paused). */
+  disabled: boolean("disabled").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});

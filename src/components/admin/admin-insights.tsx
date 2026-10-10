@@ -664,6 +664,7 @@ export function AbuseTab({ onOpenPerson }: { onOpenPerson: (q: string) => void }
           ))}
         </div>
       </Card>
+      <PublishedSites />
       <Card
         title={`Flagged accounts${data.flags.length ? ` · ${people}` : ""}`}
         note="Patterns from the last 7 days. Flags never act on their own: open the person and decide."
@@ -712,5 +713,50 @@ export function AbuseTab({ onOpenPerson }: { onOpenPerson: (q: string) => void }
         )}
       </Card>
     </div>
+  );
+}
+
+type Site = { slug: string; disabled: boolean; updatedAt: string; email: string | null; size: number };
+
+/** Builder apps people have published at /s/…, newest first, with a way to take one down. */
+function PublishedSites() {
+  const { data, error, reload } = useData<{ sites: Site[] }>("/api/admin/sites");
+  const [note, setNote] = useState("");
+  const flip = async (s: Site) => {
+    const reason = window.prompt(s.disabled ? `Put ${s.slug} back online? Give a reason for the log.` : `Take ${s.slug} down? Give a reason for the log (e.g. phishing report).`);
+    if (!reason?.trim()) return;
+    try {
+      await api("/api/admin/sites", "PATCH", { slug: s.slug, disabled: !s.disabled, reason });
+      reload();
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
+  return (
+    <Card title="Published apps" note="Apps people published from the Builder. Each page has a Report link that goes to Messages. Taking one down stops its link at once.">
+      {note && <p className="text-[13px] text-bad">{note}</p>}
+      {error ? (
+        <Empty>{error}</Empty>
+      ) : !data ? (
+        <Loading />
+      ) : data.sites.length ? (
+        <Table
+          head={["App", "Owner", "Updated", "Size", ""]}
+          rows={data.sites.map((s) => [
+            <a key="a" href={`/s/${s.slug}`} target="_blank" rel="noopener noreferrer" className={`font-mono text-xs ${s.disabled ? "text-faint line-through" : "text-accent"}`}>
+              {s.slug}
+            </a>,
+            <span key="o" className="block max-w-[200px] truncate">{s.email ?? "–"}</span>,
+            when(s.updatedAt),
+            `${Math.round(s.size / 1024)} KB`,
+            <button key="b" type="button" className={btnGhost} onClick={() => flip(s)}>
+              {s.disabled ? "Put back" : "Take down"}
+            </button>,
+          ])}
+        />
+      ) : (
+        <Empty>No published apps yet.</Empty>
+      )}
+    </Card>
   );
 }
