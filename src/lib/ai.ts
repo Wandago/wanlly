@@ -343,6 +343,9 @@ export async function claudeBuildStep(opts: {
  * unpacks it, installs what it can, runs the build and tests, and reports without changing
  * anything. The upload is deleted afterwards.
  */
+const PROMPT_CHECK =
+  "project.zip holds a web project someone is building. Unzip it into a fresh folder and check it, without changing any file:\n1. Look at what kind of project it is.\n2. If there's a package.json or requirements.txt, try to install dependencies. The sandbox may have no internet; if installs fail, say so and do what you can without them.\n3. Run its build and its tests if it has them. Otherwise run syntax checks (node --check on .js files, python -m py_compile on .py files) and look for obvious broken references (missing files, scripts or stylesheets that don't exist).\n4. Reply with a short report: what you ran, what passed, and for each failure the exact error lines and the likely cause. No other commentary.";
+
 export async function claudeSandboxCheck(opts: { modelId: string; zip: Blob; signal: AbortSignal }) {
   if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
   anthropic ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1 });
@@ -350,34 +353,50 @@ export async function claudeSandboxCheck(opts: { modelId: string; zip: Blob; sig
   if (!m) throw new ProviderError("unavailable");
   const uploaded = await anthropic.files.upload({ file: await toFile(opts.zip, "project.zip", { type: "application/zip" }) });
   try {
-    const stream = anthropic.messages.stream(
+    const messages: Anthropic.MessageParam[] = [
       {
-        model: m.api,
-        max_tokens: 16000,
-        tools: [{ type: "code_execution_20260521", name: "code_execution" }],
-        output_config: { effort: "low" },
-        messages: [
+        role: "user",
+        content: [
           {
-            role: "user",
-            content: [
-              {
-                type: "text",
-                text: "project.zip holds a web project someone is building. Unzip it into a fresh folder and check it, without changing any file:\n1. Look at what kind of project it is.\n2. If there's a package.json or requirements.txt, try to install dependencies. The sandbox may have no internet; if installs fail, say so and do what you can without them.\n3. Run its build and its tests if it has them. Otherwise run syntax checks (node --check on .js files, python -m py_compile on .py files) and look for obvious broken references (missing files, scripts or stylesheets that don't exist).\n4. Reply with a short report: what you ran, what passed, and for each failure the exact error lines and the likely cause. No other commentary.",
-              },
-              { type: "container_upload", file_id: uploaded.id },
-            ],
+            type: "text",
+            text: PROMPT_CHECK,
           },
+          { type: "container_upload", file_id: uploaded.id },
         ],
       },
-      { signal: opts.signal },
-    );
-    const message = await stream.finalMessage();
-    const report = message.content
+    ];
+    // Long installs or builds can pause the turn; it's resumed (a few times at most) by sending
+    // the conversation back, in the same sandbox.
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let message: Anthropic.Message | null = null;
+    let container: string | undefined;
+    for (let round = 0; round < 4; round++) {
+      const stream: ReturnType<Anthropic["messages"]["stream"]> = anthropic.messages.stream(
+        {
+          model: m.api,
+          max_tokens: 16000,
+          tools: [{ type: "code_execution_20260521", name: "code_execution" }],
+          output_config: { effort: "low" },
+          ...(container ? { container } : {}),
+          messages,
+        },
+        { signal: opts.signal },
+      );
+      const reply: Anthropic.Message = await stream.finalMessage();
+      message = reply;
+      container = reply.container?.id ?? container;
+      inputTokens += billedInput(opts.modelId, reply.usage);
+      outputTokens += reply.usage.output_tokens;
+      if (reply.stop_reason !== "pause_turn") break;
+      messages.push({ role: "assistant", content: reply.content });
+    }
+    const report = (message?.content ?? [])
       .filter((b): b is Anthropic.TextBlock => b.type === "text")
       .map((b) => b.text)
       .join("\n")
       .trim();
-    return { report, inputTokens: billedInput(opts.modelId, message.usage), outputTokens: message.usage.output_tokens };
+    return { report, inputTokens, outputTokens };
   } finally {
     await anthropic.files.delete(uploaded.id).catch(() => {});
   }

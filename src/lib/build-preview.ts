@@ -39,8 +39,11 @@ const scriptSafe = (s: string) => s.replace(/<\/script/gi, "<\\/script");
 /** Which kind of preview a project gets, and from which file. */
 export function previewKind(files: BuildFile[]): { kind: "html" | "react" | "none"; entry?: string } {
   const html = files.find((f) => f.path === "index.html") ?? files.find((f) => f.path.endsWith("/index.html")) ?? files.find((f) => f.path.endsWith(".html"));
-  if (html) return { kind: "html", entry: html.path };
   const app = files.find((f) => /(^|\/)App\.(jsx|tsx)$/.test(f.path)) ?? files.find((f) => /\.(jsx|tsx)$/.test(f.path));
+  // A Vite-style React app (index.html loading src/main.jsx) runs as React: the browser can't
+  // load .jsx itself.
+  if (html && app && /<script\b[^>]*\bsrc\s*=\s*["'][^"']+\.(jsx|tsx)["']/i.test(html.content)) return { kind: "react", entry: app.path };
+  if (html) return { kind: "html", entry: html.path };
   if (app) return { kind: "react", entry: app.path };
   return { kind: "none" };
 }

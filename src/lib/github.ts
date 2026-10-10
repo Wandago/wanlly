@@ -9,6 +9,8 @@ import { clerk } from "./session";
 
 export const GITHUB_SCOPE = "repo";
 const API = "https://api.github.com";
+/** The description Wanlly gives repositories it creates; only those are written to. */
+const MARK = "Built with Wanlly";
 
 export async function githubToken(userId: string): Promise<{ token?: string; connected: boolean }> {
   try {
@@ -45,11 +47,15 @@ export async function pushToGithub(token: string, repo: string, files: { path: s
   const me = await gh<{ login: string }>(token, "/user");
   if (!me.ok) throw new Error("GitHub didn't accept the connection. Connect GitHub again.");
   const full = `${me.data.login}/${repo}`;
-  let info = await gh<{ default_branch: string; html_url: string }>(token, `/repos/${full}`);
+  let info = await gh<{ default_branch: string; html_url: string; description?: string | null }>(token, `/repos/${full}`);
+  // Each save replaces the repository's files with the project's, so an existing repository is
+  // only used when Wanlly made it; anything else could lose work.
+  if (info.ok && info.data.description !== MARK)
+    throw new Error(`You already have a repository called ${repo} that Wanlly didn't create. Pick another name so nothing in it is replaced.`);
   if (info.status === 404) {
     const made = await gh<{ default_branch: string; html_url: string; message?: string }>(token, "/user/repos", {
       method: "POST",
-      body: JSON.stringify({ name: repo, private: true, auto_init: true, description: "Built with Wanlly" }),
+      body: JSON.stringify({ name: repo, private: true, auto_init: true, description: MARK }),
     });
     if (!made.ok) throw new Error(made.data.message ? `GitHub: ${made.data.message}` : "Couldn't create the repository on GitHub.");
     info = made;

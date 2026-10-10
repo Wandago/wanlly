@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { loadFiles, loadSteps, ownBuild } from "@/lib/build";
 import { field, smallJson } from "@/lib/forms";
@@ -70,6 +70,8 @@ export async function DELETE(req: Request, ctx: RouteContext<"/api/build/[id]">)
   if (!Number.isSafeInteger(id) || !(await ownBuild(id, userId).catch(() => null))) return Response.json({ error: SAY.notFound }, { status: 404 });
   await db().delete(schema.buildSteps).where(eq(schema.buildSteps.projectId, id));
   await db().delete(schema.buildFiles).where(eq(schema.buildFiles.projectId, id));
+  // Its published page goes offline too (a taken-down one stays, disabled, as the record).
+  await db().delete(schema.publishedSites).where(and(eq(schema.publishedSites.projectId, id), eq(schema.publishedSites.disabled, false))).catch(() => {});
   await db().update(schema.projects).set({ deletedAt: sql`now()` }).where(eq(schema.projects.id, id));
   return Response.json({ ok: true });
 }

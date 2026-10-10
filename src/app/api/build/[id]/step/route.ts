@@ -44,12 +44,20 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
   const project = await ownBuild(id, userId).catch(() => null);
   if (!project) return Response.json({ error: SAY.notFound }, { status: 404 });
 
-  // The conversation so far, with the new message at the end.
+  // The conversation so far. A step cut off between saving the AI's edits and their results
+  // would leave edits with no results, which the model refuses to continue from, so those are
+  // closed as interrupted first. Then the new message goes at the end.
   let steps = await loadSteps(id);
-  if (message) {
-    await d.insert(schema.buildSteps).values({ projectId: id, role: "user", content: [{ type: "text", text: message }] });
-    steps = await loadSteps(id);
-  }
+  const tail = steps[steps.length - 1];
+  const orphans = tail?.role === "assistant" ? ((Array.isArray(tail.content) ? tail.content : []) as Block[]).filter((b) => b.type === "tool_use" && b.id) : [];
+  if (orphans.length)
+    await d.insert(schema.buildSteps).values({
+      projectId: id,
+      role: "user",
+      content: orphans.map((b) => ({ type: "tool_result", tool_use_id: b.id, is_error: true, content: "This edit was interrupted and may not have been applied. View the file to check." })),
+    });
+  if (message) await d.insert(schema.buildSteps).values({ projectId: id, role: "user", content: [{ type: "text", text: message }] });
+  if (orphans.length || message) steps = await loadSteps(id);
   const last = steps[steps.length - 1];
   if (!last || last.role !== "user") return Response.json({ done: true });
   const history = JSON.stringify(steps.map((s) => s.content));
@@ -75,38 +83,41 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
         } catch {}
       };
       send({ type: "start", price });
-      let streamed = false;
+      // What this step has taken so far, and whether its result is saved: anything that fails
+      // before the save is refunded in full, extra charge included.
+      let charged = price;
+      let saved = false;
       try {
         const { message: reply, inputTokens, outputTokens } = await claudeBuildStep({
           modelId: model.id,
           system: BUILD_SYSTEM,
           messages: steps.map((s) => ({ role: s.role, content: s.content as Anthropic.Beta.BetaContentBlockParam[] })),
           signal: req.signal,
-          onText: (text) => {
-            streamed = true;
-            send({ type: "text", text });
-          },
+          onText: (text) => send({ type: "text", text }),
         });
         const uses = (reply.content as Block[]).filter((b) => b.type === "tool_use");
         const actual = taskCredits(price, model, inputTokens, outputTokens, Math.ceil(replyCostUsd(model.id, inputTokens, outputTokens) / ESTIMATE.usdPerCredit));
-        const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `Builder · ${model.name} · bigger step`) : 0;
-        const charged = price + extra;
+        if (actual > price) charged += await chargeExtra(userId, actual - price, `${ref}:extra`, `Builder · ${model.name} · bigger step`);
         if (reply.stop_reason === "refusal") {
           await release(userId, charged, ref).catch(() => {});
+          saved = true;
           send({ type: "error", message: `The model chose not to do that one. Try asking a different way. ${SAY.refunded}`, ...(await account(userId)) });
           return;
         }
         // A reply cut off mid-edit can't be applied safely, and its half-written edit can't stay
-        // in the conversation; the person is asked for a smaller step instead.
+        // in the conversation; the person is asked for a smaller step instead. The tokens were
+        // really used, so the step is still paid.
         if (reply.stop_reason === "max_tokens" && uses.length) {
+          saved = true;
           send({ type: "error", message: "That step tried to write too much at once. Ask for a smaller part of the change.", charged, ...(await account(userId)) });
           return;
         }
-        await d.insert(schema.buildSteps).values({ projectId: id, role: "assistant", content: reply.content, modelId: model.id, inputTokens, outputTokens, credits: charged });
+        // Edits first, then the reply and its results saved together, so the conversation never
+        // holds edits without their results.
         const changed: string[] = [];
+        const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
         if (uses.length) {
           const files = await loadFiles(id);
-          const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
           for (const u of uses) {
             const input = (u.input && typeof u.input === "object" ? u.input : {}) as Record<string, unknown>;
             const out = await runEditor(id, files, input).catch(() => ({ text: "That edit couldn't be saved. Try again.", error: true, changed: undefined }));
@@ -114,16 +125,19 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
             send({ type: "edit", command: String(input.command ?? ""), path: String(input.path ?? ""), ok: !out.error });
             results.push({ type: "tool_result", tool_use_id: u.id!, content: out.text, ...(out.error ? { is_error: true } : {}) });
           }
-          await d.insert(schema.buildSteps).values({ projectId: id, role: "user", content: results });
         }
-        await d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
+        const reply$ = d.insert(schema.buildSteps).values({ projectId: id, role: "assistant", content: reply.content, modelId: model.id, inputTokens, outputTokens, credits: charged });
+        const touched = d.update(schema.projects).set({ updatedAt: sql`now()` }).where(eq(schema.projects.id, id));
+        if (results.length) await d.batch([reply$, d.insert(schema.buildSteps).values({ projectId: id, role: "user", content: results }), touched]);
+        else await d.batch([reply$, touched]);
+        saved = true;
         send({ type: "done", done: !uses.length, stop: reply.stop_reason, charged, changed, ...(await account(userId)) });
       } catch (e) {
         const kind = errorKind(e);
         if (kind !== "aborted") console.error("build step failed", kind, errorDetail(e));
-        // Nothing arrived: the price goes back. Stopped part-way: the work done is kept and paid.
-        if (!streamed) await release(userId, price, ref).catch(() => {});
-        send({ type: "error", message: streamed && kind === "aborted" ? "Stopped." : ERRORS[kind], ...(await account(userId).catch(() => ({}))) });
+        // Nothing of this step was kept, so nothing of it is paid.
+        if (!saved) await release(userId, charged, ref).catch(() => {});
+        send({ type: "error", message: kind === "aborted" ? `Stopped. ${SAY.refunded}` : ERRORS[kind], ...(await account(userId).catch(() => ({}))) });
       } finally {
         try {
           controller.close();

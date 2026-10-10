@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { loadFiles, ownBuild } from "@/lib/build";
@@ -63,6 +63,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/publ
 export async function DELETE(req: Request, ctx: RouteContext<"/api/build/[id]/publish">) {
   const o = await owned(req, ctx);
   if (o instanceof Response) return o;
-  await db().delete(s).where(eq(s.projectId, o.id)).catch(() => {});
+  // A page the team took down stays down: deleting it can't clear the takedown.
+  await db().delete(s).where(and(eq(s.projectId, o.id), eq(s.disabled, false))).catch(() => {});
   return Response.json({ ok: true });
 }

@@ -34,12 +34,13 @@ export async function GET(req: Request) {
     const payout = Number(p.get("payout"));
     const usd = Number.isFinite(payout) && payout > 0 ? Math.min(payout, 500) : (offer.payoutUsd ?? 0);
     // One completion per click, enforced by the unique (partner, transaction_id) index.
-    const done = await db()
+    await db()
       .insert(schema.adEvents)
       .values({ userId: started.userId, partner, format: "offer", placement: "earn_dialog", kind: "reward_completed", creative: `affiliate:${offer.id}`, transactionId: `${click}:done`, revenueMicros: Math.round(usd * 1e6) })
-      .onConflictDoNothing()
-      .returning({ id: schema.adEvents.id });
-    if (done.length) await post(started.userId, offer.credits, "sponsor_trial", `offer:${offer.id}:${click}`, offer.name);
+      .onConflictDoNothing();
+    // Posted on every confirmation, including retries: the ledger's unique reference pays it
+    // once, and a retry after a failed credit still pays it.
+    await post(started.userId, offer.credits, "sponsor_trial", `offer:${offer.id}:${click}`, offer.name);
     return new Response("ok");
   } catch (e) {
     console.error("offer postback failed", e);
