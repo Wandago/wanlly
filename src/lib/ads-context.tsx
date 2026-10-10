@@ -81,7 +81,7 @@ export function useSponsors(placement: string, fallback: Sponsor[], context = ""
 const SENSITIVE = /\b(suicid\w*|self[- ]harm|depress\w*|anxiety|therap\w*|diagnos\w*|symptom\w*|medic\w*|pregnan\w*|hiv|cancer|abortion|politic\w*|election\w*|vote|voting|religio\w*|abuse\w*|debt|loan shark|gambl\w*|betting)\b/i;
 
 /**
- * The sponsored suggestion for an AI answer, like ChatGPT's: a sold "suggested" campaign whose
+ * The sponsored suggestion for an AI answer: a sold "suggested" campaign whose
  * topics match what was asked (best match first), else one of Wanlly's own offers that matches.
  * Nothing when nothing matches, the topic is sensitive, or the person hid that advertiser.
  */

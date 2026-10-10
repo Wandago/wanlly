@@ -172,7 +172,7 @@ export function CampaignBuilder() {
             {(
               [
                 ["visual", "grid", "Visual ads", "Your picture as banners and sponsor cards beside people's work: side panels, under the chat box, over the code, the phone bar. Priced per 1,000 views."],
-                ["suggested", "chat", "Suggested in chat", "One sponsored card under an AI answer when the conversation matches your topics, like ads in ChatGPT. Never inside the answer. Per 1,000 views or per click."],
+                ["suggested", "chat", "Suggested in chat", "One sponsored card under an AI answer when the conversation matches your topics. Never inside the answer. Per 1,000 views or per click."],
               ] as const
             ).map(([id, icon, title, text]) => (
               <button
