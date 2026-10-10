@@ -15,7 +15,7 @@
 
 // The Wanlly addresses allowed to show these banners. When you add a domain, add it here (keep
 // the old one until everyone has moved), then Deploy.
-const APPS = ["https://wanlly.louiswandago.workers.dev", "https://wanlly.app", "https://www.wanlly.app"];
+const APPS = ["https://wanlly.africa", "https://www.wanlly.africa", "https://wanlly.louiswandago.workers.dev"];
 
 const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="origin">
 <style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style>

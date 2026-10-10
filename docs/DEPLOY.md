@@ -28,6 +28,29 @@ Clerk dashboard → **Webhooks → Add endpoint**:
 
 Also add the workers.dev address to Clerk's allowed origins if Clerk asks for it.
 
+## Domain: wanlly.africa
+
+The domain is registered with HostAfrica, whose Web_Starter plan hosts email only (it can't run
+the app). The site stays on Cloudflare; email stays at HostAfrica.
+
+1. **Cloudflare → Add a domain** → `wanlly.africa` → Free plan. Cloudflare copies the existing DNS
+   records. Check the mail records came across: `MX` → `mail.wanlly.africa`, the `A` record for
+   `mail` (HostAfrica's server IP) and any `TXT` (SPF/DKIM) records. Mail records stay **DNS only**
+   (grey cloud). Delete any `A`/`CNAME` for `wanlly.africa` and `www` that point at HostAfrica.
+2. **HostAfrica client area → Domains → wanlly.africa → Nameservers** → use the two Cloudflare gives
+   you (instead of dan1/dan2.host-ww.net). Wait until Cloudflare says the domain is **Active**.
+3. **Workers & Pages → wanlly → Settings → Domains & Routes → Add → Custom domain**: add
+   `wanlly.africa`, then `www.wanlly.africa` (the app redirects www to the bare domain).
+4. **Build variable** `NEXT_PUBLIC_SITE_URL` = `https://wanlly.africa`, then redeploy.
+5. **Clerk:** create the **Production** instance on `wanlly.africa`, add the DNS records Clerk lists
+   (DNS only), and swap `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (build variable) and `CLERK_SECRET_KEY`
+   (secret) for the production `pk_live_`/`sk_live_` keys. Re-add the webhook on the new domain and
+   update `CLERK_WEBHOOK_SIGNING_SECRET`. Turn on Google/GitHub sign-in again with production
+   OAuth credentials (Clerk's guides walk through each).
+6. **Banner host:** redeploy `workers/ad-frame/worker.js` (its allow-list now includes the domain).
+7. **Adsterra:** add `wanlly.africa` as a site; **WhatsApp:** webhook URL
+   `https://wanlly.africa/api/whatsapp/webhook`.
+
 ## Known issues
 
 - **`cacheComponents` and `partialPrefetching` are off** in `next.config.ts`: with them on, every page hangs on Cloudflare with `@opennextjs/cloudflare` 1.20.9. Re-test when the adapter updates.
