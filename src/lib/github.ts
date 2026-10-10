@@ -31,6 +31,16 @@ async function gh<T>(token: string, path: string, init: RequestInit = {}): Promi
   return { ok: r.ok, status: r.status, data: (await r.json().catch(() => ({}))) as T };
 }
 
+/**
+ * Credits Wanlly on every commit it makes, with GitHub's co-author line. WANLLY_GITHUB_COAUTHOR
+ * (Cloudflare setting) is the GitHub account's "Name <ID+username@users.noreply.github.com>", so
+ * GitHub shows its avatar; without it the credit is plain text.
+ */
+function withCoauthor(message: string) {
+  const who = process.env.WANLLY_GITHUB_COAUTHOR?.trim() || "Wanlly <noreply@wanlly.africa>";
+  return `${message}\n\nCo-authored-by: ${who}`;
+}
+
 /** UTF-8 text as base64, for GitHub's file API. */
 function toBase64(text: string) {
   let bin = "";
@@ -101,7 +111,7 @@ export async function pushToGithub(token: string, target: { owner?: string; name
     const first = files.find((f) => /^readme\.md$/i.test(f.path)) ?? files[0];
     const started = await gh<{ message?: string }>(token, `/repos/${full}/contents/${first.path.split("/").map(encodeURIComponent).join("/")}`, {
       method: "PUT",
-      body: JSON.stringify({ message, content: toBase64(first.content), branch }),
+      body: JSON.stringify({ message: withCoauthor(message), content: toBase64(first.content), branch }),
     });
     if (!started.ok) throw new Error(started.data.message ? `GitHub: ${started.data.message}` : "Couldn't start the empty repository.");
     ref = await gh<{ object: { sha: string } }>(token, `/repos/${full}/git/ref/heads/${branch}`);
@@ -119,7 +129,7 @@ export async function pushToGithub(token: string, target: { owner?: string; name
   if (!tree.ok) throw new Error(tree.data.message ? `GitHub: ${tree.data.message}` : "GitHub didn't accept the files.");
   const commit = await gh<{ sha: string }>(token, `/repos/${full}/git/commits`, {
     method: "POST",
-    body: JSON.stringify({ message, tree: tree.data.sha, parents: [ref.data.object.sha] }),
+    body: JSON.stringify({ message: withCoauthor(message), tree: tree.data.sha, parents: [ref.data.object.sha] }),
   });
   if (!commit.ok) throw new Error("GitHub didn't accept the commit.");
   const moved = await gh(token, `/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: commit.data.sha }) });
