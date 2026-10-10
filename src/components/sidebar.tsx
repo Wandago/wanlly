@@ -82,7 +82,7 @@ function TodayCard() {
             className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
           >
             <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
-            {floorUnlocked ? "Earn more credits" : `Watch a video · +${FLOOR_CREDITS} today`}
+            {floorUnlocked ? "Earn more credits" : `Watch an ad · +${FLOOR_CREDITS} today`}
           </button>
         </>
       )}

@@ -30,9 +30,9 @@ function UnlockCard() {
             <Icon name="play" size={20} />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-            <b className="font-display text-base font-semibold tracking-[-0.01em]">Watch a short video to get credits</b>
+            <b className="font-display text-base font-semibold tracking-[-0.01em]">Watch an ad to get credits</b>
             <p className="text-[13px] text-muted">
-              Each 20-second sponsor video adds credits. Spend them on Claude or Gemini, and watch more whenever you need more.
+              Each sponsor ad you watch adds credits. Spend them on the world&apos;s top AI models, and watch more whenever you need more.
             </p>
           </div>
           <button

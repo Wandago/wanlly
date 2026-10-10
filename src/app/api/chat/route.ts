@@ -112,7 +112,7 @@ export async function POST(req: Request) {
     const acct = await account(userId).catch(() => null);
     const reason = paid?.reason ?? "failed";
     const status = reason === "credits" ? 402 : reason === "day" || reason === "week" ? 429 : reason === "duplicate" ? 409 : 503;
-    return Response.json({ error: reason === "credits" ? "You need a few more credits for this. Watch a short video to top up." : reason === "day" ? "You've used this session's limit. It resets within 6 hours of your first message." : reason === "week" ? "You've reached this week's limit. It resets 7 days after it started." : reason === "duplicate" ? "That's already on its way." : SAY.busy, reason, ...(acct ?? {}) }, { status });
+    return Response.json({ error: reason === "credits" ? "You need a few more credits for this. Watch an ad to top up." : reason === "day" ? "You've used this session's limit. It resets within 6 hours of your first message." : reason === "week" ? "You've reached this week's limit. It resets 7 days after it started." : reason === "duplicate" ? "That's already on its way." : SAY.busy, reason, ...(acct ?? {}) }, { status });
   }
 
   // Earlier turns of this conversation, newest kept first within the budget.

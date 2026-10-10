@@ -9,7 +9,7 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], weight: ["500", "600", "700"] });
 
-const DESCRIPTION = "Chat, code and design with top AI models for free. No card and no subscription: watch short sponsor videos, earn credits, and build.";
+const DESCRIPTION = "Chat, code and design with top AI models for free. No card and no subscription: watch sponsor ads, earn credits, and build.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

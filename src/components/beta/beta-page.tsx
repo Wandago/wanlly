@@ -32,7 +32,7 @@ function ProductStill() {
           </div>
           <div className="flex items-center justify-end border-t border-line px-3.5 py-2.5">
             <span className="flex items-center gap-[7px] rounded-[9px] bg-fg px-3 py-[7px] text-[13px] font-semibold text-bg">
-              <Icon name="play" size={15} />Watch 20s <span className="font-mono font-medium text-accent">+4</span>
+              <Icon name="play" size={15} />Watch an ad <span className="font-mono font-medium text-accent">+4</span>
             </span>
           </div>
         </div>
@@ -49,7 +49,7 @@ function ProductStill() {
 const STEPS = [
   { title: "Apply", text: "Tell us what you want to build. It takes a minute." },
   { title: "Get approved", text: "We open Wanlly in weekly groups. Friends you invite move you up." },
-  { title: "Watch, then build", text: "Short sponsor videos earn credits. Watch more whenever you need more. Use Claude or Gemini." },
+  { title: "Watch, then build", text: "Sponsor ads earn credits. Watch more whenever you need more, and use the world's top AI models." },
 ];
 
 /** A select with an "Other" choice that opens a text box, so nobody is stuck with our list. */
@@ -105,7 +105,7 @@ export function BetaPage() {
             Join the Wanlly beta.
           </h1>
           <p className="max-w-[56ch] text-[17px] text-muted text-balance">
-            Chat, code and design with the world&apos;s top AI models. Watch short sponsor videos, earn credits, build. No card. No subscription.
+            Chat, code and design with the world&apos;s top AI models. Watch sponsor ads, earn credits, build. No card. No subscription.
           </p>
           <a href="#apply" className="rounded-full bg-fg px-6 py-3 text-[15px] font-semibold text-bg">Apply for the beta</a>
         </section>
@@ -126,12 +126,12 @@ export function BetaPage() {
           <div className="flex flex-col gap-3">
             <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight font-semibold tracking-[-0.03em] text-balance">How it&apos;s paid for, in plain numbers.</h2>
             <p className="max-w-[52ch] text-muted">
-              Every short video you watch earns credits, and your first one each day earns a bonus. Sponsors sit beside your work, never inside an answer, and never change what a model says.
+              Every ad you watch earns credits, and your first one each day earns a bonus. Sponsors sit beside your work, never inside an answer, and never change what a model says.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
-              ["20s", "per sponsor video"],
+              ["1", "ad a day to start"],
               ["0", "subscriptions"],
               ["10+", "top AI models: Claude, Gemini, Grok, DeepSeek and more"],
               ["0", "cards, subscriptions or API keys"],

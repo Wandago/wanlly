@@ -33,7 +33,7 @@ function Hero() {
             Frontier AI for everyone with an idea<span className="text-accent">.</span>
           </h1>
           <p className="anim-rise max-w-[50ch] text-[clamp(15px,1.4vw,17px)] text-muted [animation-delay:120ms]">
-            Chat, code and design with the world&apos;s top AI models. No card and no subscription: watch short sponsor videos, earn credits, and build.
+            Chat, code and design with the world&apos;s top AI models. No card and no subscription: watch sponsor ads, earn credits, and build.
           </p>
           <div className="anim-rise flex flex-wrap gap-3 [animation-delay:180ms]">
             <Link href="/beta" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
@@ -45,7 +45,7 @@ function Hero() {
           </div>
           <dl className="anim-rise mt-2 grid w-full max-w-[460px] grid-cols-3 border-t border-line pt-5 [animation-delay:240ms]">
             {[
-              ["20s", "per video"],
+              ["1", "ad a day to start"],
               ["0", "cards needed"],
               ["5", "frontier models"],
             ].map(([n, l]) => (
@@ -119,7 +119,7 @@ function ProductPreview() {
                 <span className="block truncate">Railhouse · put this page online for free</span>
               </span>
               <span className="flex items-center gap-1 rounded-md bg-fg px-2 py-1 text-[11px] font-semibold text-bg">
-                <Icon name="play" size={10} /> 20s <span className="text-accent">+4</span>
+                <Icon name="play" size={10} /> Watch <span className="text-accent">+4</span>
               </span>
             </div>
             <div className="flex items-center gap-2 rounded-xl border border-line p-2 pl-3 text-[13px]">
@@ -270,9 +270,9 @@ function Features() {
 
 function HowFree() {
   const steps = [
-    ["Watch short videos", "Each sponsor video is about 20 seconds and earns you credits. Watch more whenever you need more."],
-    ["Build on any model", "Spend credits on Claude or Gemini. Bigger models use them faster, and you always see the cost first."],
-    ["Other ways to earn", "Short surveys and trying a sponsor's product add credits too. Nothing is ever charged to a card."],
+    ["Watch ads", "Each sponsor ad you watch earns you credits. Watch more whenever you need more."],
+    ["Build on any model", "Spend credits on the world's top AI models. Bigger models use them faster, and you always see the cost first."],
+    ["Other ways to earn", "Soon, short surveys and trying a sponsor's product will add credits too. Nothing is ever charged to a card."],
   ];
   return (
     <section id="how" className="scroll-mt-20 border-y border-line bg-side">
@@ -342,9 +342,9 @@ function Promises() {
 }
 
 const FAQ = [
-  ["Is it really free?", "Yes. You never enter a card. You watch short sponsor videos and earn credits, and the sponsors pay for your AI. Need more? Watch a few more."],
+  ["Is it really free?", "Yes. You never enter a card. You watch sponsor ads and earn credits, and the sponsors pay for your AI. Need more? Watch a few more."],
   ["Which AI models can I use?", "Claude (Haiku, Sonnet and Opus), Gemini, Grok, DeepSeek, and open models like GLM and Kimi. You choose for every message. Fable 5.1, GPT and image models are coming."],
-  ["How do credits work?", "Every video you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
+  ["How do credits work?", "Every ad you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
   ["Who is it for?", "Students and creators with ideas and no budget for AI subscriptions: anyone who wants to build an app, a site, a shop page or a side project."],
   ["When can I start?", "We're letting people in weekly. Join the beta and invite friends to move up the list."],
 ];

@@ -47,12 +47,12 @@ function Gate() {
           {floorUnlocked ? (
             <p>
               <b>{images ? "Images" : modelName}</b> needs {price} credits here and you have {credits}. Watch{" "}
-              {spots > 1 ? `${spots} short videos` : "one short video"}
+              {spots > 1 ? `${spots} ads` : "one ad"}
               {images || modelId === CHEAPEST_MODEL_ID ? "" : `, or switch to ${cheapest.name} for ${cheapest.credits} credit`}.
             </p>
           ) : (
             <p>
-              <b>Watch a short video to get credits.</b> Your first one today earns {FLOOR_CREDITS}, then {SPOT_REWARD} for each one after. Sponsors pay for every answer.
+              <b>Watch an ad to get credits.</b> Your first one today earns {FLOOR_CREDITS}, then {SPOT_REWARD} for each one after. Sponsors pay for every answer.
             </p>
           )}
           <div className="flex flex-wrap gap-2">

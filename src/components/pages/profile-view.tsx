@@ -229,7 +229,7 @@ function Standing() {
 }
 
 type Entry = { delta: number; reason: string; note: string | null; at: string };
-const REASONS: Record<string, string> = { floor: "First video today", video: "Sponsor video", settle: "Used", admin_grant: "From Wanlly", reversal: "Reversed", referral: "Referral", student_bonus: "Student bonus" };
+const REASONS: Record<string, string> = { floor: "First ad today", video: "Sponsor ad", settle: "Used", admin_grant: "From Wanlly", reversal: "Reversed", referral: "Referral", student_bonus: "Student bonus" };
 
 function History() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
@@ -255,7 +255,7 @@ function History() {
       {state === "open" && entries && (
         <div className="max-h-[280px] overflow-y-auto rounded-xl border border-line">
           {entries.length === 0 ? (
-            <p className="p-3 text-[13px] text-muted">Nothing yet. Watch a video to earn your first credits.</p>
+            <p className="p-3 text-[13px] text-muted">Nothing yet. Watch an ad to earn your first credits.</p>
           ) : (
             <table className="w-full text-[13px]">
               <tbody>
@@ -459,7 +459,7 @@ export function ProfileView() {
               {[
                 ["Balance", synced ? `${credits} credits` : "–"],
                 ["Today's bonus", floorUnlocked ? `Collected · +${FLOOR_CREDITS}` : `+${FLOOR_CREDITS} waiting`],
-                ["Videos today", usage ? `${usage.videos} of ${usage.videoCap}` : "–"],
+                ["Ads today", usage ? `${usage.videos} of ${usage.videoCap}` : "–"],
               ].map(([l, v]) => (
                 <div key={l} className="flex flex-col gap-0.5 rounded-xl bg-code p-3">
                   <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">{l}</span>
@@ -511,7 +511,7 @@ export function ProfileView() {
                   on={s.personalisedAds}
                   onChange={(v) => save({ personalisedAds: v })}
                 />
-                <Switch label="Sound on for videos" detail="Videos start muted unless you turn this on." on={s.videoSound} onChange={(v) => save({ videoSound: v })} />
+                <Switch label="Sound on for ads" detail="Ads start muted unless you turn this on." on={s.videoSound} onChange={(v) => save({ videoSound: v })} />
               </div>
             )}
           </Panel>

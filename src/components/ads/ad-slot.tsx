@@ -59,7 +59,7 @@ function SponsorLink({ sponsor, className }: { sponsor: Sponsor; className: stri
   );
 }
 
-export function WatchButton({ onClick, earned = false, className = "", generic = false }: { onClick?: () => void; earned?: boolean; className?: string; generic?: boolean }) {
+export function WatchButton({ onClick, earned = false, className = "" }: { onClick?: () => void; earned?: boolean; className?: string }) {
   return (
     <button
       type="button"
@@ -75,7 +75,7 @@ export function WatchButton({ onClick, earned = false, className = "", generic =
       ) : (
         <>
           <Icon name="play" size={15} />
-          {generic ? "Watch a video" : "Watch 20s"} <span className="font-mono font-medium text-accent">+{SPOT_REWARD}</span>
+          Watch an ad <span className="font-mono font-medium text-accent">+{SPOT_REWARD}</span>
         </>
       )}
     </button>
@@ -145,7 +145,7 @@ export function RewardedSpot({
     view.current ??= postJson("/api/earn/start", { placement })
       .then(({ ok, body }) => {
         if (ok) return body.viewId as string;
-        dispatch({ type: "toast", text: body.error ?? "Couldn't start the video" });
+        dispatch({ type: "toast", text: body.error ?? "Couldn't start the ad" });
         // Past the first video of the day, earning needs a verified phone (one WhatsApp message).
         if (body.need === "phone") openPhoneVerify();
         return null;
@@ -167,7 +167,7 @@ export function RewardedSpot({
             if (body.need === "phone") openPhoneVerify();
             return null;
           }
-          const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first video today" : ""}` : undefined;
+          const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first ad today" : ""}` : undefined;
           dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, usage: body.usage, toast: text });
           return body.earned ? { earned: body.earned as number, credits: body.credits as number } : null;
         })
@@ -318,7 +318,7 @@ export function SponsorCard({
             className="rounded-[9px] border border-line bg-surface px-[11px] py-[7px] text-[13px] font-medium hover:border-faint"
           />
         )}
-        <WatchButton onClick={onWatch} earned={spot === "earned"} generic={sold} className="ml-auto" />
+        <WatchButton onClick={onWatch} earned={spot === "earned"} className="ml-auto" />
       </div>
     </div>
   );

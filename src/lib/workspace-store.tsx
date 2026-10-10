@@ -335,7 +335,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
           if (acct) dispatch(acct);
           const why =
             b.reason === "credits"
-              ? "Not enough credits for that. Watch a video to earn more"
+              ? "You need a few more credits for that. Watch an ad to earn more"
               : b.reason === "day" && b.usage
                 ? `You've reached this session's limit. It resets ${resetLabel(b.usage.dayResetsAt, "relative")}`
                 : b.reason === "week" && b.usage
@@ -419,7 +419,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         const acct = accountFrom(b);
         if (acct) dispatch(acct);
         if (b.reason === "credits" || b.reason === "day" || b.reason === "week")
-          return dispatch({ type: "dropJob", id, toast: b.reason === "credits" ? "Not enough credits for that. Watch a video to earn more" : "You've reached your limit for now" });
+          return dispatch({ type: "dropJob", id, toast: b.reason === "credits" ? "You need a few more credits for that. Watch an ad to earn more" : "You've reached your limit for now" });
         return dispatch({ type: "jobError", id, message: b.error ?? "Something went wrong making that image. Your credits were refunded." });
       }
       const model = r.headers.get("x-wanlly-model") ?? "gemini";

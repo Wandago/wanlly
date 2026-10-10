@@ -39,7 +39,7 @@ export function UsageMeters({ usage, videos = false }: { usage: Usage | null; vi
     <div className="flex flex-col gap-2.5">
       <Meter label="Current session" used={usage.dayUsed} limit={usage.dayLimit} resets={usage.dayResetsAt ? `Resets ${resetLabel(usage.dayResetsAt, "relative")}` : "Starts with your next request"} />
       <Meter label="This week" used={usage.weekUsed} limit={usage.weekLimit} resets={usage.weekResetsAt ? `Resets ${resetLabel(usage.weekResetsAt, "weekday")}` : "Starts with your next request"} />
-      {videos && <Meter label="Videos today" used={usage.videos} limit={usage.videoCap} resets={`${usage.videos} of ${usage.videoCap}`} />}
+      {videos && <Meter label="Ads today" used={usage.videos} limit={usage.videoCap} resets={`${usage.videos} of ${usage.videoCap}`} />}
     </div>
   );
 }

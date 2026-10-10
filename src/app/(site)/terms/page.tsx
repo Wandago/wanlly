@@ -11,7 +11,7 @@ export default function TermsPage() {
       <p>You must be 18 or older during the beta, and one person may have one account.</p>
       <h2>Credits</h2>
       <ul>
-        <li>Credits are earned by watching sponsor videos and similar offers. They have no cash value and can&apos;t be sold, transferred or exchanged.</li>
+        <li>Credits are earned by watching sponsor ads and similar offers. They have no cash value and can&apos;t be sold, transferred or exchanged.</li>
         <li>Rewards follow what each ad actually pays, so they can change. Credits from fake or invalid views are removed.</li>
       </ul>
       <h2>Fair use</h2>

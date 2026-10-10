@@ -214,7 +214,7 @@ export function DesignEditor({ id }: { id: number }) {
       if (!r.ok || !r.body) {
         const b = await r.json().catch(() => ({}));
         account(b);
-        setNote(b.reason === "credits" ? "Not enough credits. Watch a video to earn more." : b.reason === "day" || b.reason === "week" ? (limitReached(b.usage, Infinity) ?? "You've reached your limit.") : (b.error ?? "Couldn't start that."));
+        setNote(b.reason === "credits" ? "You need a few more credits. Watch an ad to earn more." : b.reason === "day" || b.reason === "week" ? (limitReached(b.usage, Infinity) ?? "You've reached your limit.") : (b.error ?? "Couldn't start that."));
         return;
       }
       const reader = r.body.pipeThrough(new TextDecoderStream()).getReader();

@@ -91,9 +91,9 @@ export function EarnDialog() {
                 </Dialog.Close>
               </header>
               {floorUnlocked ? (
-                <Option icon="play" title="Watch a 20s video" detail="Or press Watch on any working card" gain={SPOT_REWARD} onClick={() => setPlaying("self")} />
+                <Option icon="play" title="Watch an ad" detail="Or press Watch on any working card" gain={SPOT_REWARD} onClick={() => setPlaying("self")} />
               ) : (
-                <Option icon="play" title="Today's first video" detail="Your first video each day earns a bonus" gain={FLOOR_CREDITS} onClick={() => setPlaying("self")} />
+                <Option icon="play" title="Today's first ad" detail="Your first ad each day earns a bonus" gain={FLOOR_CREDITS} onClick={() => setPlaying("self")} />
               )}
               <Option
                 icon="gift"
@@ -105,7 +105,7 @@ export function EarnDialog() {
               <Option
                 icon="search"
                 title="Answer a short survey"
-                detail="Pays more than a video · credits arrive when the survey company confirms"
+                detail="Pays more than an ad · credits arrive when the survey company confirms"
                 gain="Soon"
                 locked
               />

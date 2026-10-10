@@ -28,7 +28,7 @@ async function completedToday(userId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
-export const PHONE_NEEDED = "Verify your number on WhatsApp to keep earning today. It takes one message, and your first video each day never needs it.";
+export const PHONE_NEEDED = "Verify your number on WhatsApp to keep earning today. It takes one message, and your first ad each day never needs it.";
 
 /**
  * Whether this person has a verified phone: proven on WhatsApp (src/lib/whatsapp.ts), or a
@@ -46,7 +46,7 @@ async function phoneVerified(userId: string): Promise<boolean> {
 export async function startView(userId: string, placement: string, country: string | null) {
   if (!PLACEMENTS.has(placement)) return { error: "Unknown placement", status: 400 } as const;
   const today = await completedToday(userId);
-  if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
+  if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
   // One phone, one earner: past the first video of the day, a script would need a real phone
   // number per account (each number can be tied to one account only).
   if (today >= 1 && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
@@ -55,7 +55,7 @@ export async function startView(userId: string, placement: string, country: stri
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.adEvents)
     .where(and(eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_started"), gte(schema.adEvents.createdAt, sql`now() - interval '1 minute'`)));
-  if ((recent?.n ?? 0) >= 4) return { error: "One video at a time, please. Finish this one first.", status: 429 } as const;
+  if ((recent?.n ?? 0) >= 4) return { error: "One ad at a time, please. Finish this one first.", status: 429 } as const;
 
   const viewId = crypto.randomUUID();
   await db().insert(schema.adEvents).values({ userId, partner: PARTNER, format: "video", placement, country, kind: "reward_started", transactionId: viewId });
@@ -68,11 +68,11 @@ export async function completeView(userId: string, viewId: string, country: stri
     .from(schema.adEvents)
     .where(and(eq(schema.adEvents.partner, PARTNER), eq(schema.adEvents.transactionId, viewId), eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_started")))
     .limit(1);
-  if (!started) return { error: "That video has ended. Start a new one to earn.", status: 404 } as const;
-  if (started.ms < MIN_VIEW_MS) return { error: "The video didn't play to the end, so no credits this time. Try another one.", status: 409 } as const;
-  if (started.ms > MAX_VIEW_MS) return { error: "That video has ended. Start a new one to earn.", status: 410 } as const;
+  if (!started) return { error: "That ad has ended. Start a new one to earn.", status: 404 } as const;
+  if (started.ms < MIN_VIEW_MS) return { error: "The ad didn't play to the end, so no credits this time. Try another one.", status: 409 } as const;
+  if (started.ms > MAX_VIEW_MS) return { error: "That ad has ended. Start a new one to earn.", status: 410 } as const;
   const today = await completedToday(userId);
-  if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
+  if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
   // Two views started together before the first finished: the second still needs the phone.
   if (today >= 1 && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
 
@@ -91,7 +91,7 @@ export async function completeView(userId: string, viewId: string, country: stri
     .onConflictDoNothing()
     .returning({ day: schema.dailyFloors.day });
   if (bonus.length > 0) {
-    await post(userId, FLOOR_CREDITS, "floor", `floor:${userId}:${bonus[0].day}`, "First video today");
+    await post(userId, FLOOR_CREDITS, "floor", `floor:${userId}:${bonus[0].day}`, "First ad today");
     return { earned: FLOOR_CREDITS, bonus: true } as const;
   }
   await post(userId, SPOT_REWARD, "video", `video:${viewId}`);

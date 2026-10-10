@@ -166,7 +166,7 @@ export function AdvertisePage() {
           <Format icon="images" title="Banners" text="Standard sizes (300×250, 320×50 on phones) in the same rounded frame, so they never look pasted in.">
             <Banner />
           </Format>
-          <Format icon="play" title="Sponsored videos" text="15 to 20 seconds, watched by choice to earn credits. Full attention, finished views only.">
+          <Format icon="play" title="Sponsored videos" text="Short, and watched by choice to earn credits. Full attention, finished views only.">
             <Video />
           </Format>
           <Format icon="bolt" title="Pop-up cards" text="A full card at a natural break, right after a reply or design finishes. Never while someone types, and capped per person.">

@@ -92,7 +92,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
             className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
           >
             <Icon name="play" size={15} />
-            {floorUnlocked ? `Watch a video · +${SPOT_REWARD}` : `First video today · +${FLOOR_CREDITS}`}
+            {floorUnlocked ? `Watch an ad · +${SPOT_REWARD}` : `First ad today · +${FLOOR_CREDITS}`}
           </Popover.Close>
           {from && <p className="text-xs text-faint">This is the starting price. Bigger tasks cost more, by how much the model writes and reads: about {rate ?? 1} more for every 1,500 words it writes, and never more than {(rate ?? 1) * 40} for one task.</p>}
         </Popover.Content>

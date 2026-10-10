@@ -13,7 +13,7 @@ export default function AboutPage() {
       </p>
       <h2>How it works</h2>
       <p>
-        Brands want to reach curious, ambitious people. When you choose to watch a short video, they pay for it, and that money buys your AI time. One video a day unlocks a floor of credits that&apos;s the same in every country. Extra videos, short surveys and sponsor trials add more.
+        Brands want to reach curious, ambitious people. When you choose to watch their ad, they pay for it, and that money buys your AI time. One video a day unlocks a floor of credits that&apos;s the same in every country. Extra videos, short surveys and sponsor trials add more.
       </p>
       <h2>What we promise</h2>
       <ul>
