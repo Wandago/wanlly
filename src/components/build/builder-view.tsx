@@ -151,17 +151,76 @@ export function BuilderView({ id }: { id: number }) {
     [id, model, running, smart, claude, dispatch, load],
   );
 
-  // A new app started from the Builder's home page carries its first request over.
+  // A new app asks first whether it's for an existing GitHub repository. Its first request (from
+  // the Builder's home page) waits until the person answers, then runs on the files they chose.
+  const [pendingFirst, setPendingFirst] = useState<string | null>(null);
+  const [repoLink, setRepoLink] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [startNote, setStartNote] = useState("");
+  const [startDone, setStartDone] = useState(false);
+  const [autoOpen, setAutoOpen] = useState(false);
+  const [, setSavedRepo] = useLocalSetting(`wanlly-build-repo-${id}`, "");
   useEffect(() => {
-    if (started.current || !files || steps.length || !model) return;
+    if (started.current || !files) return;
+    started.current = true;
     let first: string | null = null;
+    let repo: string | null = null;
     try {
       first = sessionStorage.getItem(`wanlly-build-first-${id}`);
       sessionStorage.removeItem(`wanlly-build-first-${id}`);
+      repo = sessionStorage.getItem(`wanlly-build-repo-${id}`);
+      sessionStorage.removeItem(`wanlly-build-repo-${id}`);
     } catch {}
-    started.current = true;
-    if (first) queueMicrotask(() => void run(first!));
-  }, [files, steps.length, model, id, run]);
+    queueMicrotask(() => {
+      if (first) setPendingFirst(first);
+      if (repo) {
+        setRepoLink(repo);
+        setAutoOpen(true);
+      }
+    });
+  }, [files, id]);
+  // Opened from "Work on a GitHub repository" on the Builder's home page: open it straight away.
+  useEffect(() => {
+    if (!autoOpen || !repoLink) return;
+    queueMicrotask(() => {
+      setAutoOpen(false);
+      void openRepoRef.current?.();
+    });
+  }, [autoOpen, repoLink]);
+  const openRepoRef = useRef<(() => Promise<void>) | null>(null);
+  const choosing = !!files && !files.length && !steps.length && !live && !startDone;
+
+  const startFresh = () => {
+    setStartDone(true);
+    if (pendingFirst) void run(pendingFirst);
+    setPendingFirst(null);
+  };
+  const openRepo = async () => {
+    if (!repoLink.trim()) return setStartNote("Paste the link to your repository, like github.com/you/my-site.");
+    setImporting(true);
+    setStartNote("");
+    try {
+      const r = await fetch(`/api/build/${id}/github/import`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo: repoLink.trim() }) });
+      const b = await r.json().catch(() => ({}));
+      if (b.connect) {
+        // Not connected yet: the GitHub panel walks them through it, then they press Open again.
+        window.dispatchEvent(new CustomEvent("wanlly:github", { detail: { repo: repoLink.trim() } }));
+        return setStartNote("Connect GitHub in the panel above, then press Open repository again.");
+      }
+      if (!r.ok) throw new Error(b.error ?? SAY.busy);
+      setSavedRepo(b.repo);
+      setStartDone(true);
+      await load();
+      dispatch({ type: "toast", text: `Opened ${b.files} files${b.skipped ? ` (${b.skipped} too big to open)` : ""}` });
+      if (pendingFirst) void run(pendingFirst);
+      setPendingFirst(null);
+    } catch (e) {
+      setStartNote(e instanceof Error ? e.message : SAY.offline);
+    } finally {
+      setImporting(false);
+    }
+  };
+  openRepoRef.current = openRepo;
 
   // The preview reports its errors; the Builder can hand them back to fix.
   useEffect(() => {
@@ -210,8 +269,31 @@ export function BuilderView({ id }: { id: number }) {
   const chat = (
     <section className="flex min-h-0 flex-1 flex-col border-line md:border-l">
       <div className="flex-1 overflow-y-auto px-4 py-4">
-        {!steps.length && !live && (
-          <p className="text-sm text-muted">Describe what to build or change. The AI works in steps: it reads the files it needs, edits them, and checks the result.</p>
+        {choosing ? (
+          <div className="flex flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-sm">
+            <b className="font-semibold">Before we start: is this for a GitHub repository?</b>
+            <p className="text-[13px] text-muted">Open one of your repositories and the AI works on its code; saving to GitHub then updates it. Or start fresh and save it to GitHub later.</p>
+            {pendingFirst && <p className="rounded-lg bg-hover px-3 py-2 text-[13px]">Your request: {pendingFirst}</p>}
+            <input
+              value={repoLink}
+              onChange={(e) => setRepoLink(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && void openRepo()}
+              placeholder="github.com/you/my-site"
+              className="rounded-lg border border-line bg-bg px-2.5 py-2 font-mono text-xs outline-none focus:border-faint"
+            />
+            <div className="flex flex-wrap gap-2">
+              <button type="button" disabled={importing} onClick={openRepo} className="flex items-center gap-1.5 rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-bg hover:opacity-90 disabled:opacity-50">
+                <Icon name="github" size={14} /> {importing ? "Opening…" : "Open repository"}
+              </button>
+              <button type="button" disabled={importing} onClick={startFresh} className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium hover:border-faint disabled:opacity-50">
+                {pendingFirst ? "Start fresh and build" : "Start fresh"}
+              </button>
+            </div>
+            {startNote && <p className="text-xs text-bad">{startNote}</p>}
+          </div>
+        ) : (
+          !steps.length &&
+          !live && <p className="text-sm text-muted">Describe what to build or change. The AI works in steps: it reads the files it needs, edits them, and checks the result.</p>
         )}
         <ol className="flex flex-col gap-3">
           {steps.map((s) => (

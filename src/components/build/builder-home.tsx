@@ -24,16 +24,18 @@ export function BuilderHome() {
       .then((b) => setItems(b.projects ?? []))
       .catch(() => setItems([]));
   }, []);
-  const start = async (text: string) => {
+  const [repo, setRepo] = useState("");
+  const start = async (text: string, fromRepo = "") => {
     setBusy(true);
     setError("");
     try {
-      const name = text.trim().replace(/\s+/g, " ").slice(0, 60) || "New app";
+      const name = (fromRepo ? fromRepo.replace(/\/+$/, "").split("/").pop() : text.trim().replace(/\s+/g, " ").slice(0, 60)) || "New app";
       const r = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
       const b = await r.json();
       if (!r.ok) throw new Error(b.error ?? SAY.busy);
       try {
         if (text.trim()) sessionStorage.setItem(`wanlly-build-first-${b.id}`, text.trim());
+        if (fromRepo) sessionStorage.setItem(`wanlly-build-repo-${b.id}`, fromRepo);
       } catch {}
       router.push(`/build/${b.id}`);
     } catch (e) {
@@ -75,6 +77,25 @@ export function BuilderHome() {
           </button>
         </div>
         {error && <p className="text-[13px] text-bad">{error}</p>}
+      </form>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (repo.trim()) void start("", repo.trim());
+        }}
+        className="-mt-4 flex flex-wrap items-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3"
+      >
+        <Icon name="github" size={16} />
+        <span className="text-sm font-medium">Work on a GitHub repository</span>
+        <input
+          value={repo}
+          onChange={(e) => setRepo(e.target.value)}
+          placeholder="github.com/you/my-site"
+          className="min-w-[200px] flex-1 rounded-lg border border-line bg-bg px-2.5 py-1.5 font-mono text-xs outline-none focus:border-faint"
+        />
+        <button type="submit" disabled={busy || !repo.trim()} className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold hover:border-faint disabled:opacity-50">
+          Open
+        </button>
       </form>
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-semibold">Your apps</h2>

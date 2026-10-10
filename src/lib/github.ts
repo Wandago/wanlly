@@ -126,3 +126,51 @@ export async function pushToGithub(token: string, target: { owner?: string; name
   if (!moved.ok) throw new Error("GitHub didn't update the branch. If the branch is protected, save to another repository.");
   return info.data.html_url;
 }
+
+/** Folders and files that aren't the project's own source (installed packages, build output). */
+const SKIP_DIR = /(^|\/)(node_modules|\.git|\.next|dist|build|out|vendor|coverage|\.venv|venv|__pycache__|\.open-next|\.wrangler)\//;
+const SKIP_FILE = /(^|\/)(package-lock\.json|yarn\.lock|pnpm-lock\.yaml|bun\.lockb?|\.DS_Store)$|\.(png|jpe?g|gif|webp|avif|ico|bmp|svgz|woff2?|ttf|otf|eot|mp3|mp4|mov|webm|wav|ogg|pdf|zip|gz|tgz|rar|7z|jar|exe|dll|so|dylib|wasm|bin|psd|sketch|fig)$/i;
+
+/**
+ * A repository's text files, read from GitHub's zip download (one request, which matters on
+ * Cloudflare's free plan). Installed packages, build output, lock files and binaries are left
+ * out, and so is anything past the size and count limits; `skipped` says how many.
+ */
+export async function readRepo(token: string, target: { owner?: string; name: string }, limits: { maxFiles: number; maxFileChars: number; maxTotalChars: number }) {
+  const { listZip } = await import("./unzip");
+  const login = await githubLogin(token);
+  if (!login) throw new Error("GitHub didn't accept the connection. Connect GitHub again.");
+  const full = `${target.owner ?? login}/${target.name}`;
+  const info = await gh<{ default_branch: string; html_url: string; size?: number }>(token, `/repos/${full}`);
+  if (!info.ok) throw new Error(`Couldn't find ${full}, or your GitHub account (${login}) can't see it. Check the link.`);
+  if ((info.data.size ?? 0) > 60_000) throw new Error("That repository is too big to open here (over 60 MB). Try a smaller one.");
+  const r = await fetch(`${API}/repos/${full}/zipball/${encodeURIComponent(info.data.default_branch || "main")}`, {
+    headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json", "user-agent": "Wanlly" },
+  });
+  if (r.status === 404) throw new Error("That repository is empty, so there's nothing to open yet. Start fresh, then save into it.");
+  if (!r.ok) throw new Error("GitHub didn't send the repository's files. Try again in a moment.");
+  const zip = new Uint8Array(await r.arrayBuffer());
+  const files: { path: string; content: string }[] = [];
+  let total = 0;
+  let skipped = 0;
+  const utf8 = new TextDecoder("utf-8", { fatal: true });
+  for (const e of listZip(zip)) {
+    // Paths in GitHub's zip start with a "owner-repo-sha/" folder.
+    const path = e.path.slice(e.path.indexOf("/") + 1);
+    if (!path || SKIP_DIR.test(path) || SKIP_FILE.test(path)) continue;
+    if (e.size > limits.maxFileChars || files.length >= limits.maxFiles || total + e.size > limits.maxTotalChars) {
+      skipped++;
+      continue;
+    }
+    let text: string;
+    try {
+      text = utf8.decode(await e.read());
+    } catch {
+      continue; // not text
+    }
+    if (text.includes("\u0000")) continue;
+    files.push({ path, content: text });
+    total += text.length;
+  }
+  return { files, skipped, url: info.data.html_url, branch: info.data.default_branch || "main" };
+}
