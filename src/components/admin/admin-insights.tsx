@@ -66,7 +66,7 @@ type Traffic = {
   campaigns: { campaign: string; channel: string; applications: number; approved: number }[];
 };
 
-export function TrafficTab({ days }: { days: 7 | 30 }) {
+export function TrafficTab({ days }: { days: number }) {
   const { data, error } = useData<Traffic>(`/api/admin/traffic?days=${days}`);
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <Loading />;
@@ -177,7 +177,7 @@ type Ads = {
 };
 
 /** Ads in two parts: a dashboard of how ads perform, and the setup of the ad network. */
-export function AdsTab({ days }: { days: 7 | 30 }) {
+export function AdsTab({ days }: { days: number }) {
   const [part, setPart] = useState<"money" | "dashboard" | "setup">("money");
   return (
     <div className="flex flex-col gap-4">
@@ -205,7 +205,7 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
   );
 }
 
-function AdStats({ days }: { days: 7 | 30 }) {
+function AdStats({ days }: { days: number }) {
   const { data, error } = useData<Ads>(`/api/admin/ads?days=${days}`);
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <Loading />;

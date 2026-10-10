@@ -549,7 +549,7 @@ export function AdminConsole() {
   });
   const [access, setAccess] = useState<"checking" | "ok" | "denied" | "error">("checking");
   const [role, setRole] = useState("");
-  const [days, setDays] = useState<7 | 30>(30);
+  const [days, setDays] = useState<number>(30);
   const [person, setPerson] = useState("");
 
   useEffect(() => {
@@ -600,11 +600,14 @@ export function AdminConsole() {
             <div className="ml-auto">
               <Pills
                 label="Date range"
-                value={String(days) as "7" | "30"}
-                onChange={(v) => setDays(v === "7" ? 7 : 30)}
+                value={String(days) as "7" | "30" | "90" | "180" | "365"}
+                onChange={(v) => setDays(Number(v))}
                 options={[
-                  ["7", "7 days"],
-                  ["30", "30 days"],
+                  ["7", "7d"],
+                  ["30", "30d"],
+                  ["90", "90d"],
+                  ["180", "6m"],
+                  ["365", "1y"],
                 ]}
               />
             </div>

@@ -83,4 +83,9 @@ export async function hasAccess(userId: string): Promise<boolean> {
 }
 
 /** The admin page's date range: 7 or 30 days, ending today (UTC). */
-export const rangeDays = (req: Request) => (new URL(req.url).searchParams.get("days") === "7" ? 7 : 30);
+/** The date range asked for: 7, 30, 90, 180 or 365 days (30 when anything else). */
+export const RANGE_DAYS = [7, 30, 90, 180, 365] as const;
+export const rangeDays = (req: Request) => {
+  const n = Number(new URL(req.url).searchParams.get("days"));
+  return (RANGE_DAYS as readonly number[]).includes(n) ? n : 30;
+};

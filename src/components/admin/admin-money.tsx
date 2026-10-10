@@ -25,7 +25,7 @@ const S2 = "var(--series-2)";
 const tokens = (v: number) => (v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e4 ? `${Math.round(v / 1e3)}k` : num(v));
 const input = "rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-faint";
 
-export function MoneyPanel({ days }: { days: 7 | 30 }) {
+export function MoneyPanel({ days }: { days: number }) {
   const [data, setData] = useState<Money | null>(null);
   const [error, setError] = useState("");
   const [tick, setTick] = useState(0);

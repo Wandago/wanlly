@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { SpinLoader } from "../spin-mark";
 
 /* Building blocks shared by every admin tab. */
@@ -98,11 +98,38 @@ export const Chip = ({ s, label }: { s: string; label?: string }) => (
 export const usd = (v: number) => (v === 0 ? "$0" : v < 0.01 ? "<$0.01" : v < 100 ? `$${v.toFixed(2)}` : `$${Math.round(v).toLocaleString("en-US")}`);
 export const pct = (v: number) => (Number.isFinite(v) ? `${(v * 100).toFixed(v < 0.1 ? 1 : 0)}%` : "–");
 
-/** Compact table; numeric columns right-aligned, an optional bar column showing magnitude. */
-export function Table({ head, rows, numeric = [] }: { head: string[]; rows: ReactNode[][]; numeric?: number[] }) {
+/** Saves rows as a CSV file (Excel and Google Sheets open it). */
+export function downloadCsv(name: string, rows: (string | number)[][]) {
+  const cell = (v: string | number) => {
+    const s = String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const blob = new Blob(["\ufeff" + rows.map((r) => r.map(cell).join(",")).join("\r\n")], { type: "text/csv;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "wanlly"}-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+export const btnExport = "rounded-md border border-line px-2 py-0.5 text-[11px] font-medium text-muted hover:border-faint hover:text-fg";
+
+/** Compact table; numeric columns right-aligned, an optional bar column showing magnitude. Exports to CSV as shown. */
+export function Table({ head, rows, numeric = [], name = "table" }: { head: string[]; rows: ReactNode[][]; numeric?: number[]; name?: string }) {
+  const ref = useRef<HTMLTableElement>(null);
+  // What's on screen is what's exported: each cell's text.
+  const exportCsv = () => {
+    const t = ref.current;
+    if (t) downloadCsv(name, [...t.rows].map((r) => [...r.cells].map((c) => c.innerText.trim())));
+  };
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-[13px]">
+    <div className="flex flex-col gap-1.5 overflow-x-auto">
+      {rows.length > 0 && (
+        <button type="button" onClick={exportCsv} className={`${btnExport} self-end`} title="Download this table as CSV">
+          Export CSV
+        </button>
+      )}
+      <table ref={ref} className="w-full text-[13px]">
         <thead>
           <tr className="text-left text-muted">
             {head.map((h, i) => (
