@@ -90,6 +90,33 @@ export function BuilderView({ id }: { id: number }) {
   const run = useCallback(
     async (message: string) => {
       if (!model || running) return;
+      // Just "push" / "commit and push": no AI needed (or credits). It's committed straight away.
+      if (message.length < 70 && /\b(commit|push)\b/i.test(message) && !/\b(add|make|change|fix|create|remove|build|update|improve|edit)\b/i.test(message)) {
+        setNotice(null);
+        if (!repoRef.current) {
+          window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }));
+          setNotice({ text: "Pick or paste the repository in the GitHub panel, then say push again." });
+          return;
+        }
+        setRunning(true);
+        try {
+          const r = await fetch(`/api/build/${id}/github`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo: repoRef.current, message: "Update from Wanlly" }) });
+          const b = await r.json().catch(() => ({}));
+          if (b.connect) {
+            window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }));
+            setNotice({ text: "Connect GitHub in the panel, then say push again." });
+          } else if (!r.ok) setNotice({ text: b.error ?? SAY.busy });
+          else {
+            setNotice({ text: `Committed and pushed to ${String(b.url).replace(/^https:\/\//, "")}` });
+            dispatch({ type: "toast", text: "Committed and pushed to GitHub" });
+          }
+        } catch {
+          setNotice({ text: SAY.offline });
+        } finally {
+          setRunning(false);
+        }
+        return;
+      }
       // A repository link in the message becomes the one this project saves to; the AI commits
       // and pushes with its save_to_github tool.
       const link = message.match(/https?:\/\/github\.com\/[\w-]+\/[\w.-]+/i)?.[0];

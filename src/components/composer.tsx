@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
 import { isConnected, useReward, useWorkspace } from "@/lib/workspace-store";
@@ -86,8 +87,18 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   const connected = isConnected(tool);
   const toast = useCallback((text: string) => dispatch({ type: "toast", text }), [dispatch]);
   const files = useAttachments(toast);
+  // Working on an existing repository happens in the Builder, which can open it. Asked here, the
+  // repository is asked for (or opened straight away when linked) before any credits are spent.
+  const [repoAsk, setRepoAsk] = useState<{ link: string } | null>(null);
   const send = () => {
     if (files.busy) return;
+    if ((tool === "code" || tool === "chat") && !files.items.length) {
+      const repo = repoIntent(draft);
+      if (repo) {
+        setRepoAsk({ link: repo.link });
+        return;
+      }
+    }
     submit(files.items);
     files.clear();
   };
@@ -131,6 +142,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
           ))}
         </div>
       )}
+      {repoAsk && <RepoAsk initial={repoAsk.link} request={draft} onClose={() => setRepoAsk(null)} onSkip={() => (setRepoAsk(null), submit(files.items), files.clear())} />}
       <form
         {...(connected ? files.dropProps : {})}
         className="relative flex flex-col gap-2 rounded-[20px] border border-line bg-surface p-3 pb-2.5 shadow-soft focus-within:border-faint"
@@ -229,4 +241,76 @@ function pick(all: string[], seed: number) {
   if (all.length <= 3) return all;
   const start = seed % all.length;
   return [0, 1, 2].map((i) => all[(start + i) % all.length]);
+}
+
+const REPO_LINK = /(?:https?:\/\/)?github\.com\/[\w-]+\/[\w.-]+/i;
+
+/**
+ * "Edit my repo", "update the code in github.com/me/site": a request about a repository the AI
+ * hasn't seen. Pasted code (a fenced block) means they shared it, so that goes to the AI.
+ */
+function repoIntent(text: string): { link: string } | null {
+  if (/```/.test(text)) return null;
+  const link = text.match(REPO_LINK)?.[0] ?? "";
+  const aboutRepo = !!link || /\b(my|our|the|existing|this)\s+(git\s?hub\s+)?(repo|repository|codebase)\b/i.test(text);
+  const editing = /\b(edit|change|update|fix|modify|improve|work on|add|remove|refactor|open|continue)\b/i.test(text);
+  return aboutRepo && editing ? { link } : null;
+}
+
+/** Asks which repository, then opens it in the Builder with the request carried over. No credits used. */
+function RepoAsk({ initial, request, onClose, onSkip }: { initial: string; request: string; onClose: () => void; onSkip: () => void }) {
+  const router = useRouter();
+  const [link, setLink] = useState(initial);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const open = async () => {
+    if (!REPO_LINK.test(link)) return setError("Paste the repository's link, like github.com/you/my-site.");
+    setBusy(true);
+    setError("");
+    try {
+      const name = link.replace(/\/+$/, "").split("/").pop() || "My repository";
+      const r = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+      const b = await r.json().catch(() => ({}));
+      if (!r.ok || !b.id) throw new Error(b.error ?? "Couldn't start the project. Try again.");
+      try {
+        sessionStorage.setItem(`wanlly-build-repo-${b.id}`, link.trim());
+        // The request itself, minus the link, runs once the repository is open.
+        const ask = request.replace(REPO_LINK, "").trim();
+        if (ask.length > 12) sessionStorage.setItem(`wanlly-build-first-${b.id}`, ask);
+      } catch {}
+      router.push(`/build/${b.id}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't start the project. Try again.");
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-4 text-sm">
+      <div className="flex items-center gap-2">
+        <Icon name="github" size={16} />
+        <b className="font-semibold">Which repository should we work on?</b>
+        <button type="button" onClick={onClose} aria-label="Close" className="ml-auto text-faint hover:text-fg">
+          ×
+        </button>
+      </div>
+      <p className="text-[13px] text-muted">Wanlly opens it in the Builder, where the AI reads your real files, changes them and can push the changes back to GitHub.</p>
+      <div className="flex flex-wrap gap-2">
+        <input
+          value={link}
+          onChange={(e) => setLink(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && void open()}
+          placeholder="github.com/you/my-site"
+          autoFocus
+          className="min-w-[220px] flex-1 rounded-lg border border-line bg-bg px-2.5 py-2 font-mono text-xs outline-none focus:border-faint"
+        />
+        <button type="button" disabled={busy} onClick={open} className="rounded-lg bg-fg px-3 py-2 text-xs font-semibold text-bg hover:opacity-90 disabled:opacity-50">
+          {busy ? "Opening…" : "Open in Builder"}
+        </button>
+      </div>
+      <button type="button" onClick={onSkip} className="self-start text-xs text-muted underline-offset-2 hover:text-fg hover:underline">
+        Not a repository? Send my message to the AI instead
+      </button>
+      {error && <p className="text-xs text-bad">{error}</p>}
+    </div>
+  );
 }
