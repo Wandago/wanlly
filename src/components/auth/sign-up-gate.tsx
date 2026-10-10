@@ -13,6 +13,22 @@ import { SpinLoader } from "../spin-mark";
  * sign-in, so changing the email inside the form doesn't get anyone past the beta.
  */
 
+/** Clerk's form was shown in this tab, so a #/… address here belongs to a real sign-up. */
+const MARK = "wanlly-auth-started";
+const started = () => {
+  try {
+    return sessionStorage.getItem(MARK) === "1";
+  } catch {
+    return false;
+  }
+};
+export const markStarted = () => {
+  try {
+    sessionStorage.setItem(MARK, "1");
+  } catch {}
+};
+export { started as authStarted };
+
 type Step = "loading" | "ask" | "approved" | "waiting" | "none" | "open";
 
 const field = "w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm outline-none focus:border-faint";
@@ -24,8 +40,12 @@ export function SignUpGate() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    // Back from Google or GitHub, or mid-way through Clerk's steps (#/verify…): let it finish.
-    const midFlow = window.location.hash.startsWith("#/");
+    // Back from Google or GitHub (#/sso-callback), or part-way through Clerk's steps in this tab
+    // (#/verify…): let it finish. A copied #/verify link opened elsewhere has no sign-up behind
+    // it and would show a blank form, so it starts over instead.
+    const hash = window.location.hash;
+    const midFlow = hash.startsWith("#/sso-callback") || (hash.startsWith("#/") && started());
+    if (hash && !midFlow) history.replaceState(null, "", window.location.pathname + window.location.search);
     fetch("/api/beta/check", { method: "POST", body: "{}" })
       .then((r) => r.json())
       .then((b) => setStep(b.open || midFlow ? "open" : "ask"))
@@ -49,8 +69,10 @@ export function SignUpGate() {
   };
 
   if (step === "loading") return <SpinLoader size={40} />;
-  if (step === "open") return <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/app" />;
-  if (step === "approved") return <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/app" initialValues={{ emailAddress: email }} />;
+  if (step === "open" || step === "approved") {
+    markStarted();
+    return <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/app" initialValues={step === "approved" ? { emailAddress: email } : undefined} />;
+  }
 
   const back = (
     <button type="button" onClick={() => setStep("ask")} className="text-sm text-muted underline-offset-2 hover:text-fg hover:underline">
