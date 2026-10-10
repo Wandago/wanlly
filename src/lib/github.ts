@@ -184,3 +184,13 @@ export async function readRepo(token: string, target: { owner?: string; name: st
   }
   return { files, skipped, url: info.data.html_url, branch: info.data.default_branch || "main" };
 }
+
+/** Repositories the person can push to, most recently changed first (up to 100). */
+export async function githubRepos(token: string) {
+  const r = await gh<{ full_name: string; html_url: string; private: boolean; pushed_at: string | null; permissions?: { push?: boolean } }[]>(
+    token,
+    "/user/repos?sort=pushed&per_page=100&affiliation=owner,collaborator,organization_member",
+  );
+  if (!r.ok || !Array.isArray(r.data)) throw new Error("GitHub didn't list the repositories");
+  return r.data.filter((x) => x.permissions?.push !== false).map((x) => ({ name: x.full_name, url: x.html_url, private: x.private, pushedAt: x.pushed_at }));
+}

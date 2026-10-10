@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useGithubConnect } from "./github-connect";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
 import { isConnected, useReward, useWorkspace } from "@/lib/workspace-store";
@@ -90,6 +91,20 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   // Working on an existing repository happens in the Builder, which can open it. Asked here, the
   // repository is asked for (or opened straight away when linked) before any credits are spent.
   const [repoAsk, setRepoAsk] = useState<{ link: string } | null>(null);
+  // Back from approving GitHub: the card and the message come back.
+  useEffect(() => {
+    let waiting: string | null = null;
+    try {
+      waiting = sessionStorage.getItem(REPO_ASK_KEY);
+      sessionStorage.removeItem(REPO_ASK_KEY);
+    } catch {}
+    if (waiting === null) return;
+    const text = waiting;
+    queueMicrotask(() => {
+      dispatch({ type: "setDraft", draft: text });
+      setRepoAsk({ link: "" });
+    });
+  }, [dispatch]);
   const send = () => {
     if (files.busy) return;
     if ((tool === "code" || tool === "chat") && !files.items.length) {
@@ -243,6 +258,8 @@ function pick(all: string[], seed: number) {
   return [0, 1, 2].map((i) => all[(start + i) % all.length]);
 }
 
+/** Where the message waits while the person approves GitHub. */
+const REPO_ASK_KEY = "wanlly-repo-ask";
 const REPO_LINK = /(?:https?:\/\/)?github\.com\/[\w-]+\/[\w.-]+/i;
 
 /**
@@ -257,23 +274,32 @@ function repoIntent(text: string): { link: string } | null {
   return aboutRepo && editing ? { link } : null;
 }
 
-/** Asks which repository, then opens it in the Builder with the request carried over. No credits used. */
+/** Asks which repository (connecting GitHub, then picking one), and opens it in the Builder with the request carried over. No credits used. */
 function RepoAsk({ initial, request, onClose, onSkip }: { initial: string; request: string; onClose: () => void; onSkip: () => void }) {
   const router = useRouter();
+  const connect = useGithubConnect();
   const [link, setLink] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const open = async () => {
-    if (!REPO_LINK.test(link)) return setError("Paste the repository's link, like github.com/you/my-site.");
+  const [gh, setGh] = useState<{ ready: boolean; connected: boolean; repos: { name: string; url: string; private: boolean }[] } | null>(null);
+  const [filter, setFilter] = useState("");
+  useEffect(() => {
+    fetch("/api/github/repos", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((b) => setGh({ ready: !!b.ready, connected: !!b.connected, repos: b.repos ?? [] }))
+      .catch(() => setGh({ ready: false, connected: false, repos: [] }));
+  }, []);
+  const open = async (target = link) => {
+    if (!REPO_LINK.test(target)) return setError("Pick a repository, or paste its link like github.com/you/my-site.");
     setBusy(true);
     setError("");
     try {
-      const name = link.replace(/\/+$/, "").split("/").pop() || "My repository";
+      const name = target.replace(/\/+$/, "").split("/").pop() || "My repository";
       const r = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
       const b = await r.json().catch(() => ({}));
       if (!r.ok || !b.id) throw new Error(b.error ?? "Couldn't start the project. Try again.");
       try {
-        sessionStorage.setItem(`wanlly-build-repo-${b.id}`, link.trim());
+        sessionStorage.setItem(`wanlly-build-repo-${b.id}`, target.trim());
         // The request itself, minus the link, runs once the repository is open.
         const ask = request.replace(REPO_LINK, "").trim();
         if (ask.length > 12) sessionStorage.setItem(`wanlly-build-first-${b.id}`, ask);
@@ -284,6 +310,19 @@ function RepoAsk({ initial, request, onClose, onSkip }: { initial: string; reque
       setBusy(false);
     }
   };
+  const startConnect = async () => {
+    setError("");
+    try {
+      // Back here afterwards, with this card and the message waiting.
+      sessionStorage.setItem(REPO_ASK_KEY, request);
+    } catch {}
+    try {
+      await connect(window.location.href);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Couldn't reach GitHub.");
+    }
+  };
+  const shown = (gh?.repos ?? []).filter((r) => r.name.toLowerCase().includes(filter.trim().toLowerCase())).slice(0, 8);
   return (
     <div className="flex flex-col gap-2.5 rounded-2xl border border-line bg-surface p-4 text-sm">
       <div className="flex items-center gap-2">
@@ -293,22 +332,46 @@ function RepoAsk({ initial, request, onClose, onSkip }: { initial: string; reque
           ×
         </button>
       </div>
-      <p className="text-[13px] text-muted">Wanlly opens it in the Builder, where the AI reads your real files, changes them and can push the changes back to GitHub.</p>
+      <p className="text-[13px] text-muted">Wanlly opens it in the Builder, where the AI reads your real files, changes them and pushes the changes back to GitHub.</p>
+      {!gh ? (
+        <p className="text-[13px] text-faint">Checking your GitHub…</p>
+      ) : !gh.ready ? (
+        <button type="button" onClick={startConnect} className="flex items-center justify-center gap-2 self-start rounded-lg bg-fg px-3.5 py-2 text-xs font-semibold text-bg hover:opacity-90">
+          <Icon name="github" size={14} /> {gh.connected ? "Allow Wanlly to save to GitHub" : "Connect GitHub"}
+        </button>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {gh.repos.length > 8 && (
+            <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Search your repositories" className="rounded-lg border border-line bg-bg px-2.5 py-1.5 text-xs outline-none focus:border-faint" />
+          )}
+          <div className="flex max-h-[220px] flex-col overflow-y-auto rounded-lg border border-line">
+            {shown.length ? (
+              shown.map((r) => (
+                <button key={r.name} type="button" disabled={busy} onClick={() => void open(r.url)} className="flex items-center gap-2 border-b border-line px-3 py-2 text-left text-[13px] last:border-b-0 hover:bg-hover disabled:opacity-50">
+                  <span className="truncate font-mono text-xs">{r.name}</span>
+                  {r.private && <span className="ml-auto rounded border border-line px-1.5 text-[10px] text-faint">private</span>}
+                </button>
+              ))
+            ) : (
+              <p className="px-3 py-2 text-xs text-faint">{gh.repos.length ? "No repository matches." : "No repositories on this GitHub account yet."}</p>
+            )}
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap gap-2">
         <input
           value={link}
           onChange={(e) => setLink(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && void open()}
-          placeholder="github.com/you/my-site"
-          autoFocus
+          placeholder="…or paste a link: github.com/you/my-site"
           className="min-w-[220px] flex-1 rounded-lg border border-line bg-bg px-2.5 py-2 font-mono text-xs outline-none focus:border-faint"
         />
-        <button type="button" disabled={busy} onClick={open} className="rounded-lg bg-fg px-3 py-2 text-xs font-semibold text-bg hover:opacity-90 disabled:opacity-50">
+        <button type="button" disabled={busy || !link.trim()} onClick={() => void open()} className="rounded-lg border border-line px-3 py-2 text-xs font-semibold hover:border-faint disabled:opacity-50">
           {busy ? "Opening…" : "Open in Builder"}
         </button>
       </div>
       <button type="button" onClick={onSkip} className="self-start text-xs text-muted underline-offset-2 hover:text-fg hover:underline">
-        Not a repository? Send my message to the AI instead
+        Not about a repository? Send my message to the AI instead
       </button>
       {error && <p className="text-xs text-bad">{error}</p>}
     </div>
