@@ -105,7 +105,7 @@ export function BetaPage() {
             Join the Wanlly beta.
           </h1>
           <p className="max-w-[56ch] text-[17px] text-muted text-balance">
-            Chat, code and design with Claude and Gemini. Watch short sponsor videos, earn credits, build. No card. No subscription.
+            Chat, code and design with the world&apos;s top AI models. Watch short sponsor videos, earn credits, build. No card. No subscription.
           </p>
           <a href="#apply" className="rounded-full bg-fg px-6 py-3 text-[15px] font-semibold text-bg">Apply for the beta</a>
         </section>
@@ -133,7 +133,7 @@ export function BetaPage() {
             {[
               ["20s", "per sponsor video"],
               ["0", "subscriptions"],
-              ["2", "AI families: Claude and Gemini"],
+              ["10+", "top AI models: Claude, Gemini, Grok, DeepSeek and more"],
               ["0", "cards, subscriptions or API keys"],
             ].map(([n, l]) => (
               <div key={l} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">

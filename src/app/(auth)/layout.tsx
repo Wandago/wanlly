@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
           <h1 className="font-display text-[36px] leading-[1.05] font-semibold tracking-[-0.03em] text-balance">
             Build the thing you keep thinking about.
           </h1>
-          <p className="text-lg opacity-70">Claude&apos;s best models for chat, code and design. One short video a day pays for it, wherever you live.</p>
+          <p className="text-lg opacity-70">The world&apos;s top AI models for chat, code and design. One short video a day pays for it, wherever you live.</p>
         </div>
         <p className="text-[13px] opacity-50">Sponsors never see your prompts or your work.</p>
       </section>

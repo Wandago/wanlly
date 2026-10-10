@@ -199,7 +199,7 @@ function cameFrom(a: Application) {
 function inviteMail(a: Application) {
   const site = window.location.origin;
   const first = a.name.split(" ")[0];
-  const body = `Hi ${first},\n\nYou're in. Thanks for applying to the Wanlly beta.\n\nSign up here with this email address (${a.email}), so Wanlly knows it's you: ${site}/sign-up\n\nWatch short sponsor videos to earn credits, then build with Claude or Gemini. Reply to this email if anything breaks.\n\nLouis, Wanlly`;
+  const body = `Hi ${first},\n\nYou're in. Thanks for applying to the Wanlly beta.\n\nSign up here with this email address (${a.email}), so Wanlly knows it's you: ${site}/sign-up\n\nWatch short sponsor videos to earn credits, then build with the world's top AI models. Reply to this email if anything breaks.\n\nLouis, Wanlly`;
   return `mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent("You're in: your Wanlly beta invite")}&body=${encodeURIComponent(body)}`;
 }
 

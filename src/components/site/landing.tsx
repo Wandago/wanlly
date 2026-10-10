@@ -33,7 +33,7 @@ function Hero() {
             Frontier AI for everyone with an idea<span className="text-accent">.</span>
           </h1>
           <p className="anim-rise max-w-[50ch] text-[clamp(15px,1.4vw,17px)] text-muted [animation-delay:120ms]">
-            Chat, code and design with Claude and Gemini. No card and no subscription: watch short sponsor videos, earn credits, and build.
+            Chat, code and design with the world&apos;s top AI models. No card and no subscription: watch short sponsor videos, earn credits, and build.
           </p>
           <div className="anim-rise flex flex-wrap gap-3 [animation-delay:180ms]">
             <Link href="/beta" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">

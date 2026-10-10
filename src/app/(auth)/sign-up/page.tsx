@@ -1,8 +1,8 @@
-import { SignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
+import { SignUpGate } from "@/components/auth/sign-up-gate";
 
 export const metadata: Metadata = { title: "Create your account · Wanlly" };
 
 export default function SignUpPage() {
-  return <SignUp routing="hash" signInUrl="/sign-in" fallbackRedirectUrl="/app" />;
+  return <SignUpGate />;
 }
