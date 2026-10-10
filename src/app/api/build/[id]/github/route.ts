@@ -1,6 +1,6 @@
 import { loadFiles, ownBuild } from "@/lib/build";
 import { field, smallJson } from "@/lib/forms";
-import { githubToken, pushToGithub, repoName } from "@/lib/github";
+import { githubLogin, githubToken, parseRepo, pushToGithub } from "@/lib/github";
 import { SAY } from "@/lib/messages";
 import { signedInUserId } from "@/lib/session";
 
@@ -9,7 +9,8 @@ export async function GET(req: Request) {
   const userId = await signedInUserId(req);
   if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const t = await githubToken(userId);
-  return Response.json({ connected: t.connected, ready: !!t.token });
+  const login = t.token ? await githubLogin(t.token).catch(() => null) : null;
+  return Response.json({ connected: t.connected, ready: !!t.token, login });
 }
 
 /** Saves the project to the person's GitHub as a commit on the repository's main branch. */
@@ -25,7 +26,9 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/gith
   const files = [...(await loadFiles(id))].map(([path, content]) => ({ path, content }));
   if (!files.length) return Response.json({ error: "There are no files to save yet." }, { status: 400 });
   try {
-    const url = await pushToGithub(token, repoName(field(data ?? {}, "repo", 100) || project.name), files, field(data ?? {}, "message", 200) || "Update from Wanlly");
+    const target = parseRepo(field(data ?? {}, "repo", 200) || project.name);
+    if (!target) return Response.json({ error: "Give a repository name or a GitHub link." }, { status: 400 });
+    const url = await pushToGithub(token, target, files, field(data ?? {}, "message", 200) || "Update from Wanlly");
     return Response.json({ url });
   } catch (e) {
     return Response.json({ error: e instanceof Error ? e.message : SAY.busy }, { status: 502 });

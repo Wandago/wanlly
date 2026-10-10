@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { BuildFile } from "@/lib/build-preview";
 import { SAY } from "@/lib/messages";
 import { useLocalSetting } from "@/lib/use-local-setting";
@@ -43,31 +43,76 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
     setLive(null);
   };
 
+  // GitHub: a small panel to connect the account and pick (or paste) the repository.
+  const [ghOpen, setGhOpen] = useState(false);
+  const [gh, setGh] = useState<{ ready: boolean; connected: boolean; login: string | null } | null>(null);
+  const [draftRepo, setDraftRepo] = useState("");
+  const [ghError, setGhError] = useState("");
+  const checkGithub = useCallback(async () => {
+    const r = await fetch(`/api/build/${id}/github`, { cache: "no-store" }).catch(() => null);
+    const b = r?.ok ? await r.json().catch(() => null) : null;
+    setGh(b ? { ready: !!b.ready, connected: !!b.connected, login: b.login ?? null } : { ready: false, connected: false, login: null });
+  }, [id]);
+  const openGithub = useCallback(
+    (repoHint?: string) => {
+      setGhError("");
+      setDraftRepo(repoHint || repo || name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "my-app");
+      setGhOpen(true);
+      void checkGithub();
+    },
+    [repo, name, checkGithub],
+  );
+  // The Builder opens this panel when someone asks to push to GitHub or pastes a repository link,
+  // and again after they come back from allowing GitHub.
+  useEffect(() => {
+    const onAsk = (e: Event) => openGithub((e as CustomEvent<{ repo?: string }>).detail?.repo);
+    window.addEventListener("wanlly:github", onAsk);
+    let back = false;
+    try {
+      back = sessionStorage.getItem(`wanlly-gh-connect-${id}`) === "1";
+      sessionStorage.removeItem(`wanlly-gh-connect-${id}`);
+    } catch {}
+    if (back) queueMicrotask(() => openGithub());
+    return () => window.removeEventListener("wanlly:github", onAsk);
+  }, [id, openGithub]);
+
+  const connectGithub = async () => {
+    setGhError("");
+    try {
+      const account = user?.externalAccounts.find((a) => a.provider.replace("oauth_", "") === "github");
+      const back = window.location.href;
+      const acct = account ? await account.reauthorize({ additionalScopes: ["repo"], redirectUrl: back }) : await user?.createExternalAccount({ strategy: "oauth_github", additionalScopes: ["repo"], redirectUrl: back });
+      const url = acct?.verification?.externalVerificationRedirectURL;
+      if (!url) throw new Error("GitHub isn't switched on for Wanlly yet.");
+      try {
+        sessionStorage.setItem(`wanlly-gh-connect-${id}`, "1");
+      } catch {}
+      if (draftRepo) setRepo(draftRepo);
+      window.location.href = url.toString();
+    } catch (e) {
+      setGhError(e instanceof Error ? e.message : SAY.offline);
+    }
+  };
+
   const saveToGithub = async () => {
-    const chosen = repo || window.prompt("Name of the GitHub repository to save to (a private one is created if it doesn't exist):", name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "my-app");
-    if (!chosen) return;
+    const chosen = draftRepo.trim();
+    if (!chosen) return setGhError("Type a name for a new repository, or paste a link to one of yours.");
     setBusy(true);
+    setGhError("");
     try {
       const r = await fetch(`/api/build/${id}/github`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ repo: chosen, message: "Update from Wanlly" }) });
       const b = await r.json().catch(() => ({}));
       if (b.connect) {
-        // First time: ask GitHub (through the sign-in) for permission to save repositories.
-        const gh = user?.externalAccounts.find((a) => a.provider.replace("oauth_", "") === "github");
-        const back = window.location.href;
-        const acct = gh ? await gh.reauthorize({ additionalScopes: ["repo"], redirectUrl: back }) : await user?.createExternalAccount({ strategy: "oauth_github", additionalScopes: ["repo"], redirectUrl: back });
-        const url = acct?.verification?.externalVerificationRedirectURL;
-        if (!url) throw new Error("GitHub sign-in isn't switched on for Wanlly yet.");
-        setRepo(chosen);
-        dispatch({ type: "toast", text: "Allow GitHub, then press Save to GitHub again" });
-        window.location.href = url.toString();
+        setGh({ ready: false, connected: false, login: null });
         return;
       }
       if (!r.ok) throw new Error(b.error ?? SAY.busy);
       setRepo(chosen);
+      setGhOpen(false);
       dispatch({ type: "toast", text: "Saved to GitHub" });
       window.open(b.url, "_blank", "noopener");
     } catch (e) {
-      dispatch({ type: "toast", text: e instanceof Error ? e.message : SAY.offline });
+      setGhError(e instanceof Error ? e.message : SAY.offline);
     } finally {
       setBusy(false);
     }
@@ -94,15 +139,58 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
       >
         {publishing ? "Publishing…" : live ? "Update live app" : "Publish"}
       </button>
-      <button
-        type="button"
-        disabled={busy || !files.length}
-        onClick={saveToGithub}
-        title={repo ? `Saves to your GitHub repository ${repo}` : "Saves the files to a private repository on your GitHub"}
-        className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium hover:border-faint disabled:opacity-50"
-      >
-        <Icon name="github" size={14} /> {busy ? "Saving…" : "GitHub"}
-      </button>
+      <div className="relative">
+        <button
+          type="button"
+          disabled={!files.length}
+          onClick={() => (ghOpen ? setGhOpen(false) : openGithub())}
+          title={repo ? `Saves to your GitHub repository ${repo}` : "Saves the files to your GitHub"}
+          aria-expanded={ghOpen}
+          className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium hover:border-faint disabled:opacity-50"
+        >
+          <Icon name="github" size={14} /> GitHub
+        </button>
+        {ghOpen && (
+          <div className="absolute right-0 z-30 mt-2 flex w-[320px] max-w-[calc(100vw-24px)] flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-[13px] shadow-soft">
+            <div className="flex items-center gap-2">
+              <Icon name="github" size={16} />
+              <b className="font-semibold">Save to GitHub</b>
+              <button type="button" onClick={() => setGhOpen(false)} aria-label="Close" className="ml-auto text-faint hover:text-fg">
+                ×
+              </button>
+            </div>
+            {!gh ? (
+              <p className="text-muted">Checking your GitHub…</p>
+            ) : !gh.ready ? (
+              <>
+                <p className="text-muted">Connect your GitHub account so Wanlly can save this project to it. You choose the repository; nothing else is touched.</p>
+                <button type="button" onClick={connectGithub} className="flex items-center justify-center gap-2 rounded-lg bg-fg px-3 py-2 text-xs font-semibold text-bg hover:opacity-90">
+                  <Icon name="github" size={14} /> {gh.connected ? "Allow saving to GitHub" : "Connect GitHub"}
+                </button>
+              </>
+            ) : (
+              <>
+                {gh.login && <p className="text-xs text-muted">Connected as <b className="font-semibold text-fg">@{gh.login}</b></p>}
+                <label className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium">Repository</span>
+                  <input
+                    value={draftRepo}
+                    onChange={(e) => setDraftRepo(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && void saveToGithub()}
+                    placeholder="my-app, or github.com/you/repo"
+                    className="rounded-lg border border-line bg-bg px-2.5 py-2 font-mono text-xs outline-none focus:border-faint"
+                  />
+                  <span className="text-[11px] leading-snug text-faint">A new name makes a private repository. Paste a link to save into one you already have: your files are added or updated, everything else stays.</span>
+                </label>
+                <button type="button" disabled={busy} onClick={saveToGithub} className="rounded-lg bg-fg px-3 py-2 text-xs font-semibold text-bg hover:opacity-90 disabled:opacity-50">
+                  {busy ? "Saving…" : "Save to GitHub"}
+                </button>
+              </>
+            )}
+            {ghError && <p className="text-xs text-bad">{ghError}</p>}
+          </div>
+        )}
+      </div>
     </>
   );
 }

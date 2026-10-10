@@ -93,6 +93,11 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   // Claude replies can cost more than the starting price when they run long.
   // Every model scales with the size of the task; images have a flat price.
   const from = tool !== "images";
+  // A different few ideas on each visit, chosen after the page loads so server and browser agree.
+  const [seed, setSeed] = useState(0);
+  useEffect(() => {
+    queueMicrotask(() => setSeed(1 + Math.floor(Math.random() * 1000)));
+  }, [tool]);
 
   useEffect(() => {
     const el = ta.current;
@@ -106,7 +111,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
       {showSuggestions && !draft && (
         <div className="flex flex-wrap justify-center gap-2">
           {/* In Chat, suggestions come from what Wanlly remembers about the person, when it has some. */}
-          {(tool === "chat" && memory?.suggestions.length ? memory.suggestions : config.suggestions).map((s) => (
+          {(tool === "chat" && memory?.suggestions.length ? memory.suggestions : pick(config.suggestions, seed)).map((s) => (
             <button
               key={s}
               type="button"
@@ -212,4 +217,11 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
       </form>
     </div>
   );
+}
+
+/** Three of the tool's ideas, a different three for each seed (0: the first three). */
+function pick(all: string[], seed: number) {
+  if (all.length <= 3) return all;
+  const start = seed % all.length;
+  return [0, 1, 2].map((i) => all[(start + i) % all.length]);
 }

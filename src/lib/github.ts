@@ -40,33 +40,63 @@ export const repoName = (s: string) =>
     .slice(0, 80) || "wanlly-app";
 
 /**
- * Commits every file to the repository's main branch (creating a private repository the first
- * time), so the repository matches the project exactly. Returns the repository's address.
+ * What the person typed: a link (https://github.com/owner/repo), "owner/repo", or just a name for
+ * a repository of their own. Null when it can't be a repository.
  */
-export async function pushToGithub(token: string, repo: string, files: { path: string; content: string }[], message: string): Promise<string> {
+export function parseRepo(input: string): { owner?: string; name: string } | null {
+  const t = input.trim().replace(/\.git$/, "").replace(/\/+$/, "");
+  if (!t) return null;
+  const link = t.match(/github\.com[/:]([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})/i);
+  if (link) return { owner: link[1], name: link[2] };
+  const pair = t.match(/^([A-Za-z0-9-]{1,39})\/([A-Za-z0-9._-]{1,100})$/);
+  if (pair) return { owner: pair[1], name: pair[2] };
+  return { name: repoName(t) };
+}
+
+/** The GitHub account the token belongs to, or null when GitHub refuses it. */
+export async function githubLogin(token: string): Promise<string | null> {
   const me = await gh<{ login: string }>(token, "/user");
-  if (!me.ok) throw new Error("GitHub didn't accept the connection. Connect GitHub again.");
-  const full = `${me.data.login}/${repo}`;
-  let info = await gh<{ default_branch: string; html_url: string; description?: string | null }>(token, `/repos/${full}`);
-  // Each save replaces the repository's files with the project's, so an existing repository is
-  // only used when Wanlly made it; anything else could lose work.
-  if (info.ok && info.data.description !== MARK)
-    throw new Error(`You already have a repository called ${repo} that Wanlly didn't create. Pick another name so nothing in it is replaced.`);
+  return me.ok ? me.data.login : null;
+}
+
+/**
+ * Commits the project's files to a repository's main branch and returns its address.
+ * - A name of the person's own that doesn't exist yet: a private repository is created.
+ * - A repository Wanlly created: it's kept identical to the project (deleted files go too).
+ * - Any other repository they can push to: the files are added or updated in one commit and
+ *   everything else in it is left alone, so nothing of theirs is lost (and history keeps all).
+ */
+export async function pushToGithub(token: string, target: { owner?: string; name: string }, files: { path: string; content: string }[], message: string): Promise<string> {
+  const login = await githubLogin(token);
+  if (!login) throw new Error("GitHub didn't accept the connection. Connect GitHub again.");
+  const owner = target.owner ?? login;
+  const full = `${owner}/${target.name}`;
+  let info = await gh<{ default_branch: string; html_url: string; description?: string | null; permissions?: { push?: boolean }; message?: string }>(token, `/repos/${full}`);
   if (info.status === 404) {
-    const made = await gh<{ default_branch: string; html_url: string; message?: string }>(token, "/user/repos", {
+    if (owner.toLowerCase() !== login.toLowerCase())
+      throw new Error(`Couldn't find ${full}, or your GitHub account (${login}) can't see it. Check the link, or ask the owner to add you.`);
+    const made = await gh<{ default_branch: string; html_url: string; description?: string | null; message?: string }>(token, "/user/repos", {
       method: "POST",
-      body: JSON.stringify({ name: repo, private: true, auto_init: true, description: MARK }),
+      body: JSON.stringify({ name: target.name, private: true, auto_init: true, description: MARK }),
     });
     if (!made.ok) throw new Error(made.data.message ? `GitHub: ${made.data.message}` : "Couldn't create the repository on GitHub.");
     info = made;
+  } else if (info.ok && info.data.permissions && !info.data.permissions.push) {
+    throw new Error(`Your GitHub account (${login}) can see ${full} but can't save to it. Ask the owner for write access.`);
   }
   if (!info.ok) throw new Error("Couldn't reach that repository on GitHub.");
+  const mirror = info.data.description === MARK;
   const branch = info.data.default_branch || "main";
   const ref = await gh<{ object: { sha: string } }>(token, `/repos/${full}/git/ref/heads/${branch}`);
-  if (!ref.ok) throw new Error("The repository has no main branch yet. Add a README on GitHub, then try again.");
+  if (!ref.ok) throw new Error("The repository is empty. Add a README on GitHub, then try again.");
+  const parent = await gh<{ tree: { sha: string } }>(token, `/repos/${full}/git/commits/${ref.data.object.sha}`);
   const tree = await gh<{ sha: string; message?: string }>(token, `/repos/${full}/git/trees`, {
     method: "POST",
-    body: JSON.stringify({ tree: files.map((f) => ({ path: f.path, mode: "100644", type: "blob", content: f.content })) }),
+    body: JSON.stringify({
+      // On top of what's there, unless the repository is one Wanlly keeps identical to the project.
+      ...(!mirror && parent.ok ? { base_tree: parent.data.tree.sha } : {}),
+      tree: files.map((f) => ({ path: f.path, mode: "100644", type: "blob", content: f.content })),
+    }),
   });
   if (!tree.ok) throw new Error(tree.data.message ? `GitHub: ${tree.data.message}` : "GitHub didn't accept the files.");
   const commit = await gh<{ sha: string }>(token, `/repos/${full}/git/commits`, {
@@ -75,6 +105,6 @@ export async function pushToGithub(token: string, repo: string, files: { path: s
   });
   if (!commit.ok) throw new Error("GitHub didn't accept the commit.");
   const moved = await gh(token, `/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: JSON.stringify({ sha: commit.data.sha }) });
-  if (!moved.ok) throw new Error("GitHub didn't update the branch.");
+  if (!moved.ok) throw new Error("GitHub didn't update the branch. If the branch is protected, save to another repository.");
   return info.data.html_url;
 }

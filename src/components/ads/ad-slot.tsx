@@ -344,14 +344,17 @@ export function SponsorLine({ sponsor, format, earned }: { sponsor: Sponsor; for
     );
   }
   return (
-    <div className="flex min-w-0 animate-rise flex-wrap items-center gap-2.5 py-0.5 text-[13px] text-muted">
-      <Logo sponsor={sponsor} small />
-      <span className={eyebrow}>Sponsored</span>
-      <span>
-        <b className="font-semibold text-fg">{sponsor.name}</b> ·{" "}
-        <SponsorLink sponsor={sponsor} className="text-fg underline decoration-line underline-offset-[3px] hover:decoration-faint" />
-      </span>
-      {badge}
+    <div className="flex min-w-0 animate-rise items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2.5">
+      <Logo sponsor={sponsor} />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <b className="truncate text-[13px] font-semibold">{sponsor.name}</b>
+          <span className={eyebrow}>Sponsored</span>
+          {badge}
+        </div>
+        <p className="truncate text-[13px] text-muted">{sponsor.headline || sponsor.text}</p>
+      </div>
+      <SponsorLink sponsor={sponsor} className="shrink-0 rounded-lg bg-fg px-3 py-1.5 text-xs font-semibold text-bg hover:opacity-90" />
     </div>
   );
 }

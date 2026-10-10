@@ -33,6 +33,8 @@ Keep a PLAN.md at the root: the person reads it to know where the project stands
 - "## How to run it": how to open, run or deploy it, step by step.
 Keep it short and current; don't let it describe work that isn't done.
 
+Saving to GitHub is done by the app, not by you: when the person asks, tell them the GitHub panel (top right) is open for them to connect their account and pick or paste the repository. Never ask for passwords or tokens.
+
 Work steadily until the task is done, then reply with a short summary of what changed and anything the person must do next. Ask a question instead of guessing when the request is genuinely unclear. Never invent API keys or secrets; leave clearly marked placeholders.`;
 
 /** A model-supplied path as a clean project path, or null when it isn't allowed. */

@@ -153,7 +153,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     multiplier: 1,
     durationMs: 3200,
     steps: ["Thinking", "Writing the answer"],
-    suggestions: ["Explain prompt caching simply", "Compare Sonnet and Opus for coding"],
+    suggestions: ["Make me a revision plan for my exams", "Write a cover letter for an internship", "Explain this topic like I'm new to it", "Ideas to grow my business on WhatsApp", "Draft a polite email to my lecturer", "Turn my notes into a summary"],
     sponsor: {
       name: "Northbeam DB",
       cover: "db",
@@ -174,7 +174,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     multiplier: 3,
     durationMs: 7000,
     steps: ["Reading your request", "Planning the code", "Writing files", "Checking it fits together"],
-    suggestions: ["A to-do app with dark mode", "A price list page for my shop"],
+    suggestions: ["A portfolio site to show my work", "A booking page for my salon or barbershop", "A price list with an M-Pesa pay button", "A quiz app to revise for exams", "Fix the error in my code", "A landing page for my side hustle"],
     sponsor: {
       name: "Railhouse",
       cover: "deploy",
@@ -195,7 +195,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     multiplier: 2,
     durationMs: 5200,
     steps: ["Reading the brief", "Laying out the screen", "Choosing type and color"],
-    suggestions: ["Pricing page with three plans", "Settings screen, mobile"],
+    suggestions: ["Poster for a campus event", "Menu for a café in Nairobi", "Landing page for my freelance services", "A CV that stands out", "Instagram post for a product launch"],
     sponsor: {
       name: "Typecase",
       cover: "type",
@@ -217,7 +217,7 @@ export const TOOLS: Record<ToolId, Tool> = {
     flatCredits: 5,
     durationMs: 12000,
     steps: ["Reading your idea", "Drawing", "Finishing"],
-    suggestions: ["Mug on a sunlit counter, film grain", "Flat-lay of a desk setup"],
+    suggestions: ["Handmade jewellery on kitenge fabric, product photo", "Nairobi skyline at sunset, poster style", "Logo ideas for a fresh juice brand", "Cover art for my podcast"],
     sponsor: {
       name: "Printwell",
       cover: "print",

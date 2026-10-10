@@ -70,6 +70,14 @@ export function BuilderView({ id }: { id: number }) {
   const run = useCallback(
     async (message: string) => {
       if (!model || running) return;
+      // Asking to save to GitHub, or pasting a repository link, opens the GitHub panel. A request
+      // that's only that doesn't need the AI (or its credits).
+      const link = message.match(/https?:\/\/github\.com\/[\w-]+\/[\w.-]+/i)?.[0];
+      const wantsGithub = /\bgit\s?hub\b/i.test(message) && /\b(push|save|upload|commit|connect|send|put)\b/i.test(message);
+      if (link || wantsGithub) {
+        window.dispatchEvent(new CustomEvent("wanlly:github", { detail: { repo: link } }));
+        if (message.length < 160) return;
+      }
       setRunning(true);
       setNotice(null);
       setErrors([]);
