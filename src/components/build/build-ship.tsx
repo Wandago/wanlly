@@ -167,7 +167,7 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
           <Icon name="github" size={14} /> GitHub
         </button>
         {ghOpen && (
-          <div className="absolute right-0 z-30 mt-2 flex w-[320px] max-w-[calc(100vw-24px)] flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-[13px] shadow-soft">
+          <div className="absolute right-0 z-30 mt-2 flex w-[320px] max-w-[calc(100vw-24px)] flex-col gap-3 rounded-xl border border-line bg-surface p-4 text-[13px] whitespace-normal shadow-soft max-lg:fixed max-lg:inset-x-3 max-lg:top-28 max-lg:mt-0 max-lg:w-auto max-lg:max-w-none">
             <div className="flex items-center gap-2">
               <Icon name="github" size={16} />
               <b className="font-semibold">Save to GitHub</b>

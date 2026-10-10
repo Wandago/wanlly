@@ -19,7 +19,6 @@ import { Interstitial } from "./ads/interstitial";
 import { AdBlockWall } from "./ads/adblock-wall";
 import { Sidebar } from "./sidebar";
 import { BetaWaiting } from "./beta-waiting";
-import { Icon } from "./icon";
 import { useLocalSetting } from "@/lib/use-local-setting";
 
 function Toast() {
@@ -168,7 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   // The design editor and the Builder need the width for their previews: their side panel waits for 1536px screens.
   const path = usePathname();
   // The left menu can be hidden on a computer for more room; remembered in this browser.
-  const [menu, setMenu] = useLocalSetting("wanlly-menu", "shown");
+  const [menu] = useLocalSetting("wanlly-menu", "shown");
   const roomy = path.startsWith("/design/");
   // The Builder has no side panel at all: its ads sit in a strip under the page and in the
   // Builder's own slots, so nothing sits beside the work.
@@ -189,21 +188,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           inert={walled || !!waiting}
           aria-hidden={walled || !!waiting || undefined}
           className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[var(--side-w)_minmax(0,1fr)] md:grid-rows-1 ${builder ? "" : roomy ? "2xl:grid-cols-[var(--side-w)_minmax(0,1fr)_var(--rail-w)]" : "xl:grid-cols-[var(--side-w)_minmax(0,1fr)_var(--rail-w)]"}`}
-          style={{ "--side-w": menu === "hidden" ? "0px" : "240px", "--rail-w": railW } as React.CSSProperties}
+          style={{ "--side-w": menu === "hidden" ? "60px" : "240px", "--rail-w": railW } as React.CSSProperties}
         >
           <Sidebar />
-          {/* With the menu hidden on a computer, a small button brings it back. */}
-          {menu === "hidden" && (
-            <button
-              type="button"
-              onClick={() => setMenu("shown")}
-              aria-label="Show the menu"
-              title="Show the menu"
-              className="fixed top-2.5 left-2.5 z-30 hidden size-8 place-items-center rounded-lg border border-line bg-surface text-muted shadow-soft hover:text-fg md:grid"
-            >
-              <Icon name="menu" size={16} />
-            </button>
-          )}
           <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto] md:col-start-2 md:row-start-1">
             <div className="min-h-0 min-w-0">{children}</div>
             <TabletBanner roomy={roomy} always={builder} />

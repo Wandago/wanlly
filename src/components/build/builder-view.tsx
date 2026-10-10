@@ -598,7 +598,7 @@ export function BuilderView({ id }: { id: number }) {
           onClick={() => setShowFiles(showFiles === "on" ? "off" : "on")}
           aria-pressed={showFiles === "on"}
           title={showFiles === "on" ? "Hide the file list" : "Show the file list"}
-          className="mr-1 hidden rounded-md px-1.5 py-1 text-muted hover:bg-hover hover:text-fg md:block"
+          className="mr-1 hidden rounded-md px-1.5 py-1 text-muted hover:bg-hover hover:text-fg lg:block"
         >
           <Icon name="list" size={14} />
         </button>
@@ -656,6 +656,8 @@ export function BuilderView({ id }: { id: number }) {
           onBlur={() => fetch(`/api/build/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) })}
           className="min-w-0 flex-1 truncate bg-transparent font-display text-base font-semibold outline-none"
         />
+        {/* On narrow screens the actions sit in their own row that scrolls sideways. */}
+        <div className="flex items-center gap-2 whitespace-nowrap max-lg:order-last max-lg:w-full max-lg:overflow-x-auto max-lg:pb-0.5 max-lg:[scrollbar-width:none] [&>*]:shrink-0">
         <BuildShip id={id} files={files} name={name} />
         <button
           type="button"
@@ -687,15 +689,17 @@ export function BuilderView({ id }: { id: number }) {
         >
           New thread
         </button>
+        </div>
       </header>
-      <div className="flex border-b border-line md:hidden">
+      {/* Below laptop width the panels take turns (tabs); side by side they'd be too narrow. */}
+      <div className="flex border-b border-line lg:hidden">
         {(["chat", "files", "preview"] as const).map((p) => (
           <button key={p} type="button" onClick={() => setPane(p)} className={`flex-1 py-2 text-xs capitalize ${pane === p ? "border-b-2 border-fg font-semibold" : "text-muted"}`}>
             {p}
           </button>
         ))}
       </div>
-      <div className="hidden min-h-0 flex-1 md:flex">
+      <div className="hidden min-h-0 flex-1 lg:flex">
         {/* Neither side panel may take more than its share, so the preview always keeps room. */}
         {showFiles === "on" && (
           <>
@@ -711,7 +715,7 @@ export function BuilderView({ id }: { id: number }) {
           {chat}
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col md:hidden">{pane === "chat" ? chat : pane === "files" ? fileList : stage}</div>
+      <div className="flex min-h-0 flex-1 flex-col lg:hidden">{pane === "chat" ? chat : pane === "files" ? fileList : stage}</div>
     </main>
   );
 }

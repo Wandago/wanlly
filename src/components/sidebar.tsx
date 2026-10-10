@@ -57,6 +57,51 @@ function useFolded(): [boolean, (v: boolean) => void] {
   return [folded, set];
 }
 
+/** The folded menu: the same places as icons, with their names on hover. */
+function IconRail({ onExpand }: { onExpand: () => void }) {
+  const { tool, me, credits, dispatch } = useWorkspace();
+  const { user } = useUser();
+  const path = usePathname();
+  const item = (active: boolean) => `grid size-10 place-items-center rounded-lg ${active ? "bg-hover text-fg" : "text-muted hover:bg-hover hover:text-fg"}`;
+  return (
+    <aside aria-label="Sidebar" className="hidden min-h-0 flex-col items-center gap-1 border-r border-line bg-side py-3 md:flex">
+      <button type="button" onClick={onExpand} aria-label="Show the full menu" title="Show the full menu" className={item(false)}>
+        <Icon name="menu" size={16} />
+      </button>
+      <Link href="/app" aria-label="Wanlly home" title="Wanlly" className="grid size-10 place-items-center">
+        <Mark />
+      </Link>
+      <Link href="/app" onClick={() => dispatch({ type: "newChat" })} aria-label="New chat" title="New chat" className="mb-1 grid size-10 place-items-center rounded-lg border border-line bg-surface hover:border-faint">
+        <Icon name="plus" size={16} />
+      </Link>
+      {TOOL_LINKS.map((id) => (
+        <Link key={id} href="/app" onClick={() => dispatch({ type: "setTool", tool: id })} aria-label={TOOLS[id].label} title={TOOLS[id].label} aria-current={path === "/app" && tool === id ? "page" : undefined} className={item(path === "/app" && tool === id)}>
+          <Icon name={id} size={16} />
+        </Link>
+      ))}
+      {PAGES.map((pg) => (
+        <Link key={pg.href} href={pg.href} aria-label={pg.label} title={pg.label} aria-current={path.startsWith(pg.href) ? "page" : undefined} className={item(path.startsWith(pg.href))}>
+          <Icon name={pg.icon} size={16} />
+        </Link>
+      ))}
+      {me?.role && me.role !== "user" && (
+        <Link href="/admin" aria-label="Admin" title="Admin" className={item(path.startsWith("/admin"))}>
+          <Icon name="shield" size={16} />
+        </Link>
+      )}
+      <div className="mt-auto flex flex-col items-center gap-2">
+        <button type="button" onClick={() => dispatch({ type: "setEarnOpen", open: true })} title="Credits · watch an ad to earn more" aria-label={`${credits} credits. Earn more`} className="grid min-w-10 place-items-center rounded-lg border border-accent-line bg-accent-soft px-1.5 py-1 font-mono text-[11px] font-semibold text-accent">
+          {credits}
+        </button>
+        <Link href="/profile" aria-label="Your profile" title="Your profile" className="grid size-9 place-items-center overflow-hidden rounded-full bg-hover">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          {user?.imageUrl ? <img src={user.imageUrl} alt="" className="size-full object-cover" /> : <Icon name="user" size={16} />}
+        </Link>
+      </div>
+    </aside>
+  );
+}
+
 function TodayCard() {
   const { floor: FLOOR_CREDITS } = useReward();
   const { credits, floorUnlocked, synced, usage, dispatch } = useWorkspace();
@@ -192,10 +237,11 @@ export function Sidebar() {
   return (
     <>
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={close} aria-hidden="true" />}
-      {/* Hidden on a computer, the menu keeps its (zero-width) place in the page grid, so the
-          page and the side panel stay in their own columns. */}
+      {/* Folded on a computer, the menu becomes a narrow column of icons (the full one still
+          slides out on phones). */}
+      {menu === "hidden" && <IconRail onExpand={() => setMenu("shown")} />}
       <aside
-        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 ${menu === "hidden" ? "md:invisible md:w-0 md:overflow-hidden md:border-0 md:p-0" : ""} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
+        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 ${menu === "hidden" ? "md:hidden" : ""} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
         aria-label="Sidebar"
       >
         <div className="flex items-center">
@@ -206,8 +252,8 @@ export function Sidebar() {
           <button
             type="button"
             onClick={() => setMenu("hidden")}
-            aria-label="Hide the menu"
-            title="Hide the menu"
+            aria-label="Fold the menu to icons"
+            title="Fold the menu to icons"
             className="mb-2 ml-auto hidden size-7 place-items-center rounded-lg text-faint hover:bg-hover hover:text-fg md:grid"
           >
             <Icon name="menu" size={15} />
