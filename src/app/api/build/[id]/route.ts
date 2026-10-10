@@ -36,7 +36,9 @@ export async function GET(req: Request, ctx: RouteContext<"/api/build/[id]">) {
             id: s.id,
             role: "assistant",
             text: blocks.filter((b) => b.type === "text").map((b) => b.text).join("\n"),
-            edits: blocks.filter((b) => b.type === "tool_use").map((b) => ({ command: String(b.input?.command ?? ""), path: String(b.input?.path ?? "") })),
+            edits: blocks
+              .filter((b) => b.type === "tool_use")
+              .map((b) => (b.name === "save_to_github" ? { command: "github", path: String(b.input?.message ?? "") } : { command: String(b.input?.command ?? ""), path: String(b.input?.path ?? "") })),
             modelId: s.modelId,
             credits: s.credits,
           },

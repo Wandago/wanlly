@@ -27,11 +27,25 @@ type Live = { text: string; edits: { command: string; path: string; ok: boolean 
 
 /** Steps one request may take before asking the person whether to keep going. */
 const STEP_LIMIT = 25;
-const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replace: "Edited", insert: "Edited" };
+const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replace: "Edited", insert: "Edited", github: "Pushed to GitHub:" };
 
 export function BuilderView({ id }: { id: number }) {
   const { providers, dispatch } = useWorkspace();
   const reward = useReward();
+  // The linked repository, read when a step is sent (kept in the browser by the GitHub panel).
+  const repoRef = useRef("");
+  useEffect(() => {
+    try {
+      repoRef.current = localStorage.getItem(`wanlly-build-repo-${id}`) ?? "";
+    } catch {}
+    const sync = () => {
+      try {
+        repoRef.current = localStorage.getItem(`wanlly-build-repo-${id}`) ?? "";
+      } catch {}
+    };
+    window.addEventListener("wanlly-local-setting", sync);
+    return () => window.removeEventListener("wanlly-local-setting", sync);
+  }, [id]);
   const [name, setName] = useState("");
   const [files, setFiles] = useState<BuildFile[] | null>(null);
   const [steps, setSteps] = useState<Step[]>([]);
@@ -76,13 +90,13 @@ export function BuilderView({ id }: { id: number }) {
   const run = useCallback(
     async (message: string) => {
       if (!model || running) return;
-      // Asking to save to GitHub, or pasting a repository link, opens the GitHub panel. A request
-      // that's only that doesn't need the AI (or its credits).
+      // A repository link in the message becomes the one this project saves to; the AI commits
+      // and pushes with its save_to_github tool.
       const link = message.match(/https?:\/\/github\.com\/[\w-]+\/[\w.-]+/i)?.[0];
-      const wantsGithub = /\bgit\s?hub\b/i.test(message) && /\b(push|save|upload|commit|connect|send|put)\b/i.test(message);
-      if (link || wantsGithub) {
-        window.dispatchEvent(new CustomEvent("wanlly:github", { detail: { repo: link } }));
-        if (message.length < 160) return;
+      if (link) {
+        repoRef.current = link;
+        localStorage.setItem(`wanlly-build-repo-${id}`, link);
+        window.dispatchEvent(new Event("wanlly-local-setting"));
       }
       setRunning(true);
       setNotice(null);
@@ -99,7 +113,7 @@ export function BuilderView({ id }: { id: number }) {
           const r = await fetch(`/api/build/${id}/step`, {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ message: first ? message : "", modelId: stepModel, jobId: crypto.randomUUID() }),
+            body: JSON.stringify({ message: first ? message : "", modelId: stepModel, jobId: crypto.randomUUID(), repo: repoRef.current }),
             signal: ctrl.signal,
           });
           first = false;
@@ -135,6 +149,11 @@ export function BuilderView({ id }: { id: number }) {
               if (ev.type === "done" || ev.type === "error") {
                 const act = accountFrom(ev);
                 if (act) dispatch(act);
+              }
+              if (ev.type === "github") {
+                if (ev.ok) dispatch({ type: "toast", text: "Committed and pushed to GitHub" });
+                // Not connected, or no repository chosen: the GitHub panel takes it from here.
+                else if (ev.need) window.dispatchEvent(new CustomEvent("wanlly:github", { detail: {} }));
               }
               if (ev.type === "done") finished = ev.done;
               if (ev.type === "error") {
@@ -576,7 +595,7 @@ export function BuilderView({ id }: { id: number }) {
 }
 
 const BUILD_PHASES = ["Reading the request", "Pondering the approach", "Looking through the files", "Planning the changes", "Writing the code", "Checking the work"];
-const NOW_DOING: Record<string, string> = { view: "Reading", create: "Writing", str_replace: "Editing", insert: "Editing" };
+const NOW_DOING: Record<string, string> = { view: "Reading", create: "Writing", str_replace: "Editing", insert: "Editing", github: "Pushing to GitHub" };
 
 /** What the Builder is doing right now: its latest file action, or a phrase that moves on while it thinks. */
 function BuildPhase({ live }: { live: Live }) {

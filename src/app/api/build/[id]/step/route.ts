@@ -6,6 +6,7 @@ import { claudeBuildStep, errorDetail, errorKind, geminiBuildStep, isClaudeModel
 import { BUILD_SYSTEM, MAX_HISTORY_CHARS, loadFiles, loadSteps, ownBuild, runEditor } from "@/lib/build";
 import { ESTIMATE, MODELS, isLive, taskCredits } from "@/lib/catalog";
 import { field, jsonUpTo } from "@/lib/forms";
+import { githubToken, parseRepo, pushToGithub } from "@/lib/github";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { SAY, spendMessage } from "@/lib/messages";
 import { signedInUserId } from "@/lib/session";
@@ -36,6 +37,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
   if (!Number.isSafeInteger(id) || !data) return Response.json({ error: SAY.badRequest }, { status: 400 });
   const message = typeof data.message === "string" ? data.message.trim().slice(0, 12_000) : "";
   const jobId = field(data, "jobId", 64);
+  // The repository this project saves to (remembered in the person's browser), for save_to_github.
+  const repoSetting = field(data, "repo", 200);
   const model = MODELS.find((m) => m.id === data.modelId);
   if (!/^[\w-]{8,64}$/.test(jobId) || !model) return Response.json({ error: SAY.badRequest }, { status: 400 });
   const onGemini = model.provider === "google";
@@ -126,6 +129,13 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
           const files = await loadFiles(id);
           for (const u of uses) {
             const input = (u.input && typeof u.input === "object" ? u.input : {}) as Record<string, unknown>;
+            if (u.name === "save_to_github") {
+              const out = await commitToGithub(userId, repoSetting, files, String(input.message ?? "").slice(0, 200) || "Update from Wanlly");
+              send({ type: "github", ok: !out.error, url: out.url, need: out.need, message: out.text });
+              send({ type: "edit", command: "github", path: String(input.message ?? ""), ok: !out.error });
+              results.push({ type: "tool_result", tool_use_id: u.id!, content: out.text, ...(out.error ? { is_error: true } : {}) });
+              continue;
+            }
             const out = await runEditor(id, files, input).catch(() => ({ text: "That edit couldn't be saved. Try again.", error: true, changed: undefined }));
             if (out.changed && !changed.includes(out.changed)) changed.push(out.changed);
             send({ type: "edit", command: String(input.command ?? ""), path: String(input.path ?? ""), ok: !out.error });
@@ -152,4 +162,19 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
     },
   });
   return new Response(body, { headers: { "content-type": "application/x-ndjson; charset=utf-8", "cache-control": "no-store" } });
+}
+
+/** The AI's save_to_github: commits the project's files to the linked repository. */
+async function commitToGithub(userId: string, repo: string, files: Map<string, string>, message: string): Promise<{ text: string; error?: boolean; url?: string; need?: "connect" | "repo" }> {
+  const { token } = await githubToken(userId);
+  if (!token) return { text: "GitHub isn't connected for this person yet. The app has opened its GitHub panel for them to connect; ask them to say push again after.", error: true, need: "connect" };
+  const target = repo ? parseRepo(repo) : null;
+  if (!target) return { text: "No repository is linked to this project yet. The app has opened its GitHub panel for them to pick or paste one; ask them to say push again after.", error: true, need: "repo" };
+  if (!files.size) return { text: "There are no files to commit yet.", error: true };
+  try {
+    const url = await pushToGithub(token, target, [...files].map(([path, content]) => ({ path, content })), message);
+    return { text: `Committed "${message}" and pushed to ${url}.`, url };
+  } catch (e) {
+    return { text: e instanceof Error ? e.message : "GitHub didn't accept the commit.", error: true };
+  }
 }

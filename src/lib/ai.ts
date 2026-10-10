@@ -1,4 +1,5 @@
 import "server-only";
+import { GITHUB_TOOL } from "./build";
 import Anthropic, { toFile } from "@anthropic-ai/sdk";
 import { MODELS, type Providers, type ToolId } from "./catalog";
 
@@ -344,7 +345,7 @@ export async function claudeBuildStep(opts: {
       max_tokens: 32000,
       system: opts.system,
       messages: forClaude(opts.messages),
-      tools: [{ type: "text_editor_20250728", name: "str_replace_based_edit_tool", max_characters: 40000 }],
+      tools: [{ type: "text_editor_20250728", name: "str_replace_based_edit_tool", max_characters: 40000 }, GITHUB_TOOL],
       output_config: { effort: "medium" },
       cache_control: { type: "ephemeral" },
     },
@@ -432,7 +433,7 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
     return JSON.stringify({
       systemInstruction: { parts: [{ text: opts.system }] },
       contents: toGeminiContents(opts.messages),
-      tools: [{ functionDeclarations: [EDIT_TOOL] }],
+      tools: [{ functionDeclarations: [EDIT_TOOL, { name: GITHUB_TOOL.name, description: GITHUB_TOOL.description, parameters: GITHUB_TOOL.input_schema }] }],
       generationConfig: { maxOutputTokens: 32000, ...(t ? { thinkingConfig: t } : {}) },
     });
   };

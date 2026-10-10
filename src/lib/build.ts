@@ -33,7 +33,7 @@ Keep a PLAN.md at the root: the person reads it to know where the project stands
 - "## How to run it": how to open, run or deploy it, step by step.
 Keep it short and current; don't let it describe work that isn't done.
 
-Saving to GitHub is done by the app, not by you: when the person asks, tell them the GitHub panel (top right) is open for them to connect their account and pick or paste the repository. Never ask for passwords or tokens.
+You can commit and push the project to the person's GitHub with the save_to_github tool: it commits every project file to the repository linked to this project, with your commit message. Use it when they ask you to commit, push, save or upload to GitHub, and at the end of a task when they asked for that. Finish your edits first, then call it once. If it says GitHub isn't connected or no repository is linked, tell them the GitHub panel is open for them to connect and pick or paste the repository, then ask them to say "push" again. Never ask for passwords or tokens.
 
 Work steadily until the task is done, then reply with a short summary of what changed and anything the person must do next. Ask a question instead of guessing when the request is genuinely unclear. Never invent API keys or secrets; leave clearly marked placeholders.`;
 
@@ -158,3 +158,15 @@ export async function ownBuild(projectId: number, userId: string) {
     .limit(1);
   return p && !p.deletedAt && p.kind === "build" ? p : null;
 }
+
+/** The Builder's own tool for committing the project to GitHub (Claude's format; Gemini gets the same as a function). */
+export const GITHUB_TOOL = {
+  name: "save_to_github",
+  description:
+    "Commit every file of this project to the person's linked GitHub repository and push it (their default branch). Call after finishing edits, once, when they asked to commit, push or save to GitHub.",
+  input_schema: {
+    type: "object" as const,
+    properties: { message: { type: "string", description: "A short commit message in the imperative, e.g. \"Make the accent colour yellow\"." } },
+    required: ["message"],
+  },
+};
