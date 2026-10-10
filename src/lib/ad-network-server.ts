@@ -1,14 +1,22 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { NO_NETWORK, cleanNetwork, type NetworkConfig } from "./ad-network";
+import { NO_NETWORKS, cleanNetwork, cleanNetworks, type NetworksConfig } from "./ad-network";
 
-/** The saved network settings, or none. Stored in app_flags under "adNetwork". */
-export async function loadNetwork(): Promise<NetworkConfig> {
+/**
+ * Every network, stored under "adNetworks". Before there was a list, one network was stored
+ * under "adNetwork"; that one is read as a list of one until the list is first saved.
+ */
+export async function loadNetworks(): Promise<NetworksConfig> {
   try {
-    const [row] = await db().select({ value: schema.appFlags.value }).from(schema.appFlags).where(eq(schema.appFlags.key, "adNetwork")).limit(1);
-    return row ? cleanNetwork(row.value) : NO_NETWORK;
+    const rows = await db().select({ key: schema.appFlags.key, value: schema.appFlags.value }).from(schema.appFlags).where(inArray(schema.appFlags.key, ["adNetworks", "adNetwork"]));
+    const list = rows.find((r) => r.key === "adNetworks");
+    if (list) return cleanNetworks(list.value);
+    const one = rows.find((r) => r.key === "adNetwork");
+    if (!one) return NO_NETWORKS;
+    const n = cleanNetwork(one.value);
+    return cleanNetworks({ host: n.host, list: n.name || Object.keys(n.units).length ? [{ ...n, name: n.name || "network" }] : [] });
   } catch {
-    return NO_NETWORK;
+    return NO_NETWORKS;
   }
 }

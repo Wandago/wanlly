@@ -1,5 +1,5 @@
 import { NETWORK_SIZES, sizeOf, type NetworkSize } from "@/lib/ad-network";
-import { loadNetwork } from "@/lib/ad-network-server";
+import { loadNetworks } from "@/lib/ad-network-server";
 
 /**
  * One network banner as its own small page, loaded in an iframe by the ad slot. The sandbox
@@ -7,10 +7,13 @@ import { loadNetwork } from "@/lib/ad-network-server";
  * read Wanlly's cookies or storage, and can't navigate the app; clicks open in a new tab.
  */
 export async function GET(req: Request) {
-  const size = new URL(req.url).searchParams.get("size") as NetworkSize | null;
+  const params = new URL(req.url).searchParams;
+  const size = params.get("size") as NetworkSize | null;
   if (!size || !NETWORK_SIZES.includes(size)) return new Response(null, { status: 400 });
-  const network = await loadNetwork();
-  const code = network.audience === "off" ? undefined : network.units[size];
+  // Which network's banner: the one named, or the first that has this size.
+  const { list } = await loadNetworks();
+  const network = list.find((n) => n.name === params.get("net") && n.units[size]) ?? list.find((n) => n.audience !== "off" && n.units[size]);
+  const code = !network || network.audience === "off" ? undefined : network.units[size];
   if (!code) return new Response(null, { status: 404 });
   const { w, h } = sizeOf(size);
   // After the network's code, a check tells the slot whether an ad actually appeared, so an

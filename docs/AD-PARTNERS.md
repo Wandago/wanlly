@@ -128,3 +128,15 @@ Recommended: **Adsterra** banners only (no popunder, Social Bar or Direct Link),
 ### Banner host (optional)
 
 Banners served by Wanlly run with no origin (no cookies or storage), and script banners like Adsterra's load blank there. Deploy `workers/ad-frame/worker.js` as its own Cloudflare Worker (Workers & Pages → Create → Worker → paste → Deploy) and put its address in **Banner host**. Wanlly then loads each script banner from `<host>/frame#<banner code>`: the code travels after `#`, so the Worker never calls Wanlly (Cloudflare refuses Worker-to-Worker fetches between workers.dev addresses on one account). The page runs only inside a frame on Wanlly (`frame-ancestors` plus a top-window check), so the address can't be used to show anything elsewhere. Banners keep that Worker's origin: a different site, so they can't reach Wanlly.
+
+## 9. Several networks at once (built)
+
+Admin → Ads & revenue → Setup → **Ad networks** holds up to six networks (Adsterra, A-ADS, Monetag, HilltopAds…), each with its own banner codes and "who sees it", and one shared banner host.
+
+**Who gets a slot.** Sold campaigns first, as always. Then, per banner size, the network that pays best gets the slot; if it answers with no ad, the slot goes to the next network for 10 minutes, then to house sponsors. Paste-code networks don't bid in real time, so "pays best" means what each one really earned per 1,000 views over the last 14 days:
+
+- **Adsterra:** its own report (ADSTERRA_API_KEY): revenue ÷ its impressions.
+- **Others:** income recorded in Admin → Money with the network's name in the source (e.g. "Monetag payout"), ÷ the views Wanlly counted for that network.
+- **Until 1,000 views are measured:** the "Expected $ per 1,000" you type in (take it from the network's dashboard).
+
+One page load in ten tries a different network first, so newer networks keep getting enough views to be measured and can overtake. Real-time bidding (Prebid.js with SSPs such as PubMatic or Magnite) needs approved accounts with those exchanges and steadier traffic; it can sit in front of this later, with the same slots.

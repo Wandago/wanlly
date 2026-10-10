@@ -1,33 +1,36 @@
 import { sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { cleanNetwork } from "@/lib/ad-network";
-import { loadNetwork } from "@/lib/ad-network-server";
+import { cleanNetworks } from "@/lib/ad-network";
+import { loadNetworks } from "@/lib/ad-network-server";
+import { rankNetworks } from "@/lib/ad-rank";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
+import { dbErrorMessage } from "@/lib/migrations";
 import { jsonUpTo } from "@/lib/forms";
 
-/** The ad network settings, for the admin form. */
+/** Every ad network, the shared banner host, and how each one ranks on real earnings. */
 export async function GET(req: Request) {
   const staff = await requireStaff(req, CAN.view);
   if (staff instanceof Response) return staff;
-  return Response.json({ network: await loadNetwork() });
+  const networks = await loadNetworks();
+  return Response.json({ ...networks, ranks: await rankNetworks(networks.list).catch(() => []) });
 }
 
-/** Saves the network name, who sees it, and its banner codes. Owners and admins only. */
+/** Saves the networks: names, who sees each, banner codes and expected rates. Owners and admins only. */
 export async function PUT(req: Request) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
-  const data = await jsonUpTo(req, 40_000);
+  const data = await jsonUpTo(req, 200_000);
   if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
-  const network = cleanNetwork(data);
+  const networks = cleanNetworks(data);
   try {
     await db()
       .insert(schema.appFlags)
-      .values({ key: "adNetwork", value: network, updatedBy: staff.id })
-      .onConflictDoUpdate({ target: schema.appFlags.key, set: { value: network, updatedBy: staff.id, updatedAt: sql`now()` } });
-    await logAction(staff.id, "network.saved", "flag:adNetwork", { name: network.name, audience: network.audience, sizes: Object.keys(network.units) });
-    return Response.json({ network });
+      .values({ key: "adNetworks", value: networks, updatedBy: staff.id })
+      .onConflictDoUpdate({ target: schema.appFlags.key, set: { value: networks, updatedBy: staff.id, updatedAt: sql`now()` } });
+    await logAction(staff.id, "network.saved", "flag:adNetworks", { networks: networks.list.map((n) => ({ name: n.name, audience: n.audience, sizes: Object.keys(n.units), ecpm: n.ecpm })) });
+    return Response.json({ ...networks, ranks: await rankNetworks(networks.list).catch(() => []) });
   } catch (e) {
     console.error("admin network failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: dbErrorMessage(e) }, { status: 503 });
   }
 }

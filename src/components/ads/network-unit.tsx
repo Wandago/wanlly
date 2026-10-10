@@ -32,19 +32,22 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   const direct = net?.direct?.[size] ?? "";
   // Script banners: from the banner host when there is one (its own origin), else from Wanlly.
   const code = net?.codes?.[size];
-  const src = direct || (host && code ? frameUrl(host, code) : `/api/ads/unit?size=${size}`);
+  // Whichever network is first in line for this size right now (see useNetwork).
+  const name = net?.by[size] ?? network;
+  const src = direct || (host && code ? frameUrl(host, code) : `/api/ads/unit?size=${size}&net=${encodeURIComponent(name)}`);
   useEffect(() => {
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
       const m = (e.data as { wanllyAd?: string })?.wanllyAd;
       if (m === "filled") setFilled(true);
-      if (m === "empty") markNetworkEmpty(size);
+      if (m === "empty") markNetworkEmpty(name, size);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [size]);
+  }, [size, name]);
   const iframe = (
     <iframe
+      key={src}
       ref={frame}
       title="Advertisement"
       src={src}
@@ -58,7 +61,7 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   );
   // Only a banner that actually showed counts as a view.
   return (
-    <Tracked placement={placement} format="display" creative={`network:${network || "network"}`} className="shrink-0" paused={!filled}>
+    <Tracked placement={placement} format="display" creative={`network:${name || "network"}`} className="shrink-0" paused={!filled}>
       {iframe}
     </Tracked>
   );

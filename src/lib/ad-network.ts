@@ -25,7 +25,20 @@ export type NetworkConfig = {
   native?: string;
   /** Height of the native row in px; the unit fills the width. */
   nativeHeight?: number;
+  /**
+   * What the team expects this network to pay per 1,000 views, in US dollars. Used to rank it
+   * until enough real views and earnings are in to measure it (see lib/ad-rank.ts).
+   */
+  ecpm?: number;
 };
+
+/**
+ * Every network, with one shared banner host. Slots go to the best-paying network that has the
+ * size; when it has no ad to show, the next one gets the slot.
+ */
+export type NetworksConfig = { host?: string; list: NetworkConfig[] };
+export const NO_NETWORKS: NetworksConfig = { list: [] };
+export const MAX_NETWORKS = 6;
 
 export const NO_NETWORK: NetworkConfig = { name: "", audience: "off", units: {} };
 
@@ -88,5 +101,20 @@ export function cleanNetwork(v: unknown): NetworkConfig {
     host: httpsOrigin(o.host),
     native: typeof o.native === "string" && o.native.trim() ? o.native.trim().slice(0, 4000) : undefined,
     nativeHeight: Math.max(100, Math.min(600, Math.round(Number(o.nativeHeight)) || 280)),
+    ecpm: Number(o.ecpm) > 0 ? Math.min(100, Math.round(Number(o.ecpm) * 100) / 100) : undefined,
   };
+}
+
+/** Keeps what the admin form may set: the host and up to MAX_NETWORKS named, distinct networks. */
+export function cleanNetworks(v: unknown): NetworksConfig {
+  if (!v || typeof v !== "object") return NO_NETWORKS;
+  const o = v as Record<string, unknown>;
+  const seen = new Set<string>();
+  const list = (Array.isArray(o.list) ? o.list : [])
+    .map(cleanNetwork)
+    .filter((n) => n.name && !seen.has(n.name) && seen.add(n.name))
+    .slice(0, MAX_NETWORKS)
+    // The host is shared, so a network's own (from the one-network days) is dropped.
+    .map((n) => ({ ...n, host: undefined }));
+  return { host: httpsOrigin(o.host), list };
 }

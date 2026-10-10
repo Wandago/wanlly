@@ -14,15 +14,15 @@ import type { Sponsor } from "./catalog";
 
 type Served = Sponsor & { placements: string[] };
 type Native = { code: string; height: number };
-type Network = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; host?: string; direct?: Record<string, string>; codes?: Record<string, string>; native?: Native } | null;
 const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
-type NetInfo = { name: string; sizes: NetworkSize[]; host: string; direct: Record<string, string>; codes: Record<string, string>; native?: Native };
-const AdsContext = createContext<{ ads: Served[]; seen: number; network: NetInfo | null; house: Sponsor[] }>({ ads: [], seen: 0, network: null, house: [] });
+/** One ad network as /api/ads sends it; the list comes best-paying first. */
+type NetInfo = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; direct: Record<string, string>; codes: Record<string, string>; native?: Native };
+const AdsContext = createContext<{ ads: Served[]; seen: number; networks: NetInfo[]; host: string; house: Sponsor[] }>({ ads: [], seen: 0, networks: [], host: "", house: [] });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
   const [ads, setAds] = useState<Served[]>([]);
   const [house, setHouse] = useState<Sponsor[]>([]);
-  const [net, setNet] = useState<Network>(null);
+  const [nets, setNets] = useState<{ list: NetInfo[]; host: string }>({ list: [], host: "" });
   const { me } = useWorkspace();
   // Bumped after each counted view, so campaigns that reach their daily cap drop out.
   const [seen, setSeen] = useState(0);
@@ -39,7 +39,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         if (!live) return;
         if (Array.isArray(b.ads)) setAds(b.ads);
         if (Array.isArray(b.house)) setHouse(b.house);
-        if (b.network?.sizes?.length) setNet(b.network);
+        if (Array.isArray(b.networks) && b.networks.length) setNets({ list: b.networks, host: b.host ?? "" });
       })
       .catch(() => {});
     return () => {
@@ -47,8 +47,9 @@ export function AdsProvider({ children }: { children: ReactNode }) {
     };
   }, []);
   // "staff" networks are being checked by the team; everyone else keeps seeing sponsors.
-  const netKey = net && (net.audience === "everyone" || STAFF.has(me?.role ?? "")) ? JSON.stringify({ name: net.name, sizes: net.sizes, host: net.host ?? "", direct: net.direct ?? {}, codes: net.codes ?? {}, native: net.native }) : "";
-  const value = useMemo(() => ({ ads, seen, network: netKey ? (JSON.parse(netKey) as NetInfo) : null, house }), [ads, seen, netKey, house]);
+  const staff = STAFF.has(me?.role ?? "");
+  const networks = useMemo(() => nets.list.filter((n) => n.audience === "everyone" || staff), [nets, staff]);
+  const value = useMemo(() => ({ ads, seen, networks, host: nets.host, house }), [ads, seen, networks, nets.host, house]);
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
@@ -76,8 +77,8 @@ export function useSponsors(placement: string, fallback: Sponsor[], context = ""
   }, [ads, seen, house, placement, fallback, context, interests]);
 }
 
-/* Sizes the network just answered with no ad. They're skipped for 10 minutes so the slot shows
-   a sponsor instead of an empty box, then tried again. */
+/* Network and size pairs that just answered with no ad. They're skipped for 10 minutes, so the
+   slot goes to the next network (or a sponsor) instead of an empty box, then tried again. */
 const EMPTY_FOR = 10 * 60_000;
 const emptySizes = new Set<string>();
 let emptyVersion = 0;
@@ -86,12 +87,13 @@ const changed = () => {
   emptyVersion++;
   emptyListeners.forEach((fn) => fn());
 };
-export function markNetworkEmpty(size: string) {
-  if (emptySizes.has(size)) return;
-  emptySizes.add(size);
+export function markNetworkEmpty(network: string, size: string) {
+  const key = `${network}:${size}`;
+  if (emptySizes.has(key)) return;
+  emptySizes.add(key);
   changed();
   window.setTimeout(() => {
-    emptySizes.delete(size);
+    emptySizes.delete(key);
     changed();
   }, EMPTY_FOR);
 }
@@ -100,17 +102,32 @@ const subscribeEmpty = (fn: () => void) => {
   return () => emptyListeners.delete(fn);
 };
 
-/** The network banner sizes this person may see right now; null when there's no network. */
+/**
+ * The network banners this person may see right now, as one view across every network: for each
+ * size, the best-paying network that has it and didn't just come back empty (`by` names it).
+ * Null when no network has anything to show.
+ */
 export function useNetwork() {
-  const network = useContext(AdsContext).network;
+  const { networks, host } = useContext(AdsContext);
   const version = useSyncExternalStore(subscribeEmpty, () => emptyVersion, () => 0);
   return useMemo(() => {
     void version;
-    if (!network) return null;
-    const sizes = network.sizes.filter((s) => !emptySizes.has(s));
-    const native = emptySizes.has("native") ? undefined : network.native;
-    return sizes.length || native ? { ...network, sizes, native } : null;
-  }, [network, version]);
+    const by: Record<string, string> = {};
+    const direct: Record<string, string> = {};
+    const codes: Record<string, string> = {};
+    for (const n of networks)
+      for (const size of n.sizes) {
+        if (by[size] || emptySizes.has(`${n.name}:${size}`)) continue;
+        by[size] = n.name;
+        if (n.direct[size]) direct[size] = n.direct[size];
+        if (n.codes[size]) codes[size] = n.codes[size];
+      }
+    const nativeFrom = networks.find((n) => n.native && !emptySizes.has(`${n.name}:native`));
+    const native = nativeFrom?.native ? { ...nativeFrom.native, name: nativeFrom.name } : undefined;
+    const sizes = Object.keys(by) as NetworkSize[];
+    if (!sizes.length && !native) return null;
+    return { name: networks[0]?.name ?? "", sizes, by, host, direct, codes, native };
+  }, [networks, host, version]);
 }
 
 /** A counter that ticks every `ms` while the page is visible, for alternating ads in a slot. */

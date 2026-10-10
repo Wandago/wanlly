@@ -1,6 +1,7 @@
 import { rawSql } from "@/db";
 import { directSrc } from "@/lib/ad-network";
-import { loadNetwork } from "@/lib/ad-network-server";
+import { loadNetworks } from "@/lib/ad-network-server";
+import { rankNetworks, slotOrder } from "@/lib/ad-rank";
 import { affiliateSponsor } from "@/lib/affiliates";
 import { loadAffiliates } from "@/lib/affiliates-server";
 
@@ -25,7 +26,8 @@ export async function GET(req: Request) {
           select count(*) from ad_events a where a.creative = 'campaign:' || c.id and a.kind = 'impression'))
       order by c.id desc limit 20`) as Record<string, unknown>[];
     // Which network sizes are set up, and for whom. The codes themselves stay in /api/ads/unit.
-    const [network, affiliates] = await Promise.all([loadNetwork(), loadAffiliates()]);
+    const [networks, affiliates] = await Promise.all([loadNetworks(), loadAffiliates()]);
+    const ranks = await rankNetworks(networks.list).catch(() => []);
     return Response.json(
       {
         // The visitor's own network country, so the team can see why a campaign isn't shown.
@@ -34,21 +36,27 @@ export async function GET(req: Request) {
         house: affiliates.filter((a) => a.active).map(affiliateSponsor),
         // Iframe-only banners (A-ADS…) run on the network's own site and need nothing more. Script
         // banners (Adsterra…) need the banner host: inside Wanlly's sandbox they load blank.
-        network: (() => {
-          if (network.audience === "off") return null;
-          const direct: Record<string, string> = {};
-          const codes: Record<string, string> = {};
-          const sizes: string[] = [];
-          for (const [size, code] of Object.entries(network.units)) {
-            const src = directSrc(code);
-            if (src) direct[size] = src;
-            else if (network.host && code) codes[size] = code;
-            if (src || network.host) sizes.push(size);
-          }
-          // The native row needs the banner host (its script, like any network script).
-          const native = network.native && network.host ? { code: network.native, height: network.nativeHeight ?? 280 } : undefined;
-          return sizes.length || native ? { name: network.name, audience: network.audience, sizes, host: network.host, direct, codes, native } : null;
-        })(),
+        // Every network that's on, best-paying first. Iframe-only banners (A-ADS…) run on the
+        // network's own site and need nothing more; script banners (Adsterra…) need the banner
+        // host, since inside Wanlly's sandbox they load blank.
+        networks: slotOrder(
+          networks.list.flatMap((n) => {
+            if (n.audience === "off") return [];
+            const direct: Record<string, string> = {};
+            const codes: Record<string, string> = {};
+            const sizes: string[] = [];
+            for (const [size, code] of Object.entries(n.units)) {
+              const src = directSrc(code);
+              if (src) direct[size] = src;
+              else if (networks.host && code) codes[size] = code;
+              if (src || networks.host) sizes.push(size);
+            }
+            const native = n.native && networks.host ? { code: n.native, height: n.nativeHeight ?? 280 } : undefined;
+            return sizes.length || native ? [{ name: n.name, audience: n.audience, sizes, direct, codes, native }] : [];
+          }),
+          ranks,
+        ),
+        host: networks.host ?? "",
         ads: rows.map((r) => ({
           campaignId: Number(r.id),
           name: String(r.advertiser),

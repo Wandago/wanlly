@@ -13,6 +13,7 @@ import { Tracked } from "./tracked";
  */
 export function NativeSlot({ placement, fallback = null }: { placement: string; fallback?: React.ReactNode }) {
   const net = useNetwork();
+  const name = net?.native?.name ?? "";
   const frame = useRef<HTMLIFrameElement>(null);
   const [filled, setFilled] = useState(false);
   useEffect(() => {
@@ -20,17 +21,17 @@ export function NativeSlot({ placement, fallback = null }: { placement: string; 
       if (e.source !== frame.current?.contentWindow) return;
       const m = (e.data as { wanllyAd?: string })?.wanllyAd;
       if (m === "filled") setFilled(true);
-      if (m === "empty") markNetworkEmpty("native");
+      if (m === "empty" && name) markNetworkEmpty(name, "native");
     };
     window.addEventListener("message", on);
     return () => window.removeEventListener("message", on);
-  }, []);
+  }, [name]);
   if (!net?.native || !net.host) return <>{fallback}</>;
   return (
-    <Tracked placement={placement} format="native" creative={`network:${net.name || "network"}`} paused={!filled} className="w-full">
+    <Tracked placement={placement} format="native" creative={`network:${name || "network"}`} paused={!filled} className="w-full">
       <div className={`flex flex-col gap-1.5 ${filled ? "" : "h-0 overflow-hidden"}`}>
         <span className="text-[11px] tracking-[0.07em] text-faint uppercase">Sponsored</span>
-        <iframe ref={frame} title="Sponsored links" src={frameUrl(net.host, net.native.code)} sandbox={DIRECT_SANDBOX} className="block w-full rounded-xl border-0" style={{ height: net.native.height, colorScheme: "normal" }} />
+        <iframe key={name} ref={frame} title="Sponsored links" src={frameUrl(net.host, net.native.code)} sandbox={DIRECT_SANDBOX} className="block w-full rounded-xl border-0" style={{ height: net.native.height, colorScheme: "normal" }} />
       </div>
       {!filled && fallback}
     </Tracked>

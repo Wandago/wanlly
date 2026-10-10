@@ -276,31 +276,58 @@ const WHERE: Record<NetworkSize, string> = {
   "320x100": "Not used yet",
 };
 
-/** The ad network: its name, who sees it, and the banner code for each size. */
+type Rank = { name: string; estimate: number | null; measured: number | null; views: number; earned: number; ecpm: number };
+type Networks = { host?: string; list: NetworkConfig[] };
+const BLANK: NetworkConfig = { name: "", audience: "staff", units: {} };
+const rate = (v: number | null) => (v === null ? "–" : `$${v.toFixed(2)}`);
+
+/**
+ * Every display ad network, side by side. Slots go to the best-paying network that has the size;
+ * when it has no ad, the next one gets the slot. Paste-code networks don't bid live, so each is
+ * ranked on what it really paid per 1,000 views (Adsterra's report, or income recorded in Money
+ * with the network's name as the source), and on the team's estimate until it has been measured.
+ */
 function AdNetwork() {
-  const [cfg, setCfg] = useState<NetworkConfig | null>(null);
-  const [saved, setSaved] = useState<NetworkConfig | null>(null);
+  const [cfg, setCfg] = useState<Networks | null>(null);
+  const [saved, setSaved] = useState<Networks | null>(null);
+  const [ranks, setRanks] = useState<Rank[]>([]);
+  const [pick, setPick] = useState(0);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState(0);
   const [added, setAdded] = useState<NetworkSize[]>([]);
   useEffect(() => {
-    api<{ network: NetworkConfig }>("/api/admin/network")
+    api<Networks & { ranks: Rank[] }>("/api/admin/network")
       .then((b) => {
-        setCfg(b.network);
-        setSaved(b.network);
+        setCfg({ host: b.host, list: b.list });
+        setSaved({ host: b.host, list: b.list });
+        setRanks(b.ranks);
       })
       .catch((e: Error) => setNote(e.message));
   }, []);
-  if (!cfg) return <Card title="Ad network">{note ? <Empty>{note}</Empty> : <Loading />}</Card>;
-  const set = (patch: Partial<NetworkConfig>) => setCfg({ ...cfg, ...patch });
+  if (!cfg) return <Card title="Ad networks">{note ? <Empty>{note}</Empty> : <Loading />}</Card>;
+  const net = cfg.list[pick] ?? null;
+  const savedNet = saved?.list.find((n) => n.name === net?.name) ?? null;
+  const set = (patch: Partial<NetworkConfig>) => setCfg({ ...cfg, list: cfg.list.map((n, i) => (i === pick ? { ...n, ...patch } : n)) });
+  const add = () => {
+    setCfg({ ...cfg, list: [...cfg.list, { ...BLANK }] });
+    setPick(cfg.list.length);
+    setAdded([]);
+  };
+  const remove = () => {
+    if (!net || !window.confirm(`Remove ${net.name || "this network"}? Its banner codes are deleted when you save.`)) return;
+    setCfg({ ...cfg, list: cfg.list.filter((_, i) => i !== pick) });
+    setPick(0);
+  };
   const save = async () => {
     setBusy(true);
     setNote("");
     try {
-      const b = await api<{ network: NetworkConfig }>("/api/admin/network", "PUT", cfg);
-      setCfg(b.network);
-      setSaved(b.network);
+      const b = await api<Networks & { ranks: Rank[] }>("/api/admin/network", "PUT", cfg);
+      setCfg({ host: b.host, list: b.list });
+      setSaved({ host: b.host, list: b.list });
+      setRanks(b.ranks);
+      setPick((i) => Math.min(i, Math.max(0, b.list.length - 1)));
       setPreview((n) => n + 1);
       setNote("Saved. Changes reach the app within 5 minutes.");
     } catch (e) {
@@ -310,120 +337,177 @@ function AdNetwork() {
     }
   };
   const field = "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-faint";
+  const order = [...ranks].sort((a, b) => b.ecpm - a.ecpm);
   return (
     <Card
-      title="Ad network"
-      note="Real paid banners from a network such as Adsterra or A-ADS, alongside your own campaigns. Paste each banner's code from the network's dashboard. Each one runs in a locked-down frame, so its script can't reach the app or people's accounts."
-    >
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col gap-1 text-[13px] font-medium">
-          Network
-          <input className={`${field} w-[180px]`} value={cfg.name} onChange={(e) => set({ name: e.target.value })} placeholder="adsterra" list="networks" />
-          <datalist id="networks">
-            <option value="adsterra" />
-            <option value="a-ads" />
-          </datalist>
-        </label>
-        <div className="flex flex-col gap-1 text-[13px] font-medium">
-          Who sees it
-          <span className="flex gap-1">
-            {(
-              [
-                ["off", "Off"],
-                ["staff", "Team only"],
-                ["everyone", "Everyone"],
-              ] as const
-            ).map(([k, label]) => (
-              <button
-                key={k}
-                type="button"
-                aria-pressed={cfg.audience === k}
-                onClick={() => set({ audience: k })}
-                className={`rounded-full border px-2.5 py-1 text-xs ${cfg.audience === k ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line font-normal text-muted"}`}
-              >
-                {label}
-              </button>
-            ))}
-          </span>
-        </div>
-        <label className="flex min-w-[240px] flex-1 flex-col gap-1 text-[13px] font-medium">
-          Banner host <span className="font-normal text-faint">optional</span>
-          <input className={field} value={cfg.host ?? ""} onChange={(e) => set({ host: e.target.value })} placeholder="https://wanlly-ads.yourname.workers.dev" />
-        </label>
-        <button type="button" className={`${btnGhost} ml-auto`} onClick={save} disabled={busy}>
+      title="Ad networks"
+      note="Real paid banners from networks such as Adsterra, A-ADS or Monetag, alongside your own campaigns. Add as many as you like: each slot goes to the best-paying network that has that size, and if it has no ad, the next one gets it. Every banner runs in a locked-down frame, so no network can reach the app or people's accounts."
+      actions={
+        <button type="button" className={btnGhost} onClick={save} disabled={busy}>
           {busy ? "Saving…" : "Save"}
         </button>
-      </div>
+      }
+    >
+      <label className="flex flex-col gap-1 text-[13px] font-medium">
+        Banner host <span className="font-normal text-faint">shared by every network; needed for script banners like Adsterra&apos;s</span>
+        <input className={field} value={cfg.host ?? ""} onChange={(e) => setCfg({ ...cfg, host: e.target.value })} placeholder="https://wanlly-ads.yourname.workers.dev" />
+      </label>
       {note && <p className="text-[13px] text-muted">{note}</p>}
-      {!saved?.host && Object.values(saved?.units ?? {}).some((code) => !directSrc(code)) && (
-        <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
-          Script banners (like Adsterra&apos;s) stay off in the app until a banner host is set: without one they load blank inside Wanlly&apos;s sandbox. Banners whose code is just an &lt;iframe&gt; (like A-ADS) run without it. Your sponsors fill the slots meanwhile.
-        </p>
-      )}
-      <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. Slots with a network size take turns between network banners and your sponsors.</p>
-      <ul className="flex flex-col">
-        {UNIT_SIZES.filter((size) => cfg.units[size] !== undefined || added.includes(size)).map((size) => {
-          const { w, h } = sizeOf(size);
-          const live = saved?.audience !== "off" && !!saved?.units[size];
-          return (
-            <li key={size} className="flex flex-col gap-2 border-t border-line py-3 first:border-t-0">
-              <div className="text-[13px]">
-                <b className="font-semibold">{w}×{h}</b> <span className="text-muted">{WHERE[size]}</span>
-              </div>
-              <textarea
-                className={`${field} min-h-[64px] font-mono text-[11px]`}
-                value={cfg.units[size] ?? ""}
-                onChange={(e) => set({ units: { ...cfg.units, [size]: e.target.value } })}
-                placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
-                spellCheck={false}
-              />
-              {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}`} size={size} host={saved?.host ?? ""} direct={directSrc(saved?.units[size]) ?? ""} code={saved?.units[size] ?? ""} />}
-            </li>
-          );
-        })}
-      </ul>
-      <div className="flex flex-col gap-2 border-t border-line pt-3">
-        <div className="text-[13px]">
-          <b className="font-semibold">Native row</b>{" "}
-          <span className="text-muted">A few picture-and-headline ads in a row, under replies (Adsterra&apos;s &quot;Native Banner&quot;). Needs the banner host.</span>
-        </div>
-        <textarea
-          className={`${field} min-h-[64px] font-mono text-[11px]`}
-          value={cfg.native ?? ""}
-          onChange={(e) => set({ native: e.target.value })}
-          placeholder="Native Banner code from the network's dashboard"
-          spellCheck={false}
+      {order.length > 0 && (
+        <Table
+          head={["Order", "Network", "Who sees it", "Expected per 1,000", "Measured per 1,000", "Views (14 days)", "Earned (14 days)"]}
+          numeric={[3, 4, 5, 6]}
+          rows={order.map((r, i) => {
+            const n = saved?.list.find((x) => x.name === r.name);
+            return [
+              i + 1,
+              <b key="n" className="font-medium">{r.name}</b>,
+              n?.audience === "everyone" ? "Everyone" : n?.audience === "staff" ? "Team only" : "Off",
+              rate(r.estimate),
+              <span key="m" className={r.measured === null ? "text-faint" : ""}>{r.measured === null ? "not enough views yet" : rate(r.measured)}</span>,
+              num(r.views),
+              usd(r.earned),
+            ];
+          })}
         />
-        <label className="flex items-center gap-2 text-xs text-muted">
-          Height
-          <input type="number" min={100} max={600} className={`${field} w-24`} value={cfg.nativeHeight ?? 280} onChange={(e) => set({ nativeHeight: Number(e.target.value) })} />
-          px. Use the height the network shows for your layout (often 250–320).
-        </label>
-        {saved?.native && saved.host && saved.audience !== "off" && (
-          <iframe
-            key={`native-${preview}`}
-            title="Native row preview"
-            src={frameUrl(saved.host, saved.native)}
-            sandbox={DIRECT_SANDBOX}
-            className="block w-full rounded-lg border border-dashed border-line"
-            style={{ height: saved.nativeHeight ?? 280 }}
-          />
-        )}
-      </div>
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-xs text-muted">Add a size:</span>
-        {UNIT_SIZES.filter((size) => cfg.units[size] === undefined && !added.includes(size)).map((size) => (
-          <button key={size} type="button" title={WHERE[size]} onClick={() => setAdded((xs) => [...xs, size])} className="rounded-full border border-dashed border-line px-2.5 py-0.5 font-mono text-xs text-muted hover:border-faint hover:text-fg">
-            + {size.replace("x", "×")}
+      )}
+      <p className="text-xs text-faint">
+        Measured rates come from Adsterra&apos;s report, or for other networks from income you record in Money with the network&apos;s name as the source, divided by the views Wanlly counted. A network needs 1,000 views to be measured; until then its expected rate decides. One page load in ten tries a different network first, so every network keeps being measured.
+      </p>
+      <div className="flex flex-wrap items-center gap-1.5 border-t border-line pt-3">
+        {cfg.list.map((n, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-pressed={i === pick}
+            onClick={() => {
+              setPick(i);
+              setAdded([]);
+            }}
+            className={`rounded-full border px-3 py-1 text-xs ${i === pick ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line text-muted hover:text-fg"}`}
+          >
+            {n.name || "New network"}
           </button>
         ))}
+        <button type="button" onClick={add} disabled={cfg.list.length >= 6} className="rounded-full border border-dashed border-line px-3 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+          + Add network
+        </button>
       </div>
+      {!net ? (
+        <Empty>No networks yet. Add one, paste its banner codes, and start with Team only.</Empty>
+      ) : (
+        <>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="flex flex-col gap-1 text-[13px] font-medium">
+              Network
+              <input className={`${field} w-[180px]`} value={net.name} onChange={(e) => set({ name: e.target.value })} placeholder="adsterra" list="networks" />
+              <datalist id="networks">
+                {["adsterra", "a-ads", "monetag", "hilltopads", "propellerads", "media-net", "ezoic", "adsense"].map((n) => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+            </label>
+            <div className="flex flex-col gap-1 text-[13px] font-medium">
+              Who sees it
+              <span className="flex gap-1">
+                {(
+                  [
+                    ["off", "Off"],
+                    ["staff", "Team only"],
+                    ["everyone", "Everyone"],
+                  ] as const
+                ).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    aria-pressed={net.audience === k}
+                    onClick={() => set({ audience: k })}
+                    className={`rounded-full border px-2.5 py-1 text-xs ${net.audience === k ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line font-normal text-muted"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </span>
+            </div>
+            <label className="flex flex-col gap-1 text-[13px] font-medium">
+              Expected $ per 1,000 views
+              <input type="number" min={0} step={0.01} className={`${field} w-[150px]`} value={net.ecpm ?? ""} onChange={(e) => set({ ecpm: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder="e.g. 0.80" />
+            </label>
+            <button type="button" className={`${btnGhost} ml-auto`} onClick={remove}>
+              Remove
+            </button>
+          </div>
+          {!saved?.host && Object.values(savedNet?.units ?? {}).some((code) => !directSrc(code)) && (
+            <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
+              Script banners (like Adsterra&apos;s) stay off in the app until a banner host is set: without one they load blank inside Wanlly&apos;s sandbox. Banners whose code is just an &lt;iframe&gt; (like A-ADS) run without it. Your sponsors fill the slots meanwhile.
+            </p>
+          )}
+          <p className="text-xs text-faint">Start with Team only: check the banners in the app, then switch to Everyone. The expected rate is what the network&apos;s dashboard shows for your traffic; it only decides the order until real numbers come in.</p>
+          <ul className="flex flex-col">
+            {UNIT_SIZES.filter((size) => net.units[size] !== undefined || added.includes(size)).map((size) => {
+              const { w, h } = sizeOf(size);
+              const live = savedNet && savedNet.audience !== "off" && !!savedNet.units[size];
+              return (
+                <li key={size} className="flex flex-col gap-2 border-t border-line py-3 first:border-t-0">
+                  <div className="text-[13px]">
+                    <b className="font-semibold">{w}×{h}</b> <span className="text-muted">{WHERE[size]}</span>
+                  </div>
+                  <textarea
+                    className={`${field} min-h-[64px] font-mono text-[11px]`}
+                    value={net.units[size] ?? ""}
+                    onChange={(e) => set({ units: { ...net.units, [size]: e.target.value } })}
+                    placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
+                    spellCheck={false}
+                  />
+                  {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}-${net.name}`} size={size} net={net.name} host={saved?.host ?? ""} direct={directSrc(savedNet.units[size]) ?? ""} code={savedNet.units[size] ?? ""} />}
+                </li>
+              );
+            })}
+          </ul>
+          <div className="flex flex-col gap-2 border-t border-line pt-3">
+            <div className="text-[13px]">
+              <b className="font-semibold">Native row</b>{" "}
+              <span className="text-muted">A few picture-and-headline ads in a row, under replies (Adsterra&apos;s &quot;Native Banner&quot;). Needs the banner host.</span>
+            </div>
+            <textarea
+              className={`${field} min-h-[64px] font-mono text-[11px]`}
+              value={net.native ?? ""}
+              onChange={(e) => set({ native: e.target.value })}
+              placeholder="Native Banner code from the network's dashboard"
+              spellCheck={false}
+            />
+            <label className="flex items-center gap-2 text-xs text-muted">
+              Height
+              <input type="number" min={100} max={600} className={`${field} w-24`} value={net.nativeHeight ?? 280} onChange={(e) => set({ nativeHeight: Number(e.target.value) })} />
+              px. Use the height the network shows for your layout (often 250–320).
+            </label>
+            {savedNet?.native && saved?.host && savedNet.audience !== "off" && (
+              <iframe
+                key={`native-${preview}-${net.name}`}
+                title="Native row preview"
+                src={frameUrl(saved.host, savedNet.native)}
+                sandbox={DIRECT_SANDBOX}
+                className="block w-full rounded-lg border border-dashed border-line"
+                style={{ height: savedNet.nativeHeight ?? 280 }}
+              />
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-muted">Add a size:</span>
+            {UNIT_SIZES.filter((size) => net.units[size] === undefined && !added.includes(size)).map((size) => (
+              <button key={size} type="button" title={WHERE[size]} onClick={() => setAdded((xs) => [...xs, size])} className="rounded-full border border-dashed border-line px-2.5 py-0.5 font-mono text-xs text-muted hover:border-faint hover:text-fg">
+                + {size.replace("x", "×")}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </Card>
   );
 }
 
 /** One saved banner, live, with what happened in this browser: shown, empty, blocked or failed. */
-function BannerPreview({ size, host, direct, code }: { size: NetworkSize; host: string; direct: string; code: string }) {
+function BannerPreview({ size, net, host, direct, code }: { size: NetworkSize; net: string; host: string; direct: string; code: string }) {
   const { w, h } = sizeOf(size);
   const ref = useRef<HTMLIFrameElement>(null);
   const [status, setStatus] = useState<{ kind: string; detail?: string }>({ kind: "loading" });
@@ -452,7 +536,7 @@ function BannerPreview({ size, host, direct, code }: { size: NetworkSize; host: 
         <iframe
           ref={ref}
           title={`${w}×${h} banner preview`}
-          src={direct || (host ? frameUrl(host, code) : `/api/ads/unit?size=${size}`)}
+          src={direct || (host ? frameUrl(host, code) : `/api/ads/unit?size=${size}&net=${encodeURIComponent(net)}`)}
           width={w}
           height={h}
           sandbox={direct ? DIRECT_SANDBOX : frameSandbox(host)}
