@@ -31,6 +31,13 @@ async function gh<T>(token: string, path: string, init: RequestInit = {}): Promi
   return { ok: r.ok, status: r.status, data: (await r.json().catch(() => ({}))) as T };
 }
 
+/** UTF-8 text as base64, for GitHub's file API. */
+function toBase64(text: string) {
+  let bin = "";
+  for (const b of new TextEncoder().encode(text)) bin += String.fromCharCode(b);
+  return btoa(bin);
+}
+
 /** A repository name GitHub accepts. */
 export const repoName = (s: string) =>
   s
@@ -87,8 +94,19 @@ export async function pushToGithub(token: string, target: { owner?: string; name
   if (!info.ok) throw new Error("Couldn't reach that repository on GitHub.");
   const mirror = info.data.description === MARK;
   const branch = info.data.default_branch || "main";
-  const ref = await gh<{ object: { sha: string } }>(token, `/repos/${full}/git/ref/heads/${branch}`);
-  if (!ref.ok) throw new Error("The repository is empty. Add a README on GitHub, then try again.");
+  let ref = await gh<{ object: { sha: string } }>(token, `/repos/${full}/git/ref/heads/${branch}`);
+  if (!ref.ok) {
+    // A brand-new empty repository has no branch yet, and GitHub won't take a set of files into
+    // it. Writing one file the simple way starts the branch; the rest follow in the commit below.
+    const first = files.find((f) => /^readme\.md$/i.test(f.path)) ?? files[0];
+    const started = await gh<{ message?: string }>(token, `/repos/${full}/contents/${first.path.split("/").map(encodeURIComponent).join("/")}`, {
+      method: "PUT",
+      body: JSON.stringify({ message, content: toBase64(first.content), branch }),
+    });
+    if (!started.ok) throw new Error(started.data.message ? `GitHub: ${started.data.message}` : "Couldn't start the empty repository.");
+    ref = await gh<{ object: { sha: string } }>(token, `/repos/${full}/git/ref/heads/${branch}`);
+    if (!ref.ok) throw new Error("GitHub didn't create the branch. Try again in a moment.");
+  }
   const parent = await gh<{ tree: { sha: string } }>(token, `/repos/${full}/git/commits/${ref.data.object.sha}`);
   const tree = await gh<{ sha: string; message?: string }>(token, `/repos/${full}/git/trees`, {
     method: "POST",
