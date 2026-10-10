@@ -51,6 +51,8 @@ function UnlockCard() {
 
 export function Workspace() {
   const { jobs, tool, floorUnlocked, synced, me } = useWorkspace();
+  /** The team can open Images past its "Coming soon" page to test it. */
+  const [testImages, setTestImages] = useState(false);
   const visible = jobs.filter((j) => j.tool === tool);
   const empty = visible.length === 0;
   const scroller = useRef<HTMLDivElement>(null);
@@ -69,14 +71,21 @@ export function Workspace() {
   }, [streamed]);
 
   if (tool === "design") return <DesignHome />;
-  // Images isn't open to everyone yet; the team can still use it to test.
-  if (tool === "images" && !STAFF.has(me?.role ?? ""))
+  // Images isn't open yet: everyone sees "Coming soon"; the team can open it to test.
+  if (tool === "images" && !testImages)
     return (
       <ComingSoon
         icon="images"
         title="Make pictures from a sentence"
         text="Posters, product shots, logos and illustrations, made in seconds and saved to your gallery."
         points={["Describe it, or attach a photo to change", "Download in high quality, ready for WhatsApp and Instagram", "Quick fixes: remove a background, erase an object"]}
+        action={
+          STAFF.has(me?.role ?? "") ? (
+            <button type="button" onClick={() => setTestImages(true)} className="text-[13px] text-faint underline underline-offset-4 hover:text-fg">
+              Open anyway (team only)
+            </button>
+          ) : undefined
+        }
       />
     );
 
