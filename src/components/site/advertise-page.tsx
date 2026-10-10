@@ -54,6 +54,20 @@ const Banner = () => (
     </div>
   </div>
 );
+const Suggested = () => (
+  <div className="flex w-[210px] flex-col gap-1.5">
+    <i className="h-1.5 w-[90%] rounded-full bg-line" />
+    <i className="h-1.5 w-[70%] rounded-full bg-line" />
+    <div className="mt-1 flex items-center gap-2 rounded-xl border border-line bg-surface p-2">
+      <span className="size-6 shrink-0 rounded-md bg-[#7c3aed]" />
+      <span className="flex flex-1 flex-col gap-1">
+        <i className="h-1.5 w-16 rounded-full bg-fg/70" />
+        <i className="h-1.5 w-24 rounded-full bg-line" />
+      </span>
+      <i className="h-4 w-9 rounded-md bg-fg" />
+    </div>
+  </div>
+);
 const Video = () => (
   <div className="w-[200px] overflow-hidden rounded-xl border border-line bg-surface">
     <div className="grid h-[90px] place-items-center bg-[#16171b]">
@@ -127,11 +141,14 @@ export function AdvertisePage() {
           to earn credits.
         </p>
         <div className="flex flex-wrap gap-2">
-          <a href="#apply" className="rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
-            Apply to advertise
+          <a href="/advertise/create" className="rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
+            Create a campaign
           </a>
           <a href="#formats" className="rounded-full border border-line bg-surface px-5 py-2.5 text-sm font-medium hover:border-faint">
             See the formats
+          </a>
+          <a href="#apply" className="rounded-full px-3 py-2.5 text-sm font-medium text-muted hover:text-fg">
+            Or talk to us
           </a>
         </div>
       </section>
@@ -157,7 +174,7 @@ export function AdvertisePage() {
       <section id="formats" className="mx-auto flex w-full max-w-[1080px] scroll-mt-20 flex-col gap-6 px-4 py-16 sm:px-6">
         <div className="flex flex-col gap-2">
           <h2 className="font-display text-3xl font-semibold tracking-[-0.025em]">Formats</h2>
-          <p className="max-w-[620px] text-[15px] text-muted">Mix any of them in one campaign. You choose the countries; we report views, clicks and click rate every week.</p>
+          <p className="max-w-[620px] text-[15px] text-muted">Visual ads and suggested ads are self-serve: <a href="/advertise/create" className="font-medium text-fg underline underline-offset-2">create a campaign</a>. You offer the price, per 1,000 views or per click, and set a budget it never goes over. For videos, pop-up cards and trials, talk to us.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Format icon="grid" title="Sponsor cards" text="A card with your picture, one line and a button, in the side panels people keep open while they work.">
@@ -165,6 +182,9 @@ export function AdvertisePage() {
           </Format>
           <Format icon="images" title="Banners" text="Standard sizes (300×250, 320×50 on phones) in the same rounded frame, so they never look pasted in.">
             <Banner />
+          </Format>
+          <Format icon="chat" title="Suggested in chat" text="One sponsored card under an AI answer when the question matches your topics. Never inside the answer, never on sensitive topics.">
+            <Suggested />
           </Format>
           <Format icon="play" title="Sponsored videos" text="Short, and watched by choice to earn credits. Full attention, finished views only.">
             <Video />
@@ -175,12 +195,6 @@ export function AdvertisePage() {
           <Format icon="gift" title="Sponsor trials" text="People earn credits for trying your product: creating an account, a free course, a first deploy.">
             <Trial />
           </Format>
-          <article className="flex flex-col justify-center gap-2 rounded-2xl border border-dashed border-line p-6">
-            <b className="text-[15px] font-semibold">Pricing</b>
-            <p className="text-[13px] leading-relaxed text-muted">
-              Priced per 1,000 views and agreed with you per campaign, with a cap so you never spend more than you planned. Small tests are welcome.
-            </p>
-          </article>
         </div>
       </section>
 
@@ -189,10 +203,10 @@ export function AdvertisePage() {
           <h2 className="font-display text-3xl font-semibold tracking-[-0.025em]">How it works</h2>
           <ol className="flex flex-col gap-3">
             {[
-              ["Apply", "Tell us about your product and budget. It takes two minutes."],
-              ["Agree the campaign", "We reply within a few days with placements, countries, dates and a price per 1,000 views."],
-              ["Go live", "Send your picture, headline and link. Your ads run in Wanlly, labelled as sponsored."],
-              ["See the results", "Views, clicks and click rate, every week, and links tagged so your own analytics see Wanlly."],
+              ["Build your ad", "Picture, headline, link and countries, with a live preview. Visual ads, or suggested ads in chat."],
+              ["Set a budget and offer a price", "Per 1,000 views, or per click for suggested ads. We accept or suggest another price within a working day."],
+              ["Pay and go live", "Once the price is agreed, pay by bank, M-Pesa or card and your ads start, labelled as sponsored."],
+              ["Follow the results", "Views, clicks, click rate and spend at your private link, any time. Pause whenever you like."],
             ].map(([t, d], i) => (
               <li key={t} className="flex gap-3">
                 <span className="grid size-7 shrink-0 place-items-center rounded-full bg-hover font-mono text-xs">{i + 1}</span>

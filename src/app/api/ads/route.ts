@@ -1,4 +1,5 @@
 import { rawSql } from "@/db";
+import { SPEND_SQL, ensureCampaignColumns } from "@/lib/ad-orders";
 import { directSrc } from "@/lib/ad-network";
 import { loadNetworks } from "@/lib/ad-network-server";
 import { rankNetworks, slotOrder } from "@/lib/ad-rank";
@@ -13,18 +14,23 @@ export async function GET(req: Request) {
   const country = (req.headers.get("cf-ipcountry") ?? "").toUpperCase();
   try {
     const q = rawSql();
-    const rows = (await q`
-      select c.id, c.advertiser, c.headline, c.body, c.cta, c.url, c.color, c.cover, (c.image is not null) as has_image, c.placements,
-        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap,
+    await ensureCampaignColumns().catch(() => {});
+    const rows = (await q.query(
+      `select c.id, c.advertiser, c.headline, c.body, c.cta, c.url, c.color, c.cover, (c.image is not null) as has_image, c.placements,
+        (to_jsonb(c)->>'frequency_cap')::int as frequency_cap, coalesce(to_jsonb(c)->'keywords', '[]'::jsonb) as keywords,
         (select coalesce(jsonb_agg(k), '[]'::jsonb) from jsonb_object_keys(coalesce(to_jsonb(c)->'banners', '{}'::jsonb)) k) as banner_sizes
       from campaigns c
       where c.status = 'active'
         and (c.starts_at is null or c.starts_at <= now())
         and (c.ends_at is null or c.ends_at > now())
-        and (jsonb_array_length(c.countries) = 0 or c.countries ? ${country})
+        and (jsonb_array_length(c.countries) = 0 or c.countries ? $1)
         and (c.max_impressions is null or c.max_impressions > (
           select count(*) from ad_events a where a.creative = 'campaign:' || c.id and a.kind = 'impression'))
-      order by c.id desc limit 20`) as Record<string, unknown>[];
+        -- Self-serve campaigns stop when their spend reaches the budget.
+        and (c.budget_cents is null or ${SPEND_SQL} < c.budget_cents)
+      order by c.id desc limit 20`,
+      [country],
+    )) as Record<string, unknown>[];
     // Which network sizes are set up, and for whom. The codes themselves stay in /api/ads/unit.
     const [networks, affiliates] = await Promise.all([loadNetworks(), loadAffiliates()]);
     const ranks = await rankNetworks(networks.list).catch(() => []);
@@ -71,6 +77,7 @@ export async function GET(req: Request) {
           placements: r.placements,
           cap: r.frequency_cap === null ? undefined : Number(r.frequency_cap),
           banners: Array.isArray(r.banner_sizes) && r.banner_sizes.length ? r.banner_sizes : undefined,
+          keywords: Array.isArray(r.keywords) && r.keywords.length ? r.keywords : undefined,
         })),
       },
       { headers: { "cache-control": "private, max-age=300", vary: "cf-ipcountry" } },

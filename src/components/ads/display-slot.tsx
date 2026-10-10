@@ -21,6 +21,7 @@ export function DisplaySlot({
   label = "Sponsored",
   className = "",
   onBanner,
+  networks = true,
 }: {
   placement: string;
   sizes: NetworkSize[];
@@ -31,10 +32,16 @@ export function DisplaySlot({
   className?: string;
   /** Told whether a banner (rather than the fallback) is showing. */
   onBanner?: (shown: boolean) => void;
+  /**
+   * False where people are rewarded for viewing (watch for credits): ad networks ban rewarding views
+   * of their ordinary banners, so only sold campaigns (whose advertisers agreed to it) may fill it.
+   */
+  networks?: boolean;
 }) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const { dispatch } = useWorkspace();
-  const network = useNetwork();
+  const anyNetwork = useNetwork();
+  const network = networks ? anyNetwork : null;
   const booked = useSponsors(placement, []);
   const fits = (s: NetworkSize) => width > 0 && sizeOf(s).w <= width;
   const campaign = booked.map((sp) => ({ sp, size: sizes.find((s) => fits(s) && sp.banners?.includes(s)) })).find((x) => x.size);

@@ -77,6 +77,29 @@ export function useSponsors(placement: string, fallback: Sponsor[], context = ""
   }, [ads, seen, house, placement, fallback, context, interests]);
 }
 
+/** Conversations about these get no suggested ad (health, mental health, politics, money trouble). */
+const SENSITIVE = /\b(suicid\w*|self[- ]harm|depress\w*|anxiety|therap\w*|diagnos\w*|symptom\w*|medic\w*|pregnan\w*|hiv|cancer|abortion|politic\w*|election\w*|vote|voting|religio\w*|abuse\w*|debt|loan shark|gambl\w*|betting)\b/i;
+
+/**
+ * The sponsored suggestion for an AI answer, like ChatGPT's: a sold "suggested" campaign whose
+ * topics match what was asked (best match first), else one of Wanlly's own offers that matches.
+ * Nothing when nothing matches, the topic is sensitive, or the person hid that advertiser.
+ */
+export function useSuggested(context: string, hidden: string[]): Sponsor | null {
+  const { ads, house, seen } = useContext(AdsContext);
+  return useMemo(() => {
+    void seen;
+    if (!context.trim() || SENSITIVE.test(context)) return null;
+    const pick = (list: Sponsor[]) =>
+      list
+        .filter((a) => !hidden.includes(a.name) && !(a.cap && seenToday(creativeOf(a)) >= a.cap))
+        .map((a) => ({ a, score: matchScore(a.keywords, context) }))
+        .filter((x) => x.score >= 1)
+        .sort((x, y) => y.score - x.score)[0]?.a ?? null;
+    return pick(ads.filter((a) => a.placements.includes("suggested"))) ?? pick(house.filter((h) => !h.places || h.places.includes("suggested")));
+  }, [ads, house, seen, context, hidden]);
+}
+
 /* Network and size pairs that just answered with no ad. They're skipped for 10 minutes, so the
    slot goes to the next network (or a sponsor) instead of an empty box, then tried again. */
 const EMPTY_FOR = 10 * 60_000;

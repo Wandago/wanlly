@@ -1,0 +1,10 @@
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "cpc_cents" integer DEFAULT 0 NOT NULL;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "budget_cents" integer;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "keywords" jsonb DEFAULT '[]'::jsonb NOT NULL;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "source" text DEFAULT 'admin' NOT NULL;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "email" text;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "token_hash" text;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "offer_status" text;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "offers" jsonb DEFAULT '[]'::jsonb NOT NULL;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "paid_at" timestamp with time zone;
+CREATE INDEX IF NOT EXISTS "campaigns_offer_status" ON "campaigns" ("offer_status");

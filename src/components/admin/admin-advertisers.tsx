@@ -1,5 +1,7 @@
 "use client";
 
+import { OffersPanel } from "./admin-offers";
+import { bannerFrom, pictureFrom } from "@/lib/ad-pictures";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useEffect, useState, type ReactNode } from "react";
 import type { CoverKind } from "@/lib/catalog";
@@ -120,44 +122,6 @@ async function colourOf(dataUrl: string): Promise<string | null> {
   const best = [...buckets.values()].sort((x, y) => y.n - x.n)[0];
   if (!best) return null;
   return "#" + [best.r, best.g, best.b].map((v) => Math.round(v / best.n).toString(16).padStart(2, "0")).join("");
-}
-
-/**
- * A banner picture at exactly one size: the upload is scaled to cover it and centred (twice the
- * pixels when that stays small, so it's sharp on good screens), as WebP under 200 KB.
- */
-async function bannerFrom(file: File, size: string): Promise<string> {
-  const [w, h] = size.split("x").map(Number);
-  const bmp = await createImageBitmap(file);
-  for (const scale of [2, 1]) {
-    const c = document.createElement("canvas");
-    c.width = w * scale;
-    c.height = h * scale;
-    const k = Math.max(c.width / bmp.width, c.height / bmp.height);
-    const dw = bmp.width * k;
-    const dh = bmp.height * k;
-    c.getContext("2d")!.drawImage(bmp, (c.width - dw) / 2, (c.height - dh) / 2, dw, dh);
-    for (const q of [0.88, 0.75, 0.6]) {
-      const url = c.toDataURL("image/webp", q);
-      if (url.length < 270_000) return url;
-    }
-  }
-  throw new Error("That banner is too detailed. Try a simpler picture.");
-}
-
-/** Shrinks a picture to at most 800 px wide and under 200 KB, as a data URL. */
-async function pictureFrom(file: File): Promise<string> {
-  const bmp = await createImageBitmap(file);
-  const scale = Math.min(1, 800 / bmp.width);
-  const c = document.createElement("canvas");
-  c.width = Math.round(bmp.width * scale);
-  c.height = Math.round(bmp.height * scale);
-  c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
-  for (const q of [0.85, 0.7, 0.55, 0.4]) {
-    const url = c.toDataURL("image/webp", q);
-    if (url.length < 270_000) return url;
-  }
-  throw new Error("That picture is too detailed. Try a smaller one.");
 }
 
 /** The card exactly as people will see it in the side panel. */
@@ -646,6 +610,7 @@ export function AdvertisersTab() {
 
   return (
     <div className="flex flex-col gap-4">
+      <OffersPanel />
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-3.5">
           <span className="text-[11px] font-medium tracking-[0.08em] text-faint uppercase">Running now</span>

@@ -328,6 +328,22 @@ export const campaigns = pgTable(
     frequencyCap: integer("frequency_cap"),
     /** Agreed price in US cents per 1,000 impressions, for revenue. */
     cpmCents: integer("cpm_cents").notNull().default(0),
+    /** Agreed price per click in US cents, for suggested ads sold by the click (0 when sold by the thousand). */
+    cpcCents: integer("cpc_cents").notNull().default(0),
+    /** Total budget in US cents; the campaign stops once its spend reaches it. Null for no budget. */
+    budgetCents: integer("budget_cents"),
+    /** Topics a suggested ad matches in chat, e.g. ["laptop", "coding bootcamp"]. */
+    keywords: jsonb("keywords").notNull().default([]),
+    /** Self-serve: the advertiser's email, a hash of their private link, and the price negotiation. */
+    source: text("source", { enum: ["admin", "self"] }).notNull().default("admin"),
+    email: text("email"),
+    tokenHash: text("token_hash"),
+    /** submitted: waiting on Wanlly. countered: waiting on the advertiser. accepted: price agreed. declined. */
+    offerStatus: text("offer_status", { enum: ["submitted", "countered", "accepted", "declined"] }),
+    /** Every price proposal, oldest first: who, CPM and CPC in cents, a note, when. */
+    offers: jsonb("offers").notNull().default([]),
+    /** When Wanlly confirmed payment; a self-serve campaign only goes live after this. */
+    paidAt: timestamp("paid_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

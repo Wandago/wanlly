@@ -194,8 +194,9 @@ export function RewardedSpot({
 }
 
 /**
- * The ad that plays before a run or for credits: the ad network's banner (or a booked campaign's)
- * with a countdown under it; Wanlly's own sponsor video only when no banner fills.
+ * The ad that plays before a run or for credits: a sold campaign's banner with a countdown under it,
+ * else Wanlly's own sponsor video. Never an ad network's banner: networks ban rewarding views of
+ * their ordinary banners (see docs/AD-POLICY.md); their official rewarded units are the way in.
  */
 export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }: { aspect: VideoAspect; sponsor: Sponsor; placement: string; progress: number; maxHeight?: number }) {
   const [banner, setBanner] = useState(false);
@@ -206,6 +207,7 @@ export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }:
         placement={placement}
         sizes={["336x280", "300x250", "320x100", "320x50"]}
         label="Sponsored"
+        networks={false}
         onBanner={setBanner}
         fallback={<VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />}
       />
@@ -222,15 +224,15 @@ export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }:
 }
 
 /**
- * A rewarded ad that shows the ad network's banner (a booked campaign first, the sponsor's video
- * frame if no banner fits) for the ad's length, then pays it like any rewarded view.
+ * A rewarded ad: a sold campaign's banner (or the sponsor's video frame) for the ad's length, then
+ * paid like any rewarded view. No ad-network banners here, for the same policy reason as NetworkSpot.
  */
 export function RewardedBanner({ placement, sponsor, onDone }: { placement: string; sponsor: Sponsor; onDone: (result: ViewResult) => void }) {
   const progress = useRewardedView(placement, onDone);
   const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
   return (
     <div className="flex flex-col gap-2">
-      <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" fallback={<VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} />} />
+      <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" networks={false} fallback={<VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} />} />
       <div className="flex items-center gap-2 font-mono text-xs text-muted">
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-hover">
           <i className="block h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />

@@ -1,4 +1,5 @@
 import { eq, sql } from "drizzle-orm";
+import { ensureCampaignColumns } from "@/lib/ad-orders";
 import { db, schema } from "@/db";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
 import { campaignFields } from "@/lib/campaigns";
@@ -11,6 +12,7 @@ const c = schema.campaigns;
 export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/campaigns/[id]">) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
+  await ensureCampaignColumns().catch(() => {});
   const id = Number((await ctx.params).id);
   const data = await jsonUpTo(req, 2_600_000);
   if (!Number.isSafeInteger(id) || id <= 0 || !data) return Response.json({ error: "Bad request" }, { status: 400 });

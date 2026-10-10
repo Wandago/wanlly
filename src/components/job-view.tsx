@@ -7,6 +7,7 @@ import { TOOLS } from "@/lib/catalog";
 import { isConnected, useWorkspace, type Job } from "@/lib/workspace-store";
 import { JobResult } from "./results";
 import { SponsorCard, SponsorLine } from "./ads/ad-slot";
+import { SuggestedAd } from "./ads/suggested-ad";
 import { Tracked } from "./ads/tracked";
 import { AttachmentTray } from "./attachment-tray";
 import { creativeOf, useSponsors } from "@/lib/ads-context";
@@ -113,7 +114,11 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
       </div>
       <div className={`flex min-w-0 flex-col gap-3 ${job.status === "done" && !job.sample ? "animate-rise" : ""}`}>
         {job.status !== "working" ? (
-          <JobResult job={job} />
+          <>
+            <JobResult job={job} />
+            {/* Under a finished chat answer: a sponsored suggestion when an advertiser's topics match. */}
+            {job.status === "done" && job.tool === "chat" && !job.sample && <SuggestedAd context={context} />}
+          </>
         ) : !isConnected(job.tool) ? (
           <WorkingStatus job={job} />
         ) : job.text ? (

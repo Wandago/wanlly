@@ -1,4 +1,5 @@
 import { db, rawSql, schema } from "@/db";
+import { ensureCampaignColumns } from "@/lib/ad-orders";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
 import { campaignFields } from "@/lib/campaigns";
 import { dbErrorMessage } from "@/lib/migrations";
@@ -8,6 +9,7 @@ import { jsonUpTo } from "@/lib/forms";
 export async function GET(req: Request) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
+  await ensureCampaignColumns().catch(() => {});
   try {
     const q = rawSql();
     const rows = (await q`
@@ -57,6 +59,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
+  await ensureCampaignColumns().catch(() => {});
   const data = await jsonUpTo(req, 2_600_000);
   if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
   const r = campaignFields(data);
