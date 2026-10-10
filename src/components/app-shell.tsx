@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
 import { applyTheme, type Settings } from "@/lib/settings";
-import { AdRail } from "./ads/rail";
+import { AdRail, RAIL_SETTING } from "./ads/rail";
 import { DisplayCreative } from "./ads/creatives";
 import { Tracked } from "./ads/tracked";
 import { NetworkSlot, useNetworkTest } from "./ads/network-slot";
@@ -132,14 +132,15 @@ function PhoneBanner() {
  * Tablets and laptops (768–1279px, or up to 1535px in the design editor) have no right panel, so
  * a banner strip sits under the page: a sold campaign first, then the ad network, then a house sponsor.
  */
-function TabletBanner({ roomy }: { roomy: boolean }) {
+function TabletBanner({ roomy, always }: { roomy: boolean; always?: boolean }) {
   const { dispatch } = useWorkspace();
   const sponsor = useSponsors("tablet_banner", RAIL_SPONSORS)[0];
   return (
-    <div className={`hidden justify-center border-t border-line bg-side px-4 py-2 md:flex ${roomy ? "2xl:hidden" : "xl:hidden"}`} aria-label="Advertisement">
+    <div className={`hidden justify-center border-t border-line bg-side px-4 py-1.5 md:flex ${always ? "" : roomy ? "2xl:hidden" : "xl:hidden"}`} aria-label="Advertisement">
       <DisplaySlot
         placement="tablet_banner"
-        sizes={["728x90", "468x60", "320x100", "320x50"]}
+        // In the Builder the strip stays slim (60px tall at most) so the work keeps the room.
+        sizes={always ? ["468x60", "320x50"] : ["728x90", "468x60", "320x100", "320x50"]}
         label=""
         fallback={
           <Tracked key={creativeOf(sponsor)} placement="tablet_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">
@@ -168,7 +169,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   // The left menu can be hidden on a computer for more room; remembered in this browser.
   const [menu, setMenu] = useLocalSetting("wanlly-menu", "shown");
-  const roomy = path.startsWith("/design/") || /^\/build\/\d/.test(path);
+  const roomy = path.startsWith("/design/");
+  // The Builder has no side panel at all: its ads sit in a strip under the page and in the
+  // Builder's own slots, so nothing sits beside the work.
+  const builder = /^\/build\/\d/.test(path);
+  const [rail] = useLocalSetting(RAIL_SETTING, "full");
+  const railW = rail === "slim" ? "184px" : "344px";
   // With an ad blocker on, the app underneath can't be used until ads are allowed.
   const [walled, setWalled] = useState(false);
   // Signed in, but their place in the private beta hasn't opened yet.
@@ -182,8 +188,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div
           inert={walled || !!waiting}
           aria-hidden={walled || !!waiting || undefined}
-          className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[var(--side-w)_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[var(--side-w)_minmax(0,1fr)_344px]" : "xl:grid-cols-[var(--side-w)_minmax(0,1fr)_344px]"}`}
-          style={{ "--side-w": menu === "hidden" ? "0px" : "240px" } as React.CSSProperties}
+          className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[var(--side-w)_minmax(0,1fr)] md:grid-rows-1 ${builder ? "" : roomy ? "2xl:grid-cols-[var(--side-w)_minmax(0,1fr)_var(--rail-w)]" : "xl:grid-cols-[var(--side-w)_minmax(0,1fr)_var(--rail-w)]"}`}
+          style={{ "--side-w": menu === "hidden" ? "0px" : "240px", "--rail-w": railW } as React.CSSProperties}
         >
           <Sidebar />
           {/* With the menu hidden on a computer, a small button brings it back. */}
@@ -200,9 +206,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
           <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto]">
             <div className="min-h-0 min-w-0">{children}</div>
-            <TabletBanner roomy={roomy} />
+            <TabletBanner roomy={roomy} always={builder} />
           </div>
-          <AdRail wideOnly={roomy} />
+          {!builder && <AdRail wideOnly={roomy} />}
           <PhoneBanner />
         </div>
         <AdBlockWall onChange={setWalled} />

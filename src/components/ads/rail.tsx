@@ -11,6 +11,8 @@ import { Tracked } from "./tracked";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { NetworkUnit } from "./network-unit";
+import { DisplaySlot } from "./display-slot";
+import { useLocalSetting } from "@/lib/use-local-setting";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
@@ -156,7 +158,57 @@ function EarnMini() {
 }
 
 /** Right side panel, on every page from 1280px wide. Always running, refreshed while visible. */
+/**
+ * The side panel can be slimmed to a narrow column (one tall banner) so it takes less room; the
+ * choice is remembered in this browser. AppShell reads the same setting for the column width.
+ */
+export const RAIL_SETTING = "wanlly-rail";
+
 export function AdRail({ wideOnly = false }: { wideOnly?: boolean }) {
+  const [mode, setMode] = useLocalSetting(RAIL_SETTING, "full");
+  if (mode === "slim") return <SlimRail wideOnly={wideOnly} onExpand={() => setMode("full")} />;
+  return <FullRail wideOnly={wideOnly} onSlim={() => setMode("slim")} />;
+}
+
+/** One tall banner (160×600, or a sponsor card) and a small earn button, in a narrow column. */
+function SlimRail({ wideOnly, onExpand }: { wideOnly: boolean; onExpand: () => void }) {
+  const sponsor = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
+  const { perAd } = useReward();
+  const { dispatch } = useWorkspace();
+  return (
+    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
+      <div className="sticky top-0 flex h-full flex-col items-center gap-3 overflow-y-auto px-2 py-3 [scrollbar-width:none]">
+        <button type="button" onClick={onExpand} title="Show the full side panel" aria-label="Show the full side panel" className="self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
+          «
+        </button>
+        <DisplaySlot
+          placement="rail_banner"
+          sizes={["160x600"]}
+          label="Ad"
+          fallback={
+            <Tracked key={creativeOf(sponsor)} placement="rail_banner" format="native" creative={creativeOf(sponsor)} className="w-full">
+              <button type="button" onClick={() => openSponsor(sponsor, "rail_banner") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })} className="flex w-full flex-col gap-2 overflow-hidden rounded-xl border border-line bg-surface text-left">
+                <div className="h-[90px] overflow-hidden">
+                  <Cover sponsor={sponsor} className="h-full" />
+                </div>
+                <div className="flex flex-col gap-1 px-2.5 pb-2.5">
+                  <b className="truncate text-xs font-semibold">{sponsor.name}</b>
+                  <span className="line-clamp-3 text-[11px] leading-snug text-muted">{sponsor.headline}</span>
+                  <span className="mt-1 text-[11px] font-semibold text-fg">{sponsor.cta} →</span>
+                </div>
+              </button>
+            </Tracked>
+          }
+        />
+        <button type="button" onClick={() => dispatch({ type: "setEarnOpen", open: true })} className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent-soft px-2 py-2 text-xs font-semibold text-accent">
+          <Icon name="play" size={12} /> +{perAd} credits
+        </button>
+      </div>
+    </aside>
+  );
+}
+
+function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void }) {
   const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
   // Who gets each slot: a sold campaign booked for it always shows; otherwise the ad network;
@@ -168,6 +220,9 @@ export function AdRail({ wideOnly = false }: { wideOnly?: boolean }) {
   return (
     <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
+        <button type="button" onClick={onSlim} title="Make the side panel narrower" aria-label="Make the side panel narrower" className="-mb-1.5 self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
+          »
+        </button>
         {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
         <div className="hidden [@media(min-height:860px)]:block">
           {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}

@@ -415,7 +415,7 @@ export function BuilderView({ id }: { id: number }) {
           )}
           {running && (
             <li className="flex justify-center pt-1">
-              <DisplaySlot placement="builder_wait" sizes={["300x250", "320x100", "320x50"]} label="While you wait · Sponsored" />
+              <DisplaySlot placement="builder_wait" sizes={["320x100", "320x50"]} label="While you wait · Sponsored" />
             </li>
           )}
         </ol>
