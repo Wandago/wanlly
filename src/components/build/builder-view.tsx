@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MODELS, isLive } from "@/lib/catalog";
-import { buildPreview, previewKind, type BuildFile } from "@/lib/build-preview";
+import { buildPreview, type BuildFile } from "@/lib/build-preview";
 import { saveBlob } from "@/lib/export";
 import { SAY } from "@/lib/messages";
 import { zipFiles } from "@/lib/runnable";
@@ -43,6 +43,8 @@ export function BuilderView({ id }: { id: number }) {
   const [view, setView] = useState<"preview" | "code">("preview");
   const [open, setOpen] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
+  const [checking, setChecking] = useState(false);
+  const [report, setReport] = useState<string | null>(null);
   const abort = useRef<AbortController | null>(null);
   const frame = useRef<HTMLIFrameElement>(null);
   const started = useRef(false);
@@ -163,7 +165,6 @@ export function BuilderView({ id }: { id: number }) {
   }, []);
 
   const preview = useMemo(() => (files ? buildPreview(files) : ""), [files]);
-  const kind = files ? previewKind(files).kind : "none";
   const current = files?.find((f) => f.path === open) ?? null;
 
   if (missing) return <main className="grid h-full place-items-center p-6 text-center text-muted">{SAY.notFound}</main>;
@@ -174,6 +175,22 @@ export function BuilderView({ id }: { id: number }) {
     if (!text || running) return;
     setDraft("");
     void run(text);
+  };
+  const runChecks = async () => {
+    setChecking(true);
+    setReport(null);
+    try {
+      const r = await fetch(`/api/build/${id}/check`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jobId: crypto.randomUUID() }) });
+      const b = await r.json().catch(() => ({}));
+      const act = accountFrom(b);
+      if (act) dispatch(act);
+      if (!r.ok) setNotice({ text: b.error ?? SAY.busy });
+      else setReport(b.report);
+    } catch {
+      setNotice({ text: SAY.offline });
+    } finally {
+      setChecking(false);
+    }
   };
   const fixErrors = () => void run(`The preview shows these errors:\n${errors.map((e) => `- ${e}`).join("\n")}\nFind the cause and fix it.`);
 
@@ -208,6 +225,29 @@ export function BuilderView({ id }: { id: number }) {
           )}
         </ol>
       </div>
+      {report && (
+        <div className="mx-4 mb-2 flex max-h-[45%] flex-col gap-2 overflow-y-auto rounded-xl border border-line p-3 text-[13px]">
+          <b className="font-semibold">Check report</b>
+          <Markdown text={report} />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={running}
+              onClick={() => {
+                const text = report;
+                setReport(null);
+                void run(`I ran the project's checks in a sandbox. Here is the report:\n\n${text}\n\nFix what failed.`);
+              }}
+              className="rounded-lg bg-fg px-2.5 py-1 text-xs font-semibold text-bg disabled:opacity-50"
+            >
+              Ask the AI to fix
+            </button>
+            <button type="button" onClick={() => setReport(null)} className="rounded-lg px-2.5 py-1 text-xs text-muted">
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       {notice && (
         <div className="mx-4 mb-2 flex flex-wrap items-center gap-2 rounded-xl bg-hover px-3 py-2 text-[13px]">
           <span className="min-w-0 flex-1">{notice.text}</span>
@@ -343,7 +383,16 @@ export function BuilderView({ id }: { id: number }) {
           onBlur={() => fetch(`/api/build/${id}`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) })}
           className="min-w-0 flex-1 truncate bg-transparent font-display text-base font-semibold outline-none"
         />
-        <BuildShip id={id} files={files} kind={kind} />
+        <BuildShip id={id} files={files} name={name} />
+        <button
+          type="button"
+          disabled={running || checking || !files.length}
+          onClick={runChecks}
+          title="Runs the project in a sandbox: installs what it can, builds, runs tests, and reports what failed"
+          className="rounded-lg border border-line px-2.5 py-1.5 text-xs font-medium hover:border-faint disabled:opacity-50"
+        >
+          {checking ? "Checking…" : "Run checks"}
+        </button>
         <button
           type="button"
           disabled={!files.length}

@@ -1,5 +1,5 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
+import Anthropic, { toFile } from "@anthropic-ai/sdk";
 import { MODELS, type Providers, type ToolId } from "./catalog";
 
 /*
@@ -336,6 +336,51 @@ export async function claudeBuildStep(opts: {
   }
   const message = await stream.finalMessage();
   return { message, inputTokens: billedInput(opts.modelId, message.usage), outputTokens: message.usage.output_tokens };
+}
+
+/**
+ * Checks a Builder project in Anthropic's code sandbox: the project goes up as a zip, Claude
+ * unpacks it, installs what it can, runs the build and tests, and reports without changing
+ * anything. The upload is deleted afterwards.
+ */
+export async function claudeSandboxCheck(opts: { modelId: string; zip: Blob; signal: AbortSignal }) {
+  if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
+  anthropic ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1 });
+  const m = CLAUDE[opts.modelId];
+  if (!m) throw new ProviderError("unavailable");
+  const uploaded = await anthropic.files.upload({ file: await toFile(opts.zip, "project.zip", { type: "application/zip" }) });
+  try {
+    const stream = anthropic.messages.stream(
+      {
+        model: m.api,
+        max_tokens: 16000,
+        tools: [{ type: "code_execution_20260521", name: "code_execution" }],
+        output_config: { effort: "low" },
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: "project.zip holds a web project someone is building. Unzip it into a fresh folder and check it, without changing any file:\n1. Look at what kind of project it is.\n2. If there's a package.json or requirements.txt, try to install dependencies. The sandbox may have no internet; if installs fail, say so and do what you can without them.\n3. Run its build and its tests if it has them. Otherwise run syntax checks (node --check on .js files, python -m py_compile on .py files) and look for obvious broken references (missing files, scripts or stylesheets that don't exist).\n4. Reply with a short report: what you ran, what passed, and for each failure the exact error lines and the likely cause. No other commentary.",
+              },
+              { type: "container_upload", file_id: uploaded.id },
+            ],
+          },
+        ],
+      },
+      { signal: opts.signal },
+    );
+    const message = await stream.finalMessage();
+    const report = message.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("\n")
+      .trim();
+    return { report, inputTokens: billedInput(opts.modelId, message.usage), outputTokens: message.usage.output_tokens };
+  } finally {
+    await anthropic.files.delete(uploaded.id).catch(() => {});
+  }
 }
 
 // ---------------------------------------------------------------- NVIDIA (open models)
