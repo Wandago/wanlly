@@ -72,7 +72,14 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
       back = sessionStorage.getItem(`wanlly-gh-connect-${id}`) === "1";
       sessionStorage.removeItem(`wanlly-gh-connect-${id}`);
     } catch {}
-    if (back) queueMicrotask(() => openGithub());
+    // Sent here from a chat's "Save to GitHub": open the panel, with their repository link if any.
+    const asked = new URL(window.location.href).searchParams.get("github");
+    if (asked) {
+      const url = new URL(window.location.href);
+      url.searchParams.delete("github");
+      window.history.replaceState(null, "", url.toString());
+    }
+    if (back || asked) queueMicrotask(() => openGithub(asked && asked !== "1" ? asked : undefined));
     return () => window.removeEventListener("wanlly:github", onAsk);
   }, [id, openGithub]);
 
@@ -83,14 +90,16 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
       const back = window.location.href;
       const acct = account ? await account.reauthorize({ additionalScopes: ["repo"], redirectUrl: back }) : await user?.createExternalAccount({ strategy: "oauth_github", additionalScopes: ["repo"], redirectUrl: back });
       const url = acct?.verification?.externalVerificationRedirectURL;
-      if (!url) throw new Error("GitHub isn't switched on for Wanlly yet.");
+      if (!url) throw new Error("GitHub didn't send a sign-in page back. Try again in a moment.");
       try {
         sessionStorage.setItem(`wanlly-gh-connect-${id}`, "1");
       } catch {}
       if (draftRepo) setRepo(draftRepo);
       window.location.href = url.toString();
     } catch (e) {
-      setGhError(e instanceof Error ? e.message : SAY.offline);
+      // Clerk explains what's wrong (for example GitHub sign-in not turned on for this site).
+      const clerkMessage = (e as { errors?: { longMessage?: string; message?: string }[] })?.errors?.[0];
+      setGhError(clerkMessage?.longMessage || clerkMessage?.message || (e instanceof Error ? e.message : SAY.offline));
     }
   };
 

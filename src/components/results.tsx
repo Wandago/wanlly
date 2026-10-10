@@ -5,6 +5,7 @@ import { ProjectCard } from "./project-canvas";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { Markdown } from "./markdown";
 import { SpinLoader } from "./spin-mark";
+import { GithubSave } from "./github-save";
 import { Icon } from "./icon";
 
 function Meta({ job }: { job: Job }) {
@@ -82,6 +83,7 @@ function TextResult({ job }: { job: Job }) {
       <ProjectCard job={job} />
       {job.stop === "max_tokens" && <p className="text-xs text-faint">The reply hit its length limit. Ask it to continue.</p>}
       {job.stop === "interrupted" && <p className="text-xs text-faint">Stopped before the end.</p>}
+      {!streaming && <GithubSave job={job} />}
       {!streaming && <Meta job={job} />}
     </>
   );
