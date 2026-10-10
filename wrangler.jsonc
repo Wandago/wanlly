@@ -8,6 +8,9 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
-	"observability": { "enabled": true }
+	"observability": { "enabled": true },
+	// Keep the variables set in the Cloudflare dashboard on every deploy; without this, each deploy
+	// deletes the plain-text ones (secrets are always kept).
+	"keep_vars": true
 	// No R2 cache yet: R2 needs a card on file. Add it with the incremental cache when that's set up.
 }
