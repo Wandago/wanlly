@@ -40,7 +40,7 @@ export function BuilderView({ id }: { id: number }) {
   const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "sonnet");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
   const [pane, setPane] = useState<"chat" | "files" | "preview">("chat");
-  const [view, setView] = useState<"preview" | "code">("preview");
+  const [view, setView] = useState<"preview" | "code" | "plan">("preview");
   const [open, setOpen] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [checking, setChecking] = useState(false);
@@ -167,6 +167,9 @@ export function BuilderView({ id }: { id: number }) {
 
   const preview = useMemo(() => (files ? buildPreview(files) : ""), [files]);
   const current = files?.find((f) => f.path === open) ?? null;
+  const plan = files?.find((f) => f.path.toLowerCase() === "plan.md") ?? null;
+  // With nothing to preview (a server app, or no page yet), the plan is the most useful thing to show.
+  const shown = view === "preview" && !preview && plan ? "plan" : view;
 
   if (missing) return <main className="grid h-full place-items-center p-6 text-center text-muted">{SAY.notFound}</main>;
   if (!files) return <main className="grid h-full place-items-center"><SpinLoader size={56} label="Opening your app" /></main>;
@@ -336,8 +339,8 @@ export function BuilderView({ id }: { id: number }) {
   const stage = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex items-center gap-1 border-b border-line px-3 py-1.5 text-xs">
-        {(["preview", "code"] as const).map((v) => (
-          <button key={v} type="button" onClick={() => setView(v)} className={`rounded-md px-2 py-1 capitalize ${view === v ? "bg-hover font-medium text-fg" : "text-muted"}`}>
+        {(plan ? (["preview", "code", "plan"] as const) : (["preview", "code"] as const)).map((v) => (
+          <button key={v} type="button" onClick={() => setView(v)} className={`rounded-md px-2 py-1 capitalize ${shown === v ? "bg-hover font-medium text-fg" : "text-muted"}`}>
             {v}
           </button>
         ))}
@@ -354,7 +357,13 @@ export function BuilderView({ id }: { id: number }) {
         </div>
       )}
       <div className="min-h-0 flex-1">
-        {view === "preview" ? (
+        {shown === "plan" && plan ? (
+          <div className="h-full overflow-y-auto px-6 py-5 text-[14px]">
+            <div className="mx-auto max-w-[680px]">
+              <Markdown text={plan.content} />
+            </div>
+          </div>
+        ) : shown === "preview" ? (
           preview ? (
             <iframe key={preview.length} ref={frame} title="Preview" srcDoc={preview} sandbox="allow-scripts allow-modals allow-forms allow-popups" className="block size-full border-0 bg-white" />
           ) : (

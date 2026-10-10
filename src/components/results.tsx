@@ -45,7 +45,7 @@ function TextResult({ job }: { job: Job }) {
   if (job.status === "error") {
     return (
       <>
-        {job.text && <Markdown text={job.text} />}
+        {job.text && <Markdown text={job.text} openable />}
         <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-muted">{job.error}</p>
         <Meta job={job} />
       </>
@@ -55,7 +55,7 @@ function TextResult({ job }: { job: Job }) {
   return (
     <>
       <div aria-live={streaming ? "polite" : undefined} aria-busy={streaming}>
-        <Markdown text={job.text ?? ""} />
+        <Markdown text={job.text ?? ""} openable />
         {streaming && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-fg/60" aria-hidden="true" />}
       </div>
       <ProjectCard job={job} />

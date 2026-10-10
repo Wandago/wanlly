@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { Icon } from "./icon";
 
@@ -118,12 +119,44 @@ function inline(text: string, key = 0): ReactNode[] {
   );
 }
 
-function CodeBlock({ lang, text }: { lang: string; text: string }) {
+/** Which file a code block becomes in the Builder, for code a browser can run. */
+const APP_FILE: Record<string, string> = { html: "index.html", jsx: "App.jsx", tsx: "App.tsx" };
+
+/** Turns a code block into a Builder project, where it can be previewed, changed, published or saved to GitHub. */
+function OpenInBuilder({ lang, text }: { lang: string; text: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const file = APP_FILE[lang.toLowerCase()];
+  if (!file) return null;
+  const open = async () => {
+    setBusy(true);
+    try {
+      const title = text.match(/<title>([^<]{1,60})<\/title>/i)?.[1] ?? text.match(/export\s+default\s+function\s+(\w{1,60})/)?.[1] ?? "New app";
+      const made = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: title }) });
+      const b = await made.json().catch(() => ({}));
+      if (!made.ok || !b.id) throw new Error(b.error);
+      await fetch(`/api/build/${b.id}/files`, { method: "PUT", headers: { "content-type": "application/json" }, body: JSON.stringify({ path: file, content: text }) });
+      router.push(`/build/${b.id}`);
+    } catch {
+      setBusy(false);
+    }
+  };
+  return (
+    <button type="button" disabled={busy} onClick={open} title="Opens this code as an app you can preview, change, publish or save to GitHub" className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-hover hover:text-fg disabled:opacity-50">
+      <Icon name="bolt" size={12} />
+      {busy ? "Opening…" : "Open in Builder"}
+    </button>
+  );
+}
+
+function CodeBlock({ lang, text, openable }: { lang: string; text: string; openable?: boolean }) {
   const [copied, setCopied] = useState(false);
   return (
     <div className="overflow-hidden rounded-xl border border-line bg-code">
       <div className="flex items-center gap-2 border-b border-line px-3 py-1.5 font-mono text-[11px] text-faint">
         {lang || "text"}
+        <span className="ml-auto" />
+        {openable && <OpenInBuilder lang={lang} text={text} />}
         <button
           type="button"
           onClick={() => {
@@ -132,7 +165,7 @@ function CodeBlock({ lang, text }: { lang: string; text: string }) {
               window.setTimeout(() => setCopied(false), 1500);
             });
           }}
-          className="ml-auto inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-hover hover:text-fg"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 hover:bg-hover hover:text-fg"
         >
           <Icon name={copied ? "check" : "copy"} size={12} />
           {copied ? "Copied" : "Copy"}
@@ -145,13 +178,14 @@ function CodeBlock({ lang, text }: { lang: string; text: string }) {
   );
 }
 
-export function Markdown({ text }: { text: string }) {
+/** `openable`: code blocks a browser can run get an "Open in Builder" button (chat replies). */
+export function Markdown({ text, openable }: { text: string; openable?: boolean }) {
   return (
     <div className="flex min-w-0 flex-col gap-3 leading-[1.65] [overflow-wrap:anywhere]">
       {parse(text).map((b, i) => {
         switch (b.kind) {
           case "code":
-            return <CodeBlock key={i} lang={b.lang} text={b.text} />;
+            return <CodeBlock key={i} lang={b.lang} text={b.text} openable={openable} />;
           case "heading": {
             const cls = b.level <= 2 ? "mt-1 text-[17px] font-semibold tracking-[-0.01em]" : "mt-1 text-[15px] font-semibold";
             return b.level <= 2 ? (
@@ -165,7 +199,20 @@ export function Markdown({ text }: { text: string }) {
             );
           }
           case "list": {
-            const items = b.items.map((it, j) => <li key={j}>{inline(it)}</li>);
+            // "[ ] task" and "[x] task" items (a plan's checklist) get a box instead of a bullet.
+            const items = b.items.map((it, j) => {
+              const box = it.match(/^\[([ xX])\]\s+([\s\S]*)$/);
+              if (!box) return <li key={j}>{inline(it)}</li>;
+              const done = box[1] !== " ";
+              return (
+                <li key={j} className="-ml-5 flex list-none items-start gap-2">
+                  <span aria-label={done ? "Done" : "To do"} className={`mt-[3px] grid size-4 shrink-0 place-items-center rounded border ${done ? "border-accent bg-accent text-white" : "border-faint"}`}>
+                    {done && <Icon name="check" size={11} />}
+                  </span>
+                  <span className={done ? "text-muted line-through decoration-faint" : ""}>{inline(box[2])}</span>
+                </li>
+              );
+            });
             return b.ordered ? (
               <ol key={i} start={b.start} className="flex list-decimal flex-col gap-1 pl-5">
                 {items}

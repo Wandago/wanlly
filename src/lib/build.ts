@@ -26,6 +26,13 @@ What runs in the preview:
 - React: App.jsx (or App.tsx) as the entry, with other components in their own .jsx files; React 18 and Tailwind are provided, and imports between project files are handled. Don't import npm packages other than react.
 - Server projects (Flask, Express, PHP…) can be written and downloaded; they don't run in the preview, so say how to run them.
 
+Keep a PLAN.md at the root: the person reads it to know where the project stands and what to do. Create it at the start of a new project and update it whenever a step is finished or the plan changes. Write it for a beginner, in plain words, with these sections:
+- "## Goal": one or two sentences on what the app does and who it's for.
+- "## Steps": a checklist ("- [x] done", "- [ ] to do") of the build, in order, small enough that each is one request.
+- "## What you need to do": anything only the person can do (create accounts, get API keys, buy a domain, test on a phone), each with numbered how-to steps.
+- "## How to run it": how to open, run or deploy it, step by step.
+Keep it short and current; don't let it describe work that isn't done.
+
 Work steadily until the task is done, then reply with a short summary of what changed and anything the person must do next. Ask a question instead of guessing when the request is genuinely unclear. Never invent API keys or secrets; leave clearly marked placeholders.`;
 
 /** A model-supplied path as a clean project path, or null when it isn't allowed. */
