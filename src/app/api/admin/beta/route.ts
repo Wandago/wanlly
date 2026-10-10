@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { CAN, requireStaff } from "@/lib/admin";
+import { mailReady } from "@/lib/mail";
 
 const b = schema.betaApplications;
 const STATUSES = ["pending", "approved", "declined"] as const;
@@ -18,7 +19,7 @@ export async function GET(req: Request) {
       .orderBy(desc(b.createdAt))
       .limit(200);
     const [open] = await db().select({ value: schema.appFlags.value }).from(schema.appFlags).where(eq(schema.appFlags.key, "signupOpen")).limit(1);
-    return Response.json({ applications: rows, signupOpen: open?.value === true });
+    return Response.json({ applications: rows, signupOpen: open?.value === true, mailReady: mailReady() });
   } catch (e) {
     console.error("admin beta GET failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });

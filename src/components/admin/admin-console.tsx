@@ -7,6 +7,7 @@ import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when, Loading } from "./admin-ui";
 import type { FirstTouch } from "@/lib/first-touch";
+import { inviteMessage } from "@/lib/beta-invite";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
 
@@ -197,10 +198,8 @@ function cameFrom(a: Application) {
 }
 
 function inviteMail(a: Application) {
-  const site = window.location.origin;
-  const first = a.name.split(" ")[0];
-  const body = `Hi ${first},\n\nYou're in. Thanks for applying to the Wanlly beta.\n\nSign up here with this email address (${a.email}), so Wanlly knows it's you: ${site}/sign-up\n\nWatch short sponsor videos to earn credits, then build with the world's top AI models. Reply to this email if anything breaks.\n\nLouis, Wanlly`;
-  return `mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent("You're in: your Wanlly beta invite")}&body=${encodeURIComponent(body)}`;
+  const { subject, text } = inviteMessage(a, window.location.origin);
+  return `mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
 }
 
 function Beta() {
@@ -221,12 +220,28 @@ function Beta() {
   };
   const [note, setNote] = useState("");
 
+  const mailOn = extra.mailReady === true;
   const decide = async (a: Application, next: Application["status"]) => {
     setBusy(a.id);
     setNote("");
     try {
-      const { application } = await api<{ application: Application }>(`/api/admin/beta/${a.id}`, "PATCH", { status: next });
+      const { application, invite } = await api<{ application: Application; invite?: "sent" | "failed" | "skipped" }>(`/api/admin/beta/${a.id}`, "PATCH", { status: next });
       setItems((xs) => (xs ?? []).map((x) => (x.id === a.id ? application : x)));
+      if (invite === "sent") setNote(`✓ Approved, and the invite was emailed to ${a.email}.`);
+      if (invite === "failed") setNote(`Approved, but the invite email couldn't be sent. Press "Send invite" to try again.`);
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const resend = async (a: Application) => {
+    setBusy(a.id);
+    setNote("");
+    try {
+      await api(`/api/admin/beta/${a.id}`, "POST", {});
+      setNote(`✓ Invite emailed to ${a.email}.`);
     } catch (e) {
       setNote((e as Error).message);
     } finally {
@@ -251,7 +266,7 @@ function Beta() {
       </Card>
       <Card
         title="Beta applications"
-        note="Approving lets that email in straight away. Then send the invite from your own email. Decisions are logged."
+        note={mailOn ? "Approving lets that email in straight away and emails them the invite from Wanlly's mailbox. Decisions are logged." : "Approving lets that email in straight away. Then send the invite from your own email (or add SMTP_USER and SMTP_PASS in Cloudflare to send it automatically). Decisions are logged."}
         actions={
           <Pills
             label="Show"
@@ -266,7 +281,7 @@ function Beta() {
           />
         }
       >
-        {note && <p className="text-[13px] text-bad">{note}</p>}
+        {note && <p className={`text-[13px] ${note.startsWith("✓") ? "text-good" : "text-bad"}`}>{note}</p>}
         {error ? (
           <Empty>{error}</Empty>
         ) : !items ? (
@@ -291,11 +306,16 @@ function Beta() {
                   </small>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {a.status === "approved" && (
-                    <a href={inviteMail(a)} className={btnDark}>
-                      Email invite
-                    </a>
-                  )}
+                  {a.status === "approved" &&
+                    (mailOn ? (
+                      <button type="button" className={btnDark} disabled={busy === a.id} onClick={() => resend(a)}>
+                        Send invite
+                      </button>
+                    ) : (
+                      <a href={inviteMail(a)} className={btnDark}>
+                        Email invite
+                      </a>
+                    ))}
                   {a.status !== "approved" && (
                     <button type="button" className={btnDark} disabled={busy === a.id} onClick={() => decide(a, "approved")}>
                       Approve
