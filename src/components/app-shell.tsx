@@ -204,7 +204,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Icon name="menu" size={16} />
             </button>
           )}
-          <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto]">
+          <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto] md:col-start-2 md:row-start-1">
             <div className="min-h-0 min-w-0">{children}</div>
             <TabletBanner roomy={roomy} always={builder} />
           </div>

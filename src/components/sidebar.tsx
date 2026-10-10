@@ -192,8 +192,10 @@ export function Sidebar() {
   return (
     <>
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={close} aria-hidden="true" />}
+      {/* Hidden on a computer, the menu keeps its (zero-width) place in the page grid, so the
+          page and the side panel stay in their own columns. */}
       <aside
-        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 ${menu === "hidden" ? "md:hidden" : ""} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
+        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 ${menu === "hidden" ? "md:invisible md:w-0 md:overflow-hidden md:border-0 md:p-0" : ""} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
         aria-label="Sidebar"
       >
         <div className="flex items-center">

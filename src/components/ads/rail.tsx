@@ -176,7 +176,7 @@ function SlimRail({ wideOnly, onExpand }: { wideOnly: boolean; onExpand: () => v
   const { perAd } = useReward();
   const { dispatch } = useWorkspace();
   return (
-    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
+    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:col-start-3 2xl:row-start-1 2xl:block" : "xl:col-start-3 xl:row-start-1 xl:block"}`}>
       <div className="sticky top-0 flex h-full flex-col items-center gap-3 overflow-y-auto px-2 py-3 [scrollbar-width:none]">
         <button type="button" onClick={onExpand} title="Show the full side panel" aria-label="Show the full side panel" className="self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
           «
@@ -218,7 +218,7 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
   const has = (s: NetworkSize) => !!network?.sizes.includes(s);
   const bannerSize: NetworkSize | null = tall && has("300x600") ? "300x600" : has("300x250") ? "300x250" : null;
   return (
-    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
+    <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:col-start-3 2xl:row-start-1 2xl:block" : "xl:col-start-3 xl:row-start-1 xl:block"}`}>
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
         <button type="button" onClick={onSlim} title="Make the side panel narrower" aria-label="Make the side panel narrower" className="-mb-1.5 self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
           »
