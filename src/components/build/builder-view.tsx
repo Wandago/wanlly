@@ -68,7 +68,9 @@ export function BuilderView({ id }: { id: number }) {
   const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "gemini-flash");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
   const [pane, setPane] = useState<"chat" | "files" | "preview">("chat");
-  const [view, setView] = useState<"preview" | "code" | "plan">("preview");
+  // The code is the main view: it follows each file as the AI edits it. The preview is opt-in.
+  const [view, setView] = useState<"preview" | "code" | "plan">("code");
+  const [phone, setPhone] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [checking, setChecking] = useState(false);
@@ -181,7 +183,15 @@ export function BuilderView({ id }: { id: number }) {
               if (!line.trim()) continue;
               const ev = JSON.parse(line);
               if (ev.type === "text") setLive((l) => (l ? { ...l, text: l.text + ev.text } : l));
-              if (ev.type === "edit") setLive((l) => (l ? { ...l, edits: [...l.edits, { command: ev.command, path: ev.path, ok: ev.ok }] } : l));
+              if (ev.type === "edit") {
+                setLive((l) => (l ? { ...l, edits: [...l.edits, { command: ev.command, path: ev.path, ok: ev.ok }] } : l));
+                // Follow the AI around: show the file it's working on, fresh from the server.
+                if (ev.ok && ev.path && !["view", "delete", "github"].includes(ev.command)) {
+                  setOpen(ev.path);
+                  setView((v) => (v === "preview" ? v : "code"));
+                  void load();
+                }
+              }
               if (ev.type === "done" || ev.type === "error") {
                 const act = accountFrom(ev);
                 if (act) dispatch(act);
@@ -237,7 +247,9 @@ export function BuilderView({ id }: { id: number }) {
       sessionStorage.removeItem(`wanlly-build-repo-${id}`);
     } catch {}
     queueMicrotask(() => {
-      if (first) setPendingFirst(first);
+      // A request with no repository named just starts building; nobody is asked about GitHub.
+      if (first && !repo) setAutoRun(first);
+      else if (first) setPendingFirst(first);
       if (repo) {
         setRepoLink(repo);
         setAutoOpen(true);
@@ -252,6 +264,15 @@ export function BuilderView({ id }: { id: number }) {
       void openRepoRef.current?.();
     });
   }, [autoOpen, repoLink]);
+  const [autoRun, setAutoRun] = useState<string | null>(null);
+  useEffect(() => {
+    if (!autoRun || !model) return;
+    queueMicrotask(() => {
+      setAutoRun(null);
+      setStartDone(true);
+      void run(autoRun);
+    });
+  }, [autoRun, model, run]);
   const openRepoRef = useRef<(() => Promise<void>) | null>(null);
   const choosing = !!files && !files.length && !steps.length && !live && !startDone;
 
@@ -300,10 +321,16 @@ export function BuilderView({ id }: { id: number }) {
   }, [dispatch]);
 
   const preview = useMemo(() => (files ? buildPreview(files) : ""), [files]);
-  const current = files?.find((f) => f.path === open) ?? null;
   const plan = files?.find((f) => f.path.toLowerCase() === "plan.md") ?? null;
-  // With nothing to preview (a server app, or no page yet), the plan is the most useful thing to show.
-  const shown = view === "preview" && !preview && plan ? "plan" : view;
+  // With no file picked yet, open the plan, else the page, else the first file.
+  const current =
+    files?.find((f) => f.path === open) ??
+    plan ??
+    files?.find((f) => /(^|\/)index\.html$/i.test(f.path)) ??
+    files?.find((f) => /(^|\/)(page|app|main|index)\.(tsx?|jsx?)$/i.test(f.path)) ??
+    files?.[0] ??
+    null;
+  const shown = view;
 
   if (missing) return <main className="grid h-full place-items-center p-6 text-center text-muted">{SAY.notFound}</main>;
   if (!files) return <main className="grid h-full place-items-center"><SpinLoader size={56} label="Opening your app" /></main>;
@@ -577,7 +604,7 @@ export function BuilderView({ id }: { id: number }) {
       {files.length ? (
         <FileTree
           paths={files.map((f) => f.path)}
-          active={view === "code" ? open : null}
+          active={view === "code" ? (current?.path ?? null) : null}
           onOpen={(path) => {
             setOpen(path);
             setView("code");
@@ -602,12 +629,33 @@ export function BuilderView({ id }: { id: number }) {
         >
           <Icon name="list" size={14} />
         </button>
-        {(plan ? (["preview", "code", "plan"] as const) : (["preview", "code"] as const)).map((v) => (
+        {(plan ? (["code", "plan"] as const) : (["code"] as const)).map((v) => (
           <button key={v} type="button" onClick={() => setView(v)} className={`rounded-md px-2 py-1 capitalize ${shown === v ? "bg-hover font-medium text-fg" : "text-muted"}`}>
             {v}
           </button>
         ))}
-        {view === "code" && current && <span className="ml-2 truncate font-mono text-faint">{current.path}</span>}
+        {view === "code" && current && (
+          <span className="ml-2 flex min-w-0 items-center gap-1.5 truncate font-mono text-faint">
+            {running && live?.edits.at(-1)?.path === current.path && <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-accent" aria-label="Being edited" />}
+            {current.path}
+          </span>
+        )}
+        <span className="ml-auto flex items-center gap-1">
+          {view === "preview" && preview && (
+            <button type="button" onClick={() => setPhone(!phone)} aria-pressed={phone} title="Phone-sized preview" className={`rounded-md px-2 py-1 ${phone ? "bg-hover font-medium text-fg" : "text-muted"}`}>
+              Phone
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setView(view === "preview" ? "code" : "preview")}
+            aria-pressed={view === "preview"}
+            title="A quick look at the page, where the project has one a browser can run"
+            className={`rounded-md border border-line px-2 py-1 ${view === "preview" ? "bg-hover font-medium text-fg" : "text-muted hover:text-fg"}`}
+          >
+            {view === "preview" ? "Close preview" : "Preview"}
+          </button>
+        </span>
       </div>
       {errors.length > 0 && view === "preview" && (
         <div className="flex flex-wrap items-center gap-2 border-b border-line bg-bad/5 px-3 py-2 text-[13px]">
@@ -619,6 +667,12 @@ export function BuilderView({ id }: { id: number }) {
           </button>
         </div>
       )}
+      {/* Sponsors keep Wanlly free: a banner over the code as it changes. */}
+      {view !== "preview" && (
+        <div className="border-b border-line px-3 py-2">
+          <DisplaySlot placement="builder_code" sizes={["728x90", "468x60", "320x100", "320x50"]} label="" />
+        </div>
+      )}
       <div className="min-h-0 flex-1">
         {shown === "plan" && plan ? (
           <div className="h-full overflow-y-auto px-6 py-5 text-[14px]">
@@ -628,7 +682,16 @@ export function BuilderView({ id }: { id: number }) {
           </div>
         ) : shown === "preview" ? (
           preview ? (
-            <iframe key={preview.length} ref={frame} title="Preview" srcDoc={preview} sandbox="allow-scripts allow-modals allow-forms allow-popups" className="block size-full border-0 bg-white" />
+            <div className={`size-full ${phone ? "overflow-y-auto bg-hover py-4" : ""}`}>
+              <iframe
+                key={preview.length}
+                ref={frame}
+                title="Preview"
+                srcDoc={preview}
+                sandbox="allow-scripts allow-modals allow-forms allow-popups"
+                className={`block border-0 bg-white ${phone ? "mx-auto h-[720px] max-h-full w-[375px] max-w-full rounded-2xl shadow-lg" : "size-full"}`}
+              />
+            </div>
           ) : (
             <div className="grid h-full place-items-center p-6 text-center text-sm text-muted">
               {files.length ? "This project doesn't have a page a browser can run (for example a server app). Download it to run it." : "The preview appears here once there are files."}
@@ -637,7 +700,10 @@ export function BuilderView({ id }: { id: number }) {
         ) : current ? (
           <FileEditor key={current.path} id={id} file={current} onSaved={load} />
         ) : (
-          <div className="grid h-full place-items-center text-sm text-muted">Pick a file on the left.</div>
+          <div className="grid h-full place-items-center content-center gap-4 p-6 text-center text-sm text-muted">
+            <p>{running ? "The AI is getting started…" : "The code shows here as the AI writes it."}</p>
+            <DisplaySlot placement="builder_code" sizes={["336x280", "300x250", "320x100"]} />
+          </div>
         )}
       </div>
     </section>
@@ -695,7 +761,7 @@ export function BuilderView({ id }: { id: number }) {
       <div className="flex border-b border-line lg:hidden">
         {(["chat", "files", "preview"] as const).map((p) => (
           <button key={p} type="button" onClick={() => setPane(p)} className={`flex-1 py-2 text-xs capitalize ${pane === p ? "border-b-2 border-fg font-semibold" : "text-muted"}`}>
-            {p}
+            {p === "preview" ? "code" : p}
           </button>
         ))}
       </div>

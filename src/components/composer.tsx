@@ -82,6 +82,7 @@ function Gate() {
 
 export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   const { tool, draft, price, gate, modelId, dispatch, submit, memory, jobs } = useWorkspace();
+  const router = useRouter();
   const ta = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const config = TOOLS[tool];
@@ -105,14 +106,25 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
       setRepoAsk({ link: "" });
     });
   }, [dispatch]);
+  const [starting, setStarting] = useState(false);
   const send = () => {
-    if (files.busy) return;
-    if ((tool === "code" || tool === "chat") && !files.items.length) {
+    if (files.busy || starting) return;
+    // Code and the Builder are one place: a code request opens a Builder project that works on
+    // it (asking for the repository first when it's about one). Chat and Design never ask.
+    if (tool === "code" && !files.items.length && draft.trim()) {
       const repo = repoIntent(draft);
-      if (repo) {
-        setRepoAsk({ link: repo.link });
-        return;
-      }
+      if (repo) return setRepoAsk({ link: repo.link });
+      setStarting(true);
+      void startBuild(draft.trim())
+        .then((bid) => {
+          dispatch({ type: "setDraft", draft: "" });
+          router.push(`/build/${bid}`);
+        })
+        .catch((e) => {
+          setStarting(false);
+          toast(e instanceof Error ? e.message : "Couldn't start the project. Try again.");
+        });
+      return;
     }
     submit(files.items);
     files.clear();
@@ -262,6 +274,19 @@ function pick(all: string[], seed: number) {
 const REPO_ASK_KEY = "wanlly-repo-ask";
 const REPO_LINK = /(?:https?:\/\/)?github\.com\/[\w-]+\/[\w.-]+/i;
 
+/** Starts a Builder project that begins on `request`; returns its id. */
+async function startBuild(request: string, repo?: string): Promise<string> {
+  const name = repo ? repo.replace(/\/+$/, "").split("/").pop() || "My repository" : request.replace(/\s+/g, " ").slice(0, 48);
+  const r = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
+  const b = await r.json().catch(() => ({}));
+  if (!r.ok || !b.id) throw new Error(b.error ?? "Couldn't start the project. Try again.");
+  try {
+    if (repo) sessionStorage.setItem(`wanlly-build-repo-${b.id}`, repo.trim());
+    if (request.length > 12) sessionStorage.setItem(`wanlly-build-first-${b.id}`, request);
+  } catch {}
+  return b.id as string;
+}
+
 /**
  * "Edit my repo", "update the code in github.com/me/site": a request about a repository the AI
  * hasn't seen. Pasted code (a fenced block) means they shared it, so that goes to the AI.
@@ -294,17 +319,9 @@ function RepoAsk({ initial, request, onClose, onSkip }: { initial: string; reque
     setBusy(true);
     setError("");
     try {
-      const name = target.replace(/\/+$/, "").split("/").pop() || "My repository";
-      const r = await fetch("/api/build", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name }) });
-      const b = await r.json().catch(() => ({}));
-      if (!r.ok || !b.id) throw new Error(b.error ?? "Couldn't start the project. Try again.");
-      try {
-        sessionStorage.setItem(`wanlly-build-repo-${b.id}`, target.trim());
-        // The request itself, minus the link, runs once the repository is open.
-        const ask = request.replace(REPO_LINK, "").trim();
-        if (ask.length > 12) sessionStorage.setItem(`wanlly-build-first-${b.id}`, ask);
-      } catch {}
-      router.push(`/build/${b.id}`);
+      // The request itself, minus the link, runs once the repository is open.
+      const bid = await startBuild(request.replace(REPO_LINK, "").trim(), target);
+      router.push(`/build/${bid}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't start the project. Try again.");
       setBusy(false);

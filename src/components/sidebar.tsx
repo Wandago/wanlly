@@ -16,12 +16,16 @@ import { Ring } from "./credits-button";
 
 const TOOL_LINKS: ToolId[] = ["chat", "code", "design", "images"];
 const PAGES: { href: string; label: string; icon: IconName }[] = [
-  { href: "/build", label: "Builder", icon: "bolt" },
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/coworkers", label: "Coworkers", icon: "users" },
 ];
 
 const row = "flex min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px]";
+
+/** Code lives in the Builder; the other tools are modes of the main page. */
+function toolActive(id: ToolId, path: string, tool: ToolId) {
+  return id === "code" ? path.startsWith("/build") : path === "/app" && tool === id;
+}
 
 function Mark() {
   return <SpinMark size={22} tile />;
@@ -62,6 +66,7 @@ function IconRail({ onExpand }: { onExpand: () => void }) {
   const { tool, me, credits, dispatch } = useWorkspace();
   const { user } = useUser();
   const path = usePathname();
+  const isOn = (id: ToolId) => toolActive(id, path, tool);
   const item = (active: boolean) => `grid size-10 place-items-center rounded-lg ${active ? "bg-hover text-fg" : "text-muted hover:bg-hover hover:text-fg"}`;
   return (
     <aside aria-label="Sidebar" className="hidden min-h-0 flex-col items-center gap-1 border-r border-line bg-side py-3 md:flex">
@@ -75,7 +80,7 @@ function IconRail({ onExpand }: { onExpand: () => void }) {
         <Icon name="plus" size={16} />
       </Link>
       {TOOL_LINKS.map((id) => (
-        <Link key={id} href="/app" onClick={() => dispatch({ type: "setTool", tool: id })} aria-label={TOOLS[id].label} title={TOOLS[id].label} aria-current={path === "/app" && tool === id ? "page" : undefined} className={item(path === "/app" && tool === id)}>
+        <Link key={id} href={id === "code" ? "/build" : "/app"} onClick={() => id !== "code" && dispatch({ type: "setTool", tool: id })} aria-label={TOOLS[id].label} title={TOOLS[id].label} aria-current={isOn(id) ? "page" : undefined} className={item(isOn(id))}>
           <Icon name={id} size={16} />
         </Link>
       ))}
@@ -194,6 +199,7 @@ export function Sidebar() {
   const path = usePathname();
   const router = useRouter();
   const close = () => dispatch({ type: "setSidebar", open: false });
+  const isOn = (id: ToolId) => toolActive(id, path, tool);
   const [menu, setMenu] = useLocalSetting("wanlly-menu", "shown");
 
   useEffect(() => {
@@ -271,13 +277,13 @@ export function Sidebar() {
 
         <nav className="mt-2 flex flex-col gap-px" aria-label="Main">
           {TOOL_LINKS.map((id) => {
-            const active = path === "/app" && tool === id;
+            const active = isOn(id);
             return (
               <Link
                 key={id}
-                href="/app"
+                href={id === "code" ? "/build" : "/app"}
                 aria-current={active ? "page" : undefined}
-                onClick={() => dispatch({ type: "setTool", tool: id })}
+                onClick={() => (id === "code" ? close() : dispatch({ type: "setTool", tool: id }))}
                 className={`${row} ${active ? "bg-hover font-medium text-fg" : "text-muted hover:bg-hover hover:text-fg"}`}
               >
                 <Icon name={id} size={16} />

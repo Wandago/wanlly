@@ -51,7 +51,7 @@ export function BuilderHome() {
   return (
     <main className="mx-auto flex w-full max-w-[880px] flex-col gap-8 px-4 py-10 md:px-8">
       <header className="flex flex-col gap-2">
-        <span className="text-xs font-medium tracking-[0.08em] text-accent uppercase">Builder</span>
+        <span className="text-xs font-medium tracking-[0.08em] text-accent uppercase">Code · Builder</span>
         <h1 className="font-display text-[clamp(28px,4vw,40px)] leading-[1.05] font-semibold tracking-[-0.035em]">Build a whole app, one step at a time</h1>
         <p className="max-w-[60ch] text-muted">
           Describe what you want. The AI plans it, writes real files, previews it as it goes and fixes what breaks. You see every step and what it costs, and you can stop any time.

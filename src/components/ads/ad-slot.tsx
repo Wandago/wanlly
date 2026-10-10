@@ -190,7 +190,35 @@ export function RewardedSpot({
   maxHeight?: number;
 }) {
   const progress = useRewardedView(placement, onDone);
-  return <VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />;
+  return <NetworkSpot aspect={aspect} sponsor={sponsor} placement={placement} progress={progress} maxHeight={maxHeight} />;
+}
+
+/**
+ * The ad that plays before a run or for credits: the ad network's banner (or a booked campaign's)
+ * with a countdown under it; Wanlly's own sponsor video only when no banner fills.
+ */
+export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }: { aspect: VideoAspect; sponsor: Sponsor; placement: string; progress: number; maxHeight?: number }) {
+  const [banner, setBanner] = useState(false);
+  const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
+  return (
+    <div className={banner ? "flex flex-col gap-2 p-3" : ""}>
+      <DisplaySlot
+        placement={placement}
+        sizes={["336x280", "300x250", "320x100", "320x50"]}
+        label="Sponsored"
+        onBanner={setBanner}
+        fallback={<VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />}
+      />
+      {banner && (
+        <div className="flex items-center gap-2 font-mono text-xs text-muted">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-hover">
+            <i className="block h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
+          </div>
+          {progress < 1 ? `${left}s` : "Done"}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /**
@@ -289,7 +317,7 @@ export function SponsorCard({
     return (
       <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface">
         {progress !== undefined ? (
-          <VideoSpot aspect={spotAspect} sponsor={video} progress={progress} />
+          <NetworkSpot aspect={spotAspect} sponsor={video} placement="job_card" progress={progress} />
         ) : (
           <RewardedSpot aspect={spotAspect} sponsor={video} placement="job_card" onDone={(r) => onSpotDone?.(r)} />
         )}
