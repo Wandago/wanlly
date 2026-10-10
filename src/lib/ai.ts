@@ -73,7 +73,9 @@ export function flashOrder(names: string[]): string[] {
     .sort((a, b) => version(b) - version(a) || a.length - b.length);
   const stable = flash.filter((n) => /-flash(-\d{3})?$/.test(n));
   const preview = flash.filter((n) => !stable.includes(n));
-  return [...new Set([...stable.slice(0, 2), ...preview.slice(0, 1), ...GEMINI_FALLBACKS])];
+  // Flash-Lite has a free quota of its own: the last resort when the Flash ones are used up.
+  const lite = names.filter((n) => /^gemini-\d+(\.\d+)?-flash-lite$/.test(n)).sort((a, b) => version(b) - version(a));
+  return [...new Set([...stable.slice(0, 2), ...preview.slice(0, 1), ...GEMINI_FALLBACKS, ...lite.slice(0, 1), "gemini-flash-lite-latest"])];
 }
 
 /**
@@ -100,6 +102,61 @@ export async function geminiModels(key: string): Promise<string[]> {
 /** Models resting after a timeout or overload, until this time. */
 const resting = new Map<string, number>();
 
+/**
+ * Gemini keys: GEMINI_API_KEY plus any in GEMINI_API_KEYS (comma-separated). On the free tier
+ * each Google Cloud project has its own daily quota, so keys from different projects add up.
+ */
+export function geminiKeys(): string[] {
+  const all = [process.env.GEMINI_API_KEY, ...(process.env.GEMINI_API_KEYS ?? "").split(/[\s,]+/)];
+  return [...new Set(all.map((k) => k?.trim() ?? "").filter(Boolean))];
+}
+
+/** Key-and-model pairs whose quota is used up, until it resets (Google says when). */
+const spent = new Map<string, number>();
+
+type GeminiTry = { key: string; model: string; slot: string };
+
+/**
+ * What to try, best first: each model on each key, leaving out pairs whose quota is spent and
+ * putting overloaded models last.
+ */
+async function geminiTries(limit: number): Promise<GeminiTry[]> {
+  const keys = geminiKeys();
+  if (!keys.length) return [];
+  const now = Date.now();
+  const models = await geminiModels(keys[0]);
+  const all = models.flatMap((model) => keys.map((key, k) => ({ key, model, slot: `${k}:${model}` })));
+  const open = all.filter((t) => (spent.get(t.slot) ?? 0) <= now);
+  return [...open.filter((t) => (resting.get(t.model) ?? 0) <= now), ...open.filter((t) => (resting.get(t.model) ?? 0) > now)].slice(0, limit);
+}
+
+/**
+ * A 429 that means the quota is used up (not a short burst): marks the pair spent until Google's
+ * retry time, along with the model the quota belongs to ("gemini-flash-latest" counts against
+ * the Flash it points at). Returns whether it was one.
+ */
+function noteQuota(t: GeminiTry, raw: string): boolean {
+  const delay = raw.match(/"retryDelay":\s*"([\d.]+)s"/)?.[1];
+  const said = raw.match(/retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s/i);
+  const secs = delay ? Number(delay) : said ? Number(said[1] ?? 0) * 3600 + Number(said[2] ?? 0) * 60 + Number(said[3]) : 0;
+  const daily = /per.?day|PerDay|free_tier_requests/i.test(raw);
+  if (secs < 90 && !daily) return false;
+  const until = Date.now() + Math.min(Math.max(secs, 600), 24 * 3600) * 1000;
+  spent.set(t.slot, until);
+  const real = raw.match(/model:\s*([\w.-]+)/)?.[1];
+  const k = t.slot.split(":")[0];
+  if (real && real !== t.model) spent.set(`${k}:${real}`, until);
+  // An alias and the model it names share a quota: once one is spent, so is the other.
+  for (const alias of ["gemini-flash-latest", "gemini-flash-lite-latest"]) if (real && geminiAlias.get(alias) === real) spent.set(`${k}:${alias}`, until);
+  if (t.model.endsWith("-latest") && real) geminiAlias.set(t.model, real);
+  return true;
+}
+/** Which model each "-latest" alias turned out to be, learnt from quota errors. */
+const geminiAlias = new Map<string, string>();
+
+/** Whether any free host besides Gemini has a key (for when Gemini's quota is used up). */
+const hasPool = () => POOL_HOSTS.some((h) => !!process.env[h.env]);
+
 /** Google's "too busy" answers: worth another try, or another model. */
 // 502 and the 52x codes are Google's gateway timing out or failing on a slow model: try another.
 const RETRYABLE = new Set([429, 500, 502, 503, 504, 520, 521, 522, 523, 524, 529]);
@@ -123,7 +180,6 @@ function geminiThinking(model: string, fast: boolean) {
 }
 
 async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true): AsyncGenerator<ReplyEvent> {
-  const key = process.env.GEMINI_API_KEY!;
   const request = (model: string, thinking: boolean) => {
     const t = thinking ? geminiThinking(model, fast) : null;
     return JSON.stringify({
@@ -135,17 +191,16 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
       generationConfig: { maxOutputTokens: maxTokens, ...(t ? { thinkingConfig: t } : {}) },
     });
   };
-  // A busy model gets one more try after a pause, then the next model is tried. All of this
-  // happens before any words arrive, so the person only sees a slightly longer wait.
-  // Models that recently timed out or were overloaded go to the back of the line for a while.
-  const all = await geminiModels(key);
-  const now = Date.now();
-  const models = [...all.filter((m) => (resting.get(m) ?? 0) <= now), ...all.filter((m) => (resting.get(m) ?? 0) > now)];
-  const tries = [models[0], ...models].slice(0, 5);
+  // A busy model gets one more try after a pause, then the next model (or key) is tried. All of
+  // this happens before any words arrive, so the person only sees a slightly longer wait.
+  // Models that recently timed out or were overloaded go to the back of the line for a while;
+  // ones whose quota is used up are skipped until it resets.
+  const options = await geminiTries(5);
+  const tries = options.length ? [options[0], ...options].slice(0, 5) : [];
   let res: Response | null = null;
   let error: ProviderError | null = null;
   for (let i = 0; i < tries.length && !res; i++) {
-    const model = tries[i];
+    const { model, key } = tries[i];
     if (i > 0) await pause(i === 1 ? 1200 : 300, signal);
     const call = (thinking: boolean) =>
       fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
@@ -167,20 +222,26 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
       message = (JSON.parse(raw) as { error?: { message?: string } }).error?.message ?? message;
     } catch {}
     console.error("gemini error", model, r.status, message);
+    // Quota used up: no point trying this pair again (not even the second try).
+    if (r.status === 429 && noteQuota(tries[i], raw) && tries[i + 1] === tries[i]) i++;
     // 402/403: billing or key problems on Wanlly's side, not something the person can retry.
     const kind = RETRYABLE.has(r.status) ? "busy" : r.status === 402 || r.status === 403 ? "unavailable" : "failed";
     error = new ProviderError(kind, `Google ${r.status} on ${model}: ${message}${i ? ` (try ${i + 1})` : ""}`);
     // Busy models and ones this key can't use (404) move on to the next; anything else stops.
     if (!RETRYABLE.has(r.status) && r.status !== 404) break;
-    if (r.status === 404 && tries[i + 1] === model) i++;
+    if (r.status === 404 && tries[i + 1] === tries[i]) i++;
     // Overloaded or timed out: rest this model for 10 minutes. A timeout already took long, so
     // don't wait on the same model again; go straight to the next one.
     if (r.status === 503 || r.status >= 520) {
       resting.set(model, Date.now() + 10 * 60_000);
-      if (r.status >= 520 && tries[i + 1] === model) i++;
+      if (r.status >= 520 && tries[i + 1] === tries[i]) i++;
     }
   }
-  if (!res?.body) throw error ?? new ProviderError("failed");
+  if (!res?.body) {
+    // Gemini is used up or busy: the other free hosts take it, when there are any.
+    if (!signal.aborted && hasPool() && !turns.some((t) => t.files?.length)) return yield* pool(system, turns, maxTokens, signal, false);
+    throw error ?? new ProviderError(tries.length ? "failed" : "busy", tries.length ? "" : "Every Gemini key has used today's free quota");
+  }
   let inputTokens = 0;
   let outputTokens = 0;
   let stop = "end";
@@ -426,8 +487,7 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
   inputTokens: number;
   outputTokens: number;
 }> {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) throw new ProviderError("unavailable");
+  if (!geminiKeys().length) throw new ProviderError("unavailable");
   const body = (model: string, thinking: boolean) => {
     const t = thinking && !opts.retry ? geminiThinking(model, false) : null;
     return JSON.stringify({
@@ -437,14 +497,12 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
       generationConfig: { maxOutputTokens: 32000, ...(t ? { thinkingConfig: t } : {}) },
     });
   };
-  // Like chat: a busy or missing model moves on to the next one before anything is shown.
-  const all = await geminiModels(key);
-  const now = Date.now();
-  const models = [...all.filter((m) => (resting.get(m) ?? 0) <= now), ...all.filter((m) => (resting.get(m) ?? 0) > now)].slice(0, 4);
+  // Like chat: a busy, missing or used-up model moves on to the next one before anything is shown.
+  const tries = await geminiTries(4);
   let res: Response | null = null;
   let error: ProviderError | null = null;
-  for (let i = 0; i < models.length && !res; i++) {
-    const model = models[i];
+  for (let i = 0; i < tries.length && !res; i++) {
+    const { model, key } = tries[i];
     if (i > 0) await pause(800, opts.signal);
     const call = (thinking: boolean) =>
       fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
@@ -461,11 +519,16 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
     }
     const raw = await r.text().catch(() => "");
     console.error("gemini build error", model, r.status, raw.slice(0, 300));
+    if (r.status === 429) noteQuota(tries[i], raw);
     error = new ProviderError(RETRYABLE.has(r.status) ? "busy" : r.status === 402 || r.status === 403 ? "unavailable" : "failed", `Google ${r.status} on ${model}`);
     if (!RETRYABLE.has(r.status) && r.status !== 404) break;
     if (r.status === 503 || r.status >= 520) resting.set(model, Date.now() + 10 * 60_000);
   }
-  if (!res?.body) throw error ?? new ProviderError("failed");
+  if (!res?.body) {
+    // Gemini is used up or busy: another free host carries on with the same tools.
+    if (!opts.signal.aborted && hasPool()) return openBuildStep(opts);
+    throw error ?? new ProviderError("busy", "Every Gemini key has used today's free quota");
+  }
 
   const content: BuildBlock[] = [];
   let finish = "";
@@ -520,6 +583,118 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
   }
   const stop_reason = blocked || /SAFETY|PROHIBITED|BLOCKLIST|RECITATION/.test(finish) ? "refusal" : finish === "MAX_TOKENS" ? "max_tokens" : tidy.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn";
   return { message: { content: tidy as unknown as Anthropic.Beta.BetaContentBlock[], stop_reason }, inputTokens, outputTokens };
+}
+
+/**
+ * A Builder step on a free OpenAI-compatible host (Cerebras, Groq, NVIDIA, Mistral, OpenRouter),
+ * with the same tools, for when Gemini's quota is used up. The conversation is kept in Anthropic's
+ * shape and translated each way, so the next step can go back to Gemini or Claude.
+ */
+async function openBuildStep(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void }): Promise<{
+  message: { content: Anthropic.Beta.BetaContentBlock[]; stop_reason: string };
+  inputTokens: number;
+  outputTokens: number;
+}> {
+  const messages: Record<string, unknown>[] = [{ role: "system", content: opts.system }];
+  for (const m of opts.messages) {
+    const blocks = (typeof m.content === "string" ? [{ type: "text", text: m.content }] : m.content) as BuildBlock[];
+    const text = blocks
+      .filter((b) => b.type === "text" && b.text)
+      .map((b) => b.text)
+      .join("\n");
+    if (m.role === "assistant") {
+      const calls = blocks.filter((b) => b.type === "tool_use" && b.id).map((b) => ({ id: b.id, type: "function", function: { name: b.name ?? EDIT_TOOL.name, arguments: JSON.stringify(b.input ?? {}) } }));
+      messages.push({ role: "assistant", content: text || null, ...(calls.length ? { tool_calls: calls } : {}) });
+    } else {
+      // Tool results answer the calls just before them, so they come first.
+      for (const b of blocks.filter((b) => b.type === "tool_result")) {
+        const out = typeof b.content === "string" ? b.content : Array.isArray(b.content) ? (b.content as { text?: string }[]).map((c) => c.text ?? "").join("\n") : "";
+        messages.push({ role: "tool", tool_call_id: b.tool_use_id, content: b.is_error ? `Error: ${out}` : out || "(done)" });
+      }
+      if (text) messages.push({ role: "user", content: text });
+    }
+  }
+  const tools = [EDIT_TOOL, { name: GITHUB_TOOL.name, description: GITHUB_TOOL.description, parameters: GITHUB_TOOL.input_schema }].map((f) => ({ type: "function", function: f }));
+  const tried: string[] = [];
+  for (const c of (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
+    const r = await fetch(`${c.host.base}/chat/completions`, {
+      method: "POST",
+      signal: opts.signal,
+      headers: { "content-type": "application/json", authorization: `Bearer ${c.host.key}`, accept: "text/event-stream" },
+      body: JSON.stringify({ model: c.model, messages, tools, max_tokens: 8192, stream: true, stream_options: { include_usage: true } }),
+    }).catch((e) => {
+      if (opts.signal.aborted) throw e;
+      return null;
+    });
+    if (!r?.ok || !r.body) {
+      const raw = r ? await r.text().catch(() => "") : "no answer";
+      console.error(`${c.label} build error`, c.model, r?.status, raw.slice(0, 300));
+      resting.set(c.id, Date.now() + 10 * 60_000);
+      tried.push(`${c.label} ${c.model}: ${r?.status ?? ""}`);
+      continue;
+    }
+    let text = "";
+    let finish = "";
+    let inputTokens = 0;
+    let outputTokens = 0;
+    const calls: { id: string; name: string; args: string }[] = [];
+    const strip = thinkFilter();
+    const reader = r.body.pipeThrough(new TextDecoderStream()).getReader();
+    let buf = "";
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += value;
+      let nl: number;
+      while ((nl = buf.indexOf("\n")) >= 0) {
+        const line = buf.slice(0, nl).trim();
+        buf = buf.slice(nl + 1);
+        if (!line.startsWith("data:")) continue;
+        const data = line.slice(5).trim();
+        if (data === "[DONE]") continue;
+        let chunk: {
+          choices?: { delta?: { content?: string | null; tool_calls?: { index?: number; id?: string; function?: { name?: string; arguments?: string } }[] }; finish_reason?: string | null }[];
+          usage?: { prompt_tokens?: number; completion_tokens?: number } | null;
+        };
+        try {
+          chunk = JSON.parse(data);
+        } catch {
+          continue;
+        }
+        const choice = chunk.choices?.[0];
+        const piece = choice?.delta?.content ? strip(choice.delta.content) : "";
+        if (piece) {
+          text += piece;
+          opts.onText(piece);
+        }
+        for (const tc of choice?.delta?.tool_calls ?? []) {
+          const at = tc.index ?? calls.length - 1;
+          calls[at] ??= { id: tc.id || `toolu_o${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`, name: "", args: "" };
+          if (tc.function?.name) calls[at].name += tc.function.name;
+          if (tc.function?.arguments) calls[at].args += tc.function.arguments;
+        }
+        if (choice?.finish_reason) finish = choice.finish_reason;
+        if (chunk.usage) {
+          inputTokens = chunk.usage.prompt_tokens ?? inputTokens;
+          outputTokens = chunk.usage.completion_tokens ?? outputTokens;
+        }
+      }
+    }
+    const content: BuildBlock[] = [];
+    if (text.trim()) content.push({ type: "text", text });
+    for (const call of calls.filter(Boolean)) {
+      let input: unknown = {};
+      try {
+        input = JSON.parse(call.args || "{}");
+      } catch {}
+      content.push({ type: "tool_use", id: call.id, name: call.name || EDIT_TOOL.name, input });
+    }
+    if (!outputTokens) outputTokens = Math.ceil((text.length + calls.reduce((n, c) => n + c.args.length, 0)) / 4);
+    if (!inputTokens) inputTokens = Math.ceil(JSON.stringify(messages).length / 4);
+    const stop_reason = finish === "content_filter" ? "refusal" : finish === "length" ? "max_tokens" : content.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn";
+    return { message: { content: content as unknown as Anthropic.Beta.BetaContentBlock[], stop_reason }, inputTokens, outputTokens };
+  }
+  throw new ProviderError("busy", `Gemini's free quota is used up and every other free host was busy: ${tried.join(" · ") || "none set"}`);
 }
 
 /**
@@ -825,9 +1000,9 @@ export async function poolPlan() {
   return out;
 }
 
-async function* pool(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
+async function* pool(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, geminiToo = true): AsyncGenerator<ReplyEvent> {
   // Pictures and PDFs need a model that can see them: Gemini, when it's there.
-  if (process.env.GEMINI_API_KEY && turns.some((t) => t.files?.length)) return yield* gemini(system, turns, maxTokens, signal);
+  if (geminiToo && process.env.GEMINI_API_KEY && turns.some((t) => t.files?.length)) return yield* gemini(system, turns, maxTokens, signal);
   const tried: string[] = [];
   for (const c of (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
     const it = openaiChat(c.host, c.model, system, turns, maxTokens, signal, 1);
@@ -846,7 +1021,7 @@ async function* pool(system: string, turns: Turn[], maxTokens: number, signal: A
     yield* it;
     return;
   }
-  if (process.env.GEMINI_API_KEY) return yield* gemini(system, turns, maxTokens, signal);
+  if (geminiToo && process.env.GEMINI_API_KEY) return yield* gemini(system, turns, maxTokens, signal);
   throw new ProviderError("busy", tried.length ? `Every free host was busy: ${tried.join(" · ")}` : "No free host has a key");
 }
 
