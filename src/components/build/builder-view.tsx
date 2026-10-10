@@ -35,8 +35,9 @@ export function BuilderView({ id }: { id: number }) {
   const { providers, dispatch, credits } = useWorkspace();
   const reward = useReward();
   // Panel widths, dragged by the handles between them and kept for next time.
-  const [filesWidth, setFilesWidth] = useDragWidth("wanlly-build-files-w", 220, 140, 420);
-  const [chatWidth, setChatWidth] = useDragWidth("wanlly-build-chat-w", 380, 300, 760);
+  const [filesWidth, setFilesWidth] = useDragWidth("wanlly-build-files-w", 200, 140, 420);
+  const [chatWidth, setChatWidth] = useDragWidth("wanlly-build-chat-w", 360, 280, 760);
+  const [showFiles, setShowFiles] = useLocalSetting("wanlly-build-files", "on");
   // The linked repository, read when a step is sent (kept in the browser by the GitHub panel).
   const repoRef = useRef("");
   useEffect(() => {
@@ -573,21 +574,15 @@ export function BuilderView({ id }: { id: number }) {
         Files <span className="font-mono normal-case">{files.length}</span>
       </div>
       {files.length ? (
-        files.map((f) => (
-          <button
-            key={f.path}
-            type="button"
-            onClick={() => {
-              setOpen(f.path);
-              setView("code");
-              setPane("preview");
-            }}
-            className={`truncate px-3 py-1 text-left font-mono text-xs ${open === f.path && view === "code" ? "bg-hover text-fg" : "text-muted hover:text-fg"}`}
-            title={f.path}
-          >
-            {f.path}
-          </button>
-        ))
+        <FileTree
+          paths={files.map((f) => f.path)}
+          active={view === "code" ? open : null}
+          onOpen={(path) => {
+            setOpen(path);
+            setView("code");
+            setPane("preview");
+          }}
+        />
       ) : (
         <p className="px-3 text-xs text-faint">No files yet.</p>
       )}
@@ -597,6 +592,15 @@ export function BuilderView({ id }: { id: number }) {
   const stage = (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       <div className="flex items-center gap-1 border-b border-line px-3 py-1.5 text-xs">
+        <button
+          type="button"
+          onClick={() => setShowFiles(showFiles === "on" ? "off" : "on")}
+          aria-pressed={showFiles === "on"}
+          title={showFiles === "on" ? "Hide the file list" : "Show the file list"}
+          className="mr-1 hidden rounded-md px-1.5 py-1 text-muted hover:bg-hover hover:text-fg md:block"
+        >
+          <Icon name="list" size={14} />
+        </button>
         {(plan ? (["preview", "code", "plan"] as const) : (["preview", "code"] as const)).map((v) => (
           <button key={v} type="button" onClick={() => setView(v)} className={`rounded-md px-2 py-1 capitalize ${shown === v ? "bg-hover font-medium text-fg" : "text-muted"}`}>
             {v}
@@ -691,13 +695,18 @@ export function BuilderView({ id }: { id: number }) {
         ))}
       </div>
       <div className="hidden min-h-0 flex-1 md:flex">
-        <div style={{ width: filesWidth }} className="flex min-h-0 shrink-0 flex-col">
-          {fileList}
-        </div>
-        <ResizeHandle width={filesWidth} onWidth={setFilesWidth} edge="right" label="Resize the file list" onReset={() => setFilesWidth(220)} />
+        {/* Neither side panel may take more than its share, so the preview always keeps room. */}
+        {showFiles === "on" && (
+          <>
+            <div style={{ width: `min(${filesWidth}px, 22%)` }} className="flex min-h-0 shrink-0 flex-col">
+              {fileList}
+            </div>
+            <ResizeHandle width={filesWidth} onWidth={setFilesWidth} edge="right" label="Resize the file list" onReset={() => setFilesWidth(200)} />
+          </>
+        )}
         {stage}
-        <ResizeHandle width={chatWidth} onWidth={setChatWidth} edge="left" label="Resize the chat" onReset={() => setChatWidth(380)} />
-        <div style={{ width: chatWidth }} className="flex shrink-0 flex-col">
+        <ResizeHandle width={chatWidth} onWidth={setChatWidth} edge="left" label="Resize the chat" onReset={() => setChatWidth(360)} />
+        <div style={{ width: `min(${chatWidth}px, 42%)` }} className="flex shrink-0 flex-col">
           {chat}
         </div>
       </div>
@@ -727,6 +736,56 @@ function BuildPhase({ live }: { live: Live }) {
       </span>
     </span>
   );
+}
+
+type TreeNode = { name: string; path: string; children: Map<string, TreeNode>; file: boolean };
+
+/** The project's files as folders that open and close; big projects start with folders closed. */
+function FileTree({ paths, active, onOpen }: { paths: string[]; active: string | null; onOpen: (path: string) => void }) {
+  const root = useMemo(() => {
+    const top: TreeNode = { name: "", path: "", children: new Map(), file: false };
+    for (const p of [...paths].sort((a, b) => a.localeCompare(b))) {
+      let node = top;
+      p.split("/").forEach((part, i, all) => {
+        const path = all.slice(0, i + 1).join("/");
+        if (!node.children.has(part)) node.children.set(part, { name: part, path, children: new Map(), file: i === all.length - 1 });
+        node = node.children.get(part)!;
+      });
+    }
+    return top;
+  }, [paths]);
+  const [openDirs, setOpenDirs] = useState<Set<string>>(() => new Set());
+  const allOpen = paths.length <= 30;
+  const toggle = (path: string) =>
+    setOpenDirs((s) => {
+      const next = new Set(s);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  const render = (node: TreeNode, depth: number): React.ReactNode =>
+    [...node.children.values()]
+      .sort((a, b) => Number(a.file) - Number(b.file) || a.name.localeCompare(b.name))
+      .map((n) => {
+        const pad = { paddingLeft: 12 + depth * 12 };
+        if (n.file)
+          return (
+            <button key={n.path} type="button" onClick={() => onOpen(n.path)} style={pad} title={n.path} className={`block w-full truncate py-1 pr-3 text-left font-mono text-xs ${active === n.path ? "bg-hover text-fg" : "text-muted hover:text-fg"}`}>
+              {n.name}
+            </button>
+          );
+        const isOpen = allOpen ? !openDirs.has(n.path) : openDirs.has(n.path) || (!!active && active.startsWith(`${n.path}/`));
+        return (
+          <div key={n.path}>
+            <button type="button" onClick={() => toggle(n.path)} style={pad} className="flex w-full items-center gap-1 truncate py-1 pr-3 text-left font-mono text-xs text-muted hover:text-fg">
+              <span className={`inline-block transition-transform ${isOpen ? "rotate-90" : ""}`}>›</span>
+              {n.name}/
+            </button>
+            {isOpen && render(n, depth + 1)}
+          </div>
+        );
+      });
+  return <div className="flex flex-col">{render(root, 0)}</div>;
 }
 
 function EditList({ edits }: { edits: { command: string; path: string; ok?: boolean }[] }) {

@@ -17,7 +17,13 @@
 // the old one until everyone has moved), then Deploy.
 const APPS = ["https://wanlly.africa", "https://www.wanlly.africa", "https://wanlly.louiswandago.workers.dev"];
 
-const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="origin">
+// Ad networks check these to confirm the address belongs to Wanlly (labels only; nothing runs).
+const VERIFY = `<meta name="monetag" content="a4afdb23dd54a039b0a0e7bf98b75c0e">`;
+
+/** The address's own page: just the verification tags and a line saying what this is. */
+const HOME = `<!doctype html><html><head><meta charset="utf-8"><title>Wanlly ads</title>${VERIFY}<meta name="robots" content="noindex"></head><body style="font:14px system-ui,sans-serif;padding:24px">Ad frames for <a href="https://wanlly.africa">Wanlly</a>.</body></html>`;
+
+const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="referrer" content="origin">${VERIFY}
 <style>html,body{margin:0;padding:0;overflow:hidden;background:transparent}</style>
 <script>
 (function(){
@@ -57,6 +63,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8"><meta name="refer
 const worker = {
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === "/") return new Response(HOME, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" } });
     if (url.pathname !== "/frame") return new Response("Not found", { status: 404 });
     return new Response(PAGE, {
       headers: {

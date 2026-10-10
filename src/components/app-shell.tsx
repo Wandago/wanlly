@@ -162,7 +162,9 @@ function TabletBanner({ roomy }: { roomy: boolean }) {
  * for 1536px screens. The panels are part of the layout, so ads never cover or push the work.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const roomy = usePathname().startsWith("/design/");
+  // The design editor and the Builder need the width for their previews: their side panel waits for 1536px screens.
+  const path = usePathname();
+  const roomy = path.startsWith("/design/") || /^\/build\/\d/.test(path);
   // With an ad blocker on, the app underneath can't be used until ads are allowed.
   const [walled, setWalled] = useState(false);
   // Signed in, but their place in the private beta hasn't opened yet.
