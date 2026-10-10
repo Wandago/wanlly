@@ -94,6 +94,8 @@ export const SPONSOR_TRIAL_REWARD = 25;
  */
 export const DAILY_SPEND_LIMIT = 100;
 export const WEEKLY_SPEND_LIMIT = 500;
+/** The weekly limit once the person has verified their phone on WhatsApp (one account per number). */
+export const WEEKLY_SPEND_LIMIT_VERIFIED = 1500;
 export const SESSION_HOURS = 6;
 /** Most paid videos per day. */
 export const DAILY_VIDEO_CAP = 30;
@@ -112,6 +114,8 @@ export type Usage = {
   dayLimit: number;
   weekUsed: number;
   weekLimit: number;
+  /** Whether the phone is verified, which raises the weekly limit. */
+  verified: boolean;
   videos: number;
   videoCap: number;
   /** ISO times when this person's session and week reset; null when none is running. */

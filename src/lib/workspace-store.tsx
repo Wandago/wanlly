@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 import {
   CHEAPEST_MODEL_ID,
+  WEEKLY_SPEND_LIMIT_VERIFIED,
   IMAGE_MODEL_NAME,
   MODELS,
   TOOLS,
@@ -289,7 +290,8 @@ export function resetLabel(iso: string | null, style: "relative" | "weekday"): s
 export function limitReached(usage: Usage | null, price: number): string | null {
   if (!usage) return null;
   if (usage.dayUsed + price > usage.dayLimit) return `You've reached this session's limit. It resets ${resetLabel(usage.dayResetsAt, "relative")}`;
-  if (usage.weekUsed + price > usage.weekLimit) return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}`;
+  if (usage.weekUsed + price > usage.weekLimit)
+    return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}${usage.verified ? "" : `. Verify your number on WhatsApp to raise it to ${WEEKLY_SPEND_LIMIT_VERIFIED}`}`;
   return null;
 }
 

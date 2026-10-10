@@ -2,13 +2,14 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRef, useState, type ReactNode } from "react";
-import { FLOOR_CREDITS, MODELS } from "@/lib/catalog";
+import { FLOOR_CREDITS, MODELS, WEEKLY_SPEND_LIMIT_VERIFIED } from "@/lib/catalog";
 import { AD_TOPICS, applyTheme, type Settings, type Theme } from "@/lib/settings";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "../icon";
 import { UsageMeters } from "../usage-meters";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
 import { SpinLoader } from "../spin-mark";
+import { openPhoneVerify } from "../phone-verify";
 
 const SECTIONS = [
   ["profile", "Profile"],
@@ -472,6 +473,14 @@ export function ProfileView() {
               {usage && (
                 <p className="mt-2.5 text-xs text-muted">
                   You can use up to {usage.dayLimit} credits in a 6-hour session and {usage.weekLimit} a week, however many you&apos;ve saved. Both start with your first request.
+                </p>
+              )}
+              {usage && !usage.verified && (
+                <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
+                  Building something big? Verify your number on WhatsApp and your weekly limit goes up to {WEEKLY_SPEND_LIMIT_VERIFIED}.
+                  <button type="button" onClick={openPhoneVerify} className="font-medium text-fg underline-offset-2 hover:underline">
+                    Verify now
+                  </button>
                 </p>
               )}
             </div>

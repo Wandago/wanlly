@@ -1,7 +1,7 @@
 import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { db, rawSql, schema } from "@/db";
-import { DAILY_SPEND_LIMIT, DAILY_VIDEO_CAP, WEEKLY_SPEND_LIMIT, type Usage } from "./catalog";
+import { DAILY_SPEND_LIMIT, DAILY_VIDEO_CAP, WEEKLY_SPEND_LIMIT, WEEKLY_SPEND_LIMIT_VERIFIED, type Usage } from "./catalog";
 
 type Reason = (typeof schema.ledgerEntries.$inferInsert)["reason"];
 
@@ -52,7 +52,8 @@ export async function account(userId: string): Promise<Account> {
         (select ss + interval '6 hours' from u) as day_resets,
         (select ws + interval '7 days' from u) as week_resets,
         (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
-        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
+        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor,
+        coalesce((select phone_verified from users where id = ${userId}), false) as verified
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
   } catch (e) {
     if (!noSessionColumns(e)) throw e;
@@ -64,7 +65,8 @@ export async function account(userId: string): Promise<Account> {
         date_trunc('day', now()) + interval '1 day' as day_resets,
         date_trunc('week', now()) + interval '7 days' as week_resets,
         (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
-        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor
+        exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor,
+        coalesce((select phone_verified from users where id = ${userId}), false) as verified
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
   }
   const r = rows[0] ?? {};
@@ -76,7 +78,8 @@ export async function account(userId: string): Promise<Account> {
       dayUsed: Number(r.day_used ?? 0),
       dayLimit: DAILY_SPEND_LIMIT,
       weekUsed: Number(r.week_used ?? 0),
-      weekLimit: WEEKLY_SPEND_LIMIT,
+      weekLimit: r.verified ? WEEKLY_SPEND_LIMIT_VERIFIED : WEEKLY_SPEND_LIMIT,
+      verified: Boolean(r.verified),
       videos: Number(r.videos ?? 0),
       videoCap: DAILY_VIDEO_CAP,
       dayResetsAt: iso(r.day_resets),
@@ -102,7 +105,8 @@ export async function spend(userId: string, amount: number, refId: string, note:
       q`with u as (
           select
             case when session_started_at is null or session_started_at + interval '6 hours' <= now() then now() else session_started_at end as ss,
-            case when week_started_at is null or week_started_at + interval '7 days' <= now() then now() else week_started_at end as ws
+            case when week_started_at is null or week_started_at + interval '7 days' <= now() then now() else week_started_at end as ws,
+            case when phone_verified then ${WEEKLY_SPEND_LIMIT_VERIFIED}::int else ${WEEKLY_SPEND_LIMIT}::int end as wl
           from users where id = ${userId}
         ),
         cur as (
@@ -115,7 +119,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
         ins as (
           insert into ledger_entries (user_id, delta, reason, ref_id, note)
           select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
-          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
+          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= (select wl from u)
           on conflict (ref_id, reason) do nothing
           returning delta
         ),
@@ -124,7 +128,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
           where id = ${userId} and exists (select 1 from ins)
           returning 1
         )
-        select cur.total, cur.day, cur.week, (select count(*) from ins)::int as charged, (select count(*) from started)::int as started from cur`,
+        select cur.total, cur.day, cur.week, (select wl from u) as wl, (select count(*) from ins)::int as charged, (select count(*) from started)::int as started from cur`,
     ]);
   } catch (e) {
     if (!noSessionColumns(e)) throw e;
@@ -151,7 +155,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
   if (Number(r.charged) > 0) return { ok: true };
   if (Number(r.total) < amount) return { ok: false, reason: "credits" };
   if (Number(r.day) + amount > DAILY_SPEND_LIMIT) return { ok: false, reason: "day" };
-  if (Number(r.week) + amount > WEEKLY_SPEND_LIMIT) return { ok: false, reason: "week" };
+  if (Number(r.week) + amount > Number(r.wl ?? WEEKLY_SPEND_LIMIT)) return { ok: false, reason: "week" };
   return { ok: false, reason: "duplicate" };
 }
 
