@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
     const q = rawSql();
     await q`
       insert into users (id, email, name, phone_verified) values (${u.id}, ${email}, ${name}, ${phoneVerified})
-      on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = excluded.phone_verified, updated_at = now()`;
+      on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = users.phone_verified or excluded.phone_verified, updated_at = now()`;
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {

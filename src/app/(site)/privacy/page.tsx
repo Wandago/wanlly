@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <ProsePage eyebrow="Privacy" title="Privacy policy" intro="Plain-language summary. This is a beta draft and will be reviewed by a privacy lawyer before Wanlly opens widely.">
       <h2>What we collect</h2>
       <ul>
-        <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and your phone number if you verify it.</li>
+        <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and whether you've verified a phone. If you verify on WhatsApp, we keep only a one-way fingerprint of the number, so it can't be used for a second account; we never store the number itself or message you.</li>
         <li>Your country, from your network, to choose ads and set ad rates.</li>
         <li>What you create: prompts, files, projects and the replies AI models send back.</li>
         <li>
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       </ul>
       <h2>Who we share it with</h2>
       <p>
-        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini, xAI for Grok, DeepSeek, and the hosts of the open models: NVIDIA, Cerebras, Groq, Mistral and OpenRouter), Clerk (sign-in), Neon (database), Cloudflare (hosting and security) and our ad partners. Advertisers never receive your prompts or your work.
+        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini, xAI for Grok, DeepSeek, and the hosts of the open models: NVIDIA, Cerebras, Groq, Mistral and OpenRouter), Clerk (sign-in), Meta (WhatsApp, only the verification message you send us), Neon (database), Cloudflare (hosting and security) and our ad partners. Advertisers never receive your prompts or your work.
       </p>
       <p>
         <strong>Gemini during testing:</strong> while Wanlly uses Google&apos;s free Gemini access for testing, Google may use those prompts and replies to improve its products. We&apos;ll tell you clearly before that applies to you, and you can choose Claude instead.

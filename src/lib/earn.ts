@@ -28,11 +28,11 @@ async function completedToday(userId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
-export const PHONE_NEEDED = "Add and verify your phone number to keep earning today. Your first video each day never needs it.";
+export const PHONE_NEEDED = "Verify your number on WhatsApp to keep earning today. It takes one message, and your first video each day never needs it.";
 
 /**
- * Whether this person has a verified phone. Our copy can be behind (they may have just added
- * one), so a "no" is checked with Clerk and saved.
+ * Whether this person has a verified phone: proven on WhatsApp (src/lib/whatsapp.ts), or a
+ * number verified in Clerk. Our copy can be behind Clerk, so a "no" is checked there and saved.
  */
 async function phoneVerified(userId: string): Promise<boolean> {
   const [row] = await db().select({ ok: schema.users.phoneVerified }).from(schema.users).where(eq(schema.users.id, userId)).limit(1);
@@ -48,7 +48,7 @@ export async function startView(userId: string, placement: string, country: stri
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
   // One phone, one earner: past the first video of the day, a script would need a real phone
-  // number per account (Clerk lets a number belong to one account only).
+  // number per account (each number can be tied to one account only).
   if (today >= 1 && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
   // At most four starts a minute: stops one person farming many tabs at once.
   const [recent] = await db()

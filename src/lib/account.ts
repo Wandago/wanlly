@@ -16,7 +16,7 @@ export async function ensureUser(userId: string, country: string | null) {
   const q = rawSql();
   const [row] = (await q`
     insert into users (id, email, name, phone_verified, country) values (${u.id}, ${email}, ${name}, ${phoneVerified}, ${country})
-    on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = excluded.phone_verified,
+    on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = users.phone_verified or excluded.phone_verified,
       country = coalesce(users.country, excluded.country), updated_at = now()
     returning id, email, country, status, role`) as { id: string; email: string | null; country: string | null; status: string; role: string }[];
   return row as { id: string; email: string | null; country: string | null; status: (typeof schema.users.$inferSelect)["status"]; role: (typeof schema.users.$inferSelect)["role"] };

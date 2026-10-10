@@ -22,6 +22,7 @@ const MARKS = [
   { file: "0013_user_memory", table: "users", column: "memory" },
   { file: "0014_design_tokens", table: "design_versions", column: "input_tokens" },
   { file: "0015_ad_creative_index", table: "ad_events", column: "", index: "ad_creative_kind" },
+  { file: "0016_whatsapp_verify", table: "phone_links", column: "phone_hash" },
 ] as { file: string; table: string; column: string; index?: string }[];
 
 /** Every migration with whether its table or column exists. */

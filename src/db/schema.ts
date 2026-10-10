@@ -31,6 +31,28 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/**
+ * Phone numbers proven over WhatsApp, one account each. Only a hash of the number is kept: enough
+ * to stop a second account using it, not enough to message anyone.
+ */
+export const phoneLinks = pgTable("phone_links", {
+  phoneHash: text("phone_hash").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Short codes a person sends to Wanlly's WhatsApp number to prove their phone. Good for 30 minutes. */
+export const whatsappCodes = pgTable("whatsapp_codes", {
+  code: text("code").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const ledgerEntries = pgTable(
   "ledger_entries",
   {

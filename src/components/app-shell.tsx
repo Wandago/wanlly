@@ -13,6 +13,7 @@ import { NetworkSlot, useNetworkTest } from "./ads/network-slot";
 import { AdsProvider, creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { NetworkUnit } from "./ads/network-unit";
 import { EarnDialog } from "./earn-dialog";
+import { PhoneVerifyDialog } from "./phone-verify";
 import { Interstitial } from "./ads/interstitial";
 import { AdBlockWall } from "./ads/adblock-wall";
 import { Sidebar } from "./sidebar";
@@ -126,6 +127,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <AdBlockWall onChange={setWalled} />
         <EarnDialog />
+        <PhoneVerifyDialog />
         <Interstitial />
         <Toast />
         <AccountSync onWaiting={onWaiting} />
