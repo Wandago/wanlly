@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
-import { DisplaySlot } from "../ads/display-slot";
+import { SpaceAd } from "../ads/space-ad";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
 
 type Ticket = { id: number; subject: string; category: string; status: "open" | "answered" | "closed"; createdAt: string; updatedAt: string; messages?: number };
@@ -90,7 +90,7 @@ export function SupportView() {
               </ul>
             )}
           </Panel>
-          <DisplaySlot placement="support_banner" sizes={["300x250", "320x100", "320x50"]} />
+          <SpaceAd placement="support_banner" sizes={["300x250", "320x100", "320x50"]} />
         </div>
         <div className="min-w-0">
           {composing || !open ? (

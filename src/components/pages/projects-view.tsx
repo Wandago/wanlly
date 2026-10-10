@@ -1,5 +1,6 @@
 "use client";
 
+import { SpaceAd } from "../ads/space-ad";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -410,6 +411,7 @@ export function ProjectsView() {
           )}
         </>
       )}
+      {!open && projects !== null && <SpaceAd placement="projects_banner" />}
     </PageFrame>
   );
 }

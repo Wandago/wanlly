@@ -1,5 +1,6 @@
 "use client";
 
+import { SpaceAd } from "../ads/space-ad";
 import Link from "next/link";
 import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { MODELS, SPOT_SPONSOR, isLive } from "@/lib/catalog";
@@ -670,7 +671,7 @@ export function BuilderView({ id }: { id: number }) {
       {/* Sponsors keep Wanlly free: a banner over the code as it changes. */}
       {view !== "preview" && (
         <div className="border-b border-line px-3 py-2">
-          <DisplaySlot placement="builder_code" sizes={["728x90", "468x60", "320x100", "320x50"]} label="" />
+          <SpaceAd placement="builder_code" />
         </div>
       )}
       <div className="min-h-0 flex-1">
@@ -702,7 +703,7 @@ export function BuilderView({ id }: { id: number }) {
         ) : (
           <div className="grid h-full place-items-center content-center gap-4 p-6 text-center text-sm text-muted">
             <p>{running ? "The AI is getting started…" : "The code shows here as the AI writes it."}</p>
-            <DisplaySlot placement="builder_code" sizes={["336x280", "300x250", "320x100"]} />
+            <SpaceAd placement="builder_code" sizes={["336x280", "300x250", "320x100"]} />
           </div>
         )}
       </div>

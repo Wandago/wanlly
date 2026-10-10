@@ -1,5 +1,6 @@
 "use client";
 
+import { SpaceAd } from "../ads/space-ad";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRef, useState, type ReactNode } from "react";
 import { MODELS, WEEKLY_SPEND_LIMIT_VERIFIED } from "@/lib/catalog";
@@ -409,10 +410,12 @@ export function ProfileView() {
               {label}
             </a>
           ))}
+          <SpaceAd placement="profile_side" sizes={["160x600"]} narrow className="mt-4 hidden lg:block" />
         </nav>
 
         <div className="flex min-w-0 flex-col gap-4">
           <ProfilePanel />
+          <SpaceAd placement="profile_side" sizes={["728x90", "468x60", "320x100", "320x50"]} className="lg:hidden" />
 
           <Panel title="Preferences">
             <div id="preferences" />

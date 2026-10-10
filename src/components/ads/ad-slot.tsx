@@ -383,6 +383,21 @@ export function SponsorCard({
 }
 
 /** What the card folds into once the result is in: one native line, or a 320×50 banner. */
+/** A sponsor card for narrow columns (about 160–200px): logo and name, the line, and the button, stacked. */
+export function SponsorStack({ sponsor }: { sponsor: Sponsor }) {
+  return (
+    <div className="flex w-full min-w-0 animate-rise flex-col gap-2 rounded-xl border border-line bg-surface p-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <Logo sponsor={sponsor} small />
+        <b className="truncate text-[13px] font-semibold">{sponsor.name}</b>
+      </div>
+      <p className="text-[13px] leading-snug text-muted">{sponsor.headline || sponsor.text}</p>
+      <span className={eyebrow}>Sponsored</span>
+      <SponsorLink sponsor={sponsor} className="rounded-lg bg-fg px-3 py-1.5 text-center text-xs font-semibold text-bg hover:opacity-90" />
+    </div>
+  );
+}
+
 export function SponsorLine({ sponsor, format, earned }: { sponsor: Sponsor; format: CardFormat; earned: boolean }) {
   const { perAd: SPOT_REWARD } = useReward();
   const badge = earned && (

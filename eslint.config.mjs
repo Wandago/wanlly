@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Build output from OpenNext and Wrangler.
+    ".open-next/**",
+    ".wrangler/**",
   ]),
 ]);
 

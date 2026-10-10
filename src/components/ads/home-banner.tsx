@@ -1,15 +1,11 @@
 "use client";
 
-import { DisplaySlot } from "./display-slot";
+import { SpaceAd } from "./space-ad";
 
 /**
- * A banner under the composer on an empty chat, from tablet width up (phones already have the
- * bottom bar): a sold campaign's banner, else the ad network's, at 728×90 or 468×60.
+ * A banner under the composer on an empty chat, phones included: a sold campaign's banner, else
+ * the ad network's (728×90 down to 320×50, whatever fits), else a sponsor card.
  */
 export function HomeBanner() {
-  return (
-    <div className="max-md:hidden">
-      <DisplaySlot placement="home_banner" sizes={["728x90", "468x60"]} label="" />
-    </div>
-  );
+  return <SpaceAd placement="home_banner" />;
 }

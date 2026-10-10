@@ -4,11 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SAY } from "@/lib/messages";
-import { DisplaySlot } from "../ads/display-slot";
-import { SponsorLine } from "../ads/ad-slot";
-import { Tracked } from "../ads/tracked";
-import { creativeOf, useSponsors } from "@/lib/ads-context";
-import { RAIL_SPONSORS } from "@/lib/catalog";
+import { SpaceAd } from "../ads/space-ad";
 import { Icon } from "../icon";
 import { SpinLoader } from "../spin-mark";
 
@@ -54,7 +50,7 @@ export function BuilderHome() {
         <span className="text-xs font-medium tracking-[0.08em] text-accent uppercase">Code · Builder</span>
         <h1 className="font-display text-[clamp(28px,4vw,40px)] leading-[1.05] font-semibold tracking-[-0.035em]">Build a whole app, one step at a time</h1>
         <p className="max-w-[60ch] text-muted">
-          Describe what you want. The AI plans it, writes real files, previews it as it goes and fixes what breaks. You see every step and what it costs, and you can stop any time.
+          Describe what you want. The AI plans it, writes real files while you watch the code change, fixes what breaks and pushes to GitHub. You see every step and what it costs, and you can stop any time.
         </p>
       </header>
       <form
@@ -136,17 +132,5 @@ export function BuilderHome() {
 
 /** A banner in the page's own flow (a booked campaign, else the ad network, else a sponsor card). */
 function HomeAd({ placement }: { placement: string }) {
-  const sponsor = useSponsors(placement, RAIL_SPONSORS)[0];
-  return (
-    <DisplaySlot
-      placement={placement}
-      sizes={["728x90", "468x60", "320x100", "320x50"]}
-      className="flex flex-col items-center gap-1"
-      fallback={
-        <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
-          <SponsorLine sponsor={sponsor} format="native" earned={false} />
-        </Tracked>
-      }
-    />
-  );
+  return <SpaceAd placement={placement} />;
 }
