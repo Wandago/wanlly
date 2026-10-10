@@ -118,6 +118,8 @@ export type Usage = {
   weekLimit: number;
   /** Whether the phone is verified, which raises the weekly limit. */
   verified: boolean;
+  /** Whether WhatsApp verification is set up, so the app can offer it. */
+  canVerify?: boolean;
   /** Credits a finished ad earns right now, and the first ad of the day (see lib/reward.ts). */
   reward?: number;
   floorBonus?: number;

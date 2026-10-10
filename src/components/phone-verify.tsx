@@ -1,7 +1,6 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
@@ -20,7 +19,6 @@ type Code = { code: string; link: string };
 
 export function PhoneVerifyDialog() {
   const { dispatch } = useWorkspace();
-  const clerk = useClerk();
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState<Code | null>(null);
   const [error, setError] = useState("");
@@ -35,19 +33,18 @@ export function PhoneVerifyDialog() {
 
   useEffect(() => {
     const onOpen = async () => {
-      // Before WhatsApp is set up, fall back to adding a number in Clerk's profile.
       const s = await fetch("/api/me/phone", { cache: "no-store" })
         .then((r) => r.json())
         .catch(() => null);
-      if (s && !s.whatsapp) return clerk.openUserProfile();
       if (s?.verified) return;
+      if (s && !s.whatsapp) return dispatch({ type: "toast", text: "Number verification opens soon. Keep earning meanwhile." });
       setCode(null);
       setOpen(true);
       void fetchCode();
     };
     window.addEventListener(EVENT, onOpen);
     return () => window.removeEventListener(EVENT, onOpen);
-  }, [clerk]);
+  }, [dispatch]);
 
   // While the dialog is open, check every few seconds whether the message has arrived.
   useEffect(() => {

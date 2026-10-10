@@ -138,10 +138,22 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
             </Tracked>
           }
         />
-      ) : (
+      ) : sponsor.campaignId || job.sample ? (
         <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
           <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
         </Tracked>
+      ) : (
+        // No sold campaign on this line: the ad network's banner first, the house sponsor if none.
+        <DisplaySlot
+          placement="job_line"
+          sizes={["728x90", "468x60", "320x100", "320x50"]}
+          className="py-1"
+          fallback={
+            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
+              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+            </Tracked>
+          }
+        />
       )}
     </div>
   );

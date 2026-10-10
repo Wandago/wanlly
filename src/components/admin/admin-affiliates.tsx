@@ -16,6 +16,7 @@ const PLACE_LABEL: Record<string, string> = {
   job_line: "Line after a reply",
   interstitial: "Pop-up card",
   phone_banner: "Phone bar",
+  tablet_banner: "Tablet bar",
 };
 
 const input = "w-full rounded-lg border border-line bg-surface px-2.5 py-1.5 text-[13px] outline-none focus:border-faint";

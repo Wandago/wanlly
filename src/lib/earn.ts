@@ -3,6 +3,7 @@ import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { DAILY_VIDEO_CAP, SPOT_SECONDS } from "./catalog";
 import { rewardNow } from "./reward";
+import { whatsappReady } from "./whatsapp";
 import { post } from "./ledger";
 import { clerk } from "./session";
 
@@ -49,8 +50,9 @@ export async function startView(userId: string, placement: string, country: stri
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
   // One phone, one earner: past the first video of the day, a script would need a real phone
-  // number per account (each number can be tied to one account only).
-  if (today >= 1 && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
+  // number per account (each number can be tied to one account only). Only once WhatsApp
+  // verification is set up: until then nobody could verify, so it isn't asked for.
+  if (today >= 1 && whatsappReady() && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
   // At most four starts a minute: stops one person farming many tabs at once.
   const [recent] = await db()
     .select({ n: sql<number>`count(*)::int` })
@@ -75,7 +77,7 @@ export async function completeView(userId: string, viewId: string, country: stri
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
   // Two views started together before the first finished: the second still needs the phone.
-  if (today >= 1 && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
+  if (today >= 1 && whatsappReady() && !(await phoneVerified(userId))) return { error: PHONE_NEEDED, status: 403, need: "phone" } as const;
 
   // One completion per view, enforced by the unique (partner, transaction_id) index.
   const done = await db()

@@ -45,6 +45,7 @@ const PLACEMENT_LABEL: Record<string, string> = {
   rail_banner: "Right panel · banner",
   sidebar_card: "Left sidebar · card",
   phone_banner: "Phone · bottom banner",
+  tablet_banner: "Tablet · bottom banner",
   job_card: "While you wait · card",
   job_line: "After a result · line",
   unlock: "Video · start of day card",

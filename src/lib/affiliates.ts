@@ -7,7 +7,7 @@ import type { CoverKind, Sponsor } from "./catalog";
  * coding one). Matching happens in the browser; no chat text is sent anywhere for it.
  */
 
-export const AFFILIATE_PLACES = ["rail_cover", "sidebar_card", "job_card", "job_line", "interstitial", "phone_banner"] as const;
+export const AFFILIATE_PLACES = ["rail_cover", "sidebar_card", "job_card", "job_line", "interstitial", "phone_banner", "tablet_banner"] as const;
 export const COVER_KINDS: CoverKind[] = ["laptop", "course", "jobs", "notes", "db", "deploy", "type", "print"];
 
 export type Affiliate = {

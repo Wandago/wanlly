@@ -3,7 +3,7 @@ import { field } from "./forms";
 
 /* Directly sold ads: what a campaign may contain, checked before it's saved. */
 
-export const PLACEMENTS = ["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial", "between_turns", "design_wait", "home_banner"] as const;
+export const PLACEMENTS = ["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "tablet_banner", "job_card", "job_line", "interstitial", "between_turns", "design_wait", "home_banner"] as const;
 /** Standard banner sizes an advertiser can upload a picture for. */
 export const BANNER_SIZES = ["300x250", "336x280", "728x90", "468x60", "320x50", "320x100", "300x600", "160x600"] as const;
 export const COVERS = ["db", "deploy", "type", "print", "notes", "laptop", "course", "jobs"] as const;

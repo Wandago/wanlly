@@ -9,7 +9,7 @@ import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
 import { Tracked } from "./tracked";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
-import { creativeOf, openSponsor, useNetwork, useSponsors, useTick } from "@/lib/ads-context";
+import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { NetworkUnit } from "./network-unit";
 
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
@@ -161,16 +161,14 @@ export function AdRail({ wideOnly = false }: { wideOnly?: boolean }) {
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
   // Who gets each slot: a sold campaign booked for it always shows; otherwise the ad network;
   // Wanlly's own house sponsors only fill what's left (or a network size that came back empty).
-  // With no campaigns, the cover slot takes turns between network and house so the panel varies.
   const network = useNetwork();
-  const turn = useTick(45000);
   const tall = useTall();
   const has = (s: NetworkSize) => !!network?.sizes.includes(s);
   const bannerSize: NetworkSize | null = tall && has("300x600") ? "300x600" : has("300x250") ? "300x250" : null;
   return (
     <aside aria-label="Sponsored" className={`hidden min-h-0 border-l border-line bg-side ${wideOnly ? "2xl:block" : "xl:block"}`}>
       <div className="sticky top-0 flex h-full flex-col gap-3 overflow-y-auto p-3 [scrollbar-width:none]">
-        {network && has("300x250") && !top.campaignId && turn % 2 === 1 ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
+        {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
         <div className="hidden [@media(min-height:860px)]:block">
           {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
         </div>

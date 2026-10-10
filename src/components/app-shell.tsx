@@ -12,6 +12,7 @@ import { Tracked } from "./ads/tracked";
 import { NetworkSlot, useNetworkTest } from "./ads/network-slot";
 import { AdsProvider, creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { NetworkUnit } from "./ads/network-unit";
+import { DisplaySlot } from "./ads/display-slot";
 import { EarnDialog } from "./earn-dialog";
 import { PhoneVerifyDialog } from "./phone-verify";
 import { Interstitial } from "./ads/interstitial";
@@ -101,6 +102,36 @@ function PhoneBanner() {
 }
 
 /**
+ * Tablets and laptops (768–1279px, or up to 1535px in the design editor) have no right panel, so
+ * a banner strip sits under the page: a sold campaign first, then the ad network, then a house sponsor.
+ */
+function TabletBanner({ roomy }: { roomy: boolean }) {
+  const { dispatch } = useWorkspace();
+  const sponsor = useSponsors("tablet_banner", RAIL_SPONSORS)[0];
+  return (
+    <div className={`hidden justify-center border-t border-line bg-side px-4 py-2 md:flex ${roomy ? "2xl:hidden" : "xl:hidden"}`} aria-label="Advertisement">
+      <DisplaySlot
+        placement="tablet_banner"
+        sizes={["728x90", "468x60", "320x100", "320x50"]}
+        label=""
+        fallback={
+          <Tracked key={creativeOf(sponsor)} placement="tablet_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">
+            <button
+              type="button"
+              aria-label={`${sponsor.name}: ${sponsor.cta}`}
+              onClick={() => openSponsor(sponsor, "tablet_banner") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+              className="block"
+            >
+              <DisplayCreative size="320x50" sponsor={sponsor} />
+            </button>
+          </Tracked>
+        }
+      />
+    </div>
+  );
+}
+
+/**
  * Every signed-in page: sidebar on the left, the page in the middle, and a sponsor panel on the
  * right from 1280px. The design editor needs the width for its preview, so there the panel waits
  * for 1536px screens. The panels are part of the layout, so ads never cover or push the work.
@@ -121,7 +152,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[240px_minmax(0,1fr)_344px]" : "xl:grid-cols-[240px_minmax(0,1fr)_344px]"}`}
         >
           <Sidebar />
-          <div className="min-h-0 min-w-0">{children}</div>
+          <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto]">
+            <div className="min-h-0 min-w-0">{children}</div>
+            <TabletBanner roomy={roomy} />
+          </div>
           <AdRail wideOnly={roomy} />
           <PhoneBanner />
         </div>

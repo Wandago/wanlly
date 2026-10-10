@@ -4,7 +4,7 @@ import { signedInUserId } from "@/lib/session";
 
 const KINDS = new Set(["impression", "click"]);
 const FORMATS = new Set(["native", "display"]);
-const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "job_card", "job_line", "interstitial", "home_banner", "between_turns", "design_wait", "native_row"]);
+const PLACEMENTS = new Set(["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "tablet_banner", "job_card", "job_line", "interstitial", "home_banner", "between_turns", "design_wait", "native_row"]);
 /** Above this many events a minute from one account, the rest are dropped. */
 const PER_MINUTE = 120;
 /** Most views of one sold campaign a person counts for in a day, when the campaign sets no cap. */

@@ -476,7 +476,7 @@ export function ProfileView() {
                   You can use up to {usage.dayLimit} credits in a 6-hour session and {usage.weekLimit} a week, however many you&apos;ve saved. Both start with your first request.
                 </p>
               )}
-              {usage && !usage.verified && (
+              {usage && !usage.verified && usage.canVerify && (
                 <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
                   Building something big? Verify your number on WhatsApp and your weekly limit goes up to {WEEKLY_SPEND_LIMIT_VERIFIED}.
                   <button type="button" onClick={openPhoneVerify} className="font-medium text-fg underline-offset-2 hover:underline">

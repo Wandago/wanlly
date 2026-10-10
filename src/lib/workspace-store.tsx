@@ -293,7 +293,7 @@ export function limitReached(usage: Usage | null, price: number): string | null 
   if (!usage) return null;
   if (usage.dayUsed + price > usage.dayLimit) return `You've reached this session's limit. It resets ${resetLabel(usage.dayResetsAt, "relative")}`;
   if (usage.weekUsed + price > usage.weekLimit)
-    return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}${usage.verified ? "" : `. Verify your number on WhatsApp to raise it to ${WEEKLY_SPEND_LIMIT_VERIFIED}`}`;
+    return `You've reached this week's limit. It resets ${resetLabel(usage.weekResetsAt, "weekday")}${usage.verified || !usage.canVerify ? "" : `. Verify your number on WhatsApp to raise it to ${WEEKLY_SPEND_LIMIT_VERIFIED}`}`;
   return null;
 }
 

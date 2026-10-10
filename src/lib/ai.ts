@@ -109,16 +109,31 @@ const pause = (ms: number, signal: AbortSignal) =>
     signal.addEventListener("abort", () => (clearTimeout(t), reject(signal.reason)), { once: true });
   });
 
-async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal): AsyncGenerator<ReplyEvent> {
+/**
+ * How long a Gemini model thinks before answering. Left unset, the newest Flash models think at
+ * length on every message (a simple question took minutes), so chat asks for the least thinking
+ * and code and design for a little. Gemini 2.x counts it in tokens, Gemini 3 and later in levels.
+ */
+function geminiThinking(model: string, fast: boolean) {
+  const major = Number(model.match(/^gemini-(\d+)/)?.[1] ?? 0);
+  if (major >= 3) return { thinkingLevel: fast ? "minimal" : "low" };
+  if (major === 2) return { thinkingBudget: fast ? 0 : 1024 };
+  return null;
+}
+
+async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true): AsyncGenerator<ReplyEvent> {
   const key = process.env.GEMINI_API_KEY!;
-  const body = JSON.stringify({
-    systemInstruction: { parts: [{ text: system }] },
-    contents: turns.map((t) => ({
-      role: t.role === "assistant" ? "model" : "user",
-      parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
-    })),
-    generationConfig: { maxOutputTokens: maxTokens },
-  });
+  const request = (model: string, thinking: boolean) => {
+    const t = thinking ? geminiThinking(model, fast) : null;
+    return JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: turns.map((t) => ({
+        role: t.role === "assistant" ? "model" : "user",
+        parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
+      })),
+      generationConfig: { maxOutputTokens: maxTokens, ...(t ? { thinkingConfig: t } : {}) },
+    });
+  };
   // A busy model gets one more try after a pause, then the next model is tried. All of this
   // happens before any words arrive, so the person only sees a slightly longer wait.
   // Models that recently timed out or were overloaded go to the back of the line for a while.
@@ -131,12 +146,16 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   for (let i = 0; i < tries.length && !res; i++) {
     const model = tries[i];
     if (i > 0) await pause(i === 1 ? 1200 : 300, signal);
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
-      method: "POST",
-      signal,
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body,
-    });
+    const call = (thinking: boolean) =>
+      fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
+        method: "POST",
+        signal,
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: request(model, thinking),
+      });
+    let r = await call(true);
+    // A model that doesn't take this thinking setting answers 400: ask again without it.
+    if (r.status === 400 && geminiThinking(model, fast)) r = await call(false);
     if (r.ok && r.body) {
       res = r;
       break;
@@ -748,7 +767,7 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
   if (!MODELS.find((m) => m.id === opts.modelId)?.provider) throw new ProviderError("unavailable");
   if (opts.modelId === "gemini-flash") {
     if (!process.env.GEMINI_API_KEY) throw new ProviderError("unavailable");
-    return gemini(opts.system, opts.turns, max, opts.signal);
+    return gemini(opts.system, opts.turns, max, opts.signal, opts.tool === "chat");
   }
   if (CLAUDE[opts.modelId]) {
     if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
