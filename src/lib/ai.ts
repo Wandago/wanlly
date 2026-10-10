@@ -343,7 +343,7 @@ export async function claudeBuildStep(opts: {
       model: m.api,
       max_tokens: 32000,
       system: opts.system,
-      messages: opts.messages,
+      messages: forClaude(opts.messages),
       tools: [{ type: "text_editor_20250728", name: "str_replace_based_edit_tool", max_characters: 40000 }],
       output_config: { effort: "medium" },
       cache_control: { type: "ephemeral" },
@@ -355,6 +355,160 @@ export async function claudeBuildStep(opts: {
   }
   const message = await stream.finalMessage();
   return { message, inputTokens: billedInput(opts.modelId, message.usage), outputTokens: message.usage.output_tokens };
+}
+
+/** Builder history without the notes kept for Gemini (Claude refuses fields it doesn't know). */
+function forClaude(messages: Anthropic.Beta.BetaMessageParam[]): Anthropic.Beta.BetaMessageParam[] {
+  return messages.map((m) => {
+    if (typeof m.content === "string") return m;
+    const content = m.content.map((b) => {
+      if (!("gemini_signature" in b)) return b;
+      const copy = { ...b } as Record<string, unknown>;
+      delete copy.gemini_signature;
+      return copy;
+    });
+    return { ...m, content: content as typeof m.content };
+  });
+}
+
+/*
+ * The Builder on Gemini. Gemini gets the same file tool Claude has (described as a function),
+ * and its turns are saved in the same shape as Claude's, so one project can move between the two.
+ * Gemini signs its function calls; the signature is kept with the saved call and sent back with
+ * it, as Gemini requires. Calls made by Claude have none, and are marked as such.
+ */
+type BuildBlock = { type: string; text?: string; id?: string; name?: string; input?: unknown; tool_use_id?: string; content?: unknown; is_error?: boolean; gemini_signature?: string };
+
+const EDIT_TOOL = {
+  name: "str_replace_based_edit_tool",
+  description:
+    'Work on the project\'s files. command "view": a file\'s numbered lines, or the list of files when path is "/" or a folder. "create": write a whole file (file_text). "str_replace": replace one exact, unique passage (old_str) with new_str. "insert": add insert_text after line insert_line (0 for the top).',
+  parameters: {
+    type: "object",
+    properties: {
+      command: { type: "string", enum: ["view", "create", "str_replace", "insert"] },
+      path: { type: "string", description: 'Path inside the project, like "index.html" or "src/app.js"; "/" for all files.' },
+      file_text: { type: "string" },
+      old_str: { type: "string" },
+      new_str: { type: "string" },
+      insert_line: { type: "integer" },
+      insert_text: { type: "string" },
+      view_range: { type: "array", items: { type: "integer" }, description: "Optional [first, last] line numbers; -1 for the end." },
+    },
+    required: ["command", "path"],
+  },
+};
+/** Google's documented marker for a function call that has no signature of its own. */
+const NO_SIGNATURE = "skip_thought_signature_validator";
+
+function toGeminiContents(messages: Anthropic.Beta.BetaMessageParam[]) {
+  const names = new Map<string, string>();
+  return messages.map((m) => {
+    const blocks = (typeof m.content === "string" ? [{ type: "text", text: m.content }] : m.content) as BuildBlock[];
+    const parts: Record<string, unknown>[] = [];
+    for (const b of blocks) {
+      if (b.type === "text" && b.text) parts.push({ text: b.text, ...(b.gemini_signature ? { thoughtSignature: b.gemini_signature } : {}) });
+      else if (b.type === "tool_use" && b.id) {
+        names.set(b.id, b.name ?? EDIT_TOOL.name);
+        parts.push({ functionCall: { name: b.name ?? EDIT_TOOL.name, args: b.input ?? {} }, thoughtSignature: b.gemini_signature ?? NO_SIGNATURE });
+      } else if (b.type === "tool_result") {
+        const text = typeof b.content === "string" ? b.content : Array.isArray(b.content) ? (b.content as { text?: string }[]).map((c) => c.text ?? "").join("\n") : "";
+        parts.push({ functionResponse: { name: names.get(b.tool_use_id ?? "") ?? EDIT_TOOL.name, response: b.is_error ? { error: text } : { output: text } } });
+      }
+    }
+    return { role: m.role === "assistant" ? "model" : "user", parts: parts.length ? parts : [{ text: "(continue)" }] };
+  });
+}
+
+export async function geminiBuildStep(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void }) {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new ProviderError("unavailable");
+  const body = (model: string, thinking: boolean) => {
+    const t = thinking ? geminiThinking(model, false) : null;
+    return JSON.stringify({
+      systemInstruction: { parts: [{ text: opts.system }] },
+      contents: toGeminiContents(opts.messages),
+      tools: [{ functionDeclarations: [EDIT_TOOL] }],
+      generationConfig: { maxOutputTokens: 32000, ...(t ? { thinkingConfig: t } : {}) },
+    });
+  };
+  // Like chat: a busy or missing model moves on to the next one before anything is shown.
+  const all = await geminiModels(key);
+  const now = Date.now();
+  const models = [...all.filter((m) => (resting.get(m) ?? 0) <= now), ...all.filter((m) => (resting.get(m) ?? 0) > now)].slice(0, 4);
+  let res: Response | null = null;
+  let error: ProviderError | null = null;
+  for (let i = 0; i < models.length && !res; i++) {
+    const model = models[i];
+    if (i > 0) await pause(800, opts.signal);
+    const call = (thinking: boolean) =>
+      fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`, {
+        method: "POST",
+        signal: opts.signal,
+        headers: { "content-type": "application/json", "x-goog-api-key": key },
+        body: body(model, thinking),
+      });
+    let r = await call(true);
+    if (r.status === 400 && geminiThinking(model, false)) r = await call(false);
+    if (r.ok && r.body) {
+      res = r;
+      break;
+    }
+    const raw = await r.text().catch(() => "");
+    console.error("gemini build error", model, r.status, raw.slice(0, 300));
+    error = new ProviderError(RETRYABLE.has(r.status) ? "busy" : r.status === 402 || r.status === 403 ? "unavailable" : "failed", `Google ${r.status} on ${model}`);
+    if (!RETRYABLE.has(r.status) && r.status !== 404) break;
+    if (r.status === 503 || r.status >= 520) resting.set(model, Date.now() + 10 * 60_000);
+  }
+  if (!res?.body) throw error ?? new ProviderError("failed");
+
+  const content: BuildBlock[] = [];
+  let finish = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let blocked = false;
+  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
+  let buf = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buf += value;
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const chunk = JSON.parse(line.slice(5)) as {
+        candidates?: { content?: { parts?: { text?: string; thought?: boolean; thoughtSignature?: string; functionCall?: { name: string; args?: unknown } }[] }; finishReason?: string }[];
+        usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
+        promptFeedback?: { blockReason?: string };
+      };
+      if (chunk.promptFeedback?.blockReason) blocked = true;
+      const cand = chunk.candidates?.[0];
+      if (cand?.finishReason) finish = cand.finishReason;
+      for (const part of cand?.content?.parts ?? []) {
+        if (part.thought) continue;
+        if (part.functionCall) {
+          content.push({ type: "tool_use", id: `toolu_g${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`, name: part.functionCall.name, input: part.functionCall.args ?? {}, ...(part.thoughtSignature ? { gemini_signature: part.thoughtSignature } : {}) });
+        } else if (part.text !== undefined || part.thoughtSignature) {
+          const last = content[content.length - 1];
+          const block = last?.type === "text" ? last : (content.push({ type: "text", text: "" }), content[content.length - 1]);
+          if (part.text) {
+            block.text += part.text;
+            opts.onText(part.text);
+          }
+          if (part.thoughtSignature) block.gemini_signature = part.thoughtSignature;
+        }
+      }
+      if (chunk.usageMetadata) {
+        inputTokens = chunk.usageMetadata.promptTokenCount ?? inputTokens;
+        outputTokens = (chunk.usageMetadata.candidatesTokenCount ?? 0) + (chunk.usageMetadata.thoughtsTokenCount ?? 0) || outputTokens;
+      }
+    }
+  }
+  const tidy = content.filter((b) => b.type !== "text" || b.text?.trim());
+  const stop_reason = blocked || /SAFETY|PROHIBITED|BLOCKLIST|RECITATION/.test(finish) ? "refusal" : finish === "MAX_TOKENS" ? "max_tokens" : tidy.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn";
+  return { message: { content: tidy as unknown as Anthropic.Beta.BetaContentBlock[], stop_reason }, inputTokens, outputTokens };
 }
 
 /**

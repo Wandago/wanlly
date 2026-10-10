@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
-import { claudeBuildStep, errorDetail, errorKind, isClaudeModel, providers, replyCostUsd } from "@/lib/ai";
+import { claudeBuildStep, errorDetail, errorKind, geminiBuildStep, isClaudeModel, providers, replyCostUsd } from "@/lib/ai";
 import { BUILD_SYSTEM, MAX_HISTORY_CHARS, loadFiles, loadSteps, ownBuild, runEditor } from "@/lib/build";
 import { ESTIMATE, MODELS, isLive, taskCredits } from "@/lib/catalog";
 import { field, jsonUpTo } from "@/lib/forms";
@@ -20,7 +20,7 @@ import { signedInUserId } from "@/lib/session";
 const ERRORS = {
   busy: `${SAY.busy} ${SAY.refunded}`,
   failed: `We couldn't finish that step. Please try again. ${SAY.refunded}`,
-  unavailable: `The Builder needs a Claude model that's live right now. Pick another one and try again. ${SAY.refunded}`,
+  unavailable: `That model isn't available right now. Pick another one and try again. ${SAY.refunded}`,
   aborted: "Stopped.",
 } as const;
 
@@ -38,7 +38,8 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
   const jobId = field(data, "jobId", 64);
   const model = MODELS.find((m) => m.id === data.modelId);
   if (!/^[\w-]{8,64}$/.test(jobId) || !model) return Response.json({ error: SAY.badRequest }, { status: 400 });
-  if (!isClaudeModel(model.id) || !isLive(model, providers())) return Response.json({ error: "The Builder works with Claude models (Haiku, Sonnet or Opus). Pick one of those." }, { status: 400 });
+  const onGemini = model.provider === "google";
+  if ((!isClaudeModel(model.id) && !onGemini) || !isLive(model, providers())) return Response.json({ error: "The Builder works with Gemini Flash and the Claude models (Haiku, Sonnet, Opus). Pick one of those." }, { status: 400 });
 
   const d = db();
   const project = await ownBuild(id, userId).catch(() => null);
@@ -88,13 +89,11 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
       let charged = price;
       let saved = false;
       try {
-        const { message: reply, inputTokens, outputTokens } = await claudeBuildStep({
-          modelId: model.id,
-          system: BUILD_SYSTEM,
-          messages: steps.map((s) => ({ role: s.role, content: s.content as Anthropic.Beta.BetaContentBlockParam[] })),
-          signal: req.signal,
-          onText: (text) => send({ type: "text", text }),
-        });
+        const history = steps.map((s) => ({ role: s.role, content: s.content as Anthropic.Beta.BetaContentBlockParam[] }));
+        const onText = (text: string) => send({ type: "text", text });
+        const { message: reply, inputTokens, outputTokens } = onGemini
+          ? await geminiBuildStep({ system: BUILD_SYSTEM, messages: history, signal: req.signal, onText })
+          : await claudeBuildStep({ modelId: model.id, system: BUILD_SYSTEM, messages: history, signal: req.signal, onText });
         const uses = (reply.content as Block[]).filter((b) => b.type === "tool_use");
         const actual = taskCredits(price, model, inputTokens, outputTokens, Math.ceil(replyCostUsd(model.id, inputTokens, outputTokens) / ESTIMATE.usdPerCredit));
         if (actual > price) charged += await chargeExtra(userId, actual - price, `${ref}:extra`, `Builder · ${model.name} · bigger step`);

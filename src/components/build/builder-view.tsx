@@ -37,7 +37,7 @@ export function BuilderView({ id }: { id: number }) {
   const [running, setRunning] = useState(false);
   const [notice, setNotice] = useState<{ text: string; resume?: boolean } | null>(null);
   const [draft, setDraft] = useState("");
-  const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "sonnet");
+  const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "gemini-flash");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
   const [pane, setPane] = useState<"chat" | "files" | "preview">("chat");
   const [view, setView] = useState<"preview" | "code" | "plan">("preview");
@@ -49,7 +49,8 @@ export function BuilderView({ id }: { id: number }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const started = useRef(false);
 
-  const claude = useMemo(() => MODELS.filter((m) => m.provider === "anthropic" && isLive(m, providers)), [providers]);
+  // The models the Builder can drive: Gemini Flash (free to run) and Claude.
+  const claude = useMemo(() => MODELS.filter((m) => (m.provider === "anthropic" || m.provider === "google") && isLive(m, providers)), [providers]);
   const model = claude.find((m) => m.id === modelId) ?? claude.find((m) => m.id === "sonnet") ?? claude[0];
 
   const load = useCallback(async () => {
@@ -86,8 +87,8 @@ export function BuilderView({ id }: { id: number }) {
       let first = true;
       try {
         for (let i = 0; i < STEP_LIMIT; i++) {
-          // Smart building: the chosen model plans the first step, Sonnet does the rest.
-          const stepModel = smart === "on" && !first && model.id !== "haiku" && claude.some((m) => m.id === "sonnet") ? "sonnet" : model.id;
+          // Smart building: Opus plans the first step, Sonnet does the rest (other models do every step).
+          const stepModel = smart === "on" && !first && (model.id === "opus" || model.id === "fable") && claude.some((m) => m.id === "sonnet") ? "sonnet" : model.id;
           setLive({ text: "", edits: [] });
           const r = await fetch(`/api/build/${id}/step`, {
             method: "POST",
@@ -296,10 +297,12 @@ export function BuilderView({ id }: { id: number }) {
               </option>
             ))}
           </select>
-          <label className="flex items-center gap-1.5 text-xs text-muted" title="The model you pick plans the first step; Sonnet does the rest, for a fraction of the cost.">
+          {(model?.id === "opus" || model?.id === "fable") && (
+            <label className="flex items-center gap-1.5 text-xs text-muted" title="Opus plans the first step; Sonnet does the rest, for a fraction of the cost.">
             <input type="checkbox" checked={smart === "on"} onChange={(e) => setSmart(e.target.checked ? "on" : "off")} />
             Smart building
           </label>
+          )}
           {running ? (
             <button type="button" onClick={() => abort.current?.abort()} className="ml-auto rounded-lg border border-line px-3 py-1.5 text-xs font-semibold">
               Stop
@@ -310,7 +313,7 @@ export function BuilderView({ id }: { id: number }) {
             </button>
           )}
         </div>
-        {!model && <p className="text-xs text-bad">The Builder needs a Claude model, and none is switched on yet.</p>}
+        {!model && <p className="text-xs text-bad">No Builder model is switched on yet.</p>}
       </form>
     </section>
   );
