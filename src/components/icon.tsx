@@ -1,6 +1,12 @@
 const PATHS = {
   plus: <path d="M12 5v14M5 12h14" />,
   chat: <path d="M5 18.5 3.5 21l.9-4A8 8 0 1 1 8 19.6" />,
+  help: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01" />
+    </>
+  ),
   code: <path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14" />,
   design: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4" />,
   images: (

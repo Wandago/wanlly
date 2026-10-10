@@ -18,6 +18,7 @@ const TOOL_LINKS: ToolId[] = ["chat", "code", "design", "images"];
 const PAGES: { href: string; label: string; icon: IconName }[] = [
   { href: "/projects", label: "Projects", icon: "folder" },
   { href: "/coworkers", label: "Coworkers", icon: "users" },
+  { href: "/support", label: "Help and support", icon: "help" },
 ];
 
 const row = "flex min-w-0 items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[13px]";

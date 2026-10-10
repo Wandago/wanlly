@@ -406,3 +406,40 @@ export const publishedSites = pgTable("published_sites", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** Support tickets people raise from the Help page; staff answer them from the admin page. */
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    email: text("email"),
+    subject: text("subject").notNull(),
+    category: text("category", { enum: ["bug", "credits", "account", "builder", "ads", "idea", "other"] }).notNull(),
+    /** open: waiting on staff. answered: waiting on the person. closed: done. */
+    status: text("status", { enum: ["open", "answered", "closed"] }).notNull().default("open"),
+    /** The page they were on, when they raised it. */
+    page: text("page"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("support_tickets_user").on(t.userId, t.updatedAt), index("support_tickets_status").on(t.status, t.updatedAt)],
+);
+
+/** The conversation on a ticket, oldest first. */
+export const supportMessages = pgTable(
+  "support_messages",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    ticketId: bigint("ticket_id", { mode: "number" })
+      .notNull()
+      .references(() => supportTickets.id),
+    fromStaff: boolean("from_staff").notNull().default(false),
+    authorId: text("author_id").notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("support_messages_ticket").on(t.ticketId, t.createdAt)],
+);
