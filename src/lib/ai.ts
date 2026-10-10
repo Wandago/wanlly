@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Providers, ToolId } from "./catalog";
+import { MODELS, type Providers, type ToolId } from "./catalog";
 
 /*
  * The model providers behind chat. Each one streams the same small set of events, so the chat
@@ -626,6 +626,8 @@ export async function checkProviders() {
 
 export function streamReply(opts: { modelId: string; tool: ToolId; system: string; turns: Turn[]; signal: AbortSignal }): AsyncGenerator<ReplyEvent> {
   const max = MAX_OUTPUT[opts.tool === "code" || opts.tool === "design" ? opts.tool : "chat"];
+  // Models the catalog lists as coming soon (no provider) never run, whatever keys are set.
+  if (!MODELS.find((m) => m.id === opts.modelId)?.provider) throw new ProviderError("unavailable");
   if (opts.modelId === "gemini-flash") {
     if (!process.env.GEMINI_API_KEY) throw new ProviderError("unavailable");
     return gemini(opts.system, opts.turns, max, opts.signal);

@@ -1,4 +1,5 @@
 import { clerk, signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /** Google Drive access for "Save to Google Drive": only files Wanlly creates (drive.file). */
 const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
@@ -9,7 +10,7 @@ const DRIVE_SCOPE = "https://www.googleapis.com/auth/drive.file";
  */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const { data } = await clerk().users.getUserOauthAccessToken(userId, "google");
     const t = data[0];

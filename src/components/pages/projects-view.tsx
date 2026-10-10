@@ -7,6 +7,7 @@ import { MODELS, type ToolId } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
+import { SAY } from "@/lib/messages";
 
 export type DesignKind = "slides" | "design" | "codebase" | "system";
 
@@ -31,7 +32,7 @@ const input = "w-full rounded-lg border border-line bg-surface px-3 py-1.5 text-
 async function api<T>(url: string, method = "GET", body?: object): Promise<T> {
   const r = await fetch(url, { method, cache: "no-store", headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error ?? "Something went wrong. Try again");
+  if (!r.ok) throw new Error(data.error ?? SAY.wrong);
   return data as T;
 }
 

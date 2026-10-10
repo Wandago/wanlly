@@ -1,6 +1,7 @@
 import { and, asc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 const c = schema.conversations;
 const m = schema.messages;
@@ -13,12 +14,12 @@ function idOf(raw: string) {
 /** One conversation with its messages, if it belongs to the signed-in person. */
 export async function GET(req: Request, ctx: RouteContext<"/api/conversations/[id]">) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const id = idOf((await ctx.params).id);
-  if (!id) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!id) return Response.json({ error: SAY.badRequest }, { status: 400 });
   try {
     const [convo] = await db().select({ id: c.id, title: c.title, tool: c.tool, projectId: c.projectId }).from(c).where(and(eq(c.id, id), eq(c.userId, userId))).limit(1);
-    if (!convo) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!convo) return Response.json({ error: SAY.notFound }, { status: 404 });
     const rows = await db()
       .select({ id: m.id, role: m.role, content: m.content, modelId: m.modelId, credits: m.credits, createdAt: m.createdAt })
       .from(m)
@@ -31,24 +32,24 @@ export async function GET(req: Request, ctx: RouteContext<"/api/conversations/[i
     });
   } catch (e) {
     console.error("conversation GET failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }
 
 /** Deletes a conversation and its messages for good. */
 export async function DELETE(req: Request, ctx: RouteContext<"/api/conversations/[id]">) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const id = idOf((await ctx.params).id);
-  if (!id) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!id) return Response.json({ error: SAY.badRequest }, { status: 400 });
   try {
     const [convo] = await db().select({ id: c.id }).from(c).where(and(eq(c.id, id), eq(c.userId, userId))).limit(1);
-    if (!convo) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!convo) return Response.json({ error: SAY.notFound }, { status: 404 });
     await db().delete(m).where(eq(m.conversationId, id));
     await db().delete(c).where(eq(c.id, id));
     return Response.json({ ok: true });
   } catch (e) {
     console.error("conversation DELETE failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }

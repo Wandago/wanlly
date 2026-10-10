@@ -1,11 +1,12 @@
 import { db, schema } from "@/db";
 import { CATEGORIES, FORMATS } from "@/lib/campaigns";
 import { field, isEmail, smallJson } from "@/lib/forms";
+import { SAY } from "@/lib/messages";
 
 /** Saves an application to advertise. Public; bots are turned away by a hidden field. */
 export async function POST(req: Request) {
   const data = await smallJson(req);
-  if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!data) return Response.json({ error: SAY.badRequest }, { status: 400 });
   if (field(data, "website2", 200)) return Response.json({ ok: true });
   const company = field(data, "company", 120);
   const contactName = field(data, "name", 120);

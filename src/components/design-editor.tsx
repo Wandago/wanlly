@@ -19,6 +19,7 @@ import { Icon, type IconName } from "./icon";
 import { ModelPicker } from "./top-bar";
 import { naturalBreak } from "./ads/interstitial";
 import { SpinLoader } from "./spin-mark";
+import { SAY } from "@/lib/messages";
 
 /*
  * One design file: ask for a design on the left, see it on the right as it's written, and step
@@ -127,7 +128,7 @@ export function DesignEditor({ id }: { id: number }) {
         setShown(b.latest);
         if (!b.latest && (b.file.about || b.file.instructions)) setPrompt(KIND[b.file.kind as Kind].first);
       })
-      .catch(() => alive && setError("You're offline."));
+      .catch(() => alive && setError(SAY.offline));
     return () => {
       alive = false;
       ctrl.current?.abort();

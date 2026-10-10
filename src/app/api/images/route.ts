@@ -7,6 +7,7 @@ import { TOOLS } from "@/lib/catalog";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /*
  * Images: one picture per request from a Gemini image model. The price is taken first. The
@@ -16,9 +17,9 @@ import { signedInUserId } from "@/lib/session";
  */
 
 const ERRORS = {
-  busy: "The image model is busy right now. Your credits were refunded; try again in a moment.",
-  unavailable: "Image making isn't available on Wanlly's current Gemini plan yet. Your credits were refunded.",
-  failed: "Something went wrong making that image. Your credits were refunded.",
+  busy: `${SAY.busy} ${SAY.refunded}`,
+  unavailable: `Making pictures isn't open yet. ${SAY.refunded}`,
+  failed: `We couldn't finish that picture. Please try again. ${SAY.refunded}`,
 } as const;
 
 /** An image response is hundreds of KB; a reply with no picture (refused, or text only) is a few KB. */
@@ -26,7 +27,7 @@ const MIN_IMAGE_BYTES = 20_000;
 
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const blocked = await blockedReason(userId, "spend").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
   const data = await jsonUpTo(req, MAX_BODY);
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
 /** Your recent images: ids and prompts (the pictures come from /api/images/[id]). */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const i = schema.images;
     const rows = await db().select({ id: i.id, prompt: i.prompt, model: i.model, credits: i.credits, createdAt: i.createdAt }).from(i).where(eq(i.userId, userId)).orderBy(desc(i.createdAt)).limit(48);

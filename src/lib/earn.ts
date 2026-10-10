@@ -55,7 +55,7 @@ export async function startView(userId: string, placement: string, country: stri
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.adEvents)
     .where(and(eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_started"), gte(schema.adEvents.createdAt, sql`now() - interval '1 minute'`)));
-  if ((recent?.n ?? 0) >= 4) return { error: "Too many videos at once. Finish one first.", status: 429 } as const;
+  if ((recent?.n ?? 0) >= 4) return { error: "One video at a time, please. Finish this one first.", status: 429 } as const;
 
   const viewId = crypto.randomUUID();
   await db().insert(schema.adEvents).values({ userId, partner: PARTNER, format: "video", placement, country, kind: "reward_started", transactionId: viewId });
@@ -68,9 +68,9 @@ export async function completeView(userId: string, viewId: string, country: stri
     .from(schema.adEvents)
     .where(and(eq(schema.adEvents.partner, PARTNER), eq(schema.adEvents.transactionId, viewId), eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_started")))
     .limit(1);
-  if (!started) return { error: "Unknown video", status: 404 } as const;
-  if (started.ms < MIN_VIEW_MS) return { error: "The video wasn't finished", status: 409 } as const;
-  if (started.ms > MAX_VIEW_MS) return { error: "That video expired. Start a new one.", status: 410 } as const;
+  if (!started) return { error: "That video has ended. Start a new one to earn.", status: 404 } as const;
+  if (started.ms < MIN_VIEW_MS) return { error: "The video didn't play to the end, so no credits this time. Try another one.", status: 409 } as const;
+  if (started.ms > MAX_VIEW_MS) return { error: "That video has ended. Start a new one to earn.", status: 410 } as const;
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of videos. More tomorrow.", status: 429 } as const;
   // Two views started together before the first finished: the second still needs the phone.

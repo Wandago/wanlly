@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { SAY } from "@/lib/messages";
 
 const TOPICS = ["General", "Advertise on Wanlly", "Partnerships", "Press", "Support", "Privacy"];
 const field = "w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm outline-none placeholder:text-faint focus:border-fg";
@@ -16,10 +17,10 @@ export function ContactForm({ initialTopic = "General" }: { initialTopic?: strin
     try {
       const r = await fetch("/api/contact", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(Object.fromEntries(new FormData(e.currentTarget))) });
       const out = await r.json();
-      if (!r.ok) throw new Error(out.error || "Something went wrong.");
+      if (!r.ok) throw new Error(out.error || SAY.wrong);
       setState("sent");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : SAY.wrong);
       setState("idle");
     }
   }

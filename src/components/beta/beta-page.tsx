@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { readFirstTouch } from "@/lib/first-touch";
 import { Icon } from "../icon";
 import { SpinLoader } from "../spin-mark";
+import { SAY } from "@/lib/messages";
 
 const COUNTRIES = ["Kenya", "Nigeria", "Ghana", "Uganda", "Tanzania", "Rwanda", "South Africa", "Egypt", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Brazil", "Mexico", "United Kingdom", "United States", "Other"];
 const SOURCES = ["TikTok", "X", "Instagram", "LinkedIn", "WhatsApp", "A friend invited me", "University or community group", "Product Hunt", "Search", "Other"];
@@ -83,10 +84,10 @@ export function BetaPage() {
     try {
       const r = await fetch("/api/beta", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const out = await r.json();
-      if (!r.ok) throw new Error(out.error || "Something went wrong.");
+      if (!r.ok) throw new Error(out.error || SAY.wrong);
       setSent({ name: String(body.name || "").trim().split(" ")[0], code: out.code });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : SAY.wrong);
     } finally {
       setBusy(false);
     }

@@ -7,11 +7,12 @@ import { clerk, signedInUserId } from "@/lib/session";
 import { visitorHash } from "@/lib/traffic";
 import { providers } from "@/lib/ai";
 import { loadMemory } from "@/lib/memory";
+import { SAY } from "@/lib/messages";
 
 /** The signed-in person's account: created on first call, then their balance, today's bonus and usage. */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const user = await ensureUser(userId, req.headers.get("cf-ipcountry"));
     // Which daily visitor hash this account was seen on, for spotting one person with many accounts.
@@ -24,7 +25,7 @@ export async function GET(req: Request) {
     return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, access: access ? "ok" : "waiting", ...(access ? {} : { email: user.email }), providers: providers(), memory, ...acct });
   } catch (e) {
     console.error("api/me failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }
 
@@ -34,7 +35,7 @@ export async function GET(req: Request) {
  */
 export async function DELETE(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     await db().update(schema.projects).set({ deletedAt: sql`now()` }).where(eq(schema.projects.ownerId, userId));
     // Generated designs are deleted outright; the project rows stay marked deleted.

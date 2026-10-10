@@ -9,6 +9,7 @@ import { NewProject, type DesignKind, type Preset, type Project } from "./pages/
 import { LOOK_SETS, STYLES } from "@/lib/design-styles";
 import { useLocalSetting } from "@/lib/use-local-setting";
 import { StylePreview, StyleThumb } from "./style-picker";
+import { SAY } from "@/lib/messages";
 
 /*
  * The Design tool's home: start something new from one of four kinds, then find your design
@@ -150,7 +151,7 @@ function Dropdown({ trigger, label, children }: { trigger: ReactNode; label: str
 async function api<T>(url: string, method = "GET", body?: object): Promise<T> {
   const r = await fetch(url, { method, cache: "no-store", headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
   const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(data.error ?? "Something went wrong. Try again");
+  if (!r.ok) throw new Error(data.error ?? SAY.wrong);
   return data as T;
 }
 

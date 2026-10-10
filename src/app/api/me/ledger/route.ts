@@ -1,11 +1,12 @@
 import { desc, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /** The last 100 credits in and out, newest first. */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const rows = await db()
       .select({ delta: schema.ledgerEntries.delta, reason: schema.ledgerEntries.reason, note: schema.ledgerEntries.note, at: schema.ledgerEntries.createdAt })
@@ -16,6 +17,6 @@ export async function GET(req: Request) {
     return Response.json({ entries: rows });
   } catch (e) {
     console.error("ledger GET failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }

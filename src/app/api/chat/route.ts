@@ -9,6 +9,7 @@ import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
 import { loadMemory, maybeUpdateMemory, memoryPrompt } from "@/lib/memory";
 import { after } from "next/server";
+import { SAY } from "@/lib/messages";
 
 /*
  * One reply, streamed as newline-delimited JSON:
@@ -42,15 +43,15 @@ const SYSTEM: Record<"chat" | "code", string> = {
 };
 
 const ERRORS = {
-  busy: "The model is busy right now. Your credits were refunded; try again in a moment.",
-  failed: "Something went wrong getting that reply. Your credits were refunded.",
-  unavailable: "That model isn't available right now. Your credits were refunded; try another model.",
+  busy: `${SAY.busy} ${SAY.refunded}`,
+  failed: `We couldn't finish that reply. Please try again. ${SAY.refunded}`,
+  unavailable: `This model is taking a break right now. Pick another one and try again. ${SAY.refunded}`,
   aborted: "Stopped.",
 } as const;
 
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const blocked = await blockedReason(userId, "spend").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
 
@@ -66,7 +67,7 @@ export async function POST(req: Request) {
   const jobId = field(data, "jobId", 64);
   const conversationId = Number.isSafeInteger(data.conversationId) ? (data.conversationId as number) : null;
   const projectId = Number.isSafeInteger(data.projectId) ? (data.projectId as number) : null;
-  if (!text || !TEXT_TOOLS.includes(toolId) || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!text || !TEXT_TOOLS.includes(toolId) || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: SAY.badRequest }, { status: 400 });
 
   const d = db();
   let convo: { id: number; projectId: number | null };
@@ -78,7 +79,7 @@ export async function POST(req: Request) {
         .from(schema.conversations)
         .where(and(eq(schema.conversations.id, conversationId), eq(schema.conversations.userId, userId)))
         .limit(1);
-      if (!c) return Response.json({ error: "Conversation not found" }, { status: 404 });
+      if (!c) return Response.json({ error: SAY.notFound }, { status: 404 });
       convo = c;
     } else {
       let pid: number | null = null;
@@ -100,7 +101,7 @@ export async function POST(req: Request) {
     }
   } catch (e) {
     console.error("chat setup failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 
   // Take the upfront price. Limits and balance are checked in the same locked statement.
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
     const acct = await account(userId).catch(() => null);
     const reason = paid?.reason ?? "failed";
     const status = reason === "credits" ? 402 : reason === "day" || reason === "week" ? 429 : reason === "duplicate" ? 409 : 503;
-    return Response.json({ error: reason === "credits" ? "Not enough credits" : "Couldn't start that reply", reason, ...(acct ?? {}) }, { status });
+    return Response.json({ error: reason === "credits" ? "You need a few more credits for this. Watch a short video to top up." : reason === "day" ? "You've used this session's limit. It resets within 6 hours of your first message." : reason === "week" ? "You've reached this week's limit. It resets 7 days after it started." : reason === "duplicate" ? "That's already on its way." : SAY.busy, reason, ...(acct ?? {}) }, { status });
   }
 
   // Earlier turns of this conversation, newest kept first within the budget.
@@ -134,7 +135,7 @@ export async function POST(req: Request) {
   } catch (e) {
     console.error("chat history failed", e);
     await release(userId, price, ref).catch(() => {});
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
   turns.push({ role: "user", text: text + attached.text, files: attached.files.map((f) => ({ mime: f.mime, data: f.data })) });
   // Providers want turns to alternate and start with the person, so merge any repeats.
@@ -178,7 +179,7 @@ export async function POST(req: Request) {
         const extra = actual > price ? await chargeExtra(userId, actual - price, `${ref}:extra`, `${model.name} · bigger task`) : 0;
         if (!reply && usage.stop !== "end") {
           await release(userId, price, ref);
-          send({ type: "error", message: usage.stop === "refusal" ? "The model declined to answer that. Your credits were refunded." : ERRORS.failed, refunded: true, ...(await account(userId)) });
+          send({ type: "error", message: usage.stop === "refusal" ? `The model chose not to answer that one. Try asking a different way. ${SAY.refunded}` : ERRORS.failed, refunded: true, ...(await account(userId)) });
         } else {
           await d.insert(schema.messages).values({
             conversationId: convo.id,

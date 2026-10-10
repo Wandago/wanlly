@@ -3,16 +3,17 @@ import { db, schema } from "@/db";
 import { field, jsonUpTo } from "@/lib/forms";
 import { account } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /** Keeps a picture made in Images. Only for a job this person paid for, once per job. */
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const data = await jsonUpTo(req, 1_600_000);
   if (!data) return Response.json({ error: "That picture is too large to keep." }, { status: 413 });
   const jobId = field(data, "jobId", 64);
   const image = typeof data.data === "string" ? data.data : "";
-  if (!/^[\w-]{8,64}$/.test(jobId) || !/^data:image\/(webp|png|jpeg);base64,/.test(image)) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!/^[\w-]{8,64}$/.test(jobId) || !/^data:image\/(webp|png|jpeg);base64,/.test(image)) return Response.json({ error: SAY.badRequest }, { status: 400 });
   const d = db();
   const l = schema.ledgerEntries;
   // Paid and not refunded.

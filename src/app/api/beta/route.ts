@@ -1,11 +1,12 @@
 import { db, schema } from "@/db";
 import { channelOf, cleanFirstTouch } from "@/lib/first-touch";
 import { field, isEmail, smallJson } from "@/lib/forms";
+import { SAY } from "@/lib/messages";
 
 /** Saves a beta application. Public; bots are turned away by a hidden field and size limits. */
 export async function POST(req: Request) {
   const data = await smallJson(req);
-  if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!data) return Response.json({ error: SAY.badRequest }, { status: 400 });
   // Honeypot: people never see this field, simple bots fill it in.
   if (field(data, "website", 200)) return Response.json({ ok: true, code: "thanks" });
 

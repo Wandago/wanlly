@@ -3,6 +3,7 @@ import { db, schema } from "@/db";
 import { smallJson } from "@/lib/forms";
 import { MAX_PROJECTS, projectFields } from "@/lib/projects";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 const p = schema.projects;
 const TOOLS = ["chat", "code", "design", "images"] as const;
@@ -11,7 +12,7 @@ const cols = { id: p.id, name: p.name, tool: p.tool, about: p.about, instruction
 /** The signed-in person's projects, most recently changed first. */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const tool = TOOLS.find((t) => t === new URL(req.url).searchParams.get("tool"));
     const projects = await db()
@@ -23,13 +24,13 @@ export async function GET(req: Request) {
     return Response.json({ projects });
   } catch (e) {
     console.error("projects GET failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }
 
 export async function POST(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const data = await smallJson(req);
   const f = data ? projectFields(data) : {};
   if (!f.name || !f.tool) return Response.json({ error: "Give the project a name and pick a tool." }, { status: 422 });
@@ -43,6 +44,6 @@ export async function POST(req: Request) {
     return Response.json({ project });
   } catch (e) {
     console.error("projects POST failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }

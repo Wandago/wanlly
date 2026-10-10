@@ -9,6 +9,7 @@ import { CONTINUE, MAX_PAGE, designFile, extractHtml, idParam, isComplete, packA
 import { field, jsonUpTo } from "@/lib/forms";
 import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /*
  * Makes one new version of a design, streamed as newline-delimited JSON like chat:
@@ -21,16 +22,16 @@ import { signedInUserId } from "@/lib/session";
 const KEEP_AFTER = 6000;
 
 const ERRORS = {
-  busy: "The model is busy right now. Your credits were refunded; try again in a moment.",
-  failed: "Something went wrong making that design. Your credits were refunded.",
-  unavailable: "That model isn't available right now. Your credits were refunded; try another model.",
-  aborted: "Stopped. Your credits were refunded.",
-  nohtml: "The model didn't return a complete page. Your credits were refunded; try again or rephrase.",
+  busy: `${SAY.busy} ${SAY.refunded}`,
+  failed: `We couldn't finish that design. Please try again. ${SAY.refunded}`,
+  unavailable: `This model is taking a break right now. Pick another one and try again. ${SAY.refunded}`,
+  aborted: `Stopped. ${SAY.refunded}`,
+  nohtml: `The design came out incomplete. Try again, or describe it a little differently. ${SAY.refunded}`,
 } as const;
 
 export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/generate">) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const blocked = await blockedReason(userId, "spend").catch(() => null);
   if (blocked) return Response.json({ error: blocked }, { status: 403 });
   const id = idParam((await ctx.params).id);
@@ -45,7 +46,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   const baseVersion = data && Number.isSafeInteger(data.baseVersionId) ? (data.baseVersionId as number) : null;
   const systemId = data && Number.isSafeInteger(data.systemId) ? (data.systemId as number) : null;
   const style = getStyle(data?.styleId);
-  if (!id || !request || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!id || !request || !model || !/^[\w-]{8,64}$/.test(jobId)) return Response.json({ error: SAY.badRequest }, { status: 400 });
 
   const d = db();
   const v = schema.designVersions;
@@ -54,7 +55,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
   let system: { name: string; css: string } | undefined;
   try {
     file = await designFile(userId, id);
-    if (!file) return Response.json({ error: "Not found" }, { status: 404 });
+    if (!file) return Response.json({ error: SAY.notFound }, { status: 404 });
     // Edit the version the person is looking at, or the newest one.
     const [row] = await d
       .select({ html: v.html })
@@ -73,7 +74,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
     }
   } catch (e) {
     console.error("design setup failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 
   const price = jobCost(TOOLS.design, model);
@@ -83,7 +84,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/design/[id]/gen
     const acct = await account(userId).catch(() => null);
     const reason = paid?.reason ?? "failed";
     const status = reason === "credits" ? 402 : reason === "day" || reason === "week" ? 429 : reason === "duplicate" ? 409 : 503;
-    return Response.json({ error: reason === "credits" ? "Not enough credits" : "Couldn't start that", reason, price, ...(acct ?? {}) }, { status });
+    return Response.json({ error: reason === "credits" ? "You need a few more credits for this. Watch a short video to top up." : reason === "day" ? "You've used this session's limit. It resets within 6 hours of your first message." : reason === "week" ? "You've reached this week's limit. It resets 7 days after it started." : reason === "duplicate" ? "That's already on its way." : SAY.busy, reason, price, ...(acct ?? {}) }, { status });
   }
 
   const abort = new AbortController();

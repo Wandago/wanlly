@@ -1,11 +1,12 @@
 import { desc, eq, inArray } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /** Everything Wanlly holds about the signed-in person, as one JSON file. */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   try {
     const d = db();
     const [user, ledger, projects, conversations] = await Promise.all([
@@ -24,6 +25,6 @@ export async function GET(req: Request) {
     });
   } catch (e) {
     console.error("export failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }

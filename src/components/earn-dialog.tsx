@@ -109,7 +109,7 @@ export function EarnDialog() {
                 gain="Soon"
                 locked
               />
-              <Option icon="flame" title="Daily streak" detail="Watch on five days in a row for a bonus Fable 5.1 answer" gain="Soon" locked />
+              <Option icon="flame" title="Daily streak" detail="Watch on five days in a row for a bonus Opus answer" gain="Soon" locked />
               <p className="border-t border-line pt-3 text-xs text-faint">
                 Sponsors never appear inside an answer and never change what a model says.
               </p>

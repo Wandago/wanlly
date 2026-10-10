@@ -1,12 +1,13 @@
 import { db, schema } from "@/db";
 import { field, isEmail, smallJson } from "@/lib/forms";
+import { SAY } from "@/lib/messages";
 
 const TOPICS = ["General", "Advertise on Wanlly", "Partnerships", "Press", "Support", "Privacy"];
 
 /** Saves a contact message. Public; same bot protections as the beta form. */
 export async function POST(req: Request) {
   const data = await smallJson(req);
-  if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!data) return Response.json({ error: SAY.badRequest }, { status: 400 });
   if (field(data, "website", 200)) return Response.json({ ok: true });
 
   const name = field(data, "name", 120);

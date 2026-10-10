@@ -1,5 +1,6 @@
 import { rawSql } from "@/db";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 /**
  * The signed-in person's conversations, most recently active first. With ?q=, only those whose
@@ -7,7 +8,7 @@ import { signedInUserId } from "@/lib/session";
  */
 export async function GET(req: Request) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const search = (new URL(req.url).searchParams.get("q") ?? "").trim().slice(0, 100);
   // Typed % and _ are matched literally.
   const like = `%${search.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
@@ -33,6 +34,6 @@ export async function GET(req: Request) {
     });
   } catch (e) {
     console.error("conversations GET failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: SAY.busy }, { status: 503 });
   }
 }

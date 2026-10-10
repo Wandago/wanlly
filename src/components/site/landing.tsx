@@ -9,7 +9,7 @@ import { SpinLoader } from "../spin-mark";
 
 /** The "Runs on" strip: each maker once, with its mark when Wanlly runs its models. */
 const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean }[] = [
-  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5", "Fable 5.1"], live: true },
+  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5"], live: true },
   { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
   // Open models via NVIDIA: switch to live once NVIDIA_API_KEY is set and Admin's model check passes.
   { maker: "DeepSeek", models: ["V4 Flash", "V4 Pro"], live: false },
@@ -343,7 +343,7 @@ function Promises() {
 
 const FAQ = [
   ["Is it really free?", "Yes. You never enter a card. You watch short sponsor videos and earn credits, and the sponsors pay for your AI. Need more? Watch a few more."],
-  ["Which AI models can I use?", "Claude (Haiku, Sonnet, Opus and Fable), Gemini, Grok, DeepSeek, and open models like GLM and Kimi. You choose for every message. GPT and image models are coming."],
+  ["Which AI models can I use?", "Claude (Haiku, Sonnet and Opus), Gemini, Grok, DeepSeek, and open models like GLM and Kimi. You choose for every message. Fable 5.1, GPT and image models are coming."],
   ["How do credits work?", "Every video you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
   ["Who is it for?", "Students and creators with ideas and no budget for AI subscriptions: anyone who wants to build an app, a site, a shop page or a side project."],
   ["When can I start?", "We're letting people in weekly. Join the beta and invite friends to move up the list."],

@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Icon, type IconName } from "../icon";
+import { SAY } from "@/lib/messages";
 
 const CATEGORIES = ["Learning and courses", "Developer tools", "Laptops and phones", "Jobs and internships", "Money and banking", "Design tools", "Telecoms and data", "Student services", "Other"];
 const BUDGETS = ["Under $100 (a test)", "$100 to $500", "$500 to $2,000", "$2,000 or more", "Not sure yet"];
@@ -106,7 +107,7 @@ export function AdvertisePage() {
         body: JSON.stringify({ ...Object.fromEntries(f), formats: f.getAll("formats") }),
       });
       const b = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(b.error ?? "Something went wrong");
+      if (!r.ok) throw new Error(b.error ?? SAY.wrong);
       setState("done");
     } catch (err) {
       setError((err as Error).message);

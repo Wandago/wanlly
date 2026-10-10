@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { SpinLoader } from "./spin-mark";
+import { SAY } from "@/lib/messages";
 
 /*
  * Verifying a phone over WhatsApp: the person sends a code to Wanlly's number and this dialog
@@ -29,7 +30,7 @@ export function PhoneVerifyDialog() {
     const r = await fetch("/api/me/phone", { method: "POST" }).catch(() => null);
     const b = await r?.json().catch(() => ({}));
     if (r?.ok) setCode(b as Code);
-    else setError(b?.error ?? "You're offline. Try again in a moment.");
+    else setError(b?.error ?? SAY.offline);
   };
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { signedInUserId } from "@/lib/session";
+import { SAY } from "@/lib/messages";
 
 const i = schema.images;
 
@@ -20,9 +21,9 @@ export async function GET(req: Request, ctx: RouteContext<"/api/images/[id]">) {
 /** Deletes one of your pictures. */
 export async function DELETE(req: Request, ctx: RouteContext<"/api/images/[id]">) {
   const userId = await signedInUserId(req);
-  if (!userId) return Response.json({ error: "Not signed in" }, { status: 401 });
+  if (!userId) return Response.json({ error: SAY.signedOut }, { status: 401 });
   const id = Number((await ctx.params).id);
-  if (!Number.isSafeInteger(id) || id <= 0) return Response.json({ error: "Bad request" }, { status: 400 });
+  if (!Number.isSafeInteger(id) || id <= 0) return Response.json({ error: SAY.badRequest }, { status: 400 });
   await db().delete(i).where(and(eq(i.id, id), eq(i.userId, userId)));
   return Response.json({ ok: true });
 }
