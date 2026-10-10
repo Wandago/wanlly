@@ -2,8 +2,8 @@
 
 import * as Popover from "@radix-ui/react-popover";
 import { useEffect, useRef } from "react";
-import { FLOOR_CREDITS, SPOT_REWARD } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { UsageMeters } from "./usage-meters";
 
@@ -35,6 +35,7 @@ export function Ring({ used, size = 18 }: { used: number; size?: number }) {
  * opening it shows the balance, today's and this week's limits, and a way to earn more.
  */
 export function CreditsButton({ price, from, rate }: { price: number; from: boolean; rate?: number }) {
+  const { perAd: SPOT_REWARD, floor: FLOOR_CREDITS } = useReward();
   const { credits, synced, usage, floorUnlocked, dispatch } = useWorkspace();
   const ref = useRef<HTMLButtonElement>(null);
   const last = useRef(credits);

@@ -81,6 +81,7 @@ export function MoneyPanel({ days }: { days: 7 | 30 }) {
           ]}
         />
       </Card>
+      <RewardRule usdPerCredit={data.usdPerCredit} />
       <RecordIncome entries={data.entries} onChange={() => setTick((n) => n + 1)} />
       <Card title="Tokens by model" note="What each model read and wrote in this range, the credits people paid for it, and the real cost. Design versions count once migration 0014 has run.">
         {data.models.length ? (
@@ -178,6 +179,94 @@ function RecordIncome({ entries, onChange }: { entries: Money["entries"]; onChan
           ])}
         />
       )}
+    </Card>
+  );
+}
+
+type Reward = { perAd: number; floor: number; measured: { usdPerAd: number; ads: number } | null; policy: { mode: "auto" | "fixed"; perAd: number; share: number } };
+
+/**
+ * How many credits a finished ad earns. "Follow real earnings" pays a share of what ads really
+ * brought in per finished ad, so ads always cover what people spend.
+ */
+function RewardRule({ usdPerCredit }: { usdPerCredit: number }) {
+  const [r, setR] = useState<Reward | null>(null);
+  const [draft, setDraft] = useState<Reward["policy"] | null>(null);
+  const [msg, setMsg] = useState("");
+  useEffect(() => {
+    api<Reward>("/api/admin/reward")
+      .then((b) => {
+        setR(b);
+        setDraft(b.policy);
+      })
+      .catch((e: Error) => setMsg(e.message));
+  }, []);
+  if (!r || !draft) return <Card title="Credits per ad">{msg ? <Empty>{msg}</Empty> : <Loading />}</Card>;
+  const save = async () => {
+    setMsg("");
+    try {
+      const b = await api<Reward>("/api/admin/reward", "PUT", draft);
+      setR(b);
+      setDraft(b.policy);
+      setMsg("Saved. New ads pay the new amount within a minute.");
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+  };
+  const costPerAd = r.perAd * usdPerCredit;
+  const earns = r.measured?.usdPerAd ?? null;
+  return (
+    <Card
+      title="Credits per ad"
+      note="What one finished ad earns the viewer (the first ad of the day earns double). Follow real earnings pays a share of what ads really brought in per finished ad over 14 days, so ads always cover what people spend."
+      actions={
+        <button type="button" className={btnDark} onClick={save}>
+          Save
+        </button>
+      }
+    >
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Kpi label="Now" value={`${r.perAd} credits`} sub={`first ad today: ${r.floor}`} />
+        <Kpi label="That costs us" value={usd(costPerAd)} sub="per finished ad, in AI" />
+        <Kpi label="An ad earns" value={earns === null ? "–" : usd(earns)} sub={r.measured ? `over ${num(r.measured.ads)} ads, 14 days` : "turn on Follow real earnings to measure"} />
+        <Kpi label="Balance per ad" value={earns === null ? "–" : usd(earns - costPerAd)} sub={earns === null ? "" : earns >= costPerAd ? "ads pay their way" : "each ad loses money"} />
+      </div>
+      <div className="flex flex-wrap items-end gap-3 text-[13px]">
+        <div className="flex flex-col gap-1 font-medium">
+          Rule
+          <span className="flex gap-1">
+            {(
+              [
+                ["fixed", "Fixed"],
+                ["auto", "Follow real earnings"],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={draft.mode === k}
+                onClick={() => setDraft({ ...draft, mode: k })}
+                className={`rounded-full border px-2.5 py-1 text-xs ${draft.mode === k ? "border-accent-line bg-accent-soft font-medium text-accent" : "border-line font-normal text-muted"}`}
+              >
+                {label}
+              </button>
+            ))}
+          </span>
+        </div>
+        <label className="flex flex-col gap-1 font-medium">
+          {draft.mode === "auto" ? "Until 300 ads are measured" : "Credits per ad"}
+          <input type="number" min={1} max={8} value={draft.perAd} onChange={(e) => setDraft({ ...draft, perAd: Number(e.target.value) })} className={`${input} w-[110px]`} />
+        </label>
+        {draft.mode === "auto" && (
+          <label className="flex flex-col gap-1 font-medium">
+            Share for viewers
+            <span className="flex items-center gap-1.5">
+              <input type="number" min={10} max={100} value={Math.round(draft.share * 100)} onChange={(e) => setDraft({ ...draft, share: Number(e.target.value) / 100 })} className={`${input} w-[80px]`} />%
+            </span>
+          </label>
+        )}
+      </div>
+      {msg && <p className="text-[13px] text-muted">{msg}</p>}
     </Card>
   );
 }

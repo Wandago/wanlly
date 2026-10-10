@@ -116,6 +116,9 @@ export type Usage = {
   weekLimit: number;
   /** Whether the phone is verified, which raises the weekly limit. */
   verified: boolean;
+  /** Credits a finished ad earns right now, and the first ad of the day (see lib/reward.ts). */
+  reward?: number;
+  floorBonus?: number;
   videos: number;
   videoCap: number;
   /** ISO times when this person's session and week reset; null when none is running. */

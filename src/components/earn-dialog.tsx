@@ -2,8 +2,8 @@
 
 import * as Dialog from "@radix-ui/react-dialog";
 import { useState, type ReactNode } from "react";
-import { FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+import { SPOT_SPONSOR } from "@/lib/catalog";
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { RewardedSpot } from "./ads/ad-slot";
 
@@ -49,6 +49,7 @@ function Option({
 
 /** Account-level earning. Jobs use the inline slot on their working card instead. */
 export function EarnDialog() {
+  const { perAd: SPOT_REWARD, floor: FLOOR_CREDITS } = useReward();
   const { earnOpen, floorUnlocked, dispatch } = useWorkspace();
   const [playing, setPlaying] = useState<null | "self">(null);
   const close = () => dispatch({ type: "setEarnOpen", open: false });

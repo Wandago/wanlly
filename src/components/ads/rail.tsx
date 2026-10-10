@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { NetworkSize } from "@/lib/ad-network";
-import { FLOOR_CREDITS, RAIL_SPONSORS, SPOT_REWARD, type Sponsor } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+import { RAIL_SPONSORS, type Sponsor } from "@/lib/catalog";
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { Cover } from "./cover";
 import { DisplayCreative } from "./creatives";
@@ -133,6 +133,7 @@ function useTall() {
 
 /** The earning shortcut that ends every side panel. */
 function EarnMini() {
+  const { perAd: SPOT_REWARD, floor: FLOOR_CREDITS } = useReward();
   const { floorUnlocked, dispatch } = useWorkspace();
   return (
     <div className="flex items-center gap-3 rounded-2xl border border-accent-line bg-accent-soft p-3">

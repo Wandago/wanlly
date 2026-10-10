@@ -2,6 +2,7 @@ import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { db, rawSql, schema } from "@/db";
 import { DAILY_SPEND_LIMIT, DAILY_VIDEO_CAP, WEEKLY_SPEND_LIMIT, WEEKLY_SPEND_LIMIT_VERIFIED, type Usage } from "./catalog";
+import { rewardNow } from "./reward";
 
 type Reason = (typeof schema.ledgerEntries.$inferInsert)["reason"];
 
@@ -70,6 +71,7 @@ export async function account(userId: string): Promise<Account> {
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
   }
   const r = rows[0] ?? {};
+  const reward = await rewardNow().catch(() => null);
   const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
   return {
     credits: Number(r.credits ?? 0),
@@ -80,6 +82,8 @@ export async function account(userId: string): Promise<Account> {
       weekUsed: Number(r.week_used ?? 0),
       weekLimit: r.verified ? WEEKLY_SPEND_LIMIT_VERIFIED : WEEKLY_SPEND_LIMIT,
       verified: Boolean(r.verified),
+      reward: reward?.perAd,
+      floorBonus: reward?.floor,
       videos: Number(r.videos ?? 0),
       videoCap: DAILY_VIDEO_CAP,
       dayResetsAt: iso(r.day_resets),

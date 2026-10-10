@@ -1,7 +1,8 @@
 import "server-only";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { DAILY_VIDEO_CAP, FLOOR_CREDITS, SPOT_REWARD, SPOT_SECONDS } from "./catalog";
+import { DAILY_VIDEO_CAP, SPOT_SECONDS } from "./catalog";
+import { rewardNow } from "./reward";
 import { post } from "./ledger";
 import { clerk } from "./session";
 
@@ -84,16 +85,17 @@ export async function completeView(userId: string, viewId: string, country: stri
     .returning({ id: schema.adEvents.id });
   if (done.length === 0) return { earned: 0, bonus: false } as const;
 
+  const reward = await rewardNow();
   // The first finished video of the UTC day claims the bonus; the unique (user, day) row decides races.
   const bonus = await db()
     .insert(schema.dailyFloors)
-    .values({ userId, day: sql`current_date`, credits: FLOOR_CREDITS })
+    .values({ userId, day: sql`current_date`, credits: reward.floor })
     .onConflictDoNothing()
     .returning({ day: schema.dailyFloors.day });
   if (bonus.length > 0) {
-    await post(userId, FLOOR_CREDITS, "floor", `floor:${userId}:${bonus[0].day}`, "First ad today");
-    return { earned: FLOOR_CREDITS, bonus: true } as const;
+    await post(userId, reward.floor, "floor", `floor:${userId}:${bonus[0].day}`, "First ad today");
+    return { earned: reward.floor, bonus: true } as const;
   }
-  await post(userId, SPOT_REWARD, "video", `video:${viewId}`);
-  return { earned: SPOT_REWARD, bonus: false } as const;
+  await post(userId, reward.perAd, "video", `video:${viewId}`);
+  return { earned: reward.perAd, bonus: false } as const;
 }

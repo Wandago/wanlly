@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CHEAPEST_MODEL_ID, FLOOR_CREDITS, SPOT_REWARD, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
-import { isConnected, useWorkspace } from "@/lib/workspace-store";
+import { CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
+import { isConnected, useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 import { CreditsButton } from "./credits-button";
@@ -11,6 +11,7 @@ import { useAttachments } from "@/lib/attach";
 
 /** Out-of-credits message, shown inside the composer instead of a pop-up. */
 function Gate() {
+  const { perAd: SPOT_REWARD, floor: FLOOR_CREDITS } = useReward();
   const { gate, credits, price, tool, modelName, modelId, floorUnlocked, dispatch } = useWorkspace();
   const [phase, setPhase] = useState<"offer" | "playing" | "ready">("offer");
 

@@ -12,12 +12,24 @@ export type Turn = { role: "user" | "assistant"; text: string; files?: { mime: s
 export type ReplyEvent = { type: "text"; text: string } | { type: "done"; inputTokens: number; outputTokens: number; stop: string };
 
 /** Claude models: API id and US dollars per million tokens (input, output). */
-const CLAUDE: Record<string, { api: string; usdIn: number; usdOut: number; fallbacks: boolean }> = {
-  haiku: { api: "claude-haiku-5-5", usdIn: 0.1, usdOut: 0.5, fallbacks: false },
-  sonnet: { api: "claude-sonnet-5-5", usdIn: 2, usdOut: 10, fallbacks: true },
-  opus: { api: "claude-opus-5-5", usdIn: 4, usdOut: 20, fallbacks: true },
-  fable: { api: "claude-fable-5-1", usdIn: 10, usdOut: 50, fallbacks: true },
+const CLAUDE: Record<string, { api: string; usdIn: number; usdOut: number; fallbacks: boolean; cacheRead: number }> = {
+  haiku: { api: "claude-haiku-5-5", usdIn: 0.1, usdOut: 0.5, fallbacks: false, cacheRead: 0.1 },
+  sonnet: { api: "claude-sonnet-5-5", usdIn: 2, usdOut: 10, fallbacks: true, cacheRead: 0.1 },
+  opus: { api: "claude-opus-5-5", usdIn: 4, usdOut: 20, fallbacks: true, cacheRead: 0.05 },
+  fable: { api: "claude-fable-5-1", usdIn: 10, usdOut: 50, fallbacks: true, cacheRead: 0.025 },
 };
+/** A cache write costs 1.25 times a normal input token (5-minute cache). */
+const CACHE_WRITE = 1.25;
+
+/**
+ * Input tokens at full price that cost the same as what Claude actually read: uncached tokens,
+ * plus cache writes at 1.25× and cache reads at the model's discount (a twentieth on Opus). Used
+ * for the bill and for credits, so people pay less when their files are re-read from cache.
+ */
+export function billedInput(modelId: string, usage: { input_tokens: number; cache_creation_input_tokens?: number | null; cache_read_input_tokens?: number | null }) {
+  const read = CLAUDE[modelId]?.cacheRead ?? 0.1;
+  return Math.ceil(usage.input_tokens + (usage.cache_creation_input_tokens ?? 0) * CACHE_WRITE + (usage.cache_read_input_tokens ?? 0) * read);
+}
 
 export function providers(): Providers {
   const google = !!process.env.GEMINI_API_KEY;
@@ -272,6 +284,9 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
           : { role: t.role, content: t.text },
       ),
       output_config: { effort: tool === "chat" ? "low" : "medium" },
+      // Cache the prompt so the next request re-reads it at a fraction of the price: always for
+      // code and design (long instructions, "continue" rounds), and for chats with history.
+      ...(tool !== "chat" || turns.length > 2 ? { cache_control: { type: "ephemeral" as const } } : {}),
       ...(m.fallbacks ? { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const } : {}),
     },
     { signal },
@@ -281,7 +296,7 @@ async function* claude(modelId: string, tool: ToolId, system: string, turns: Tur
   }
   const final = await stream.finalMessage();
   const stop = final.stop_reason === "refusal" ? "refusal" : final.stop_reason === "max_tokens" ? "max_tokens" : "end";
-  yield { type: "done", inputTokens: final.usage.input_tokens + (final.usage.cache_read_input_tokens ?? 0), outputTokens: final.usage.output_tokens, stop };
+  yield { type: "done", inputTokens: billedInput(modelId, final.usage), outputTokens: final.usage.output_tokens, stop };
 }
 
 // ---------------------------------------------------------------- NVIDIA (open models)

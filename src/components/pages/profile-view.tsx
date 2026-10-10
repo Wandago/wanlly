@@ -2,9 +2,9 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRef, useState, type ReactNode } from "react";
-import { FLOOR_CREDITS, MODELS, WEEKLY_SPEND_LIMIT_VERIFIED } from "@/lib/catalog";
+import { MODELS, WEEKLY_SPEND_LIMIT_VERIFIED } from "@/lib/catalog";
 import { AD_TOPICS, applyTheme, type Settings, type Theme } from "@/lib/settings";
-import { useWorkspace } from "@/lib/workspace-store";
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "../icon";
 import { UsageMeters } from "../usage-meters";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
@@ -392,6 +392,7 @@ function DataPanel() {
 }
 
 export function ProfileView() {
+  const { floor: FLOOR_CREDITS } = useReward();
   const { credits, floorUnlocked, usage, synced } = useWorkspace();
   const { settings, save } = useSettings();
   const { isSignedIn, user } = useUser();

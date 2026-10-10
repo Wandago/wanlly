@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 import {
   CHEAPEST_MODEL_ID,
+  FLOOR_CREDITS,
+  SPOT_REWARD,
   WEEKLY_SPEND_LIMIT_VERIFIED,
   IMAGE_MODEL_NAME,
   MODELS,
@@ -584,4 +586,10 @@ export function useWorkspace(): Workspace {
   const ctx = useContext(WorkspaceContext);
   if (!ctx) throw new Error("useWorkspace must be used inside WorkspaceProvider");
   return ctx;
+}
+
+/** Credits a finished ad earns now, and today's first ad; the catalog's numbers until the account loads. */
+export function useReward() {
+  const { usage } = useWorkspace();
+  return { perAd: usage?.reward ?? SPOT_REWARD, floor: usage?.floorBonus ?? FLOOR_CREDITS };
 }

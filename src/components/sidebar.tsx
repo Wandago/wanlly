@@ -5,8 +5,8 @@ import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { FLOOR_CREDITS, TOOLS, type ToolId } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+import { TOOLS, type ToolId } from "@/lib/catalog";
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { SidebarAd } from "./ads/rail";
 import { Icon, type IconName } from "./icon";
 import { UsageMeters } from "./usage-meters";
@@ -56,6 +56,7 @@ function useFolded(): [boolean, (v: boolean) => void] {
 }
 
 function TodayCard() {
+  const { floor: FLOOR_CREDITS } = useReward();
   const { credits, floorUnlocked, synced, usage, dispatch } = useWorkspace();
   const [folded, setFolded] = useFolded();
   const dayUsed = usage ? usage.dayUsed / usage.dayLimit : 0;

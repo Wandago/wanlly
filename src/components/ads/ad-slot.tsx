@@ -2,8 +2,8 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
-import { SPOT_REWARD, SPOT_SECONDS, SPOT_SPONSOR, type Sponsor } from "@/lib/catalog";
-import { useWorkspace } from "@/lib/workspace-store";
+import { SPOT_SECONDS, SPOT_SPONSOR, type Sponsor } from "@/lib/catalog";
+import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { openSponsor, useNetwork } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { openPhoneVerify } from "../phone-verify";
@@ -60,6 +60,7 @@ function SponsorLink({ sponsor, className }: { sponsor: Sponsor; className: stri
 }
 
 export function WatchButton({ onClick, earned = false, className = "" }: { onClick?: () => void; earned?: boolean; className?: string }) {
+  const { perAd: SPOT_REWARD } = useReward();
   return (
     <button
       type="button"
@@ -84,6 +85,7 @@ export function WatchButton({ onClick, earned = false, className = "" }: { onCli
 
 /** A video spot with its progress track. `progress` is 0 to 1. */
 export function VideoSpot({ aspect, sponsor, progress, maxHeight }: { aspect: VideoAspect; sponsor: Sponsor; progress: number; maxHeight?: number }) {
+  const { perAd: SPOT_REWARD } = useReward();
   const secs = Math.floor(progress * SPOT_SECONDS);
   return (
     <div>
@@ -326,6 +328,7 @@ export function SponsorCard({
 
 /** What the card folds into once the result is in: one native line, or a 320×50 banner. */
 export function SponsorLine({ sponsor, format, earned }: { sponsor: Sponsor; format: CardFormat; earned: boolean }) {
+  const { perAd: SPOT_REWARD } = useReward();
   const badge = earned && (
     <span className="rounded-full bg-good/12 px-[7px] py-0.5 font-mono text-[11px] text-good">+{SPOT_REWARD} earned</span>
   );
