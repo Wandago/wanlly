@@ -25,6 +25,16 @@ export type Affiliate = {
   places: string[];
   /** The landing page's share picture (https), shown on the ad when set. */
   image?: string;
+  /**
+   * A sponsor offer: credits the person earns once the partner confirms they signed up (0 for a
+   * plain affiliate link), and what the partner pays Wanlly for it, in US dollars.
+   */
+  credits?: number;
+  payoutUsd?: number;
+  /** The partner's name for the click id in the link, e.g. "subid" or "aff_sub". */
+  subParam?: string;
+  /** Shared secret in the partner's confirmation (postback) address. Made on save, never sent to the app. */
+  secret?: string;
 };
 
 const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
@@ -66,6 +76,10 @@ export function cleanAffiliates(v: unknown): Affiliate[] {
           : [],
         places: Array.isArray(o.places) ? AFFILIATE_PLACES.filter((p) => (o.places as unknown[]).includes(p)) : [...AFFILIATE_PLACES],
         image: httpsUrl(o.image),
+        credits: Math.max(0, Math.min(200, Math.round(Number(o.credits)) || 0)) || undefined,
+        payoutUsd: Math.max(0, Math.min(500, Number(o.payoutUsd) || 0)) || undefined,
+        subParam: /^[A-Za-z_][\w-]{0,19}$/.test(String(o.subParam ?? "")) ? String(o.subParam) : undefined,
+        secret: /^[a-f0-9]{32}$/.test(String(o.secret ?? "")) ? String(o.secret) : undefined,
       },
     ];
   });
@@ -85,6 +99,7 @@ export const affiliateSponsor = (a: Affiliate): Sponsor & { affiliateId: string;
   affiliateId: a.id,
   keywords: a.keywords,
   places: a.places,
+  offerCredits: a.credits,
 });
 
 /** How well an offer's keywords match some text: whole-word hits, longer words count more. */

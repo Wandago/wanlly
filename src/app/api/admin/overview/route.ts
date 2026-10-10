@@ -17,7 +17,7 @@ export async function GET(req: Request) {
           (select count(*) from users where status <> 'deleted')::int as users,
           (select count(*) from users where created_at >= date_trunc('day', now()))::int as new_today,
           (select count(distinct user_id) from ledger_entries where created_at >= date_trunc('day', now()))::int as active_today,
-          (select count(*) from ad_events where kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos_today,
+          (select count(*) from ad_events where kind = 'reward_completed' and partner not like 'offer:%' and created_at >= date_trunc('day', now()))::int as videos_today,
           (select coalesce(sum(delta) filter (where delta > 0), 0) from ledger_entries where created_at >= date_trunc('day', now()))::int as earned_today,
           (select coalesce(-sum(delta) filter (where reason in ('settle', 'release')), 0) from ledger_entries where created_at >= date_trunc('day', now()))::int as spent_today,
           (select count(*) from beta_applications where status = 'pending')::int as beta_pending,
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         select to_char(d.day, 'YYYY-MM-DD') as day,
           (select count(*) from users u where u.created_at >= d.day and u.created_at < d.day + interval '1 day')::int as signups,
           (select count(distinct l.user_id) from ledger_entries l where l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as active,
-          (select count(*) from ad_events a where a.kind = 'reward_completed' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as videos,
+          (select count(*) from ad_events a where a.kind = 'reward_completed' and a.partner not like 'offer:%' and a.created_at >= d.day and a.created_at < d.day + interval '1 day')::int as videos,
           (select coalesce(-sum(l.delta), 0) from ledger_entries l where l.reason in ('settle', 'release') and l.created_at >= d.day and l.created_at < d.day + interval '1 day')::int as spent,
           (select count(*) from beta_applications b where b.created_at >= d.day and b.created_at < d.day + interval '1 day')::int as applications
         from d order by d.day desc`,
@@ -40,6 +40,7 @@ export async function GET(req: Request) {
       q`select to_char(now(), 'YYYY-MM-DD') as day,
           (select coalesce(sum(c.cpm_cents), 0) from ad_events a join campaigns c on a.creative = 'campaign:' || c.id
             where a.kind = 'impression' and a.created_at >= date_trunc('day', now()))::bigint as cpm_cents,
+          (select coalesce(sum(revenue_micros), 0) from ad_events where kind = 'reward_completed' and partner like 'offer:%' and created_at >= date_trunc('day', now()))::bigint as offer_micros,
           (select coalesce(json_agg(x), '[]') from (select model_id, sum(input_tokens)::bigint as i, sum(output_tokens)::bigint as o from messages
             where role = 'assistant' and model_id is not null and created_at >= date_trunc('day', now()) group by model_id) x) as usage`,
     ]);
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
     const day = String(td.day);
     const [network, entries] = await Promise.all([adsterraDaily(day, day), readEntries()]);
     const realRevenue =
-      num(td.cpm_cents) / 100 / 1000 + (network?.days ?? []).filter((x) => x.day === day).reduce((a, x) => a + x.usd, 0) + entries.filter((e) => e.day === day).reduce((a, e) => a + e.usd, 0);
+      num(td.cpm_cents) / 100 / 1000 + num(td.offer_micros) / 1e6 + (network?.days ?? []).filter((x) => x.day === day).reduce((a, x) => a + x.usd, 0) + entries.filter((e) => e.day === day).reduce((a, e) => a + e.usd, 0);
     const realCost = ((td.usage ?? []) as { model_id: string; i: number; o: number }[]).reduce((a, u) => a + replyCostUsd(u.model_id, num(u.i), num(u.o)), 0);
     const t = (totals as Record<string, unknown>[])[0] ?? {};
     return Response.json({

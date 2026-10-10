@@ -17,6 +17,8 @@ export type Model = {
 export type CoverKind = "db" | "deploy" | "type" | "print" | "notes" | "laptop" | "course" | "jobs";
 
 export type Sponsor = {
+  /** Credits for signing up with a sponsor offer, confirmed by the partner (lib/affiliates.ts). */
+  offerCredits?: number;
   name: string;
   cover?: CoverKind;
   initial: string;

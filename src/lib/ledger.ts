@@ -52,7 +52,7 @@ export async function account(userId: string): Promise<Account> {
         coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= (select ws from u)), 0)::int as week_used,
         (select ss + interval '6 hours' from u) as day_resets,
         (select ws + interval '7 days' from u) as week_resets,
-        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
+        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and partner not like 'offer:%' and created_at >= date_trunc('day', now()))::int as videos,
         exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor,
         coalesce((select phone_verified from users where id = ${userId}), false) as verified
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
@@ -65,7 +65,7 @@ export async function account(userId: string): Promise<Account> {
         coalesce(-sum(delta) filter (where reason in ('settle', 'release') and created_at >= date_trunc('week', now())), 0)::int as week_used,
         date_trunc('day', now()) + interval '1 day' as day_resets,
         date_trunc('week', now()) + interval '7 days' as week_resets,
-        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and created_at >= date_trunc('day', now()))::int as videos,
+        (select count(*) from ad_events where user_id = ${userId} and kind = 'reward_completed' and partner not like 'offer:%' and created_at >= date_trunc('day', now()))::int as videos,
         exists (select 1 from daily_floors where user_id = ${userId} and day = current_date) as floor,
         coalesce((select phone_verified from users where id = ${userId}), false) as verified
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];

@@ -65,7 +65,7 @@ async function measure(): Promise<{ usdPerAd: number; ads: number }> {
   const q = rawSql();
   const [rows, network, entries] = await Promise.all([
     q`select
-        (select count(*)::int from ad_events where kind = 'reward_completed' and created_at >= now() - interval '14 days') as ads,
+        (select count(*)::int from ad_events where kind = 'reward_completed' and partner not like 'offer:%' and created_at >= now() - interval '14 days') as ads,
         (select coalesce(sum(c.cpm_cents), 0)::bigint from ad_events a join campaigns c on a.creative = 'campaign:' || c.id
           where a.kind = 'impression' and a.created_at >= now() - interval '14 days') as cpm_cents` as unknown as Promise<{ ads: number; cpm_cents: number }[]>,
     adsterraDaily(day(start), day(end)),

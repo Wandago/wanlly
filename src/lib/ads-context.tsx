@@ -130,6 +130,12 @@ export function useNetwork() {
   }, [networks, host, version]);
 }
 
+/** Sponsor offers that pay credits once the partner confirms a signup (Admin → Affiliates). */
+export function useOffers(): Sponsor[] {
+  const { house } = useContext(AdsContext);
+  return useMemo(() => house.filter((h) => h.offerCredits && h.affiliateId), [house]);
+}
+
 /** A counter that ticks every `ms` while the page is visible, for alternating ads in a slot. */
 export function useTick(ms: number, offset = 0) {
   const [i, setI] = useState(offset);

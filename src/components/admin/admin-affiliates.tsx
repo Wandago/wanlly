@@ -205,6 +205,39 @@ export function AffiliatesCard() {
                       })}
                     </div>
                   </div>
+                  <div className="flex flex-col gap-2 rounded-xl border border-line p-3 text-[13px] sm:col-span-2">
+                    <b className="font-semibold">Sponsor offer <span className="font-normal text-faint">optional: pay credits when the partner confirms a sign-up</span></b>
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex flex-col gap-1 font-medium">
+                        Credits for the person
+                        <input type="number" min={0} max={200} className={`${input} w-[120px]`} value={a.credits ?? ""} placeholder="0 = plain link" onChange={(e) => change(a.id, { credits: Number(e.target.value) || undefined })} />
+                      </label>
+                      <label className="flex flex-col gap-1 font-medium">
+                        Partner pays you ($)
+                        <input type="number" min={0} step={0.01} className={`${input} w-[120px]`} value={a.payoutUsd ?? ""} onChange={(e) => change(a.id, { payoutUsd: Number(e.target.value) || undefined })} />
+                      </label>
+                      <label className="flex flex-col gap-1 font-medium">
+                        Click id parameter
+                        <input className={`${input} w-[140px]`} value={a.subParam ?? ""} placeholder="subid" onChange={(e) => change(a.id, { subParam: e.target.value.trim() || undefined })} />
+                      </label>
+                    </div>
+                    {a.credits ? (
+                      a.secret ? (
+                        <p className="text-xs text-muted">
+                          Give the partner this confirmation (postback) address; they replace {"{click}"} with their click id macro:
+                          <code className="mt-1 block font-mono text-[11px] break-all text-fg">
+                            {typeof window !== "undefined" ? window.location.origin : ""}/api/offers/postback?offer={a.id}&amp;click={"{click}"}&amp;secret={a.secret}
+                          </code>
+                          Keep the address private: anyone with it could confirm sign-ups.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted">Save to create this offer&apos;s confirmation address.</p>
+                      )
+                    ) : null}
+                    {a.credits && a.payoutUsd !== undefined && a.credits * 0.005 > a.payoutUsd * 0.7 ? (
+                      <p className="text-xs text-bad">These credits cost more in AI than 70% of the payout. Lower the credits or check the payout.</p>
+                    ) : null}
+                  </div>
                 </div>
               )}
             </li>

@@ -25,7 +25,7 @@ async function completedToday(userId: string): Promise<number> {
   const [row] = await db()
     .select({ n: sql<number>`count(*)::int` })
     .from(schema.adEvents)
-    .where(and(eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_completed"), gte(schema.adEvents.createdAt, sql`date_trunc('day', now())`)));
+    .where(and(eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_completed"), eq(schema.adEvents.partner, PARTNER), gte(schema.adEvents.createdAt, sql`date_trunc('day', now())`)));
   return row?.n ?? 0;
 }
 

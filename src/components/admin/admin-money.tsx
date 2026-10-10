@@ -13,7 +13,7 @@ import { TrendChart } from "./trend-chart";
 type Money = {
   days: number;
   usdPerCredit: number;
-  daily: { day: string; campaigns: number; network: number; manual: number; cost: number; credits: number }[];
+  daily: { day: string; campaigns: number; network: number; manual: number; offers: number; cost: number; credits: number }[];
   models: { model: string; name: string; replies: number; input: number; output: number; credits: number; cost: number }[];
   rates: { model: string; name: string; credits: number; outPerCredit: number; inPerCredit: number; costOut: number; costIn: number }[];
   network: { connected: boolean; error: string | null };
@@ -42,10 +42,10 @@ export function MoneyPanel({ days }: { days: 7 | 30 }) {
   if (!data) return <Loading />;
 
   const t = data.daily.reduce(
-    (a, d) => ({ campaigns: a.campaigns + d.campaigns, network: a.network + d.network, manual: a.manual + d.manual, cost: a.cost + d.cost, credits: a.credits + d.credits }),
-    { campaigns: 0, network: 0, manual: 0, cost: 0, credits: 0 },
+    (a, d) => ({ campaigns: a.campaigns + d.campaigns, network: a.network + d.network, manual: a.manual + d.manual, offers: a.offers + (d.offers ?? 0), cost: a.cost + d.cost, credits: a.credits + d.credits }),
+    { campaigns: 0, network: 0, manual: 0, offers: 0, cost: 0, credits: 0 },
   );
-  const revenue = t.campaigns + t.network + t.manual;
+  const revenue = t.campaigns + t.network + t.manual + t.offers;
   const tk = data.models.reduce((a, m) => ({ input: a.input + m.input, output: a.output + m.output }), { input: 0, output: 0 });
   return (
     <div className="flex flex-col gap-4">
@@ -61,7 +61,7 @@ export function MoneyPanel({ days }: { days: 7 | 30 }) {
           days={data.daily.map((d) => d.day)}
           format={usd}
           series={[
-            { key: "rev", label: "Revenue", color: S1, values: data.daily.map((d) => d.campaigns + d.network + d.manual) },
+            { key: "rev", label: "Revenue", color: S1, values: data.daily.map((d) => d.campaigns + d.network + d.manual + (d.offers ?? 0)) },
             { key: "cost", label: "AI cost", color: S2, values: data.daily.map((d) => d.cost) },
           ]}
         />
@@ -77,6 +77,7 @@ export function MoneyPanel({ days }: { days: 7 | 30 }) {
               data.network.connected ? usd(t.network) : "–",
               data.network.connected ? "From Adsterra's publisher API" : data.network.error ?? "Add the ADSTERRA_API_KEY secret (Adsterra → Settings → API) to pull real earnings",
             ],
+            ["Sponsor offers", usd(t.offers), "Sign-ups partners confirmed, at their reported payout"],
             ["Recorded by hand", usd(t.manual), "Affiliate commissions, sponsorships, other payouts"],
           ]}
         />

@@ -4,6 +4,7 @@ import { CAN, logAction, requireStaff } from "@/lib/admin";
 import { cleanAffiliates } from "@/lib/affiliates";
 import { loadAffiliates } from "@/lib/affiliates-server";
 import { jsonUpTo } from "@/lib/forms";
+import { dbErrorMessage } from "@/lib/migrations";
 
 /** The affiliate list, for Admin. */
 export async function GET(req: Request) {
@@ -18,7 +19,8 @@ export async function PUT(req: Request) {
   if (staff instanceof Response) return staff;
   const data = await jsonUpTo(req, 100_000);
   if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
-  const affiliates = cleanAffiliates(data.affiliates);
+  // Offers get a postback secret the first time they're saved; existing ones keep theirs.
+  const affiliates = cleanAffiliates(data.affiliates).map((a) => (a.credits && !a.secret ? { ...a, secret: crypto.randomUUID().replace(/-/g, "") } : a));
   try {
     await db()
       .insert(schema.appFlags)
@@ -28,6 +30,6 @@ export async function PUT(req: Request) {
     return Response.json({ affiliates });
   } catch (e) {
     console.error("affiliates save failed", e);
-    return Response.json({ error: "Database unavailable" }, { status: 503 });
+    return Response.json({ error: dbErrorMessage(e) }, { status: 503 });
   }
 }

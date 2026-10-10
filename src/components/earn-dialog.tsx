@@ -6,6 +6,8 @@ import { SPOT_SPONSOR } from "@/lib/catalog";
 import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
 import { RewardedSpot } from "./ads/ad-slot";
+import { useOffers } from "@/lib/ads-context";
+import { SAY } from "@/lib/messages";
 
 function Option({
   icon,
@@ -53,6 +55,22 @@ export function EarnDialog() {
   const { earnOpen, floorUnlocked, dispatch } = useWorkspace();
   const [playing, setPlaying] = useState<null | "self">(null);
   const close = () => dispatch({ type: "setEarnOpen", open: false });
+  const offers = useOffers();
+  // The partner's page opens in a new tab with a one-time click id, so their confirmation can
+  // credit this person. Opened first, then pointed at the link, so pop-up blockers allow it.
+  const startOffer = async (id: string) => {
+    const tab = window.open("about:blank", "_blank");
+    const r = await fetch(`/api/offers/${encodeURIComponent(id)}/click`, { method: "POST" }).catch(() => null);
+    const b = await r?.json().catch(() => ({}));
+    if (r?.ok && b?.url && tab) {
+      tab.opener = null;
+      tab.location.href = b.url;
+      dispatch({ type: "toast", text: "Credits arrive once the sponsor confirms your sign-up" });
+    } else {
+      tab?.close();
+      dispatch({ type: "toast", text: b?.error ?? SAY.offline });
+    }
+  };
 
   return (
     <Dialog.Root
@@ -96,13 +114,20 @@ export function EarnDialog() {
               ) : (
                 <Option icon="play" title="Today's first ad" detail="Your first ad each day earns a bonus" gain={FLOOR_CREDITS} onClick={() => setPlaying("self")} />
               )}
-              <Option
-                icon="gift"
-                title="Try a sponsor's tool"
-                detail="Northbeam DB · create a free database"
-                gain="Soon"
-                locked
-              />
+              {offers.length ? (
+                offers.map((o) => (
+                  <Option
+                    key={o.affiliateId}
+                    icon="gift"
+                    title={o.headline}
+                    detail={`${o.name} · credits arrive once ${o.name} confirms your sign-up`}
+                    gain={o.offerCredits ?? 0}
+                    onClick={() => startOffer(o.affiliateId!)}
+                  />
+                ))
+              ) : (
+                <Option icon="gift" title="Try a sponsor's tool" detail="Sign up for a tool a sponsor offers and earn credits" gain="Soon" locked />
+              )}
               <Option
                 icon="search"
                 title="Answer a short survey"

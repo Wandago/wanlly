@@ -22,7 +22,7 @@ export async function GET(req: Request) {
   const since = `${days - 1} days`;
   try {
     const q = rawSql();
-    const [dayList, campaigns, usage] = await Promise.all([
+    const [dayList, campaigns, usage, offers] = await Promise.all([
       q`select to_char(d, 'YYYY-MM-DD') as day from generate_series(date_trunc('day', now()) - ${since}::interval, date_trunc('day', now()), interval '1 day') d order by d`,
       // Sold campaigns: impressions × agreed price per 1,000.
       q`select to_char(date_trunc('day', a.created_at), 'YYYY-MM-DD') as day, coalesce(sum(c.cpm_cents), 0)::bigint as cpm_cents
@@ -38,13 +38,20 @@ export async function GET(req: Request) {
             coalesce(sum((to_jsonb(v)->>'input_tokens')::int), 0), coalesce(sum((to_jsonb(v)->>'output_tokens')::int), 0), coalesce(sum(v.credits), 0)
           from design_versions v where v.created_at >= date_trunc('day', now()) - ${since}::interval group by 1, 2
         ) t group by day, model_id`,
+      // Sponsor offers the partner confirmed, at the payout they reported.
+      q`select to_char(date_trunc('day', created_at), 'YYYY-MM-DD') as day, coalesce(sum(revenue_micros), 0)::bigint as micros
+        from ad_events where kind = 'reward_completed' and partner like 'offer:%' and created_at >= date_trunc('day', now()) - ${since}::interval group by 1`,
     ]);
     const list = rows(dayList).map((r) => String(r.day));
     const start = list[0];
     const end = list[list.length - 1];
     const [network, entries] = await Promise.all([adsterraDaily(start, end), readEntries()]);
 
-    const byDay = new Map(list.map((d) => [d, { day: d, campaigns: 0, network: 0, manual: 0, cost: 0, credits: 0 }]));
+    const byDay = new Map(list.map((d) => [d, { day: d, campaigns: 0, network: 0, manual: 0, offers: 0, cost: 0, credits: 0 }]));
+    for (const r of rows(offers)) {
+      const d = byDay.get(String(r.day));
+      if (d) d.offers += n(r.micros) / 1e6;
+    }
     for (const r of rows(campaigns)) {
       const d = byDay.get(String(r.day));
       if (d) d.campaigns += n(r.cpm_cents) / 100 / 1000;
