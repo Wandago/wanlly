@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-store";
 import { RAIL_SPONSORS } from "@/lib/catalog";
 import { applyTheme, type Settings } from "@/lib/settings";
@@ -16,6 +16,7 @@ import { EarnDialog } from "./earn-dialog";
 import { Interstitial } from "./ads/interstitial";
 import { AdBlockWall } from "./ads/adblock-wall";
 import { Sidebar } from "./sidebar";
+import { BetaWaiting } from "./beta-waiting";
 
 function Toast() {
   const { toast } = useWorkspace();
@@ -34,7 +35,7 @@ function Toast() {
  * Saves the signed-in person to our database on every visit (and their country, the first time),
  * so nobody depends on the Clerk webhook arriving. Credits on screen are still the demo until Step 3.
  */
-function AccountSync() {
+function AccountSync({ onWaiting }: { onWaiting: (email: string | null) => void }) {
   const { isLoaded, isSignedIn, userId } = useAuth();
   const { dispatch } = useWorkspace();
   const router = useRouter();
@@ -48,6 +49,7 @@ function AccountSync() {
       .then(async (r) => {
         const b = await r.json().catch(() => ({}));
         if (!r.ok) return console.warn("Account sync:", r.status, b?.error);
+        if (b.access === "waiting") onWaiting(b.email ?? null);
         dispatch({ type: "account", credits: b.credits, floorUnlocked: b.floorUnlocked, usage: b.usage, me: { country: b.country, status: b.status, role: b.role }, providers: b.providers });
         dispatch({ type: "memory", memory: b.memory ?? null });
         // Settings load after /api/me, which creates the account row on a first visit.
@@ -58,7 +60,7 @@ function AccountSync() {
         dispatch({ type: "settings", settings, first: true });
       })
       .catch(() => console.warn("Account sync: network error"));
-  }, [isSignedIn, userId, dispatch]);
+  }, [isSignedIn, userId, dispatch, onWaiting]);
   return null;
 }
 
@@ -106,12 +108,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   const roomy = usePathname().startsWith("/design/");
   // With an ad blocker on, the app underneath can't be used until ads are allowed.
   const [walled, setWalled] = useState(false);
+  // Signed in, but their place in the private beta hasn't opened yet.
+  const [waiting, setWaiting] = useState<{ email: string | null } | null>(null);
+  const onWaiting = useCallback((email: string | null) => setWaiting({ email }), []);
   return (
     <WorkspaceProvider>
       <AdsProvider>
         <div
-          inert={walled}
-          aria-hidden={walled || undefined}
+          inert={walled || !!waiting}
+          aria-hidden={walled || !!waiting || undefined}
           className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[240px_minmax(0,1fr)_344px]" : "xl:grid-cols-[240px_minmax(0,1fr)_344px]"}`}
         >
           <Sidebar />
@@ -123,7 +128,8 @@ export function AppShell({ children }: { children: ReactNode }) {
         <EarnDialog />
         <Interstitial />
         <Toast />
-        <AccountSync />
+        <AccountSync onWaiting={onWaiting} />
+        {waiting && <BetaWaiting email={waiting.email} />}
       </AdsProvider>
     </WorkspaceProvider>
   );

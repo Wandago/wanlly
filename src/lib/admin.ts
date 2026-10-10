@@ -33,6 +33,8 @@ export async function logAction(actorId: string, action: string, target: string,
 export const FLAGS = {
   earningPaused: "Earning is paused for everyone for a short while. Please try again later.",
   spendingPaused: "Wanlly's models are paused for everyone for a short while. Please try again later.",
+  /** On when the beta ends: anyone who signs up can use Wanlly, not only approved applicants. */
+  signupOpen: "",
 } as const;
 export type FlagKey = keyof typeof FLAGS;
 
@@ -48,11 +50,36 @@ export async function blockedReason(userId: string, action: "earn" | "spend"): P
   const q = rawSql();
   const rows = (await q`
     select (select status from users where id = ${userId}) as status,
-      coalesce((select value = 'true'::jsonb from app_flags where key = ${flag}), false) as paused`) as { status: string | null; paused: boolean }[];
+      coalesce((select value = 'true'::jsonb from app_flags where key = ${flag}), false) as paused,
+      (select u.role <> 'user'
+          or coalesce((select value = 'true'::jsonb from app_flags where key = 'signupOpen'), false)
+          or u.created_at < ${BETA_GATE_SINCE}::timestamptz
+          or exists (select 1 from beta_applications b where lower(b.email) = lower(u.email) and b.status = 'approved')
+        from users u where u.id = ${userId}) as access`) as { status: string | null; paused: boolean; access: boolean | null }[];
   const r = rows[0];
   if (r?.paused) return FLAGS[flag];
   if (r?.status && BLOCKED.has(r.status)) return "Your account is paused while we take a look. Contact us if you think this is a mistake.";
+  if (r && r.access === false) return WAITING;
   return null;
+}
+
+/**
+ * The private beta. Accounts made before the gate went live keep their place; after that, Wanlly
+ * is for staff and people whose beta application was approved (matched by email), until the
+ * signupOpen switch opens it to everyone.
+ */
+export const BETA_GATE_SINCE = "2026-10-10T00:00:00Z";
+export const WAITING = "You're on the Wanlly beta list. We'll email you as soon as your place opens.";
+/** Whether this person may use Wanlly yet (see BETA_GATE_SINCE). */
+export async function hasAccess(userId: string): Promise<boolean> {
+  const q = rawSql();
+  const [r] = (await q`
+    select u.role <> 'user'
+        or coalesce((select value = 'true'::jsonb from app_flags where key = 'signupOpen'), false)
+        or u.created_at < ${BETA_GATE_SINCE}::timestamptz
+        or exists (select 1 from beta_applications b where lower(b.email) = lower(u.email) and b.status = 'approved') as access
+    from users u where u.id = ${userId}`) as { access: boolean | null }[];
+  return r?.access !== false;
 }
 
 /** The admin page's date range: 7 or 30 days, ending today (UTC). */

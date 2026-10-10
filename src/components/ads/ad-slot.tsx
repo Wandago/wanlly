@@ -1,5 +1,6 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
 import { SPOT_REWARD, SPOT_SECONDS, SPOT_SPONSOR, type Sponsor } from "@/lib/catalog";
@@ -132,12 +133,15 @@ export function RewardedSpot({
   maxHeight?: number;
 }) {
   const { dispatch } = useWorkspace();
+  const clerk = useClerk();
   const [progress, setProgress] = useState(0);
   const done = useRef(onDone);
+  const openProfile = useRef(clerk.openUserProfile);
   const view = useRef<Promise<string | null> | null>(null);
   useEffect(() => {
     done.current = onDone;
-  }, [onDone]);
+    openProfile.current = clerk.openUserProfile;
+  }, [onDone, clerk]);
 
   useEffect(() => {
     // Once per mount, even when React runs effects twice in development.
@@ -145,6 +149,9 @@ export function RewardedSpot({
       .then(({ ok, body }) => {
         if (ok) return body.viewId as string;
         dispatch({ type: "toast", text: body.error ?? "Couldn't start the video" });
+        // Past the first video of the day, earning needs a verified phone: open Clerk's profile,
+        // where they can add one. The next video checks again.
+        if (body.need === "phone") openProfile.current();
         return null;
       })
       .catch(() => null);
@@ -161,6 +168,7 @@ export function RewardedSpot({
           const { ok, body } = await postJson("/api/earn/complete", { viewId });
           if (!ok) {
             dispatch({ type: "toast", text: body.error ?? "Couldn't add those credits" });
+            if (body.need === "phone") openProfile.current();
             return null;
           }
           const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first video today" : ""}` : undefined;

@@ -199,14 +199,26 @@ function cameFrom(a: Application) {
 function inviteMail(a: Application) {
   const site = window.location.origin;
   const first = a.name.split(" ")[0];
-  const body = `Hi ${first},\n\nYou're in. Thanks for applying to the Wanlly beta.\n\nSign up here: ${site}/sign-up\nYour invite code: ${a.inviteCode}\n\nWatch short sponsor videos to earn credits, then build with Claude or Gemini. Reply to this email if anything breaks.\n\nLouis, Wanlly`;
+  const body = `Hi ${first},\n\nYou're in. Thanks for applying to the Wanlly beta.\n\nSign up here with this email address (${a.email}), so Wanlly knows it's you: ${site}/sign-up\n\nWatch short sponsor videos to earn credits, then build with Claude or Gemini. Reply to this email if anything breaks.\n\nLouis, Wanlly`;
   return `mailto:${encodeURIComponent(a.email)}?subject=${encodeURIComponent("You're in: your Wanlly beta invite")}&body=${encodeURIComponent(body)}`;
 }
 
 function Beta() {
   const [status, setStatus] = useState<"pending" | "approved" | "declined" | "all">("pending");
-  const { items, setItems, error } = useList<Application>(`/api/admin/beta${status === "all" ? "" : `?status=${status}`}`, "applications");
+  const { items, setItems, extra, error } = useList<Application>(`/api/admin/beta${status === "all" ? "" : `?status=${status}`}`, "applications");
   const [busy, setBusy] = useState<number | null>(null);
+  const [open, setOpen] = useState<boolean | null>(null);
+  const isOpen = open ?? extra.signupOpen === true;
+  const flipOpen = async () => {
+    const reason = window.prompt(isOpen ? "Close sign-up again, so only approved applicants get in? Give a reason for the log." : "Open Wanlly to everyone who signs up, ending the private beta? Give a reason for the log.");
+    if (!reason?.trim()) return;
+    try {
+      await api("/api/admin/flags", "POST", { key: "signupOpen", on: !isOpen, reason });
+      setOpen(!isOpen);
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
   const [note, setNote] = useState("");
 
   const decide = async (a: Application, next: Application["status"]) => {
@@ -223,74 +235,89 @@ function Beta() {
   };
 
   return (
-    <Card
-      title="Beta applications"
-      note="Approve, then send the invite from your own email. Decisions are logged."
-      actions={
-        <Pills
-          label="Show"
-          value={status}
-          onChange={setStatus}
-          options={[
-            ["pending", "Waiting"],
-            ["approved", "Approved"],
-            ["declined", "Declined"],
-            ["all", "All"],
-          ]}
-        />
-      }
-    >
-      {note && <p className="text-[13px] text-bad">{note}</p>}
-      {error ? (
-        <Empty>{error}</Empty>
-      ) : !items ? (
-        <Empty>Loading…</Empty>
-      ) : items.length === 0 ? (
-        <Empty>Nothing here.</Empty>
-      ) : (
-        <ul className="flex flex-col">
-          {items.map((a) => (
-            <li key={a.id} className="flex flex-wrap items-start gap-3 border-t border-line py-3 first:border-t-0 first:pt-0">
-              <div className="min-w-0 flex-1 basis-[320px]">
-                <div className="flex flex-wrap items-center gap-2">
-                  <b className="font-semibold">{a.name}</b>
-                  <span className="text-[13px] text-muted">{a.email}</span>
-                  <Chip s={a.status} />
+    <div className="flex flex-col gap-4">
+      <Card
+        title="Who can use Wanlly"
+        note={isOpen ? "Open to everyone: anyone who signs up can use it." : "Private beta: staff, accounts made before the beta gate, and people whose application is approved here. Everyone else sees that they're on the list. They sign up with the email they applied with."}
+        actions={
+          <button type="button" className={isOpen ? btnGhost : btnDark} onClick={flipOpen}>
+            {isOpen ? "Back to private beta" : "Open to everyone"}
+          </button>
+        }
+      >
+        <p className="flex items-center gap-2 text-[13px]">
+          <Chip s={isOpen ? "active" : "pending"} label={isOpen ? "Open sign-up" : "Private beta"} />
+        </p>
+      </Card>
+      <Card
+        title="Beta applications"
+        note="Approving lets that email in straight away. Then send the invite from your own email. Decisions are logged."
+        actions={
+          <Pills
+            label="Show"
+            value={status}
+            onChange={setStatus}
+            options={[
+              ["pending", "Waiting"],
+              ["approved", "Approved"],
+              ["declined", "Declined"],
+              ["all", "All"],
+            ]}
+          />
+        }
+      >
+        {note && <p className="text-[13px] text-bad">{note}</p>}
+        {error ? (
+          <Empty>{error}</Empty>
+        ) : !items ? (
+          <Empty>Loading…</Empty>
+        ) : items.length === 0 ? (
+          <Empty>Nothing here.</Empty>
+        ) : (
+          <ul className="flex flex-col">
+            {items.map((a) => (
+              <li key={a.id} className="flex flex-wrap items-start gap-3 border-t border-line py-3 first:border-t-0 first:pt-0">
+                <div className="min-w-0 flex-1 basis-[320px]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <b className="font-semibold">{a.name}</b>
+                    <span className="text-[13px] text-muted">{a.email}</span>
+                    <Chip s={a.status} />
+                  </div>
+                  <p className="mt-1 text-[13px] whitespace-pre-wrap">{a.build}</p>
+                  <small className="mt-1 block text-xs text-faint">
+                    {[a.country && `Says ${a.country}`, a.networkCountry && `network ${a.networkCountry}`, a.source && `says heard via ${a.source}`, a.channel && `came from ${cameFrom(a)}`, a.referralCode && `referred by ${a.referralCode}`, `applied ${when(a.createdAt)}`, `code ${a.inviteCode}`]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
                 </div>
-                <p className="mt-1 text-[13px] whitespace-pre-wrap">{a.build}</p>
-                <small className="mt-1 block text-xs text-faint">
-                  {[a.country && `Says ${a.country}`, a.networkCountry && `network ${a.networkCountry}`, a.source && `says heard via ${a.source}`, a.channel && `came from ${cameFrom(a)}`, a.referralCode && `referred by ${a.referralCode}`, `applied ${when(a.createdAt)}`, `code ${a.inviteCode}`]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </small>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {a.status === "approved" && (
-                  <a href={inviteMail(a)} className={btnDark}>
-                    Email invite
-                  </a>
-                )}
-                {a.status !== "approved" && (
-                  <button type="button" className={btnDark} disabled={busy === a.id} onClick={() => decide(a, "approved")}>
-                    Approve
-                  </button>
-                )}
-                {a.status !== "declined" && (
-                  <button type="button" className={btnGhost} disabled={busy === a.id} onClick={() => decide(a, "declined")}>
-                    Decline
-                  </button>
-                )}
-                {a.status !== "pending" && (
-                  <button type="button" className={btnGhost} disabled={busy === a.id} onClick={() => decide(a, "pending")}>
-                    Undo
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
+                <div className="flex flex-wrap gap-1.5">
+                  {a.status === "approved" && (
+                    <a href={inviteMail(a)} className={btnDark}>
+                      Email invite
+                    </a>
+                  )}
+                  {a.status !== "approved" && (
+                    <button type="button" className={btnDark} disabled={busy === a.id} onClick={() => decide(a, "approved")}>
+                      Approve
+                    </button>
+                  )}
+                  {a.status !== "declined" && (
+                    <button type="button" className={btnGhost} disabled={busy === a.id} onClick={() => decide(a, "declined")}>
+                      Decline
+                    </button>
+                  )}
+                  {a.status !== "pending" && (
+                    <button type="button" className={btnGhost} disabled={busy === a.id} onClick={() => decide(a, "pending")}>
+                      Undo
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
   );
 }
 

@@ -17,7 +17,8 @@ export async function GET(req: Request) {
       .where(filter ? eq(b.status, filter) : undefined)
       .orderBy(desc(b.createdAt))
       .limit(200);
-    return Response.json({ applications: rows });
+    const [open] = await db().select({ value: schema.appFlags.value }).from(schema.appFlags).where(eq(schema.appFlags.key, "signupOpen")).limit(1);
+    return Response.json({ applications: rows, signupOpen: open?.value === true });
   } catch (e) {
     console.error("admin beta GET failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });

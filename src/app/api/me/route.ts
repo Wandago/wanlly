@@ -1,6 +1,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { db, rawSql, schema } from "@/db";
 import { ensureUser } from "@/lib/account";
+import { hasAccess } from "@/lib/admin";
 import { account } from "@/lib/ledger";
 import { clerk, signedInUserId } from "@/lib/session";
 import { visitorHash } from "@/lib/traffic";
@@ -19,8 +20,8 @@ export async function GET(req: Request) {
       .values({ userId: user.id, visitor: await visitorHash(req) })
       .onConflictDoUpdate({ target: [schema.userDevices.userId, schema.userDevices.visitor], set: { seenAt: sql`now()` } })
       .catch((e) => console.error("user device failed", e));
-    const [acct, memory] = await Promise.all([account(user.id), loadMemory(user.id)]);
-    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, providers: providers(), memory, ...acct });
+    const [acct, memory, access] = await Promise.all([account(user.id), loadMemory(user.id), hasAccess(user.id)]);
+    return Response.json({ id: user.id, country: user.country, status: user.status, role: user.role, access: access ? "ok" : "waiting", ...(access ? {} : { email: user.email }), providers: providers(), memory, ...acct });
   } catch (e) {
     console.error("api/me failed", e);
     return Response.json({ error: "Database unavailable" }, { status: 503 });

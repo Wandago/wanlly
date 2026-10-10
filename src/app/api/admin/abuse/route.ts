@@ -1,5 +1,5 @@
 import { rawSql } from "@/db";
-import { CAN, FLAGS, requireStaff } from "@/lib/admin";
+import { CAN, requireStaff } from "@/lib/admin";
 import { DAILY_VIDEO_CAP, SPOT_SECONDS } from "@/lib/catalog";
 
 const rows = (r: unknown) => r as Record<string, unknown>[];
@@ -69,7 +69,7 @@ export async function GET(req: Request) {
 
     return Response.json({
       flags: out.map((f) => ({ ...f, email: byId.get(f.userId)?.email ?? null, status: byId.get(f.userId)?.status ?? "unknown" })),
-      switches: (Object.keys(FLAGS) as (keyof typeof FLAGS)[]).map((key) => ({ key, on: flagValues.get(key) ?? false })),
+      switches: (["earningPaused", "spendingPaused"] as const).map((key) => ({ key, on: flagValues.get(key) ?? false })),
       canSwitch: (CAN.switches as readonly string[]).includes(staff.role),
       log: rows(log).map((r) => ({ actor: r.actor ?? r.actor_id, action: r.action, target: r.target, detail: r.detail, at: r.created_at })),
     });

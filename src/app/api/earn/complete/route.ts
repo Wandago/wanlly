@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   if (!viewId) return Response.json({ error: "Bad request" }, { status: 400 });
   try {
     const r = await completeView(userId, viewId, req.headers.get("cf-ipcountry"));
-    if ("error" in r) return Response.json({ error: r.error }, { status: r.status });
+    if ("error" in r) return Response.json({ error: r.error, ...("need" in r ? { need: r.need } : {}) }, { status: r.status });
     return Response.json({ ...r, ...(await account(userId)) });
   } catch (e) {
     console.error("earn/complete failed", e);
