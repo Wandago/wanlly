@@ -32,12 +32,12 @@ async function gh<T>(token: string, path: string, init: RequestInit = {}): Promi
 }
 
 /**
- * Credits Wanlly on every commit it makes, with GitHub's co-author line. WANLLY_GITHUB_COAUTHOR
- * (Cloudflare setting) is the GitHub account's "Name <ID+username@users.noreply.github.com>", so
- * GitHub shows its avatar; without it the credit is plain text.
+ * Credits Wanlly on every commit it makes, with GitHub's co-author line, as the WanllyHQ GitHub
+ * account (so GitHub shows its logo among the contributors). WANLLY_GITHUB_COAUTHOR (Cloudflare
+ * setting) overrides it with another "Name <ID+username@users.noreply.github.com>".
  */
 function withCoauthor(message: string) {
-  const who = process.env.WANLLY_GITHUB_COAUTHOR?.trim() || "Wanlly <noreply@wanlly.africa>";
+  const who = process.env.WANLLY_GITHUB_COAUTHOR?.trim() || "Wanlly <340726180+WanllyHQ@users.noreply.github.com>";
   return `${message}\n\nCo-authored-by: ${who}`;
 }
 
