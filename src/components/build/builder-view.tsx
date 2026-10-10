@@ -84,10 +84,18 @@ export function BuilderView({ id }: { id: number }) {
   const claude = useMemo(() => MODELS.filter((m) => (m.provider === "anthropic" || m.provider === "google") && isLive(m, providers)), [providers]);
   const model = claude.find((m) => m.id === modelId) ?? claude.find((m) => m.id === "sonnet") ?? claude[0];
 
+  const loads = useRef(0);
   const load = useCallback(async () => {
+    // Loads can overlap while the AI edits; only the latest one is used.
+    const n = ++loads.current;
     const r = await fetch(`/api/build/${id}`, { cache: "no-store" }).catch(() => null);
-    if (!r?.ok) return setMissing(true);
+    if (n !== loads.current) return;
+    if (!r?.ok) {
+      if (r?.status === 404) setMissing(true);
+      return;
+    }
     const b = await r.json();
+    if (n !== loads.current) return;
     setName(b.project.name);
     setFiles(b.files);
     setSteps(b.steps);
@@ -669,7 +677,8 @@ export function BuilderView({ id }: { id: number }) {
         </div>
       )}
       {/* Sponsors keep Wanlly free: a banner over the code as it changes. */}
-      {view !== "preview" && (
+      {/* Only over a file: before the first file, the empty space below carries the ad. */}
+      {view !== "preview" && current && (
         <div className="border-b border-line px-3 py-2">
           <SpaceAd placement="builder_code" />
         </div>
@@ -922,7 +931,13 @@ function CodeArea({ path, value, onChange }: { path: string; value: string; onCh
 /** A file's code, editable by hand. */
 function FileEditor({ id, file, onSaved }: { id: number; file: BuildFile; onSaved: () => void }) {
   const [text, setText] = useState(file.content);
+  const [base, setBase] = useState(file.content);
   const [state, setState] = useState("");
+  // The AI changed the file: show its version, unless the person has unsaved changes of their own.
+  if (file.content !== base) {
+    setBase(file.content);
+    if (text === base) setText(file.content);
+  }
   const dirty = text !== file.content;
   return (
     <div className="flex h-full flex-col">

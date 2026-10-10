@@ -33,7 +33,7 @@ export function billedInput(modelId: string, usage: { input_tokens: number; cach
 }
 
 export function providers(): Providers {
-  const google = !!process.env.GEMINI_API_KEY;
+  const google = geminiKeys().length > 0;
   const nvidia = !!process.env.NVIDIA_API_KEY;
   return {
     anthropic: !!process.env.ANTHROPIC_API_KEY,
@@ -139,7 +139,8 @@ function noteQuota(t: GeminiTry, raw: string): boolean {
   const delay = raw.match(/"retryDelay":\s*"([\d.]+)s"/)?.[1];
   const said = raw.match(/retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s/i);
   const secs = delay ? Number(delay) : said ? Number(said[1] ?? 0) * 3600 + Number(said[2] ?? 0) * 60 + Number(said[3]) : 0;
-  const daily = /per.?day|PerDay|free_tier_requests/i.test(raw);
+  // The per-minute and per-day limits share a metric name; only the quota id says which.
+  const daily = /PerDay/i.test(raw);
   if (secs < 90 && !daily) return false;
   const until = Date.now() + Math.min(Math.max(secs, 600), 24 * 3600) * 1000;
   spent.set(t.slot, until);
@@ -306,7 +307,7 @@ export async function geminiImageModels(key: string): Promise<string[]> {
  * models are skipped for the next one.
  */
 export async function requestImage(prompt: string, files: { mime: string; data: string }[], signal: AbortSignal): Promise<{ res: Response; model: string }> {
-  const key = process.env.GEMINI_API_KEY;
+  const key = geminiKeys()[0];
   if (!key) throw new ProviderError("unavailable");
   const body = JSON.stringify({
     contents: [{ role: "user", parts: [...files.map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: prompt }] }],
@@ -668,8 +669,9 @@ async function openBuildStep(opts: { system: string; messages: Anthropic.Beta.Be
           opts.onText(piece);
         }
         for (const tc of choice?.delta?.tool_calls ?? []) {
-          const at = tc.index ?? calls.length - 1;
-          calls[at] ??= { id: tc.id || `toolu_o${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`, name: "", args: "" };
+          const at = tc.index ?? (tc.id || !calls.length ? calls.length : calls.length - 1);
+          // Our own id: some hosts' ids (e.g. "functions.name:0") aren't valid for Claude later.
+          calls[at] ??= { id: `toolu_o${crypto.randomUUID().replace(/-/g, "").slice(0, 22)}`, name: "", args: "" };
           if (tc.function?.name) calls[at].name += tc.function.name;
           if (tc.function?.arguments) calls[at].args += tc.function.arguments;
         }
@@ -1002,7 +1004,7 @@ export async function poolPlan() {
 
 async function* pool(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, geminiToo = true): AsyncGenerator<ReplyEvent> {
   // Pictures and PDFs need a model that can see them: Gemini, when it's there.
-  if (geminiToo && process.env.GEMINI_API_KEY && turns.some((t) => t.files?.length)) return yield* gemini(system, turns, maxTokens, signal);
+  if (geminiToo && geminiKeys().length && turns.some((t) => t.files?.length)) return yield* gemini(system, turns, maxTokens, signal);
   const tried: string[] = [];
   for (const c of (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
     const it = openaiChat(c.host, c.model, system, turns, maxTokens, signal, 1);
@@ -1021,7 +1023,7 @@ async function* pool(system: string, turns: Turn[], maxTokens: number, signal: A
     yield* it;
     return;
   }
-  if (geminiToo && process.env.GEMINI_API_KEY) return yield* gemini(system, turns, maxTokens, signal);
+  if (geminiToo && geminiKeys().length) return yield* gemini(system, turns, maxTokens, signal);
   throw new ProviderError("busy", tried.length ? `Every free host was busy: ${tried.join(" · ")}` : "No free host has a key");
 }
 
@@ -1067,7 +1069,7 @@ export async function checkProviders() {
     let text = "";
     let model =
       provider === "google"
-        ? (await geminiModels(process.env.GEMINI_API_KEY!)).join(" → ")
+        ? (await geminiModels(geminiKeys()[0])).join(" → ")
         : provider === "nvidia"
           ? await nvidiaModel(modelId)
           : provider === "xai"
@@ -1095,7 +1097,7 @@ export async function checkProviders() {
       const bytes = (await res.arrayBuffer()).byteLength;
       out.push({ provider: "google images", model, ok: bytes > 20_000, detail: bytes > 20_000 ? `Made an image (${Math.round(bytes / 1024)} KB)` : "No image came back", ms: Date.now() - t });
     } catch (e) {
-      out.push({ provider: "google images", model: (await geminiImageModels(process.env.GEMINI_API_KEY!)).join(" → "), ok: false, detail: errorDetail(e), ms: Date.now() - t });
+      out.push({ provider: "google images", model: (await geminiImageModels(geminiKeys()[0])).join(" → "), ok: false, detail: errorDetail(e), ms: Date.now() - t });
     }
   }
   return out;
@@ -1106,7 +1108,7 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
   // Models the catalog lists as coming soon (no provider) never run, whatever keys are set.
   if (!MODELS.find((m) => m.id === opts.modelId)?.provider) throw new ProviderError("unavailable");
   if (opts.modelId === "gemini-flash") {
-    if (!process.env.GEMINI_API_KEY) throw new ProviderError("unavailable");
+    if (!geminiKeys().length) throw new ProviderError("unavailable");
     return gemini(opts.system, opts.turns, max, opts.signal, opts.tool === "chat");
   }
   if (CLAUDE[opts.modelId]) {

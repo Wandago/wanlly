@@ -282,7 +282,7 @@ async function startBuild(request: string, repo?: string): Promise<string> {
   if (!r.ok || !b.id) throw new Error(b.error ?? "Couldn't start the project. Try again.");
   try {
     if (repo) sessionStorage.setItem(`wanlly-build-repo-${b.id}`, repo.trim());
-    if (request.length > 12) sessionStorage.setItem(`wanlly-build-first-${b.id}`, request);
+    if (request.length > (repo ? 12 : 1)) sessionStorage.setItem(`wanlly-build-first-${b.id}`, request);
   } catch {}
   return b.id as string;
 }

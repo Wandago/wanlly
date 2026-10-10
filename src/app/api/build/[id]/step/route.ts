@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { claudeBuildStep, errorDetail, errorKind, geminiBuildStep, isClaudeModel, providers, replyCostUsd } from "@/lib/ai";
-import { BUILD_SYSTEM, MAX_HISTORY_CHARS, loadFiles, loadSteps, ownBuild, runEditor } from "@/lib/build";
+import { BUILD_SYSTEM, MAX_HISTORY_CHARS, cleanPath, loadFiles, loadSteps, ownBuild, runEditor } from "@/lib/build";
 import { ESTIMATE, MODELS, isLive, taskCredits } from "@/lib/catalog";
 import { field, jsonUpTo } from "@/lib/forms";
 import { githubToken, parseRepo, pushToGithub } from "@/lib/github";
@@ -138,7 +138,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
             }
             const out = await runEditor(id, files, input).catch(() => ({ text: "That edit couldn't be saved. Try again.", error: true, changed: undefined }));
             if (out.changed && !changed.includes(out.changed)) changed.push(out.changed);
-            send({ type: "edit", command: String(input.command ?? ""), path: String(input.path ?? ""), ok: !out.error });
+            send({ type: "edit", command: String(input.command ?? ""), path: cleanPath(input.path) ?? String(input.path ?? ""), ok: !out.error });
             results.push({ type: "tool_result", tool_use_id: u.id!, content: out.text, ...(out.error ? { is_error: true } : {}) });
           }
         }

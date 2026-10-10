@@ -129,6 +129,7 @@ export function TrendChart({
                 const hi = Math.max(drag.a, drag.b);
                 setZoom({ key: dataKey, from: from + lo, to: from + hi });
                 setPin(null);
+                setHover(null);
               } else if (drag) {
                 const day = days[drag.a];
                 setPin(pinState?.key === dataKey && pinState.day === day ? null : { key: dataKey, day });
