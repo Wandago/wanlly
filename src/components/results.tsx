@@ -6,6 +6,7 @@ import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { Markdown } from "./markdown";
 import { SpinLoader } from "./spin-mark";
 import { GithubSave } from "./github-save";
+import { replyParts } from "@/lib/followups";
 import { Icon } from "./icon";
 
 function Meta({ job }: { job: Job }) {
@@ -18,7 +19,7 @@ function Meta({ job }: { job: Job }) {
           type="button"
           aria-label="Copy reply"
           onClick={() =>
-            navigator.clipboard?.writeText(job.text ?? "").then(() => {
+            navigator.clipboard?.writeText(replyParts(job.text ?? "").body).then(() => {
               setCopied(true);
               window.setTimeout(() => setCopied(false), 1500);
             })
@@ -66,7 +67,7 @@ function TextResult({ job }: { job: Job }) {
   if (job.status === "error") {
     return (
       <>
-        {job.text && <Markdown text={job.text} openable />}
+        {job.text && <Markdown text={replyParts(job.text).body} openable />}
         <p className="rounded-xl border border-line bg-surface px-3.5 py-2.5 text-[13px] text-muted">{job.error}</p>
         <Meta job={job} />
       </>
@@ -76,10 +77,10 @@ function TextResult({ job }: { job: Job }) {
   return (
     <>
       <div aria-live={streaming ? "polite" : undefined} aria-busy={streaming}>
-        <Markdown text={job.text ?? ""} openable />
+        <Markdown text={replyParts(job.text ?? "").body} openable />
         {streaming && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-fg/60" aria-hidden="true" />}
       </div>
-      {streaming && <StreamingNote text={job.text ?? ""} />}
+      {streaming && <StreamingNote text={replyParts(job.text ?? "").body} />}
       <ProjectCard job={job} />
       {job.stop === "max_tokens" && <p className="text-xs text-faint">The reply hit its length limit. Ask it to continue.</p>}
       {job.stop === "interrupted" && <p className="text-xs text-faint">Stopped before the end.</p>}

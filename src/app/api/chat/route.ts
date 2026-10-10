@@ -9,6 +9,7 @@ import { account, chargeExtra, release, spend } from "@/lib/ledger";
 import { signedInUserId } from "@/lib/session";
 import { loadMemory, maybeUpdateMemory, memoryPrompt } from "@/lib/memory";
 import { after } from "next/server";
+import { FOLLOWUP_INSTRUCTION } from "@/lib/followups";
 import { SAY } from "@/lib/messages";
 
 /*
@@ -156,7 +157,8 @@ export async function POST(req: Request) {
   const system =
     SYSTEM[toolId as "chat" | "code"] +
     memoryPrompt(memory) +
-    (instructions ? `\n\nThe person set these instructions for this project. Follow them:\n<project_instructions>\n${instructions}\n</project_instructions>` : "");
+    (instructions ? `\n\nThe person set these instructions for this project. Follow them:\n<project_instructions>\n${instructions}\n</project_instructions>` : "") +
+    `\n\n${FOLLOWUP_INSTRUCTION.trim()}`;
   // After the reply is sent, refresh what Wanlly remembers from this person's own words.
   after(() => maybeUpdateMemory(userId, turns.filter((t) => t.role === "user").map((t) => t.text)));
   const abort = new AbortController();

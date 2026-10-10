@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
 import { isConnected, useReward, useWorkspace } from "@/lib/workspace-store";
+import { replyParts } from "@/lib/followups";
 import { Icon } from "./icon";
 import { RewardedSpot, WatchButton } from "./ads/ad-slot";
 import { CreditsButton } from "./credits-button";
@@ -78,7 +79,7 @@ function Gate() {
 }
 
 export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
-  const { tool, draft, price, gate, modelId, dispatch, submit, memory } = useWorkspace();
+  const { tool, draft, price, gate, modelId, dispatch, submit, memory, jobs } = useWorkspace();
   const ta = useRef<HTMLTextAreaElement>(null);
   const picker = useRef<HTMLInputElement>(null);
   const config = TOOLS[tool];
@@ -93,11 +94,15 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
   // Claude replies can cost more than the starting price when they run long.
   // Every model scales with the size of the task; images have a flat price.
   const from = tool !== "images";
+  // After a reply: the follow-ups it suggested (like Claude's). Before any: memory, then the tool's ideas.
+  const last = [...jobs].reverse().find((j) => j.tool === tool && !j.sample);
+  const followups = last && last.status === "done" ? replyParts(last.text ?? "").next : [];
   // A different few ideas on each visit, chosen after the page loads so server and browser agree.
   const [seed, setSeed] = useState(0);
   useEffect(() => {
     queueMicrotask(() => setSeed(1 + Math.floor(Math.random() * 1000)));
   }, [tool]);
+  const ideas = followups.length ? followups : tool === "chat" && memory?.suggestions.length ? memory.suggestions : pick(config.suggestions, seed);
 
   useEffect(() => {
     const el = ta.current;
@@ -108,10 +113,10 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
 
   return (
     <div className="flex flex-col gap-2">
-      {showSuggestions && !draft && (
+      {(showSuggestions || followups.length > 0) && !draft && ideas.length > 0 && (
         <div className="flex flex-wrap justify-center gap-2">
           {/* In Chat, suggestions come from what Wanlly remembers about the person, when it has some. */}
-          {(tool === "chat" && memory?.suggestions.length ? memory.suggestions : pick(config.suggestions, seed)).map((s) => (
+          {ideas.map((s) => (
             <button
               key={s}
               type="button"
