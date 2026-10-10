@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Empty, Kpi, Table, api, btnDark, btnGhost, num, usd } from "./admin-ui";
+import { Card, Empty, Kpi, Table, api, btnDark, btnGhost, num, usd, Loading } from "./admin-ui";
 import { TrendChart } from "./trend-chart";
 
 /*
@@ -39,7 +39,7 @@ export function MoneyPanel({ days }: { days: 7 | 30 }) {
     };
   }, [days, tick]);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <Empty>Loading real numbers…</Empty>;
+  if (!data) return <Loading />;
 
   const t = data.daily.reduce(
     (a, d) => ({ campaigns: a.campaigns + d.campaigns, network: a.network + d.network, manual: a.manual + d.manual, cost: a.cost + d.cost, credits: a.credits + d.credits }),

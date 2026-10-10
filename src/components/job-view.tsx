@@ -10,6 +10,7 @@ import { SponsorCard, SponsorLine } from "./ads/ad-slot";
 import { Tracked } from "./ads/tracked";
 import { AttachmentTray } from "./attachment-tray";
 import { creativeOf, useSponsors } from "@/lib/ads-context";
+import { SpinLoader } from "./spin-mark";
 
 /** Real replies: a spinner and timer until the first words arrive, with Stop. */
 function Waiting({ job }: { job: Job }) {
@@ -22,7 +23,7 @@ function Waiting({ job }: { job: Job }) {
   const secs = Math.floor(elapsed / 1000);
   return (
     <div className="flex items-center gap-2.5 text-[13px] text-muted" role="status" aria-live="polite">
-      <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+      <SpinLoader size={16} label="" className="text-accent" />
       <span>{job.modelName} is {job.tool === "code" ? "working" : job.tool === "images" ? "drawing" : "thinking"}</span>
       <time className="font-mono text-xs text-faint tabular-nums">
         {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}
@@ -54,7 +55,7 @@ function WorkingStatus({ job }: { job: Job }) {
   return (
     <div className="flex flex-col gap-2" role="status" aria-live="polite">
       <div className="flex items-center gap-2.5 text-[13px] text-muted">
-        <span className="size-4 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+        <SpinLoader size={16} label="" className="text-accent" />
         <span>{tool.steps[step]}</span>
         <time className="ml-auto font-mono text-xs text-faint tabular-nums">{Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}</time>
       </div>

@@ -5,6 +5,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
+import { SpinLoader } from "./spin-mark";
 
 /*
  * Verifying a phone over WhatsApp: the person sends a code to Wanlly's number and this dialog
@@ -109,7 +110,7 @@ export function PhoneVerifyDialog() {
                 Open WhatsApp
               </a>
               <p className="flex items-center gap-2 text-xs text-faint" role="status" aria-live="polite">
-                <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+                <SpinLoader size={12} label="" className="text-accent" />
                 Waiting for your message. The code works for 30 minutes.
                 <button type="button" onClick={fetchCode} className="ml-auto shrink-0 text-muted underline-offset-2 hover:text-fg hover:underline">
                   New code

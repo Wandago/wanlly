@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { SpinLoader } from "../spin-mark";
 
 /* Building blocks shared by every admin tab. */
 
@@ -67,6 +68,15 @@ export function Pills<T extends string>({ value, options, onChange, label }: { v
 
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="rounded-xl bg-code px-3 py-6 text-center text-[13px] text-muted">{children}</p>;
+}
+
+/** A panel's data on its way. */
+export function Loading() {
+  return (
+    <div className="grid place-items-center rounded-xl bg-code px-3 py-8">
+      <SpinLoader size={36} />
+    </div>
+  );
 }
 
 const STATUS_CHIP: Record<string, string> = {

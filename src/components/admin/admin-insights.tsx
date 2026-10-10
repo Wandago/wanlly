@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when } from "./admin-ui";
+import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when, Loading } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
 import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
@@ -65,7 +65,7 @@ type Traffic = {
 export function TrafficTab({ days }: { days: 7 | 30 }) {
   const { data, error } = useData<Traffic>(`/api/admin/traffic?days=${days}`);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <Empty>Loading…</Empty>;
+  if (!data) return <Loading />;
   const sum = (k: "views" | "visitors") => data.daily.reduce((a, d) => a + d[k], 0);
   const today = data.daily[data.daily.length - 1];
   const totalDevices = data.devices.reduce((a, d) => a + d.visitors, 0);
@@ -204,7 +204,7 @@ export function AdsTab({ days }: { days: 7 | 30 }) {
 function AdStats({ days }: { days: 7 | 30 }) {
   const { data, error } = useData<Ads>(`/api/admin/ads?days=${days}`);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <Empty>Loading…</Empty>;
+  if (!data) return <Loading />;
   const t = data.daily.reduce((a, d) => ({ impressions: a.impressions + d.impressions, clicks: a.clicks + d.clicks, videos: a.videos + d.videos, revenue: a.revenue + d.revenue, cost: a.cost + d.cost }), { impressions: 0, clicks: 0, videos: 0, revenue: 0, cost: 0 });
   const e = data.assumptions.ecpm;
   const maxRev = Math.max(0, ...data.placements.map((p) => p.revenue));
@@ -292,7 +292,7 @@ function AdNetwork() {
       })
       .catch((e: Error) => setNote(e.message));
   }, []);
-  if (!cfg) return <Card title="Ad network">{note ? <Empty>{note}</Empty> : <Empty>Loading…</Empty>}</Card>;
+  if (!cfg) return <Card title="Ad network">{note ? <Empty>{note}</Empty> : <Loading />}</Card>;
   const set = (patch: Partial<NetworkConfig>) => setCfg({ ...cfg, ...patch });
   const save = async () => {
     setBusy(true);
@@ -540,7 +540,7 @@ export function AbuseTab({ onOpenPerson }: { onOpenPerson: (q: string) => void }
   const { data, error, reload } = useData<Abuse>("/api/admin/abuse");
   const [note, setNote] = useState("");
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <Empty>Loading…</Empty>;
+  if (!data) return <Loading />;
 
   const flip = async (key: string, on: boolean) => {
     const reason = window.prompt(`${on ? "Turn on" : "Turn off"} "${SWITCH[key][0]}" for everyone? Give a reason for the log.`);

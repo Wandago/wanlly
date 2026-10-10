@@ -18,6 +18,7 @@ import { forSending, useAttachments } from "@/lib/attach";
 import { Icon, type IconName } from "./icon";
 import { ModelPicker } from "./top-bar";
 import { naturalBreak } from "./ads/interstitial";
+import { SpinLoader } from "./spin-mark";
 
 /*
  * One design file: ask for a design on the left, see it on the right as it's written, and step
@@ -412,7 +413,12 @@ export function DesignEditor({ id }: { id: number }) {
         </div>
       </main>
     );
-  if (!file) return <main className="grid h-full place-items-center text-[13px] text-muted">Opening…</main>;
+  if (!file)
+    return (
+      <main className="grid h-full place-items-center">
+        <SpinLoader size={56} label="Opening your design" />
+      </main>
+    );
 
   const k = KIND[file.kind];
   const codeText = view === "code" && shown ? (codeAs === "react" && file.kind !== "slides" && file.kind !== "system" ? htmlToJsx(shown.html, file.name) : shown.html) : "";
@@ -614,7 +620,7 @@ export function DesignEditor({ id }: { id: number }) {
           )}
           {busy && (
             <div className="pointer-events-none absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-muted shadow-soft">
-              <span className="size-3.5 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+              <SpinLoader size={14} label="" className="text-accent" />
               {model.name} is designing{sizeKb ? ` · ${sizeKb} KB` : ""}
             </div>
           )}

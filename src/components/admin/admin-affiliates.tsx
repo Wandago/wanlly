@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AFFILIATE_PLACES, COVER_KINDS, type Affiliate } from "@/lib/affiliates";
-import { Card, Empty, api, btnDark, btnGhost } from "./admin-ui";
+import { Card, Empty, api, btnDark, btnGhost, Loading } from "./admin-ui";
 
 /*
  * Affiliate links: Wanlly's own offers that fill every place no sold campaign has booked. Each
@@ -94,7 +94,7 @@ export function AffiliatesCard() {
     >
       {note && <p className="text-[13px] text-muted">{note}</p>}
       {!list ? (
-        <Empty>Loading…</Empty>
+        <Loading />
       ) : list.length === 0 ? (
         <Empty>No affiliate links yet. Until you add some, Wanlly shows its built-in placeholders.</Empty>
       ) : (

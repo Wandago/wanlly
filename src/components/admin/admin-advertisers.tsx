@@ -8,7 +8,7 @@ import { resetSeen, seenToday } from "@/lib/ad-track";
 import { CountryPicker } from "./country-picker";
 import { AffiliatesCard } from "./admin-affiliates";
 import { Icon } from "../icon";
-import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when } from "./admin-ui";
+import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when, Loading } from "./admin-ui";
 
 /* Advertisers: applications from /advertise, and the campaigns that run in Wanlly's ad slots. */
 
@@ -638,7 +638,7 @@ export function AdvertisersTab() {
     )}`;
 
   if (error && !apps) return <Empty>{error}</Empty>;
-  if (!apps || !camps) return <Empty>Loading…</Empty>;
+  if (!apps || !camps) return <Loading />;
   const active = camps.filter((c) => c.status === "active");
 
   return (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "../icon";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
+import { SpinLoader } from "../spin-mark";
 
 type Coworker = {
   id: string;
@@ -143,7 +144,7 @@ function CoworkerCard({ c }: { c: Coworker }) {
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap ${cls}`}>{label}</span>
       </div>
       <p className="flex items-start gap-2 rounded-xl bg-code px-3 py-2.5 text-[13px]">
-        {c.status === "working" && <span className="mt-1 size-3 shrink-0 animate-spin rounded-full border-2 border-accent-line border-t-accent" />}
+        {c.status === "working" && <SpinLoader size={12} label="" className="mt-1 text-accent" />}
         {c.now}
       </p>
       <div className="flex flex-wrap gap-1.5">

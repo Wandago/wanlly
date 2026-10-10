@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
-import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when } from "./admin-ui";
+import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when, Loading } from "./admin-ui";
 import type { FirstTouch } from "@/lib/first-touch";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
@@ -117,7 +117,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
       .catch((e: Error) => setError(e.message));
   }, []);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <Empty>Loading…</Empty>;
+  if (!data) return <Loading />;
   const t = data.totals;
   return (
     <div className="flex flex-col gap-4">
@@ -270,7 +270,7 @@ function Beta() {
         {error ? (
           <Empty>{error}</Empty>
         ) : !items ? (
-          <Empty>Loading…</Empty>
+          <Loading />
         ) : items.length === 0 ? (
           <Empty>Nothing here.</Empty>
         ) : (
@@ -359,7 +359,7 @@ function Messages() {
       {error ? (
         <Empty>{error}</Empty>
       ) : !items ? (
-        <Empty>Loading…</Empty>
+        <Loading />
       ) : items.length === 0 ? (
         <Empty>No messages here.</Empty>
       ) : (
@@ -444,7 +444,7 @@ function Users({ initial = "" }: { initial?: string }) {
       {error ? (
         <Empty>{error}</Empty>
       ) : !items ? (
-        <Empty>Loading…</Empty>
+        <Loading />
       ) : items.length === 0 ? (
         <Empty>No one matches.</Empty>
       ) : (

@@ -157,3 +157,39 @@ button:not(:disabled) {
   from { opacity: 0; transform: translateY(10px); }
 }
 .anim-rise { animation: rise-in 0.6s cubic-bezier(.2,.8,.2,1) both; }
+
+/* SpinLoader (components/spin-mark.tsx): the outline turns while a bright stroke traces it. */
+.wl-loader {
+  animation: wl-turn 2.4s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.wl-trace > * {
+  stroke-dasharray: 34 66;
+  animation: wl-trace 1.2s linear infinite;
+}
+@keyframes wl-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes wl-trace {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wl-loader {
+    animation: wl-breathe 1.6s ease-in-out infinite;
+  }
+  .wl-trace > * {
+    animation: none;
+    stroke-dasharray: none;
+  }
+}
+@keyframes wl-breathe {
+  50% {
+    opacity: 0.45;
+  }
+}

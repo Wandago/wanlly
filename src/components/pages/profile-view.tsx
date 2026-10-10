@@ -8,6 +8,7 @@ import { useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "../icon";
 import { UsageMeters } from "../usage-meters";
 import { PageFrame, Panel, btnDark, btnGhost, chip } from "./page-frame";
+import { SpinLoader } from "../spin-mark";
 
 const SECTIONS = [
   ["profile", "Profile"],
@@ -449,7 +450,7 @@ export function ProfileView() {
                 </div>
               </>
             ) : (
-              <p className="text-[13px] text-muted">Loading your preferences…</p>
+              <SpinLoader size={28} label="Loading your preferences" />
             )}
           </Panel>
 

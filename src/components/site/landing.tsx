@@ -3,6 +3,7 @@ import { ClaudeMark, GeminiMark } from "./brand-marks";
 import type { ReactNode } from "react";
 import { FLOOR_CREDITS } from "@/lib/catalog";
 import { Icon, type IconName } from "../icon";
+import { SpinLoader } from "../spin-mark";
 
 /* The public home page. Flat and typographic: solid colours, hairline borders, no gradients or glows. */
 
@@ -104,7 +105,7 @@ function ProductPreview() {
                       <Icon name="check" size={10} />
                     </span>
                   ) : (
-                    <span className="size-4 animate-spin rounded-full border-2 border-accent-line border-t-accent" />
+                    <SpinLoader size={16} label="" className="text-accent" />
                   )}
                   <span className="flex-1">{t}</span>
                   <span className="font-mono text-[10px] text-faint">{d}</span>

@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     <ProsePage eyebrow="Privacy" title="Privacy policy" intro="Plain-language summary. This is a beta draft and will be reviewed by a privacy lawyer before Wanlly opens widely.">
       <h2>What we collect</h2>
       <ul>
-        <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and whether you've verified a phone. If you verify on WhatsApp, we keep only a one-way fingerprint of the number, so it can't be used for a second account; we never store the number itself or message you.</li>
+        <li>Your account: name, email and profile photo from your sign-in (Google, GitHub or email), and whether you&apos;ve verified a phone. If you verify on WhatsApp, we keep only a one-way fingerprint of the number, so it can&apos;t be used for a second account; we never store the number itself or message you.</li>
         <li>Your country, from your network, to choose ads and set ad rates.</li>
         <li>What you create: prompts, files, projects and the replies AI models send back.</li>
         <li>
