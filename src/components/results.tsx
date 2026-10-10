@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ProjectCard } from "./project-canvas";
 import { useWorkspace, type Job } from "@/lib/workspace-store";
 import { Markdown } from "./markdown";
+import { SpinLoader } from "./spin-mark";
 import { Icon } from "./icon";
 
 function Meta({ job }: { job: Job }) {
@@ -40,6 +41,25 @@ function Meta({ job }: { job: Job }) {
   );
 }
 
+const LANG_NAME: Record<string, string> = { html: "the HTML", css: "the styles", js: "the JavaScript", javascript: "the JavaScript", jsx: "the React code", tsx: "the React code", ts: "the TypeScript", typescript: "the TypeScript", py: "the Python", python: "the Python", sql: "the SQL", json: "the data" };
+
+/** While a reply streams: what it's writing right now (the code block it's in, or the explanation). */
+function StreamingNote({ text }: { text: string }) {
+  const fences = text.match(/^(```|~~~)\s*([\w+-]*)/gm) ?? [];
+  const inCode = fences.length % 2 === 1;
+  const lang = inCode ? (fences[fences.length - 1].replace(/^(```|~~~)\s*/, "").toLowerCase() || "") : "";
+  const label = inCode ? `Writing ${LANG_NAME[lang] ?? "the code"}` : text.trim() ? "Writing" : "Starting";
+  return (
+    <p className="flex items-center gap-2 text-xs text-faint" aria-hidden="true">
+      <SpinLoader size={12} label="" className="text-accent" />
+      <span key={label} className="wl-phase">
+        {label}
+        <span className="wl-dots" />
+      </span>
+    </p>
+  );
+}
+
 /** A real reply from Chat or Code: streams in, then shows copy, ask again and what it cost. */
 function TextResult({ job }: { job: Job }) {
   if (job.status === "error") {
@@ -58,6 +78,7 @@ function TextResult({ job }: { job: Job }) {
         <Markdown text={job.text ?? ""} openable />
         {streaming && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 animate-pulse rounded-sm bg-fg/60" aria-hidden="true" />}
       </div>
+      {streaming && <StreamingNote text={job.text ?? ""} />}
       <ProjectCard job={job} />
       {job.stop === "max_tokens" && <p className="text-xs text-faint">The reply hit its length limit. Ask it to continue.</p>}
       {job.stop === "interrupted" && <p className="text-xs text-faint">Stopped before the end.</p>}

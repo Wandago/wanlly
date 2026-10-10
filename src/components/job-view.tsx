@@ -12,7 +12,20 @@ import { AttachmentTray } from "./attachment-tray";
 import { creativeOf, useSponsors } from "@/lib/ads-context";
 import { SpinLoader } from "./spin-mark";
 
-/** Real replies: a spinner and timer until the first words arrive, with Stop. */
+/**
+ * What the model is up to while the first words are on their way, so a long wait never looks
+ * stuck. The phrases move on every few seconds and stop at the last one; they describe the kind
+ * of work (they aren't read from the model).
+ */
+const PHASES: Record<string, string[]> = {
+  chat: ["Reading your message", "Pondering", "Gathering thoughts", "Weighing a few angles", "Putting it into words"],
+  code: ["Reading your request", "Pondering the approach", "Sketching the structure", "Choosing layout, colours and fonts", "Writing the code", "Polishing the details", "Double-checking the work"],
+  design: ["Reading the brief", "Pondering the look", "Sketching the layout", "Picking colours and type", "Composing the page", "Polishing the details"],
+  images: ["Reading the prompt", "Imagining the scene", "Drawing", "Adding detail"],
+};
+const PHASE_MS = 3500;
+
+/** Real replies: a spinner, what's happening and a timer until the first words arrive, with Stop. */
 function Waiting({ job }: { job: Job }) {
   const { stop } = useWorkspace();
   const [elapsed, setElapsed] = useState(0);
@@ -21,10 +34,19 @@ function Waiting({ job }: { job: Job }) {
     return () => window.clearInterval(iv);
   }, [job.startedAt]);
   const secs = Math.floor(elapsed / 1000);
+  const phases = PHASES[job.tool] ?? PHASES.chat;
+  const phase = phases[Math.min(phases.length - 1, Math.floor(elapsed / PHASE_MS))];
   return (
     <div className="flex items-center gap-2.5 text-[13px] text-muted" role="status" aria-live="polite">
       <SpinLoader size={16} label="" className="text-accent" />
-      <span>{job.modelName} is {job.tool === "code" ? "working" : job.tool === "images" ? "drawing" : "thinking"}</span>
+      <span className="min-w-0 truncate">
+        <span className="text-fg">{job.modelName}</span>
+        <span className="text-faint"> · </span>
+        <span key={phase} className="wl-phase">
+          {phase}
+          <span className="wl-dots" aria-hidden="true" />
+        </span>
+      </span>
       <time className="font-mono text-xs text-faint tabular-nums">
         {Math.floor(secs / 60)}:{String(secs % 60).padStart(2, "0")}
       </time>

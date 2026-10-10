@@ -222,9 +222,7 @@ export function BuilderView({ id }: { id: number }) {
             <li className="flex flex-col gap-1.5 text-sm">
               {live.text && <Markdown text={live.text} />}
               {!!live.edits.length && <EditList edits={live.edits} />}
-              <span className="flex items-center gap-2 text-xs text-muted">
-                <SpinLoader size={14} label="" /> Working…
-              </span>
+              <BuildPhase live={live} />
             </li>
           )}
         </ol>
@@ -439,6 +437,29 @@ export function BuilderView({ id }: { id: number }) {
       </div>
       <div className="flex min-h-0 flex-1 flex-col md:hidden">{pane === "chat" ? chat : pane === "files" ? fileList : stage}</div>
     </main>
+  );
+}
+
+const BUILD_PHASES = ["Reading the request", "Pondering the approach", "Looking through the files", "Planning the changes", "Writing the code", "Checking the work"];
+const NOW_DOING: Record<string, string> = { view: "Reading", create: "Writing", str_replace: "Editing", insert: "Editing" };
+
+/** What the Builder is doing right now: its latest file action, or a phrase that moves on while it thinks. */
+function BuildPhase({ live }: { live: Live }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const iv = window.setInterval(() => setTick((t) => t + 1), 3500);
+    return () => window.clearInterval(iv);
+  }, []);
+  const last = live.edits[live.edits.length - 1];
+  const label = last && NOW_DOING[last.command] ? `${NOW_DOING[last.command]} ${last.path || "the files"}` : BUILD_PHASES[Math.min(BUILD_PHASES.length - 1, tick)];
+  return (
+    <span className="flex items-center gap-2 text-xs text-muted" role="status">
+      <SpinLoader size={14} label="" />
+      <span key={label} className="wl-phase truncate">
+        {label}
+        <span className="wl-dots" aria-hidden="true" />
+      </span>
+    </span>
   );
 }
 

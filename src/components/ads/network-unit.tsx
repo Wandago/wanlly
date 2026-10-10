@@ -45,6 +45,13 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [size, name]);
+  // A frame that never reports back (its host is down, or a script was blocked) counts as empty
+  // after a while, so the slot goes back to sponsors instead of staying blank.
+  useEffect(() => {
+    if (filled || direct) return;
+    const t = window.setTimeout(() => markNetworkEmpty(name, size), 10_000);
+    return () => window.clearTimeout(t);
+  }, [filled, direct, name, size, src]);
   const iframe = (
     <iframe
       key={src}

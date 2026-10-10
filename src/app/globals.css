@@ -193,3 +193,25 @@ button:not(:disabled) {
     opacity: 0.45;
   }
 }
+
+/* Waiting phrases (components/job-view.tsx): each new phrase fades in, with dots that count up. */
+.wl-phase {
+  animation: rise-in 0.35s ease-out both;
+}
+.wl-dots::after {
+  content: "";
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: wl-dots 1.2s steps(4, end) infinite;
+}
+@keyframes wl-dots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wl-phase { animation: none; }
+  .wl-dots::after { animation: none; content: "..."; }
+}
