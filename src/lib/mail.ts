@@ -62,7 +62,7 @@ function session(socket: Socket) {
   return { expect, upgrade, close: () => socket.close().catch(() => {}) };
 }
 
-export async function sendMail({ to, subject, text, replyTo }: { to: string; subject: string; text: string; replyTo?: string }) {
+export async function sendMail({ to, subject, text, html, replyTo }: { to: string; subject: string; text: string; html?: string; replyTo?: string }) {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   if (!user || !pass) throw new Error("Email isn't set up");
@@ -90,8 +90,13 @@ export async function sendMail({ to, subject, text, replyTo }: { to: string; sub
     await s.expect("250", `RCPT TO:<${clean(to)}>`);
     await s.expect("354", "DATA");
     const name = process.env.MAIL_FROM_NAME || "Wanlly";
-    // The body is base64, so no line can start with "." or run too long.
-    const body = b64(text.replace(/\r?\n/g, "\r\n")).replace(/.{76}/g, "$&\r\n");
+    // Bodies are base64, so no line can start with "." or run too long.
+    const part = (type: string, body: string) => [`Content-Type: ${type}; charset=UTF-8`, "Content-Transfer-Encoding: base64", "", b64(body.replace(/\r?\n/g, "\r\n")).replace(/.{76}/g, "$&\r\n")].join("\r\n");
+    const boundary = `wanlly-${crypto.randomUUID()}`;
+    // With HTML, both versions go together and the email app shows the best one it can.
+    const content = html
+      ? [`Content-Type: multipart/alternative; boundary="${boundary}"`, "", `--${boundary}`, part("text/plain", text), `--${boundary}`, part("text/html", html), `--${boundary}--`].join("\r\n")
+      : part("text/plain", text);
     const message = [
       `From: ${header(name)} <${user}>`,
       `To: <${clean(to)}>`,
@@ -100,10 +105,7 @@ export async function sendMail({ to, subject, text, replyTo }: { to: string; sub
       `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,
       `Message-ID: <${crypto.randomUUID()}@${domain}>`,
       "MIME-Version: 1.0",
-      "Content-Type: text/plain; charset=UTF-8",
-      "Content-Transfer-Encoding: base64",
-      "",
-      body,
+      content,
       ".",
     ].join("\r\n");
     await s.expect("250", message);
