@@ -1,1 +1,1 @@
-ALTER TABLE "campaigns" ADD COLUMN "frequency_cap" integer;
+ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "frequency_cap" integer;

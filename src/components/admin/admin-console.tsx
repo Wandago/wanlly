@@ -85,6 +85,29 @@ function AiCheck() {
   );
 }
 
+/** Which migrations in drizzle/ have run on the live database. */
+function DbCheck() {
+  const [rows, setRows] = useState<{ file: string; applied: boolean }[] | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    api<{ migrations: { file: string; applied: boolean }[] }>("/api/admin/db-check")
+      .then((d) => setRows(d.migrations))
+      .catch((e: Error) => setError(e.message));
+  }, []);
+  const missing = rows?.filter((r) => !r.applied) ?? [];
+  return (
+    <Card title="Database" note="Each file in drizzle/ adds a table or column. Run a missing one in Neon's SQL editor, oldest first.">
+      {error && <p className="text-[13px] text-bad">{error}</p>}
+      {rows && (
+        <p className="flex flex-wrap items-center gap-2 text-[13px]">
+          <Chip s={missing.length ? "frozen" : "active"} label={missing.length ? `${missing.length} missing` : "Up to date"} />
+          {missing.length ? missing.map((r) => <code key={r.file} className="font-mono text-xs text-bad">{r.file}</code>) : <span className="text-muted">All {rows.length} migrations have run.</span>}
+        </p>
+      )}
+    </Card>
+  );
+}
+
 function Overview({ go }: { go: (t: Tab) => void }) {
   const [data, setData] = useState<{ totals: Totals; days: Day[] } | null>(null);
   const [error, setError] = useState("");
@@ -154,6 +177,7 @@ function Overview({ go }: { go: (t: Tab) => void }) {
           </table>
         </div>
       </Card>
+      <DbCheck />
       <AiCheck />
       <p className="text-xs text-faint">
         Ad revenue, networks and per-country margins appear once a real ad network reports them.{" "}

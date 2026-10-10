@@ -1,6 +1,7 @@
 import { db, rawSql, schema } from "@/db";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
-import { campaignFields, needsMigration } from "@/lib/campaigns";
+import { campaignFields } from "@/lib/campaigns";
+import { dbErrorMessage } from "@/lib/migrations";
 import { jsonUpTo } from "@/lib/forms";
 
 /** Every campaign with its delivery so far: impressions, clicks and what it has earned. */
@@ -72,6 +73,6 @@ export async function POST(req: Request) {
     return Response.json({ id: row.id });
   } catch (e) {
     console.error("admin campaign POST failed", e);
-    return Response.json({ error: needsMigration(e) ?? "Database unavailable" }, { status: 503 });
+    return Response.json({ error: dbErrorMessage(e) }, { status: 503 });
   }
 }

@@ -1,2 +1,2 @@
-ALTER TABLE "beta_applications" ADD COLUMN "first_touch" jsonb;--> statement-breakpoint
-ALTER TABLE "beta_applications" ADD COLUMN "channel" text;
+ALTER TABLE "beta_applications" ADD COLUMN IF NOT EXISTS "first_touch" jsonb;--> statement-breakpoint
+ALTER TABLE "beta_applications" ADD COLUMN IF NOT EXISTS "channel" text;

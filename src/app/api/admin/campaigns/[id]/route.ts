@@ -1,7 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
-import { campaignFields, needsMigration } from "@/lib/campaigns";
+import { campaignFields } from "@/lib/campaigns";
+import { dbErrorMessage } from "@/lib/migrations";
 import { jsonUpTo } from "@/lib/forms";
 
 const c = schema.campaigns;
@@ -22,6 +23,6 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/campaign
     return Response.json({ ok: true, status: row.status });
   } catch (e) {
     console.error("admin campaign PATCH failed", e);
-    return Response.json({ error: needsMigration(e) ?? "Database unavailable" }, { status: 503 });
+    return Response.json({ error: dbErrorMessage(e) }, { status: 503 });
   }
 }

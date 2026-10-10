@@ -48,14 +48,6 @@ export type CampaignInput = Partial<{
   applicationId: number | null;
 }>;
 
-/** Before migration 0009, saving a frequency cap fails; say what to do instead of "unavailable". */
-export const needsMigration = (e: unknown) =>
-  /frequency_cap/.test(`${e} ${(e as { cause?: unknown }).cause}`)
-    ? "Run migration 0009 (frequency cap) in Neon, then save again."
-    : /banners/.test(`${e} ${(e as { cause?: unknown }).cause}`)
-      ? "Run migration 0012 (banner sizes) in Neon, then save again."
-      : null;
-
 /** The valid fields present in a request; an error message for the first invalid one. */
 export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput } | { error: string } {
   const out: CampaignInput = {};
