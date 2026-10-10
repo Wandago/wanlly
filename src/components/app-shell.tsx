@@ -19,6 +19,8 @@ import { Interstitial } from "./ads/interstitial";
 import { AdBlockWall } from "./ads/adblock-wall";
 import { Sidebar } from "./sidebar";
 import { BetaWaiting } from "./beta-waiting";
+import { Icon } from "./icon";
+import { useLocalSetting } from "@/lib/use-local-setting";
 
 function Toast() {
   const { toast } = useWorkspace();
@@ -164,6 +166,8 @@ function TabletBanner({ roomy }: { roomy: boolean }) {
 export function AppShell({ children }: { children: ReactNode }) {
   // The design editor and the Builder need the width for their previews: their side panel waits for 1536px screens.
   const path = usePathname();
+  // The left menu can be hidden on a computer for more room; remembered in this browser.
+  const [menu, setMenu] = useLocalSetting("wanlly-menu", "shown");
   const roomy = path.startsWith("/design/") || /^\/build\/\d/.test(path);
   // With an ad blocker on, the app underneath can't be used until ads are allowed.
   const [walled, setWalled] = useState(false);
@@ -178,9 +182,22 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div
           inert={walled || !!waiting}
           aria-hidden={walled || !!waiting || undefined}
-          className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[240px_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[240px_minmax(0,1fr)_344px]" : "xl:grid-cols-[240px_minmax(0,1fr)_344px]"}`}
+          className={`grid h-full grid-cols-1 grid-rows-[minmax(0,1fr)_auto] md:grid-cols-[var(--side-w)_minmax(0,1fr)] md:grid-rows-1 ${roomy ? "2xl:grid-cols-[var(--side-w)_minmax(0,1fr)_344px]" : "xl:grid-cols-[var(--side-w)_minmax(0,1fr)_344px]"}`}
+          style={{ "--side-w": menu === "hidden" ? "0px" : "240px" } as React.CSSProperties}
         >
           <Sidebar />
+          {/* With the menu hidden on a computer, a small button brings it back. */}
+          {menu === "hidden" && (
+            <button
+              type="button"
+              onClick={() => setMenu("shown")}
+              aria-label="Show the menu"
+              title="Show the menu"
+              className="fixed top-2.5 left-2.5 z-30 hidden size-8 place-items-center rounded-lg border border-line bg-surface text-muted shadow-soft hover:text-fg md:grid"
+            >
+              <Icon name="menu" size={16} />
+            </button>
+          )}
           <div className="grid min-h-0 min-w-0 grid-rows-[minmax(0,1fr)_auto]">
             <div className="min-h-0 min-w-0">{children}</div>
             <TabletBanner roomy={roomy} />

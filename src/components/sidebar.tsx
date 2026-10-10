@@ -1,5 +1,6 @@
 "use client";
 
+import { useLocalSetting } from "@/lib/use-local-setting";
 import { SpinMark } from "./spin-mark";
 import { useClerk, useUser } from "@clerk/nextjs";
 import Link from "next/link";
@@ -148,6 +149,7 @@ export function Sidebar() {
   const path = usePathname();
   const router = useRouter();
   const close = () => dispatch({ type: "setSidebar", open: false });
+  const [menu, setMenu] = useLocalSetting("wanlly-menu", "shown");
 
   useEffect(() => {
     if (synced && recents === null) refreshRecents();
@@ -191,13 +193,24 @@ export function Sidebar() {
     <>
       {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/30 md:hidden" onClick={close} aria-hidden="true" />}
       <aside
-        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
+        className={`flex min-h-0 flex-col gap-1 border-r border-line bg-side px-3 py-3.5 ${menu === "hidden" ? "md:hidden" : ""} max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-40 max-md:w-[min(300px,86vw)] max-md:pt-[calc(14px+env(safe-area-inset-top,0px))] max-md:transition-transform max-md:duration-200 ${sidebarOpen ? "max-md:translate-x-0 max-md:shadow-soft" : "max-md:-translate-x-[102%]"}`}
         aria-label="Sidebar"
       >
-        <Link href="/app" onClick={close} className="flex items-center gap-2.5 px-2 pt-1 pb-3">
-          <Mark />
-          <b className="font-display text-lg font-semibold tracking-[-0.02em]">Wanlly</b>
-        </Link>
+        <div className="flex items-center">
+          <Link href="/app" onClick={close} className="flex items-center gap-2.5 px-2 pt-1 pb-3">
+            <Mark />
+            <b className="font-display text-lg font-semibold tracking-[-0.02em]">Wanlly</b>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setMenu("hidden")}
+            aria-label="Hide the menu"
+            title="Hide the menu"
+            className="mb-2 ml-auto hidden size-7 place-items-center rounded-lg text-faint hover:bg-hover hover:text-fg md:grid"
+          >
+            <Icon name="menu" size={15} />
+          </button>
+        </div>
         <Link
           href="/app"
           onClick={() => dispatch({ type: "newChat" })}
