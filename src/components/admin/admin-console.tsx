@@ -281,6 +281,11 @@ function Beta() {
           />
         }
       >
+        {extra.mailReady === false && (
+          <p className="rounded-lg border border-line bg-hover px-3 py-2 text-[13px] text-muted">
+            Invites aren&apos;t sent automatically yet: add {Array.isArray(extra.mailMissing) && extra.mailMissing.length ? (extra.mailMissing as string[]).join(" and ") : "SMTP_USER and SMTP_PASS"} in Cloudflare (wanlly → Settings → Variables and Secrets), then Deploy. Until then, Email invite opens your own email app.
+          </p>
+        )}
         {note && <p className={`text-[13px] ${note.startsWith("✓") ? "text-good" : "text-bad"}`}>{note}</p>}
         {error ? (
           <Empty>{error}</Empty>
