@@ -2,15 +2,22 @@ import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { PageBeacon } from "@/components/page-beacon";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: ["latin"], weight: ["500", "600", "700"] });
 
+const DESCRIPTION = "Chat, code and design with top AI models for free. No card and no subscription: watch short sponsor videos, earn credits, and build.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Wanlly",
-  description: "Free AI for chat, code, design and images, supported by sponsors you choose to see.",
+  description: DESCRIPTION,
+  applicationName: "Wanlly",
+  openGraph: { type: "website", siteName: "Wanlly", title: "Wanlly · Frontier AI for everyone with an idea", description: DESCRIPTION, locale: "en_KE" },
+  twitter: { card: "summary_large_image", title: "Wanlly · Frontier AI for everyone with an idea", description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {
