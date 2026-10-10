@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useReverification, useUser } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import type { BuildFile } from "@/lib/build-preview";
 import { SAY } from "@/lib/messages";
@@ -83,12 +83,19 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
     return () => window.removeEventListener("wanlly:github", onAsk);
   }, [id, openGithub]);
 
+  // Linking an account is a sensitive change, so Clerk may first ask the person to confirm it's
+  // them (their password or a code); this shows that step and then carries on.
+  const linkGithub = useReverification(async (back: string) => {
+    const account = user?.externalAccounts.find((a) => a.provider.replace("oauth_", "") === "github");
+    return account ? account.reauthorize({ additionalScopes: ["repo"], redirectUrl: back }) : user?.createExternalAccount({ strategy: "oauth_github", additionalScopes: ["repo"], redirectUrl: back });
+  });
+
   const connectGithub = async () => {
     setGhError("");
     try {
-      const account = user?.externalAccounts.find((a) => a.provider.replace("oauth_", "") === "github");
-      const back = window.location.href;
-      const acct = account ? await account.reauthorize({ additionalScopes: ["repo"], redirectUrl: back }) : await user?.createExternalAccount({ strategy: "oauth_github", additionalScopes: ["repo"], redirectUrl: back });
+      const back = new URL(window.location.href);
+      back.searchParams.delete("github");
+      const acct = await linkGithub(back.toString());
       const url = acct?.verification?.externalVerificationRedirectURL;
       if (!url) throw new Error("GitHub didn't send a sign-in page back. Try again in a moment.");
       try {

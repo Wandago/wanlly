@@ -7,8 +7,11 @@
 
 export type BuildFile = { path: string; content: string };
 
-/** Posts runtime errors, rejected promises and console.error to the Builder (the parent page). */
-const REPORTER = `<script>(function(){function send(m){try{parent.postMessage({wanllyPreview:"error",message:String(m).slice(0,600)},"*")}catch(e){}}addEventListener("error",function(e){if(e.target&&e.target!==window&&(e.target.src||e.target.href)){send("Couldn't load "+(e.target.src||e.target.href));return}send((e.message||"Error")+(e.lineno?" (line "+e.lineno+")":""))},true);addEventListener("unhandledrejection",function(e){send("Unhandled promise rejection: "+(e.reason&&e.reason.message||e.reason))});var ce=console.error;console.error=function(){send([].map.call(arguments,String).join(" "));return ce.apply(console,arguments)};addEventListener("load",function(){parent.postMessage({wanllyPreview:"loaded"},"*")})})()</script>`;
+/**
+ * Posts runtime errors, rejected promises and console.error to the Builder (the parent page). An
+ * empty src or href (a placeholder image, say) resolves to the page itself and is not reported.
+ */
+const REPORTER = `<script>(function(){function send(m){try{parent.postMessage({wanllyPreview:"error",message:String(m).slice(0,600)},"*")}catch(e){}}addEventListener("error",function(e){if(e.target&&e.target!==window&&(e.target.src||e.target.href)){var u=String(e.target.src||e.target.href);if(u.split("#")[0]===String(document.baseURI).split("#")[0])return;send("Couldn't load "+u);return}send((e.message||"Error")+(e.lineno?" (line "+e.lineno+")":""))},true);addEventListener("unhandledrejection",function(e){send("Unhandled promise rejection: "+(e.reason&&e.reason.message||e.reason))});var ce=console.error;console.error=function(){send([].map.call(arguments,String).join(" "));return ce.apply(console,arguments)};addEventListener("load",function(){parent.postMessage({wanllyPreview:"loaded"},"*")})})()</script>`;
 
 /** In-memory storage and cookies for the sandboxed frame or published page, where the real ones throw. */
 const STORAGE_SHIM = `<script>(function(){function mem(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){var c="";try{Object.defineProperty(document,"cookie",{get:function(){return c},set:function(v){c=String(v).split(";")[0]},configurable:true})}catch(_){}}})()</script>`;
