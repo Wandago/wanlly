@@ -66,6 +66,31 @@ function AccountSync({ onWaiting }: { onWaiting: (email: string | null) => void 
   return null;
 }
 
+/**
+ * Sends a fresh sign-in token with every request to Wanlly's own API. The session cookie alone can
+ * be a minute stale (or left over from an older sign-in setup), which the server rightly refuses;
+ * a token from Clerk is always current, and the server prefers it over the cookie.
+ */
+function AuthFetch() {
+  const { getToken } = useAuth();
+  useEffect(() => {
+    const original = window.fetch;
+    window.fetch = async (input, init) => {
+      const url = new URL(typeof input === "string" ? input : input instanceof URL ? input.href : input.url, window.location.href);
+      if (url.origin !== window.location.origin || !url.pathname.startsWith("/api/")) return original(input, init);
+      const token = await getToken().catch(() => null);
+      if (!token) return original(input, init);
+      const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+      if (!headers.has("authorization")) headers.set("authorization", `Bearer ${token}`);
+      return original(input, { ...init, headers });
+    };
+    return () => {
+      window.fetch = original;
+    };
+  }, [getToken]);
+  return null;
+}
+
 /** Phones have no side panels, so a 320×50 banner sits in a rounded tray at the bottom. */
 function PhoneBanner() {
   const { dispatch } = useWorkspace();
@@ -146,6 +171,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <WorkspaceProvider>
       <AdsProvider>
+        {/* First, so its effect runs before any other part of the page asks the API for anything. */}
+        <AuthFetch />
         <div
           inert={walled || !!waiting}
           aria-hidden={walled || !!waiting || undefined}
