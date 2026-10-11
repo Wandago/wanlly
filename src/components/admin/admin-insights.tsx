@@ -5,7 +5,7 @@ import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd
 import { AdsenseUnit } from "../ads/adsense-unit";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
-import { NETWORK_SIZES as UNIT_SIZES, adsenseUnit, directSrc, frameUrl, siteWideTag, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
+import { NETWORK_SIZES as UNIT_SIZES, adsenseUnit, directSrc, frameUrl, notABanner, siteWideTag, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 import { MoneyPanel } from "./admin-money";
 
@@ -438,6 +438,12 @@ function AdNetwork() {
               Expected $ per 1,000 views
               <input type="number" min={0} step={0.01} className={`${field} w-[150px]`} value={net.ecpm ?? ""} onChange={(e) => set({ ecpm: e.target.value === "" ? undefined : Number(e.target.value) })} placeholder="e.g. 0.80" />
             </label>
+            {Object.values(net.units).some((code) => siteWideTag(code)) && (
+              <label className="flex items-center gap-2 self-center text-[13px]" title="Monetag's In-Page Push code looks like its MultiTag. Tick this only for an In-Page Push zone: pop-under tags must never go in banner spaces.">
+                <input type="checkbox" checked={!!net.inPagePush} onChange={(e) => set({ inPagePush: e.target.checked || undefined })} />
+                In-Page Push tag
+              </label>
+            )}
             <button type="button" className={`${btnGhost} ml-auto`} onClick={remove}>
               Remove
             </button>
@@ -464,7 +470,7 @@ function AdNetwork() {
                     placeholder={`Banner code for ${w}×${h}, from the network's dashboard`}
                     spellCheck={false}
                   />
-                  {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}-${net.name}`} size={size} net={net.name} host={saved?.host ?? ""} direct={directSrc(savedNet.units[size]) ?? ""} code={savedNet.units[size] ?? ""} />}
+                  {live && <BannerPreview key={`${preview}-${saved?.host ?? ""}-${net.name}`} size={size} net={net.name} host={saved?.host ?? ""} direct={directSrc(savedNet.units[size]) ?? ""} code={savedNet.units[size] ?? ""} inPagePush={!!savedNet.inPagePush} />}
                 </li>
               );
             })}
@@ -512,7 +518,7 @@ function AdNetwork() {
 }
 
 /** One saved banner, live, with what happened in this browser: shown, empty, blocked or failed. */
-function BannerPreview({ size, net, host, direct, code }: { size: NetworkSize; net: string; host: string; direct: string; code: string }) {
+function BannerPreview({ size, net, host, direct, code, inPagePush }: { size: NetworkSize; net: string; host: string; direct: string; code: string; inPagePush: boolean }) {
   const { w, h } = sizeOf(size);
   const ref = useRef<HTMLIFrameElement>(null);
   const [status, setStatus] = useState<{ kind: string; detail?: string }>({ kind: "loading" });
@@ -546,11 +552,12 @@ function BannerPreview({ size, net, host, direct, code }: { size: NetworkSize; n
         </small>
       </div>
     );
-  if (siteWideTag(code))
+  if (notABanner(code, { inPagePush }))
     return (
       <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
         This isn&apos;t a banner code: it&apos;s a site-wide tag (pop-under, push or MultiTag). In a banner space it shows nothing and opens the ad on the next click, so
-        Wanlly won&apos;t serve it here. In the network&apos;s dashboard, create a <b>banner</b> zone of {w}×{h} and paste that code instead, or remove this one.
+        Wanlly won&apos;t serve it here. In the network&apos;s dashboard, create a <b>banner</b> zone of {w}×{h} and paste that code instead, or remove this one. If it&apos;s
+        Monetag&apos;s <b>In-Page Push</b>, tick &quot;In-Page Push tag&quot; above and save.
       </p>
     );
   return (

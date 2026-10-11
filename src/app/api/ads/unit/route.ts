@@ -1,4 +1,4 @@
-import { NETWORK_SIZES, adsenseUnit, siteWideTag, sizeOf, type NetworkSize } from "@/lib/ad-network";
+import { NETWORK_SIZES, adsenseUnit, notABanner, sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { loadNetworks } from "@/lib/ad-network-server";
 
 /**
@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   const { list } = await loadNetworks();
   const network = list.find((n) => n.name === params.get("net") && n.units[size]) ?? list.find((n) => n.audience !== "off" && n.units[size]);
   const code = !network || network.audience === "off" ? undefined : network.units[size];
-  if (!code || siteWideTag(code) || adsenseUnit(code)) return new Response(null, { status: 404 });
+  if (!code || !network || notABanner(code, network) || adsenseUnit(code)) return new Response(null, { status: 404 });
   const { w, h } = sizeOf(size);
   // After the network's code, a check tells the slot whether an ad actually appeared, so an
   // empty answer (no ad to show, or a site still in review) can hand the slot back to sponsors.

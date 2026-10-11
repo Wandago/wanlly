@@ -1,6 +1,6 @@
 import { rawSql } from "@/db";
 import { SPEND_SQL, ensureCampaignColumns } from "@/lib/ad-orders";
-import { adsenseUnit, directSrc, siteWideTag } from "@/lib/ad-network";
+import { adsenseUnit, directSrc, notABanner } from "@/lib/ad-network";
 import { loadNetworks } from "@/lib/ad-network-server";
 import { rankNetworks, slotOrder } from "@/lib/ad-rank";
 import { affiliateSponsor } from "@/lib/affiliates";
@@ -54,7 +54,7 @@ export async function GET(req: Request) {
             const sizes: string[] = [];
             for (const [size, code] of Object.entries(n.units)) {
               // Pop-under and push tags pasted into a banner size would leave the space blank.
-              if (siteWideTag(code)) continue;
+              if (notABanner(code, n)) continue;
               // AdSense runs on Wanlly's own page, never in a frame.
               const g = adsenseUnit(code);
               if (g) {

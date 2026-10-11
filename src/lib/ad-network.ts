@@ -30,6 +30,11 @@ export type NetworkConfig = {
    * until enough real views and earnings are in to measure it (see lib/ad-rank.ts).
    */
   ecpm?: number;
+  /**
+   * The team says this network's zone tag is an In-Page Push banner (Monetag's), not a MultiTag
+   * or pop-under. Its "…/tag.min.js" code looks the same, so only the team can tell them apart.
+   */
+  inPagePush?: boolean;
 };
 
 /**
@@ -92,6 +97,9 @@ export function siteWideTag(code: string | undefined): boolean {
   return !!code && /\/tag\.min\.js|dataset\.zone\s*=|data-zone\s*=|\bpopunder\b|\bonclick\b.*zone|\/sw\.js/i.test(code);
 }
 
+/** A banner space can't use this code: a site-wide tag, unless the team marked it In-Page Push. */
+export const notABanner = (code: string | undefined, n: Pick<NetworkConfig, "inPagePush">) => siteWideTag(code) && !n.inPagePush;
+
 /**
  * The banner host's page for one banner: the code travels after "#", which browsers never send
  * to a server, so the host just returns the same small page every time.
@@ -123,6 +131,7 @@ export function cleanNetwork(v: unknown): NetworkConfig {
     native: typeof o.native === "string" && o.native.trim() ? o.native.trim().slice(0, 4000) : undefined,
     nativeHeight: Math.max(100, Math.min(600, Math.round(Number(o.nativeHeight)) || 280)),
     ecpm: Number(o.ecpm) > 0 ? Math.min(100, Math.round(Number(o.ecpm) * 100) / 100) : undefined,
+    inPagePush: o.inPagePush === true || undefined,
   };
 }
 
