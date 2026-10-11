@@ -1,6 +1,6 @@
 import { LINK_GUARD } from "@/lib/build-preview";
 import { eq } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 import { loadAffiliates } from "@/lib/affiliates-server";
 import { SITE_URL } from "@/lib/site";
 
@@ -16,20 +16,27 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&
 export async function GET(_req: Request, ctx: RouteContext<"/s/[slug]">) {
   const slug = (await ctx.params).slug;
   const [site] = await db()
-    .select({ html: schema.publishedSites.html, disabled: schema.publishedSites.disabled })
+    .select({ html: schema.publishedSites.html, disabled: schema.publishedSites.disabled, ownerId: schema.publishedSites.ownerId })
     .from(schema.publishedSites)
     .where(eq(schema.publishedSites.slug, slug))
     .limit(1)
     .catch(() => []);
   if (!site || site.disabled) return new Response("This app isn't available.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
   const sponsor = (await loadAffiliates().catch(() => [])).find((a) => a.active);
+  // The badge carries the builder's invite code: whoever joins from their app earns them both
+  // referral credits (see the Clerk webhook), so people have a reason to share what they make.
+  const [invite] = (await rawSql()`
+    select b.invite_code from users u join beta_applications b on lower(b.email) = lower(u.email)
+    where u.id = ${site.ownerId} and b.invite_code is not null order by b.created_at limit 1`.catch(() => [])) as { invite_code: string }[];
   const link = (url: string) => {
     const u = new URL(url);
     u.searchParams.set("utm_source", "wanlly");
     u.searchParams.set("utm_medium", "published-app");
     return u.toString();
   };
-  const bar = `<div style="position:fixed;right:10px;bottom:10px;z-index:2147483647;display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#0b0b0d;color:#fbfbfc;font:500 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)"><a href="${esc(link(SITE_URL))}" target="_blank" rel="noopener" style="color:#fbfbfc;text-decoration:none">Built free with <b style="color:#ff5a1f">Wanlly</b></a>${sponsor ? `<span style="opacity:.5">·</span><a href="${esc(link(sponsor.url))}" target="_blank" rel="noopener sponsored" style="color:#fbfbfc;opacity:.8;text-decoration:none">Sponsored: ${esc(sponsor.name)}</a>` : ""}<span style="opacity:.5">·</span><a href="${esc(`${SITE_URL}/contact?topic=report&site=${encodeURIComponent(slug)}`)}" target="_blank" rel="noopener" style="color:#fbfbfc;opacity:.6;text-decoration:none">Report</a></div>`;
+  const join = new URL(invite ? `${SITE_URL}/beta?ref=${encodeURIComponent(invite.invite_code)}` : SITE_URL);
+  join.searchParams.set("utm_campaign", `app-${slug}`.slice(0, 60));
+  const bar = `<div style="position:fixed;right:10px;bottom:10px;z-index:2147483647;display:flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;background:#0b0b0d;color:#fbfbfc;font:500 12px/1.2 system-ui,sans-serif;box-shadow:0 4px 16px rgba(0,0,0,.25)"><a href="${esc(link(join.toString()))}" target="_blank" rel="noopener" style="color:#fbfbfc;text-decoration:none">Built free with <b style="color:#ff5a1f">Wanlly</b> · make yours</a>${sponsor ? `<span style="opacity:.5">·</span><a href="${esc(link(sponsor.url))}" target="_blank" rel="noopener sponsored" style="color:#fbfbfc;opacity:.8;text-decoration:none">Sponsored: ${esc(sponsor.name)}</a>` : ""}<span style="opacity:.5">·</span><a href="${esc(`${SITE_URL}/contact?topic=report&site=${encodeURIComponent(slug)}`)}" target="_blank" rel="noopener" style="color:#fbfbfc;opacity:.6;text-decoration:none">Report</a></div>`;
   // Pages published before the link guard existed get it here, so their links can't open Wanlly.
   const guarded = site.html.includes("wanllyPreview:\"link\"") ? site.html : /<head(\s[^>]*)?>/i.test(site.html) ? site.html.replace(/<head(\s[^>]*)?>/i, (m) => m + LINK_GUARD) : LINK_GUARD + site.html;
   const html = /<\/body>/i.test(guarded) ? guarded.replace(/<\/body>(?![\s\S]*<\/body>)/i, () => `${bar}</body>`) : guarded + bar;

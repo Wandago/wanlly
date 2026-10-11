@@ -3,6 +3,7 @@
 import { useReverification, useUser } from "@clerk/nextjs";
 import { useCallback, useEffect, useState } from "react";
 import type { BuildFile } from "@/lib/build-preview";
+import { REFERRAL_CREDITS } from "@/lib/catalog";
 import { SAY } from "@/lib/messages";
 import { useLocalSetting } from "@/lib/use-local-setting";
 import { useWorkspace } from "@/lib/workspace-store";
@@ -29,7 +30,7 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
       const b = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(b.error ?? SAY.busy);
       setLive(b.url);
-      dispatch({ type: "toast", text: live ? "Your live app is updated" : "Your app is live" });
+      dispatch({ type: "toast", text: live ? "Your live app is updated" : `Your app is live. Share it: when someone joins Wanlly from it, you both get ${REFERRAL_CREDITS} credits` });
       window.open(b.url, "_blank", "noopener");
     } catch (e) {
       dispatch({ type: "toast", text: e instanceof Error ? e.message : SAY.offline });
