@@ -1,3 +1,5 @@
+import { REFERRAL_CAP, REFERRAL_CREDITS } from "@/lib/catalog";
+import { post } from "@/lib/ledger";
 import { alertTeam } from "@/lib/alerts";
 import { SITE_URL } from "@/lib/site";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
@@ -9,6 +11,27 @@ import { db, rawSql, schema } from "@/db";
  * Clerk calls this when a person signs up, changes their details or deletes their account.
  * The signature is checked (svix, with replay protection) before anything is written.
  */
+/**
+ * A friend joined with someone's invite link (/beta?ref=<their invite code>): both get
+ * REFERRAL_CREDITS, once per new account, and an inviter is rewarded at most REFERRAL_CAP times.
+ */
+async function rewardReferral(newUserId: string, email: string) {
+  const q = rawSql();
+  const rows = (await q`
+    select ru.id as referrer
+    from beta_applications me
+    join beta_applications inviter on inviter.invite_code = me.referral_code
+    join users ru on lower(ru.email) = lower(inviter.email) and ru.status = 'active'
+    where lower(me.email) = ${email.toLowerCase()} and me.referral_code is not null and lower(inviter.email) <> ${email.toLowerCase()}
+    limit 1`) as { referrer: string }[];
+  const referrer = rows[0]?.referrer;
+  if (!referrer || referrer === newUserId) return;
+  const [{ n }] = (await q`select count(*)::int as n from ledger_entries where user_id = ${referrer} and reason = 'referral' and ref_id like 'invited:%'`) as { n: number }[];
+  if (n >= REFERRAL_CAP) return;
+  await post(referrer, REFERRAL_CREDITS, "referral", `invited:${newUserId}`, "A friend joined with your invite link");
+  await post(newUserId, REFERRAL_CREDITS, "referral", `joined:${newUserId}`, "Joined with a friend's invite link");
+}
+
 export async function POST(req: NextRequest) {
   let evt;
   try {
@@ -27,6 +50,7 @@ export async function POST(req: NextRequest) {
     await q`
       insert into users (id, email, name, phone_verified) values (${u.id}, ${email}, ${name}, ${phoneVerified})
       on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = users.phone_verified or excluded.phone_verified, updated_at = now()`;
+    if (evt.type === "user.created" && email) await rewardReferral(u.id, email).catch((e) => console.error("referral reward failed", e));
     if (evt.type === "user.created") await alertTeam("signup", name ?? email ?? u.id, [email ?? "", `Signed up with ${u.external_accounts?.[0]?.provider?.replace("oauth_", "") ?? "email"}`], { link: `${SITE_URL}/admin#users` });
   }
 

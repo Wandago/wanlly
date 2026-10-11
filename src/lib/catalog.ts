@@ -88,6 +88,9 @@ export const IMAGE_MODEL_NAME = "Gemini Image";
 export const FLOOR_CREDITS = 8;
 export const SPOT_REWARD = 4;
 export const SPONSOR_TRIAL_REWARD = 25;
+/** Credits for both people when a friend joins with an invite link; at most REFERRAL_CAP rewards per inviter. */
+export const REFERRAL_CREDITS = 20;
+export const REFERRAL_CAP = 25;
 
 /*
  * Usage limits, the same size for everyone but on each person's own clock. They cap what anyone

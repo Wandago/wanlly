@@ -220,6 +220,18 @@ function Beta() {
     }
   };
   const [note, setNote] = useState("");
+  const [autoState, setAuto] = useState<boolean | null>(null);
+  const isAuto = autoState ?? extra.betaAutoApprove === true;
+  const flipAuto = async () => {
+    const reason = window.prompt(isAuto ? "Go back to approving applications by hand? Give a reason for the log." : "Approve every new application instantly and email the invite at once? Give a reason for the log.");
+    if (!reason?.trim()) return;
+    try {
+      await api("/api/admin/flags", "POST", { key: "betaAutoApprove", on: !isAuto, reason });
+      setAuto(!isAuto);
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
 
   const mailOn = extra.mailReady === true;
   const decide = async (a: Application, next: Application["status"]) => {
@@ -265,6 +277,21 @@ function Beta() {
           <Chip s={isOpen ? "active" : "pending"} label={isOpen ? "Open sign-up" : "Private beta"} />
         </p>
       </Card>
+      {!isOpen && (
+        <Card
+          title="Instant approval"
+          note={isAuto ? "Every new application is approved on the spot and the invite goes out at once. The page tells them to create their account." : "Applications wait here until someone approves them. Turn this on to let people straight in while the beta stays invite-only on paper."}
+          actions={
+            <button type="button" className={isAuto ? btnGhost : btnDark} onClick={flipAuto}>
+              {isAuto ? "Approve by hand" : "Approve instantly"}
+            </button>
+          }
+        >
+          <p className="flex items-center gap-2 text-[13px]">
+            <Chip s={isAuto ? "active" : "pending"} label={isAuto ? "Instant" : "By hand"} />
+          </p>
+        </Card>
+      )}
       <Card
         title="Beta applications"
         note={mailOn ? "Approving lets that email in straight away and emails them the invite from Wanlly's mailbox. Decisions are logged." : "Approving lets that email in straight away. Then send the invite from your own email (or add SMTP_USER and SMTP_PASS in Cloudflare to send it automatically). Decisions are logged."}

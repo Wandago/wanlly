@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { readFirstTouch } from "@/lib/first-touch";
 import { Icon } from "../icon";
 import { SpinLoader } from "../spin-mark";
+import { REFERRAL_CREDITS } from "@/lib/catalog";
 import { SAY } from "@/lib/messages";
 
 const COUNTRIES = ["Kenya", "Nigeria", "Ghana", "Uganda", "Tanzania", "Rwanda", "South Africa", "Egypt", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Brazil", "Mexico", "United Kingdom", "United States", "Other"];
@@ -68,7 +69,7 @@ function SelectOrType({ id, name, label, options, placeholder, required, field }
 }
 
 export function BetaPage() {
-  const [sent, setSent] = useState<null | { name: string; code: string }>(null);
+  const [sent, setSent] = useState<null | { name: string; code: string; approved: boolean }>(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -85,7 +86,7 @@ export function BetaPage() {
       const r = await fetch("/api/beta", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const out = await r.json();
       if (!r.ok) throw new Error(out.error || SAY.wrong);
-      setSent({ name: String(body.name || "").trim().split(" ")[0], code: out.code });
+      setSent({ name: String(body.name || "").trim().split(" ")[0], code: out.code, approved: out.approved === true });
     } catch (err) {
       setError(err instanceof Error ? err.message : SAY.wrong);
     } finally {
@@ -148,8 +149,19 @@ export function BetaPage() {
           {sent ? (
             <div className="flex flex-col gap-4 rounded-2xl border border-line bg-surface p-6">
               <span className="grid size-10 place-items-center rounded-full bg-good/14 text-good"><Icon name="check" /></span>
-              <h2 className="font-display text-[26px] font-semibold tracking-[-0.02em]">You&apos;re in the queue{sent.name ? `, ${sent.name}` : ""}.</h2>
-              <p className="text-muted">We approve new people every week and email you when it&apos;s your turn. Each friend who applies with your link moves you up.</p>
+              {sent.approved ? (
+                <>
+                  <h2 className="font-display text-[26px] font-semibold tracking-[-0.02em]">You&apos;re in{sent.name ? `, ${sent.name}` : ""}!</h2>
+                  <p className="text-muted">Create your account with the same email and start building. We&apos;ve emailed you the link too.</p>
+                  <a href="/sign-up" className="self-start rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg hover:opacity-90">Create your account</a>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-display text-[26px] font-semibold tracking-[-0.02em]">You&apos;re in the queue{sent.name ? `, ${sent.name}` : ""}.</h2>
+                  <p className="text-muted">We approve new people every week and email you when it&apos;s your turn. Each friend who applies with your link moves you up.</p>
+                </>
+              )}
+              <p className="text-[13px] font-medium">Invite friends: when someone joins with your link, you both get {REFERRAL_CREDITS} free credits.</p>
               <div className="flex items-center gap-2 rounded-xl border border-line bg-bg p-2 pl-3.5">
                 <span className="min-w-0 flex-1 truncate font-mono text-sm">{link}</span>
                 <button

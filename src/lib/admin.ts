@@ -35,6 +35,8 @@ export const FLAGS = {
   spendingPaused: "Wanlly's models are paused for everyone for a short while. Please try again later.",
   /** On when the beta ends: anyone who signs up can use Wanlly, not only approved applicants. */
   signupOpen: "",
+  /** On: beta applications are approved the moment they arrive and the invite is emailed at once. */
+  betaAutoApprove: "",
 } as const;
 export type FlagKey = keyof typeof FLAGS;
 

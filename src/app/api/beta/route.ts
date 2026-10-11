@@ -1,6 +1,9 @@
 import { alertTeam } from "@/lib/alerts";
 import { SITE_URL } from "@/lib/site";
-import { db, schema } from "@/db";
+import { and, eq, sql } from "drizzle-orm";
+import { db, rawSql, schema } from "@/db";
+import { inviteMessage } from "@/lib/beta-invite";
+import { mailReady, sendMail } from "@/lib/mail";
 import { channelOf, cleanFirstTouch } from "@/lib/first-touch";
 import { field, isEmail, smallJson } from "@/lib/forms";
 import { SAY } from "@/lib/messages";
@@ -46,8 +49,21 @@ export async function POST(req: Request) {
       if (!/first_touch|channel/.test(`${e} ${(e as { cause?: unknown }).cause}`)) throw e;
       rows = await save(values);
     }
-    await alertTeam("beta", name, [email, values.country ? `From: ${values.country}` : "", `Wants to build: ${build.slice(0, 400)}`, values.source ? `Heard about us: ${values.source}` : ""], { link: `${SITE_URL}/admin#beta` });
-    return Response.json({ ok: true, code: rows[0].inviteCode });
+    // Instant approval (Admin → Beta): approved now, invite emailed now, sign-up straight away.
+    const auto = await rawSql()`select coalesce((select value = 'true'::jsonb from app_flags where key = 'betaAutoApprove'), false) as on`.then((r) => (r as { on: boolean }[])[0]?.on === true).catch(() => false);
+    let approved = false;
+    if (auto) {
+      const [row] = await db()
+        .update(schema.betaApplications)
+        .set({ status: "approved", reviewedAt: sql`now()` })
+        .where(and(eq(schema.betaApplications.email, email), eq(schema.betaApplications.status, "pending")))
+        .returning({ id: schema.betaApplications.id });
+      // Already approved before (applied twice) counts too; a declined application stays declined.
+      approved = !!row || (await db().select({ s: schema.betaApplications.status }).from(schema.betaApplications).where(eq(schema.betaApplications.email, email)).limit(1))[0]?.s === "approved";
+      if (row && mailReady()) await sendMail({ to: email, ...inviteMessage({ name, email }, SITE_URL) }).catch((e) => console.error("auto invite failed", e instanceof Error ? e.message : e));
+    }
+    await alertTeam("beta", `${name}${approved ? " (auto-approved)" : ""}`, [email, values.country ? `From: ${values.country}` : "", `Wants to build: ${build.slice(0, 400)}`, values.source ? `Heard about us: ${values.source}` : ""], { link: `${SITE_URL}/admin#beta` });
+    return Response.json({ ok: true, code: rows[0].inviteCode, approved });
   } catch (e) {
     console.error("beta application failed", e);
     return Response.json({ error: "We couldn't save that just now. Please try again in a minute." }, { status: 503 });
