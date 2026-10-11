@@ -1,0 +1,295 @@
+<title>Wanlly Case Study Film</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* The case study: 72 s, documentary pacing. Chapter cards, a serif voice, captions in mono, one
+   orange accent. Every frame is a pure function of time (frame-by-frame export via #capture). */
+:root {
+  --ink: #111113;
+  --ink-2: #1a1a1d;
+  --cream: #efe9df;
+  --dim: #a59e93;
+  --faint: #6f6a62;
+  --line: #2b2a2d;
+  --tang: #ff5a1f;
+  --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --sans: "IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #070708; color: var(--cream); font: 15px/1.5 var(--sans); }
+.page { max-width: 1120px; margin: 0 auto; padding-inline: 16px; padding-block: 28px 48px; display: flex; flex-direction: column; gap: 16px; }
+.head h1 { font: 500 24px/1.2 var(--serif); margin: 0; }
+.head p { margin: 4px 0 0; color: var(--dim); font-size: 14px; }
+
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--ink); border-radius: 12px; overflow: hidden; container-type: size; isolation: isolate; }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); margin: 0 auto; }
+.portrait .stage { aspect-ratio: 4 / 5; width: min(100%, 560px); margin: 0 auto; }
+.scene { position: absolute; inset: 0; padding: 8cqmin 9cqmin; display: flex; flex-direction: column; justify-content: center; gap: 3cqmin; visibility: hidden; }
+[data-at] { will-change: opacity, transform; }
+
+/* Type */
+.kicker { font: 500 min(1.9cqw, 2.6cqh)/1 var(--mono); letter-spacing: .22em; text-transform: uppercase; color: var(--tang); }
+.chapter { font: 400 min(2cqw, 2.8cqh)/1 var(--mono); letter-spacing: .2em; text-transform: uppercase; color: var(--dim); }
+.h { font: 400 min(6.2cqw, 10cqh)/1.08 var(--serif); letter-spacing: -.012em; margin: 0; max-width: 24ch; text-wrap: balance; }
+.h.xl { font-size: min(8cqw, 13cqh); }
+.h em { font-style: italic; color: var(--tang); }
+.p { font: 400 min(2.7cqw, 3.8cqh)/1.45 var(--sans); color: var(--dim); margin: 0; max-width: 54ch; }
+.p b { color: var(--cream); font-weight: 500; }
+.cap { position: absolute; left: 9cqmin; bottom: 6cqmin; font: 400 min(1.6cqw, 2.2cqh)/1.4 var(--mono); color: var(--faint); letter-spacing: .06em; }
+.rule { width: 9cqmin; height: 2px; background: var(--tang); }
+.vertical .scene { padding: 10cqmin 8cqmin; }
+.vertical .h { font-size: 9.6cqw; }
+.vertical .h.xl { font-size: 12cqw; }
+.vertical .p { font-size: 4.3cqw; }
+.vertical .kicker, .vertical .chapter { font-size: 3.2cqw; }
+.vertical .cap { font-size: 2.8cqw; right: 8cqmin; }
+.portrait .h { font-size: 7.4cqw; } .portrait .p { font-size: 3.4cqw; }
+
+/* Big figure */
+.fig { display: flex; align-items: baseline; gap: 3cqmin; flex-wrap: wrap; }
+.fig .n { font: 400 min(15cqw, 24cqh)/.9 var(--serif); letter-spacing: -.03em; }
+.fig .u { font: 400 min(2.4cqw, 3.4cqh)/1.3 var(--mono); color: var(--dim); max-width: 26ch; }
+.vertical .fig .n { font-size: 24cqw; } .vertical .fig .u { font-size: 3.6cqw; }
+.strike { position: relative; display: inline-block; }
+.strike i { position: absolute; left: -2%; right: -2%; top: 52%; height: .06em; background: var(--tang); transform-origin: left; transform: scaleX(var(--s, 0)); }
+
+/* The model: a flow of three nodes */
+.flow { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: center; gap: 2cqmin; margin-top: 2cqmin; }
+.vertical .flow, .portrait .flow { grid-template-columns: 1fr; justify-items: start; }
+.node { border: 1px solid var(--line); background: var(--ink-2); border-radius: 1.6cqmin; padding: 2.6cqmin 3cqmin; display: flex; flex-direction: column; gap: 1cqmin; min-width: 0; }
+.node .t { font: 500 min(1.7cqw, 2.4cqh)/1 var(--mono); letter-spacing: .18em; text-transform: uppercase; color: var(--tang); }
+.node b { font: 400 min(3.2cqw, 4.6cqh)/1.1 var(--serif); font-weight: 400; }
+.node span { font: 400 min(1.9cqw, 2.6cqh)/1.4 var(--sans); color: var(--dim); }
+.vertical .node { width: 100%; } .vertical .node b { font-size: 6cqw; } .vertical .node span { font-size: 3.4cqw; } .vertical .node .t { font-size: 2.8cqw; }
+.arrow { width: 7cqmin; height: 2px; background: var(--tang); transform-origin: left; transform: scaleX(var(--d, 0)); position: relative; }
+.arrow::after { content: ""; position: absolute; right: -1px; top: -.7cqmin; border-left: 1.2cqmin solid var(--tang); border-top: .8cqmin solid transparent; border-bottom: .8cqmin solid transparent; opacity: var(--d, 0); }
+.vertical .arrow, .portrait .arrow { width: 2px; height: 5cqmin; transform: scaleY(var(--d, 0)); transform-origin: top; margin-left: 4cqmin; }
+.vertical .arrow::after, .portrait .arrow::after { display: none; }
+
+/* The product: three columns */
+.cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3cqmin; margin-top: 1cqmin; }
+.vertical .cols, .portrait .cols { grid-template-columns: 1fr; gap: 2cqmin; }
+.col3 { border-top: 2px solid var(--line); padding-top: 2cqmin; display: flex; flex-direction: column; gap: 1.2cqmin; }
+.col3 b { font: 400 min(4cqw, 6cqh)/1 var(--serif); }
+.col3 span { font: 400 min(2cqw, 2.8cqh)/1.45 var(--sans); color: var(--dim); }
+.vertical .col3 b { font-size: 7cqw; } .vertical .col3 span { font-size: 3.6cqw; }
+.models { font: 400 min(1.8cqw, 2.5cqh)/1.6 var(--mono); color: var(--faint); letter-spacing: .06em; }
+.vertical .models { font-size: 3cqw; }
+
+/* Principles */
+.list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2.2cqmin; }
+.list li { display: grid; grid-template-columns: 5cqmin 1fr; gap: 2cqmin; align-items: baseline; font: 400 min(3cqw, 4.4cqh)/1.25 var(--serif); }
+.list li span { font: 500 min(1.8cqw, 2.4cqh)/1 var(--mono); color: var(--tang); }
+.vertical .list li { font-size: 5.6cqw; grid-template-columns: 8cqmin 1fr; } .vertical .list li span { font-size: 3cqw; }
+
+/* Close */
+.lock { display: flex; align-items: center; gap: 2.4cqmin; }
+.lock svg { width: min(9cqw, 13cqh); height: min(9cqw, 13cqh); }
+.lock b { font: 500 min(6cqw, 9cqh)/1 var(--serif); letter-spacing: -.02em; }
+.url { font: 400 min(4cqw, 6cqh)/1 var(--mono); color: var(--cream); }
+.vertical .lock svg { width: 16cqw; height: 16cqw; } .vertical .lock b { font-size: 11cqw; } .vertical .url { font-size: 7cqw; }
+.ctas { display: flex; gap: 2cqmin; flex-wrap: wrap; }
+.ctas span { border: 1px solid var(--line); border-radius: 99px; padding: 1.4cqmin 2.8cqmin; font: 500 min(1.9cqw, 2.7cqh)/1 var(--sans); }
+.ctas span:first-child { background: var(--tang); border-color: var(--tang); color: #fff; }
+.vertical .ctas span { font-size: 3.6cqw; }
+
+/* Atmosphere: slow drifting light and film grain */
+.light { position: absolute; width: 90cqmax; height: 90cqmax; border-radius: 50%; background: radial-gradient(circle, rgb(255 90 31 / .10), transparent 60%); pointer-events: none; z-index: -1; }
+.grain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .08; mix-blend-mode: overlay; z-index: 3; }
+.bars::before, .bars::after { content: ""; position: absolute; left: 0; right: 0; height: 4.5cqh; background: #000; z-index: 4; }
+.bars::before { top: 0; } .bars::after { bottom: 0; }
+.vertical .bars::before, .vertical .bars::after, .portrait .bars::before, .portrait .bars::after { display: none; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; }
+.btn-c { border: 1px solid var(--line); background: var(--ink-2); color: var(--cream); border-radius: 8px; padding: 7px 12px; font: 500 13px/1 var(--sans); cursor: pointer; }
+.btn-c.primary { background: var(--tang); border-color: var(--tang); color: #fff; }
+.btn-c:focus-visible, input:focus-visible { outline: 2px solid var(--tang); outline-offset: 2px; }
+.scrub { flex: 1 1 220px; min-width: 0; accent-color: var(--tang); }
+.time { font: 500 12px/1 var(--mono); color: var(--dim); font-variant-numeric: tabular-nums; }
+.note { color: var(--dim); font-size: 13px; margin: 0; }
+.recording body, .recording .page { padding: 0; margin: 0; max-width: none; background: var(--ink); }
+.recording .head, .recording .controls, .recording .note { display: none; }
+.recording .stage { border-radius: 0; width: 100vw; height: 100vh; aspect-ratio: auto; max-width: none; }
+</style>
+
+<div class="page">
+  <div class="head">
+    <h1>Wanlly: a case study</h1>
+    <p>72 seconds &middot; documentary cut &middot; for partners, sponsors, educators and investors</p>
+  </div>
+
+  <div class="stage bars" id="stage" aria-label="Wanlly case study film">
+    <span class="light" id="light"></span>
+
+    <section class="scene" data-start="0" data-end="7000">
+      <span class="kicker" data-at="300">Wanlly &middot; a case study</span>
+      <h2 class="h xl" data-at="900">What would it take to give every student <em>frontier AI</em>, for free?</h2>
+      <span class="cap" data-at="2600">Nairobi &middot; 2026</span>
+    </section>
+
+    <section class="scene" data-start="7000" data-end="17000">
+      <span class="chapter" data-at="200">Chapter one &middot; The cost of access</span>
+      <div class="rule" data-at="500"></div>
+      <div class="fig" data-at="900"><span class="n"><span class="strike" id="price">$20<i></i></span></span><span class="u">a month: the going rate for one frontier AI subscription</span></div>
+      <p class="p" data-at="3200">In Nairobi that is about <b>KSh 2,600</b>, roughly two weeks of campus lunches. In Lagos, about <b>&#8358;26,000</b>. In Mumbai, about <b>&#8377;1,900</b>.</p>
+      <p class="p" data-at="5600">The best tools are priced in dollars, on cards most students don&rsquo;t have.</p>
+      <span class="cap" data-at="3200">Approximate, October 2026 exchange rates</span>
+    </section>
+
+    <section class="scene" data-start="17000" data-end="25000">
+      <span class="chapter" data-at="200">The insight</span>
+      <div class="rule" data-at="500"></div>
+      <h2 class="h" data-at="900">Students already pay for the internet with their <em>attention</em>.</h2>
+      <p class="p" data-at="3400">So let attention pay for intelligence: sponsors fund the AI, and people choose when to see them.</p>
+    </section>
+
+    <section class="scene" data-start="25000" data-end="37000">
+      <span class="chapter" data-at="200">Chapter two &middot; The model</span>
+      <div class="rule" data-at="500"></div>
+      <h2 class="h" data-at="800">Every credit is backed by a sponsor.</h2>
+      <div class="flow">
+        <div class="node" data-at="2000"><span class="t">Sponsor</span><b>Pays for attention</b><span>A short ad, or a task: try an app, answer a survey, take a free course.</span></div>
+        <i class="arrow" id="a1"></i>
+        <div class="node" data-at="3800"><span class="t">Credits</span><b>Land with the student</b><span>Four for a finished ad. One credit covers half a US cent of model cost.</span></div>
+        <i class="arrow" id="a2"></i>
+        <div class="node" data-at="5600"><span class="t">Models</span><b>Do the work</b><span>Chat, code and design on Claude, Gemini and open models.</span></div>
+      </div>
+      <span class="cap" data-at="7500">No card. No subscription. Usage limits are the same for everyone.</span>
+    </section>
+
+    <section class="scene" data-start="37000" data-end="47000">
+      <span class="chapter" data-at="200">Chapter three &middot; The product</span>
+      <div class="rule" data-at="500"></div>
+      <h2 class="h" data-at="800">One workspace, from first question to shipped project.</h2>
+      <div class="cols">
+        <div class="col3" data-at="2200"><b>Chat</b><span>Coursework, CVs, business plans, in plain language.</span></div>
+        <div class="col3" data-at="3200"><b>Code</b><span>Describe an app; watch it write real files and push them to GitHub.</span></div>
+        <div class="col3" data-at="4200"><b>Design</b><span>Posters, pitch decks and landing pages, editable.</span></div>
+      </div>
+      <p class="models" data-at="5600">Claude Haiku &middot; Sonnet &middot; Opus &nbsp;/&nbsp; Gemini Flash &nbsp;/&nbsp; free open models</p>
+    </section>
+
+    <section class="scene" data-start="47000" data-end="57000">
+      <span class="chapter" data-at="200">Chapter four &middot; Principles</span>
+      <div class="rule" data-at="500"></div>
+      <h2 class="h" data-at="800">Paid for by sponsors. Never shaped by them.</h2>
+      <ul class="list">
+        <li data-at="2200"><span>01</span>Ads never appear inside an AI answer.</li>
+        <li data-at="3400"><span>02</span>Sponsors never see prompts, chats or work.</li>
+        <li data-at="4600"><span>03</span>No ads on health, mental health or politics.</li>
+        <li data-at="5800"><span>04</span>No gambling, no get-rich-quick, no essay mills.</li>
+      </ul>
+    </section>
+
+    <section class="scene" data-start="57000" data-end="64000">
+      <span class="chapter" data-at="200">Chapter five &middot; Where it goes next</span>
+      <div class="rule" data-at="500"></div>
+      <h2 class="h" data-at="800">Built in Nairobi. Opening to students and creators across Africa and South Asia.</h2>
+      <p class="p" data-at="3200">Now in beta. Brands that want to reach the next generation of builders can run campaigns themselves, at a price they set.</p>
+    </section>
+
+    <section class="scene" data-start="64000" data-end="72000">
+      <h2 class="h xl" data-at="300">Good ideas shouldn&rsquo;t wait for a <em>credit card</em>.</h2>
+      <div class="lock" data-at="2400">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#efe9df"/><defs><mask id="sm" maskUnits="userSpaceOnUse" x="-16" y="-16" width="96" height="96"><rect x="-16" y="-16" width="96" height="96" fill="#fff"/><line x1="34.885" y1="34.885" x2="37.604" y2="65.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="34.885" x2="-1.966" y2="37.604" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="29.115" y1="29.115" x2="26.396" y2="-1.966" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><line x1="34.885" y1="29.115" x2="65.966" y2="26.396" stroke="#000" stroke-width="3.12" stroke-linecap="round"/><circle cx="32" cy="32" r="4.08" fill="#000"/></mask></defs><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f" stroke="#ff5a1f" stroke-width="3.36" stroke-linejoin="round" mask="url(#sm)"/></svg>
+        <b>Wanlly</b>
+      </div>
+      <span class="url" data-at="3400">wanlly.africa</span>
+      <div class="ctas" data-at="4400"><span>Join the beta</span><span>Advertise with us</span></div>
+    </section>
+
+    <svg class="grain" aria-hidden="true"><filter id="gr"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="1"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#gr)"/></svg>
+  </div>
+
+  <div class="controls">
+    <button class="btn-c primary" id="play" type="button">Play with sound</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="72000" step="10" value="0" aria-label="Position in the film">
+    <span class="time" id="time">0:00 / 1:12</span>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
+  </div>
+  <p class="note">Every figure is Wanlly&rsquo;s own (credits, limits, policies) or an approximate October 2026 exchange rate. Music is original and synthesized for Wanlly.</p>
+  <audio id="audio" src="story-film/wanlly-story-music.m4a" preload="auto"></audio>
+</div>
+
+<script>
+(function () {
+  const TOTAL = 72000;
+  const el = (id) => document.getElementById(id);
+  const stage = el("stage");
+  const ease = (x) => 1 - Math.pow(1 - Math.min(1, Math.max(0, x)), 3);
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+  const scenes = [...stage.querySelectorAll(".scene")].map((s) => ({
+    s, start: +s.dataset.start, end: +s.dataset.end,
+    items: [...s.querySelectorAll("[data-at]")].map((n) => ({ n, at: +n.dataset.at })),
+  }));
+
+  function render(t) {
+    scenes.forEach(({ s, start, end, items }, i) => {
+      const last = i === scenes.length - 1;
+      const on = t >= start && (t < end || last);
+      // Slow fades through black between chapters.
+      const fin = i === 0 ? ease(t / 900) : ease((t - start) / 900);
+      const fout = last ? 1 : ease((end - t) / 700);
+      s.style.visibility = on ? "visible" : "hidden";
+      s.style.opacity = on ? String(Math.min(fin, fout)) : "0";
+      // A gentle push-in over each chapter, like a slow camera.
+      const k = Math.min(1, Math.max(0, (t - start) / (end - start)));
+      s.style.transform = `scale(${1 + k * 0.025})`;
+      const local = t - start;
+      for (const { n, at } of items) {
+        const e = ease((local - at) / 1400);
+        n.style.opacity = String(e);
+        n.style.transform = `translateY(${(1 - e) * 2.2}cqmin)`;
+      }
+    });
+    el("price").style.setProperty("--s", ease((t - 7000 - 2400) / 900));
+    el("a1").style.setProperty("--d", ease((t - 25000 - 3000) / 800));
+    el("a2").style.setProperty("--d", ease((t - 25000 - 4800) / 800));
+    const L = el("light");
+    L.style.left = `${20 + Math.sin(t / 9000) * 25}%`;
+    L.style.top = `${-30 + Math.cos(t / 11000) * 20}%`;
+    el("turb").setAttribute("seed", String(Math.floor(t / 60) % 9 + 1));
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  const audio = el("audio");
+  let t = 0, playing = false, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = !audio.paused && audio.readyState >= 2 ? audio.currentTime * 1000 : Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { t = TOTAL; stop(); }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (t >= TOTAL) t = 0; playing = true; el("play").textContent = "Pause"; try { audio.currentTime = t / 1000; audio.play().catch(() => {}); } catch {} }
+  function stop() { playing = false; el("play").textContent = "Play with sound"; audio.pause(); }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); try { audio.currentTime = t / 1000; } catch {} render(t); }
+  el("play").addEventListener("click", () => (playing ? stop() : start()));
+  el("replay").addEventListener("click", () => { t = 0; start(); });
+  el("scrub").addEventListener("input", (e) => seek(+e.target.value));
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["portrait", "4:5"]];
+  let shape = 0;
+  function setShape(i) {
+    shape = i;
+    document.documentElement.classList.remove("vertical", "portrait");
+    if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]);
+    el("shape").textContent = `Format: ${SHAPES[i][1]}`;
+  }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-portrait") document.documentElement.classList.add("portrait");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+  render(0);
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { last = performance.now(); requestAnimationFrame(frame); });
+})();
+</script>
