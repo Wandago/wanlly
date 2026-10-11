@@ -209,7 +209,12 @@ export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }:
         label="Sponsored"
         networks={false}
         onBanner={setBanner}
-        fallback={<VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />}
+        fallback={
+          // Full width: the slot centres its content, which would shrink the video to nothing.
+          <div className="w-full">
+            <VideoSpot aspect={aspect} sponsor={sponsor} progress={progress} maxHeight={maxHeight} />
+          </div>
+        }
       />
       {banner && (
         <div className="flex items-center gap-2 font-mono text-xs text-muted">
@@ -232,7 +237,7 @@ export function RewardedBanner({ placement, sponsor, onDone }: { placement: stri
   const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
   return (
     <div className="flex flex-col gap-2">
-      <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" networks={false} fallback={<VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} />} />
+      <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" networks={false} fallback={<div className="w-full"><VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} /></div>} />
       <div className="flex items-center gap-2 font-mono text-xs text-muted">
         <div className="h-1 flex-1 overflow-hidden rounded-full bg-hover">
           <i className="block h-full rounded-full bg-accent" style={{ width: `${progress * 100}%` }} />
