@@ -59,7 +59,10 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   if (google)
     return (
       <Tracked placement={placement} format="display" creative={`network:${name || "google"}`} className="shrink-0" paused={!filled}>
-        <AdsenseUnit client={google.client} slot={google.slot} w={w} h={h} onState={onGoogle} />
+        {/* Invisible (but laid out, so Google can fill it) until AdSense says it has an ad. */}
+        <div className={`transition-opacity ${filled ? "opacity-100" : "opacity-0"}`}>
+          <AdsenseUnit client={google.client} slot={google.slot} w={w} h={h} onState={onGoogle} />
+        </div>
       </Tracked>
     );
   const iframe = (
