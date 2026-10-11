@@ -1,0 +1,845 @@
+<title>Wanlly Product Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* The product demo: 60 s at 120 BPM. A short price hook, then the real app, recreated with its own
+   look: describe a salon booking page and watch Code build and publish it, earn credits with a quick
+   ad, ask Chat for a revision plan, design a poster, invite friends. Ends on wanlly.africa.
+   Three shapes: 16:9 (YouTube), 9:16 (Reels/TikTok, phone layout) and 1:1 (X).
+   Pairs with demo/wanlly-demo-music.m4a (original, synthesized). */
+:root {
+  --ink: #08080b; --white: #fff; --tang: #ff5a1f; --volt: #d7ff3a; --cobalt: #3b63ff;
+  --bg: #0e0f12; --side: #121317; --surface: #17181d; --hover: #1f2026; --line: #27282f;
+  --fg: #f2f2f3; --muted: #9a9ca5; --faint: #6b6e78; --good: #3ccf7a;
+  --impact: "Anton", Impact, "Arial Narrow", sans-serif;
+  --display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --body: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #050507; color: var(--white); font: 15px/1.5 var(--body); }
+.page { max-width: 1120px; margin: 0 auto; padding: 24px 16px 48px; display: flex; flex-direction: column; gap: 14px; }
+.page h1 { font: 800 22px/1.2 var(--display); margin: 0; letter-spacing: -.02em; }
+.page p.sub { margin: 0; color: var(--muted); font-size: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.btn-c { border: 1px solid #333; background: #16161b; color: #fff; border-radius: 999px; padding: 7px 14px; font: 500 13px var(--body); cursor: pointer; }
+.scrub { flex: 1; min-width: 160px; accent-color: var(--tang); }
+.time { font: 500 12px var(--mono); color: var(--muted); }
+.note { color: var(--faint); font-size: 12px; margin: 0; }
+.recording body { background: var(--ink); }
+.recording .page { max-width: none; padding: 0; }
+.recording .page > :not(.stage-wrap) { display: none; }
+.recording .stage { border-radius: 0; width: 100vw !important; height: 100vh; aspect-ratio: auto !important; }
+
+/* ---------- stage ---------- */
+.stage-wrap { display: grid; place-items: center; }
+.stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background: var(--ink); border-radius: 14px; overflow: hidden; container-type: size; isolation: isolate; }
+.vertical .stage { aspect-ratio: 9 / 16; width: min(100%, 420px); }
+.square .stage { aspect-ratio: 1; width: min(100%, 600px); }
+.cam { position: absolute; inset: 0; }
+.blob { position: absolute; border-radius: 50%; filter: blur(9cqmin); opacity: .55; }
+.blob.a { width: 70cqmax; height: 70cqmax; background: radial-gradient(circle, #ff5a1f 0, #ff5a1f00 65%); }
+.blob.b { width: 60cqmax; height: 60cqmax; background: radial-gradient(circle, #3b63ff 0, #3b63ff00 65%); opacity: .4; }
+.grid { position: absolute; inset: -10%; background-image: linear-gradient(#ffffff0a 1px, transparent 1px), linear-gradient(90deg, #ffffff0a 1px, transparent 1px); background-size: 6cqmin 6cqmin; mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%); }
+.grain { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 30; opacity: .09; mix-blend-mode: overlay; }
+.flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 29; }
+.scene { position: absolute; inset: 0; display: grid; place-items: center; padding: 6cqmin; visibility: hidden; z-index: 10; }
+.scene > * { grid-area: 1 / 1; }
+.col { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2.2cqmin; }
+[data-in] { opacity: 0; will-change: transform, opacity; }
+
+.x1 { font: 400 min(17cqw, 30cqh)/.9 var(--impact); text-transform: uppercase; margin: 0; }
+.x2 { font: 400 min(11cqw, 19cqh)/.92 var(--impact); text-transform: uppercase; margin: 0; }
+.vertical .x1 { font-size: 22cqw; } .vertical .x2 { font-size: 15cqw; }
+.tag { font: 500 min(3cqw, 4cqh)/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.vertical .tag { font-size: 3.6cqw; }
+.hl { color: var(--tang); }
+.strike-wrap { position: relative; display: inline-block; }
+.strike { position: absolute; left: -4%; right: -4%; top: 48%; height: .1em; background: var(--tang); transform-origin: left; transform: scaleX(0) rotate(-5deg); }
+.prices { display: flex; gap: 2cqmin; flex-wrap: wrap; justify-content: center; }
+.price { font: 600 min(3.4cqw, 4.6cqh)/1 var(--mono); padding: 1.2cqmin 2cqmin; border: 1px solid #ffffff2a; border-radius: 99px; background: #ffffff0d; }
+.vertical .price { font-size: 4cqw; }
+.zero { margin-top: 3cqmin; font: 400 min(40cqw, 62cqh)/.8 var(--impact); color: var(--tang); text-shadow: 0 0 6cqmin #ff5a1f66; margin: 0; }
+
+/* Captions beside (16:9) or above (9:16, 1:1) the screen */
+.caps { position: absolute; z-index: 12; left: 5cqw; top: 0; bottom: 0; width: 30cqw; display: grid; align-items: center; pointer-events: none; }
+.caps > * { grid-area: 1 / 1; }
+.vertical .caps, .square .caps { left: 6cqw; right: 6cqw; width: auto; top: 4cqh; bottom: auto; height: 20cqh; }
+.square .caps { height: 24cqh; top: 2.5cqh; }
+.cap { display: flex; flex-direction: column; gap: 1.6cqmin; }
+.vertical .cap, .square .cap { align-items: center; text-align: center; }
+.cap .step { display: inline-flex; align-self: flex-start; align-items: center; gap: 1cqmin; font: 500 min(1.6cqw, 3cqh)/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--tang); border: 1px solid #ff5a1f55; background: #ff5a1f14; padding: .9cqmin 1.4cqmin; border-radius: 99px; }
+.vertical .cap .step, .square .cap .step { align-self: center; font-size: 3cqw; }
+.cap h2 { font: 800 min(4.4cqw, 8cqh)/1.02 var(--display); letter-spacing: -.035em; margin: 0; text-wrap: balance; }
+.vertical .cap h2 { font-size: 7.6cqw; } .square .cap h2 { font-size: 6.2cqw; }
+.cap p { margin: 0; color: var(--muted); font: 400 min(1.7cqw, 3.2cqh)/1.35 var(--body); text-wrap: balance; }
+.vertical .cap p { font-size: 3.6cqw; } .square .cap p { font-size: 3cqw; }
+
+/* ---------- the device ---------- */
+.device { position: absolute; z-index: 11; border-radius: 1.6cqmin; background: #1a1b20; border: 1px solid #2c2d34; box-shadow: 0 4cqmin 10cqmin #000a, 0 0 0 1px #00000080, 0 0 12cqmin #ff5a1f22; overflow: hidden; transform-origin: 50% 60%; }
+.chrome { height: 4.2%; min-height: 14px; display: flex; align-items: center; gap: .9%; padding: 0 1.6%; background: #1d1e23; border-bottom: 1px solid #2a2b31; }
+.chrome i { width: 1.1%; aspect-ratio: 1; border-radius: 50%; background: #3a3b42; }
+.chrome i:nth-child(1) { background: #ff5f57; } .chrome i:nth-child(2) { background: #febc2e; } .chrome i:nth-child(3) { background: #28c840; }
+.chrome .url { margin: 0 auto; width: 34%; height: 58%; border-radius: 99px; background: #26272d; display: grid; place-items: center; font: 500 clamp(6px, 1.3cqmin, 12px) var(--mono); color: #a6a8b0; }
+.viewport { position: absolute; left: 0; right: 0; bottom: 0; top: 4.2%; overflow: hidden; background: var(--bg); }
+.vertical .device { border-radius: 5cqw; border: .8cqw solid #2a2b31; background: #000; }
+.vertical .chrome { display: none; }
+.vertical .viewport { top: 0; border-radius: 4.2cqw; }
+.notch { display: none; position: absolute; z-index: 5; top: 1.2%; left: 50%; width: 28%; height: 2.6%; transform: translateX(-50%); border-radius: 99px; background: #000; }
+.vertical .notch { display: block; }
+
+/* The app canvas: 1600×1000 on a desktop, 390×844 on a phone */
+.app { position: absolute; left: 0; top: 0; width: 1600px; height: 1000px; transform-origin: 0 0; font: 14px/1.45 var(--body); color: var(--fg); background: var(--bg); overflow: hidden; }
+.phone .app { width: 390px; height: 844px; font-size: 14px; }
+.side { position: absolute; left: 0; top: 0; bottom: 0; width: 232px; background: var(--side); border-right: 1px solid var(--line); padding: 16px 12px; display: flex; flex-direction: column; gap: 6px; }
+.rail { position: absolute; right: 0; top: 0; bottom: 0; width: 300px; background: var(--side); border-left: 1px solid var(--line); padding: 16px 14px; display: flex; flex-direction: column; gap: 12px; }
+.main { position: absolute; left: 232px; right: 300px; top: 0; bottom: 0; }
+.phone .side, .phone .rail { display: none; }
+.phone .main { left: 0; right: 0; top: 56px; bottom: 52px; }
+.topbar { display: none; }
+.phone .topbar { display: flex; position: absolute; left: 0; right: 0; top: 0; height: 56px; padding: 22px 14px 0; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); background: var(--side); font-weight: 600; }
+.phone .topbar .cr { margin-left: auto; font: 500 12px var(--mono); padding: 4px 9px; border-radius: 99px; background: var(--hover); }
+.phonebar { display: none; }
+.phone .phonebar { display: flex; position: absolute; left: 0; right: 0; bottom: 0; height: 52px; align-items: center; justify-content: center; border-top: 1px solid var(--line); background: var(--side); }
+.logo { display: flex; align-items: center; gap: 8px; font: 700 17px var(--display); letter-spacing: -.02em; padding: 2px 6px 10px; }
+.logo svg { width: 22px; height: 22px; }
+.newchat { border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; display: flex; gap: 8px; align-items: center; font-weight: 500; }
+.nav { display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 8px; color: #cfd0d4; }
+.nav.on { background: var(--hover); color: var(--fg); }
+.nav .soon { margin-left: auto; font-size: 10px; color: var(--faint); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.nav b { width: 14px; height: 14px; border: 1.5px solid currentColor; border-radius: 4px; opacity: .7; }
+.recent { margin-top: 14px; font: 500 10px var(--mono); letter-spacing: .1em; color: var(--faint); padding: 0 10px; }
+.rec { padding: 5px 10px; color: #b9bac0; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.side .bottom { margin-top: auto; display: flex; flex-direction: column; gap: 8px; }
+.sidead { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.sidead .pic { height: 64px; background: linear-gradient(135deg, #2b6cff, #7fb0ff); }
+.sidead div { padding: 7px 10px; font-size: 12px; }
+.sidead small { color: var(--faint); font-size: 10px; letter-spacing: .06em; }
+.credits { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.credits .n { margin-left: auto; font: 600 13px var(--mono); }
+.user { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 4px; }
+.user i { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #ffb37a, #ff5a1f); }
+
+.rcard { border: 1px solid var(--line); border-radius: 16px; background: var(--surface); overflow: hidden; }
+.rcard .cover { height: 150px; display: grid; place-items: center; text-align: center; padding: 14px; font: 800 22px/1.05 var(--display); letter-spacing: -.02em; }
+.rcard .meta { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.rcard .meta .row { display: flex; align-items: center; gap: 8px; }
+.rcard .meta .row small { margin-left: auto; color: var(--faint); font-size: 10px; letter-spacing: .07em; }
+.rcard .badge { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 11px; }
+.rcard .cta { align-self: flex-start; border: 1px solid var(--line); border-radius: 9px; padding: 5px 10px; margin-top: 4px; font-weight: 500; font-size: 12px; }
+.earnmini { margin-top: auto; display: flex; align-items: center; gap: 10px; border: 1px solid #ff5a1f55; background: #ff5a1f14; border-radius: 16px; padding: 10px 12px; font-size: 12px; }
+.earnmini b { display: block; font-size: 13px; }
+.earnmini .w { margin-left: auto; background: var(--fg); color: var(--bg); border-radius: 9px; padding: 5px 10px; font-weight: 600; }
+.ring-hl { position: absolute; border: 3px solid var(--tang); border-radius: 18px; box-shadow: 0 0 0 6px #ff5a1f33; opacity: 0; }
+
+/* Views inside main */
+.view { position: absolute; inset: 0; visibility: hidden; }
+.modelchip { position: absolute; left: 22px; top: 18px; font-weight: 600; font-size: 14px; display: flex; gap: 8px; align-items: center; }
+.modelchip span { font: 500 11px var(--mono); color: var(--faint); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
+.phone .modelchip { display: none; }
+.hero { position: absolute; left: 0; right: 0; top: 300px; text-align: center; font: 700 36px/1.1 var(--display); letter-spacing: -.03em; }
+.hero em { font-style: normal; color: var(--tang); }
+.phone .hero { top: 210px; font-size: 27px; padding: 0 20px; }
+.composer { position: absolute; left: 50%; width: 700px; margin-left: -350px; top: 400px; border: 1px solid var(--line); background: var(--surface); border-radius: 20px; padding: 14px 16px 12px; box-shadow: 0 8px 30px #0006; }
+.composer.dock { top: auto; bottom: 22px; }
+.phone .composer { left: 12px; right: 12px; width: auto; margin: 0; top: auto; bottom: 10px; border-radius: 18px; padding: 12px; }
+.composer .txt { min-height: 46px; font-size: 16px; color: var(--fg); }
+.composer .txt .ph { color: var(--faint); }
+.caret { display: inline-block; width: 2px; height: 1.1em; background: var(--tang); vertical-align: -3px; margin-left: 1px; }
+.composer .bar { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+.modes { display: flex; gap: 2px; background: #0f1014; border-radius: 10px; padding: 3px; }
+.mode { font-size: 13px; padding: 5px 10px; border-radius: 8px; color: var(--muted); }
+.mode.on { background: var(--hover); color: var(--fg); font-weight: 600; }
+.phone .mode { padding: 4px 8px; font-size: 12px; }
+.composer .cr { margin-left: auto; font: 500 12px var(--mono); color: var(--muted); padding: 3px 6px; border-radius: 8px; }
+.composer .cr.low { color: var(--tang); background: #ff5a1f18; }
+.send { width: 34px; height: 34px; border-radius: 50%; background: var(--fg); color: var(--bg); display: grid; place-items: center; font-weight: 700; }
+.phone .send { width: 30px; height: 30px; }
+.banner { position: absolute; left: 50%; top: 600px; width: 728px; margin-left: -364px; height: 90px; border-radius: 6px; background: linear-gradient(90deg, #0d3b66, #136f63); display: flex; align-items: center; padding: 0 28px; gap: 18px; font: 800 24px var(--display); }
+.banner small { position: absolute; top: -20px; left: 0; font: 500 10px var(--mono); letter-spacing: .1em; color: var(--faint); }
+.banner .go { margin-left: auto; background: var(--volt); color: #111; border-radius: 10px; padding: 8px 14px; font-size: 16px; }
+.phone .banner { display: none; }
+.suggest { position: absolute; left: 0; right: 0; top: 360px; display: flex; gap: 8px; justify-content: center; }
+.suggest span { border: 1px solid var(--line); border-radius: 99px; padding: 5px 12px; font-size: 12px; color: #c3c4ca; }
+.phone .suggest { top: 290px; flex-wrap: wrap; padding: 0 16px; }
+
+/* Build view */
+.bcol { position: absolute; left: 22px; top: 64px; width: 380px; display: flex; flex-direction: column; gap: 12px; }
+.phone .bcol { left: 12px; right: 12px; top: 12px; width: auto; gap: 10px; }
+.bubble { align-self: flex-end; max-width: 92%; background: var(--hover); border-radius: 18px 18px 6px 18px; padding: 10px 14px; font-size: 14px; }
+.work { border: 1px solid var(--line); background: var(--surface); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 9px; }
+.work .h { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.spin { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #ff5a1f40; border-top-color: var(--tang); }
+.work .st { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--muted); }
+.work .st .ic { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 10px; }
+.work .st.done { color: var(--fg); }
+.work .st.done .ic { background: var(--good); border-color: var(--good); color: #062; }
+.work .meter { height: 4px; border-radius: 9px; background: var(--hover); overflow: hidden; }
+.work .meter i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--tang), #ffb37a); }
+.panel { position: absolute; left: 420px; right: 18px; top: 18px; bottom: 18px; border: 1px solid var(--line); border-radius: 16px; background: #0b0c0f; overflow: hidden; }
+.phone .panel { left: 12px; right: 12px; top: 268px; bottom: 10px; }
+.ptop { height: 50px; display: flex; align-items: center; gap: 6px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.tab { padding: 5px 12px; border-radius: 8px; font-size: 13px; color: var(--muted); }
+.tab.on { background: var(--hover); color: var(--fg); font-weight: 600; }
+.pub { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.pub .live { font: 500 12px var(--mono); color: var(--tang); opacity: 0; }
+.pub .btn { background: var(--tang); color: #fff; border-radius: 9px; padding: 6px 14px; font-weight: 600; font-size: 13px; }
+.phone .pub .live { display: none; }
+.code { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; padding: 14px 16px; font: 12.5px/1.65 var(--mono); color: #c8cad2; white-space: pre; overflow: hidden; }
+.phone .code { font-size: 10px; padding: 10px; }
+.code .ln { color: #4b4d57; display: inline-block; width: 26px; }
+.code .k { color: #ff8a5c; } .code .s { color: #b7e36a; } .code .a { color: #7fb0ff; }
+.files { position: absolute; top: 50px; left: 0; width: 170px; bottom: 0; border-right: 1px solid var(--line); padding: 10px; font: 12px/2 var(--mono); color: var(--muted); background: #0e0f13; }
+.files .on { color: var(--fg); }
+.phone .files { display: none; }
+.withfiles .code { left: 170px; }
+.phone .withfiles .code { left: 0; }
+.preview { position: absolute; top: 50px; left: 0; right: 0; bottom: 0; background: #fbf7f3; color: #1d1410; overflow: hidden; visibility: hidden; }
+.salon-nav { display: flex; align-items: center; gap: 18px; padding: 16px 26px; font-size: 13px; }
+.salon-nav b { font: 800 20px var(--display); letter-spacing: -.02em; margin-right: auto; }
+.salon-nav span:last-child { background: #1d1410; color: #fff; border-radius: 99px; padding: 6px 14px; }
+.phone .salon-nav { padding: 12px 14px; gap: 10px; font-size: 11px; }
+.phone .salon-nav span:not(:last-child) { display: none; }
+.salon-hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; padding: 10px 26px; align-items: center; }
+.phone .salon-hero { grid-template-columns: 1fr; padding: 6px 14px; gap: 10px; }
+.salon-hero h3 { font: 800 44px/1 var(--display); letter-spacing: -.04em; margin: 0 0 10px; }
+.phone .salon-hero h3 { font-size: 30px; }
+.salon-hero p { margin: 0; color: #6b5a50; font-size: 14px; }
+.salon-hero .img { height: 210px; border-radius: 18px; background: radial-gradient(circle at 30% 30%, #ffcfa8, #e86a3a 55%, #7a2b14); position: relative; overflow: hidden; }
+.phone .salon-hero .img { height: 120px; }
+.salon-hero .img::after { content: ""; position: absolute; width: 46%; height: 70%; left: 27%; bottom: -8%; border-radius: 50% 50% 0 0; background: #3a170c; box-shadow: 0 -40px 0 -10px #3a170c; }
+.services { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 16px 26px; }
+.phone .services { gap: 6px; padding: 10px 14px; }
+.svc { background: #fff; border: 1px solid #eadfd6; border-radius: 14px; padding: 12px; font-size: 13px; }
+.phone .svc { padding: 8px; font-size: 10px; }
+.svc b { display: block; font-size: 14px; } .phone .svc b { font-size: 11px; }
+.svc span { color: #e2541c; font: 600 13px var(--mono); } .phone .svc span { font-size: 10px; }
+.book { margin: 4px 26px; background: #1d1410; color: #fff; border-radius: 16px; padding: 14px; display: flex; gap: 10px; align-items: center; font-size: 13px; }
+.phone .book { margin: 6px 14px; flex-wrap: wrap; padding: 10px; font-size: 11px; }
+.book i { flex: 1; min-width: 70px; font-style: normal; background: #2d221d; border-radius: 9px; padding: 8px 10px; color: #bba; }
+.book b { background: #ff5a1f; border-radius: 9px; padding: 8px 14px; }
+.wbadge { position: absolute; right: 12px; bottom: 12px; background: #0b0b0d; color: #fff; border-radius: 99px; padding: 6px 12px; font: 500 12px var(--body); }
+.wbadge b { color: var(--tang); }
+.phone .wbadge { font-size: 10px; right: 8px; bottom: 8px; }
+.toast { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); background: var(--fg); color: var(--bg); border-radius: 12px; padding: 10px 16px; font-weight: 600; font-size: 13px; white-space: nowrap; display: flex; gap: 8px; align-items: center; z-index: 8; }
+.toast i { width: 9px; height: 9px; border-radius: 50%; background: var(--good); }
+.phone .toast { bottom: 64px; font-size: 11px; white-space: normal; width: 300px; }
+
+/* Earn dialog */
+.dim { position: absolute; inset: 0; background: #08090cb3; z-index: 6; }
+.dialog { position: absolute; z-index: 7; left: 50%; top: 50%; width: 460px; margin-left: -230px; margin-top: -250px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 30px 80px #000c; }
+.phone .dialog { width: 360px; margin-left: -180px; margin-top: -270px; padding: 16px; }
+.dialog h4 { margin: 0; font: 700 19px var(--display); letter-spacing: -.02em; }
+.dialog .d { color: var(--muted); font-size: 13px; margin: -6px 0 2px; }
+.opt { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 14px; padding: 11px; }
+.opt .ico { width: 40px; height: 40px; border-radius: 12px; background: var(--hover); display: grid; place-items: center; font-size: 17px; }
+.opt b { display: block; font-size: 14px; } .opt small { color: var(--muted); font-size: 12px; }
+.opt .g { font: 600 13px var(--mono); color: var(--tang); }
+.opt.sel { border-color: var(--tang); box-shadow: 0 0 0 3px #ff5a1f33; }
+.vid { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); position: relative; height: 250px; background: linear-gradient(135deg, #0f5132, #1e9e6a); }
+.vid .lab { position: absolute; left: 12px; top: 12px; font: 600 10px var(--mono); letter-spacing: .1em; background: #0007; padding: 4px 8px; border-radius: 6px; }
+.vid h5 { position: absolute; left: 16px; bottom: 44px; margin: 0; font: 800 26px/1 var(--display); letter-spacing: -.02em; }
+.vid .sp { position: absolute; left: 16px; bottom: 22px; font-size: 12px; opacity: .85; }
+.vid .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: #0006; }
+.vid .bar i { display: block; height: 100%; width: 0; background: var(--tang); }
+.vid .tm { position: absolute; right: 12px; top: 12px; font: 600 11px var(--mono); background: #0007; padding: 4px 8px; border-radius: 6px; }
+.plus { position: absolute; z-index: 9; font: 800 54px var(--display); color: var(--tang); text-shadow: 0 0 30px #ff5a1f99; left: 50%; top: 42%; transform: translateX(-50%); }
+.rule { font-size: 12px; color: var(--faint); border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* Chat view */
+.ccol { position: absolute; left: 50%; width: 600px; margin-left: -300px; top: 60px; display: flex; flex-direction: column; gap: 14px; }
+.phone .ccol { left: 12px; right: 12px; width: auto; margin: 0; top: 12px; }
+.answer { font-size: 16.5px; line-height: 1.6; color: #e7e7ea; white-space: pre-wrap; }
+.phone .answer { font-size: 12.5px; }
+.answer b { color: #fff; }
+.answer .day { color: var(--tang); font-weight: 600; }
+.ans-by { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--faint); }
+.ans-by i { width: 18px; height: 18px; border-radius: 6px; background: var(--tang); }
+
+/* Design view */
+.dcanvas { position: absolute; left: 420px; right: 18px; top: 18px; bottom: 18px; border: 1px solid var(--line); border-radius: 16px; background: #0b0c0f radial-gradient(#ffffff10 1px, transparent 1px) 0 0 / 18px 18px; display: grid; place-items: center; }
+.phone .dcanvas { left: 12px; right: 12px; top: 150px; bottom: 10px; }
+.poster { width: 380px; height: 520px; border-radius: 10px; background: #0d0d10; position: relative; overflow: hidden; box-shadow: 0 20px 60px #000c; }
+.phone .poster { width: 250px; height: 342px; }
+.poster .p-bg { position: absolute; inset: 0; background: radial-gradient(circle at 80% 15%, #ff5a1f 0, transparent 45%), radial-gradient(circle at 10% 90%, #3b63ff 0, transparent 50%); }
+.poster .p-t { position: absolute; left: 26px; top: 120px; font: 400 92px/.86 var(--impact); text-transform: uppercase; letter-spacing: -.01em; }
+.phone .poster .p-t { left: 16px; top: 80px; font-size: 60px; }
+.poster .p-k { position: absolute; left: 26px; top: 40px; font: 600 13px var(--mono); letter-spacing: .14em; color: var(--volt); }
+.phone .poster .p-k { left: 16px; top: 24px; font-size: 9px; }
+.poster .p-d { position: absolute; left: 26px; bottom: 96px; font: 700 20px/1.2 var(--display); }
+.phone .poster .p-d { left: 16px; bottom: 62px; font-size: 13px; }
+.poster .p-d span { display: block; color: #bbb; font: 400 14px var(--body); }
+.phone .poster .p-d span { font-size: 10px; }
+.poster .p-q { position: absolute; right: 22px; bottom: 22px; width: 74px; height: 74px; background: conic-gradient(#fff 25%, #0d0d10 0 50%, #fff 0 75%, #0d0d10 0) 0 0 / 18px 18px; border: 6px solid #fff; border-radius: 6px; }
+.phone .poster .p-q { width: 48px; height: 48px; right: 14px; bottom: 14px; border-width: 4px; background-size: 12px 12px; }
+.poster .p-s { position: absolute; left: 26px; bottom: 28px; display: flex; gap: 8px; }
+.phone .poster .p-s { left: 16px; bottom: 18px; }
+.poster .p-s i { font-style: normal; font: 600 11px var(--mono); border: 1px solid #ffffff44; border-radius: 99px; padding: 4px 9px; }
+.phone .poster .p-s i { font-size: 8px; padding: 2px 6px; }
+.dtools { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.dtools span { background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 6px 12px; font-size: 12px; }
+.dtools span.dl { background: var(--fg); color: var(--bg); font-weight: 600; }
+
+/* Invite card */
+.invite { position: absolute; z-index: 7; left: 50%; top: 50%; width: 520px; margin-left: -260px; margin-top: -170px; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 30px 80px #000c; }
+.phone .invite { width: 360px; margin-left: -180px; padding: 16px; }
+.invite h4 { margin: 0; font: 700 22px var(--display); letter-spacing: -.02em; }
+.invite p { margin: -6px 0 0; color: var(--muted); font-size: 13px; }
+.link { display: flex; gap: 8px; align-items: center; border: 1px solid var(--line); border-radius: 12px; padding: 6px 6px 6px 12px; font: 500 13px var(--mono); }
+.phone .link { font-size: 10px; }
+.link b { margin-left: auto; background: var(--fg); color: var(--bg); border-radius: 9px; padding: 6px 12px; font: 600 12px var(--body); }
+.friends { display: flex; gap: 10px; }
+.fr { flex: 1; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 12px; padding: 8px; font-size: 12px; }
+.phone .fr { font-size: 10px; padding: 6px; gap: 5px; }
+.fr i { width: 26px; height: 26px; border-radius: 50%; flex: none; }
+.fr span { margin-left: auto; color: var(--good); font: 600 12px var(--mono); }
+.phone .fr span { font-size: 10px; }
+
+/* Cursor */
+.cursor { position: absolute; z-index: 20; left: 0; top: 0; width: 26px; height: 26px; pointer-events: none; }
+.cursor svg { width: 26px; height: 26px; filter: drop-shadow(0 3px 6px #000a); }
+.phone .cursor svg { display: none; }
+.cursor .tap { position: absolute; left: -16px; top: -16px; width: 32px; height: 32px; border-radius: 50%; border: 3px solid var(--tang); opacity: 0; }
+.phone .cursor .dot { position: absolute; left: -11px; top: -11px; width: 22px; height: 22px; border-radius: 50%; background: #ffffffaa; box-shadow: 0 0 0 3px #ffffff44; }
+
+/* Outro */
+.lockup { display: flex; align-items: center; gap: 2.4cqmin; }
+.lockup svg { width: min(13cqw, 18cqh); height: min(13cqw, 18cqh); }
+.lockup b { font: 800 min(13cqw, 19cqh)/.9 var(--display); letter-spacing: -.05em; }
+.vertical .lockup { flex-direction: column; } .vertical .lockup svg { width: 26cqw; height: 26cqw; } .vertical .lockup b { font-size: 20cqw; }
+.urlbig { font: 600 min(4.4cqw, 7cqh)/1 var(--mono); color: var(--tang); }
+.vertical .urlbig { font-size: 7cqw; }
+.join { font: 700 min(2.6cqw, 4.6cqh)/1 var(--body); background: #fff; color: #111; padding: 1.8cqmin 3.4cqmin; border-radius: 99px; }
+.vertical .join { font-size: 4.6cqw; }
+.words { display: flex; gap: 3cqw; }
+.words .x1 { font-size: min(11.5cqw, 24cqh); }
+.vertical .words .x1 { font-size: 22cqw; }
+.vertical .words { flex-direction: column; gap: 0; }
+</style>
+
+<div class="page">
+  <div>
+    <h1>Wanlly · product demo</h1>
+    <p class="sub">60 seconds, three shapes: 16:9 for YouTube, 9:16 for Reels and TikTok, 1:1 for X.</p>
+  </div>
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <div class="cam" id="cam">
+        <div class="blob a" id="blobA"></div>
+        <div class="blob b" id="blobB"></div>
+        <div class="grid"></div>
+
+        <!-- Hook -->
+        <section class="scene" data-from="0" data-to="10">
+          <div class="col" data-in="0" data-out="6" data-fx="rise">
+            <p class="tag" data-in="0">The price of AI</p>
+            <h2 class="x1" data-in="0" data-fx="slam">AI costs</h2>
+            <span class="strike-wrap"><h2 class="x1 hl" data-in="1.5" data-fx="slam">$20/mo</h2><i class="strike" id="strike"></i></span>
+            <div class="prices">
+              <span class="price" data-in="4" data-fx="pop">KSh 2,600</span>
+              <span class="price" data-in="4.5" data-fx="pop">₦30,000</span>
+              <span class="price" data-in="5" data-fx="pop">₹1,700</span>
+            </div>
+          </div>
+          <div class="col" data-in="6" data-fx="rise">
+            <h2 class="x2" data-in="6" data-fx="slam">Wanlly costs</h2>
+            <p class="zero" data-in="7" data-fx="stamp">$0</p>
+            <p class="tag" data-in="8">Watch a quick ad · build anything</p>
+          </div>
+        </section>
+
+        <!-- Captions -->
+        <div class="caps" id="caps">
+          <div class="cap" data-in="10.5" data-out="19" data-fx="left"><span class="step">01 · Describe it</span><h2>Tell Wanlly what to build.</h2><p>Plain words. Any language you think in.</p></div>
+          <div class="cap" data-in="19" data-out="31" data-fx="left"><span class="step">02 · Watch it build</span><h2>It plans, writes and styles the code.</h2><p>Real files you can keep, edit or push to GitHub.</p></div>
+          <div class="cap" data-in="31" data-out="41" data-fx="left"><span class="step">03 · Ship it</span><h2>Preview. Publish. Share the link.</h2><p>Live on the web in one click.</p></div>
+          <div class="cap" data-in="41" data-out="56" data-fx="left"><span class="step">04 · Pay with time</span><h2>Low on credits? Watch a quick ad.</h2><p>Or answer a survey. No card, no subscription.</p></div>
+          <div class="cap" data-in="56" data-out="60" data-fx="left"><span class="step">Our rule</span><h2>Ads stay beside your work.</h2><p>Never inside an answer. Never changing what the AI says.</p></div>
+          <div class="cap" data-in="60" data-out="78" data-fx="left"><span class="step">Chat</span><h2>Ask anything.</h2><p>Study plans, cover letters, explanations, ideas.</p></div>
+          <div class="cap" data-in="78" data-out="94" data-fx="left"><span class="step">Design</span><h2>Posters and slides in seconds.</h2><p>Download and post them anywhere.</p></div>
+          <div class="cap" data-in="94" data-out="103" data-fx="left"><span class="step">Invite</span><h2>Bring friends. You both get 20 credits.</h2><p>Every app you publish carries your invite.</p></div>
+        </div>
+
+        <!-- The device -->
+        <div class="device" id="device">
+          <div class="chrome"><i></i><i></i><i></i><span class="url">wanlly.africa/app</span></div>
+          <div class="viewport" id="viewport">
+            <div class="notch"></div>
+            <div class="app" id="app">
+              <div class="topbar"><svg viewBox="0 0 64 64" width="20" height="20"><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f"/></svg>Wanlly<span class="cr"><span class="crn">17</span> credits</span></div>
+              <aside class="side">
+                <div class="logo"><svg viewBox="0 0 64 64"><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f"/></svg>Wanlly</div>
+                <div class="newchat">＋ New chat</div>
+                <div class="nav" id="navChat"><b></b>Chat</div>
+                <div class="nav" id="navCode"><b></b>Code</div>
+                <div class="nav" id="navDesign"><b></b>Design</div>
+                <div class="nav"><b></b>Images<span class="soon">Soon</span></div>
+                <div class="nav"><b></b>Projects</div>
+                <div class="nav"><b></b>Help and support</div>
+                <div class="recent">RECENT</div>
+                <div class="rec">Salon booking page</div>
+                <div class="rec">Exam revision plan</div>
+                <div class="rec">Hackathon poster</div>
+                <div class="bottom">
+                  <div class="sidead"><div class="pic"></div><div>Nivea Sunscreen <small>SPONSORED</small></div></div>
+                  <div class="credits">Credits<span class="n crn">17</span></div>
+                  <div class="user"><i></i>Amani W.</div>
+                </div>
+              </aside>
+
+              <main class="main">
+                <!-- Home -->
+                <section class="view" id="vHome">
+                  <div class="modelchip">Gemini Flash <span>1+ cr</span></div>
+                  <div class="hero">What are we <em>making</em> today?</div>
+                </section>
+                <!-- Build -->
+                <section class="view" id="vBuild">
+                  <div class="bcol">
+                    <div class="bubble">Build a booking page for my cousin's salon in Nairobi</div>
+                    <div class="work">
+                      <div class="h"><span class="spin" id="bspin"></span><span id="bhead">Building your app…</span></div>
+                      <div class="st" id="s1"><span class="ic">✓</span>Plan the pages and booking flow</div>
+                      <div class="st" id="s2"><span class="ic">✓</span>Write index.html</div>
+                      <div class="st" id="s3"><span class="ic">✓</span>Style it: warm, mobile-first</div>
+                      <div class="st" id="s4"><span class="ic">✓</span>Booking form with services in KSh</div>
+                      <div class="meter"><i id="bmeter"></i></div>
+                    </div>
+                  </div>
+                  <div class="panel withfiles">
+                    <div class="ptop"><span class="tab" id="tCode">Code</span><span class="tab" id="tPrev">Preview</span><div class="pub"><span class="live" id="liveUrl">wanlly.africa/s/amani-salon</span><span class="btn" id="pubBtn">Publish</span></div></div>
+                    <div class="files" id="files"><div class="on">index.html</div><div>styles.css</div><div>booking.js</div></div>
+                    <div class="code" id="code"></div>
+                    <div class="preview" id="preview">
+                      <div class="salon-nav" data-in="31.3" data-fx="rise"><b>Amani Salon</b><span>Services</span><span>Gallery</span><span>Book now</span></div>
+                      <div class="salon-hero">
+                        <div data-in="31.6" data-fx="left"><h3>Your look, booked in 30 seconds.</h3><p>Braids, cuts and nails in Kilimani, Nairobi. Pick a time, we'll be ready.</p></div>
+                        <div class="img" data-in="31.9" data-fx="pop"></div>
+                      </div>
+                      <div class="services">
+                        <div class="svc" data-in="32.2" data-fx="pop"><b>Knotless braids</b><span>KSh 2,500</span></div>
+                        <div class="svc" data-in="32.4" data-fx="pop"><b>Cut &amp; style</b><span>KSh 800</span></div>
+                        <div class="svc" data-in="32.6" data-fx="pop"><b>Gel nails</b><span>KSh 1,200</span></div>
+                      </div>
+                      <div class="book" data-in="32.9" data-fx="rise"><i>Your name</i><i>Service</i><i>Sat, 10:00</i><b>Book now</b></div>
+                      <div class="wbadge" data-in="36" data-fx="pop">Built free with <b>Wanlly</b> · make yours</div>
+                    </div>
+                  </div>
+                  <div class="toast" id="toast1" data-in="36" data-out="40.5" data-fx="rise"><i></i>Your app is live · wanlly.africa/s/amani-salon</div>
+                </section>
+                <!-- Chat -->
+                <section class="view" id="vChat">
+                  <div class="modelchip">Gemini Flash <span>1+ cr</span></div>
+                  <div class="ccol">
+                    <div class="bubble" data-in="64.6" data-fx="rise">Make me a revision plan for my exams</div>
+                    <div class="ans-by" data-in="65.5" data-fx="rise"><i></i>Wanlly · Gemini Flash</div>
+                    <div class="answer" id="answer"></div>
+                  </div>
+                </section>
+                <!-- Design -->
+                <section class="view" id="vDesign">
+                  <div class="bcol">
+                    <div class="bubble" data-in="82.2" data-fx="rise">Poster for our campus hackathon</div>
+                    <div class="work" data-in="82.8" data-fx="rise">
+                      <div class="h"><span class="spin" id="dspin"></span><span id="dhead">Designing…</span></div>
+                      <div class="st done"><span class="ic">✓</span>Bold type, Nairobi energy</div>
+                      <div class="st done"><span class="ic">✓</span>Date, venue and prizes</div>
+                    </div>
+                  </div>
+                  <div class="dcanvas">
+                    <div class="dtools" data-in="89" data-fx="rise"><span>Edit</span><span class="dl" id="dlBtn">Download PNG</span></div>
+                    <div class="poster" data-in="83.5" data-fx="pop">
+                      <div class="p-bg" data-in="84" data-fx="rise"></div>
+                      <div class="p-k" data-in="85" data-fx="left">48 HOURS · BUILD FOR AFRICA</div>
+                      <div class="p-t" data-in="86" data-fx="slam">Hack<br>Nairobi<br><span style="color:#ff5a1f">2026</span></div>
+                      <div class="p-d" data-in="87" data-fx="rise">Nov 14–16<span>Campus Innovation Hub</span></div>
+                      <div class="p-s" data-in="88" data-fx="rise"><i>KSh 500K prizes</i><i>Free entry</i></div>
+                      <div class="p-q" data-in="88.4" data-fx="pop"></div>
+                    </div>
+                  </div>
+                </section>
+
+                <!-- Composer (home, chat, design share it) -->
+                <div class="suggest" id="suggest"><span>Make me a revision plan for my exams</span><span>Write a cover letter</span><span>Explain like I'm new to it</span></div>
+                <div class="composer" id="composer">
+                  <div class="txt" id="ctext"><span class="ph">Message Wanlly</span></div>
+                  <div class="bar">
+                    <div class="modes"><span class="mode" id="mChat">Chat</span><span class="mode" id="mCode">Code</span><span class="mode" id="mDesign">Design</span><span class="mode">Images</span></div>
+                    <span class="cr" id="ccr"><span class="crn">17</span> credits</span>
+                    <span class="send">↑</span>
+                  </div>
+                </div>
+                <div class="banner" id="banner"><small>SPONSORED</small>Internly · Paid internships, remote-first<span class="go">Browse roles</span></div>
+
+                <!-- Earn dialog -->
+                <div class="dim" id="dim"></div>
+                <div class="dialog" id="dialog">
+                  <div id="dlist">
+                    <h4>Earn credits</h4>
+                    <p class="d">Every credit is paid for by a sponsor you chose to see.</p>
+                    <div style="display:flex;flex-direction:column;gap:9px">
+                      <div class="opt" id="optAd" data-in="43.5" data-fx="rise"><span class="ico">▶</span><span><b>Watch an ad</b><small>Short sponsor video</small></span><span class="g">+4</span></div>
+                      <div class="opt" data-in="44" data-fx="rise"><span class="ico">✎</span><span><b>Answer a short survey</b><small>Pays more than an ad</small></span><span class="g">+50</span></div>
+                      <div class="opt" data-in="44.5" data-fx="rise"><span class="ico">✦</span><span><b>Try a sponsor's tool</b><small>Credits when they confirm</small></span><span class="g">+30</span></div>
+                    </div>
+                    <p class="rule">Sponsors never appear inside an answer and never change what a model says.</p>
+                  </div>
+                  <div id="dvid" style="display:none">
+                    <div class="vid"><span class="lab">SPONSORED</span><span class="tm" id="vtm">0:05</span><h5>Get the job.<br>Tailored CVs in minutes.</h5><span class="sp">Tuma CV</span><div class="bar"><i id="vbar"></i></div></div>
+                  </div>
+                </div>
+                <div class="plus" id="plus" data-in="53" data-out="56" data-fx="pop">+4 credits</div>
+
+                <!-- Invite -->
+                <div class="invite" id="invite">
+                  <h4>Invite friends</h4>
+                  <p>When a friend joins with your link, you both get 20 credits.</p>
+                  <div class="link">wanlly.africa/beta?ref=amani-3f2a<b id="copyBtn">Copy</b></div>
+                  <div class="friends">
+                    <div class="fr" data-in="98" data-fx="pop"><i style="background:linear-gradient(135deg,#7fb0ff,#3b63ff)"></i>Wanjiru<span>+20</span></div>
+                    <div class="fr" data-in="99" data-fx="pop"><i style="background:linear-gradient(135deg,#b7e36a,#3ccf7a)"></i>Tunde<span>+20</span></div>
+                    <div class="fr" data-in="100" data-fx="pop"><i style="background:linear-gradient(135deg,#ffb37a,#ff5a1f)"></i>Priya<span>+20</span></div>
+                  </div>
+                </div>
+              </main>
+
+              <aside class="rail">
+                <div class="rcard" id="railTop"><div class="cover" style="background:#21b04b;color:#fff">One job. One tailored CV. Five minutes.</div><div class="meta"><div class="row"><span class="badge" style="background:#21b04b">T</span><b>Tuma CV</b><small>SPONSORED</small></div><b>Get the Job</b><span style="color:var(--muted)">Generate tailored CVs in seconds</span><span class="cta">Get Started</span></div></div>
+                <div class="rcard"><div class="cover" style="background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;font-size:18px">Paid internships, remote-first.</div><div class="meta"><div class="row"><span class="badge" style="background:#0f766e">I</span><b>Internly</b><small>SPONSORED</small></div><span class="cta">Browse roles</span></div></div>
+                <div class="earnmini"><span>▶</span><span><b>Keep building</b>+4 credits an ad</span><span class="w">Watch</span></div>
+              </aside>
+              <div class="ring-hl" id="ringRail"></div>
+              <div class="phonebar"><div style="width:320px;height:40px;border-radius:6px;background:linear-gradient(90deg,#0d3b66,#136f63);display:flex;align-items:center;padding:0 12px;font:700 13px var(--display)">Internly · Paid internships</div></div>
+
+              <div class="cursor" id="cursor"><span class="tap" id="tap"></span><span class="dot"></span><svg viewBox="0 0 24 24"><path d="M3 2l7 19 2.6-7.4L20 11z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outro -->
+        <section class="scene" data-from="104" data-to="120" style="z-index:13">
+          <div class="col" data-in="104" data-out="109.8">
+            <div class="words"><h2 class="x1" data-in="104" data-fx="slam">Chat.</h2><h2 class="x1" data-in="105" data-fx="slam">Code.</h2><h2 class="x1" data-in="106" data-fx="slam">Design.</h2></div>
+            <h2 class="x1 hl" data-in="108" data-fx="stamp">Free.</h2>
+          </div>
+          <div class="col" data-in="110" data-fx="rise" style="gap:3.4cqmin">
+            <div class="lockup" data-in="110" data-fx="pop"><svg viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#fff"/><path d="M32 8 A52.8 52.8 0 0 0 56 32 A52.8 52.8 0 0 0 32 56 A52.8 52.8 0 0 0 8 32 A52.8 52.8 0 0 0 32 8Z" fill="#ff5a1f"/></svg><b>wanlly</b></div>
+            <div class="urlbig" data-in="111" data-fx="rise">wanlly.africa</div>
+            <div class="join" data-in="112" data-fx="pop">Join the free beta →</div>
+          </div>
+        </section>
+      </div>
+      <div class="flash" id="flash"></div>
+      <svg class="grain" aria-hidden="true"><filter id="gr"><feTurbulence id="turb" type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="1"/></filter><rect width="100%" height="100%" filter="url(#gr)"/></svg>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="btn-c" id="play" type="button">Play with sound</button>
+    <button class="btn-c" id="replay" type="button">Replay</button>
+    <input class="scrub" id="scrub" type="range" min="0" max="60000" step="10" value="0" aria-label="Position in the film">
+    <span class="time" id="time">0:00 / 1:00</span>
+    <button class="btn-c" id="shape" type="button">Format: 16:9</button>
+  </div>
+  <p class="note">The app is recreated with Wanlly's own look. People, sponsors and the event are examples. Music is original and synthesized for Wanlly.</p>
+  <audio id="audio" src="demo/wanlly-demo-music.m4a" preload="auto"></audio>
+</div>
+
+<script>
+(function () {
+  const BPM = 120, B = 60000 / BPM, TOTAL = 60000;
+  const FLASH = [7, 10, 108, 110];
+  const HITS = [0, 1.5, 6, 7, 10, 36, 53, 104, 105, 106, 108, 110];
+  const el = (id) => document.getElementById(id);
+  const clamp = (x) => Math.min(1, Math.max(0, x));
+  const outExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * clamp(x)));
+  const outBack = (x) => { x = clamp(x); const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+  const inOut = (x) => { x = clamp(x); return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+  const fmt = (ms) => `${Math.floor(ms / 60000)}:${String(Math.floor(ms / 1000) % 60).padStart(2, "0")}`;
+  const isPhone = () => document.documentElement.classList.contains("vertical");
+  const isSquare = () => document.documentElement.classList.contains("square");
+
+  const stage = el("stage"), app = el("app"), device = el("device"), viewport = el("viewport");
+  const scenes = [...stage.querySelectorAll(".scene")].map((s) => ({ s, from: +s.dataset.from * B, to: +s.dataset.to * B }));
+  const items = [...stage.querySelectorAll("[data-in]")].map((n) => ({ n, at: +n.dataset.in * B, out: n.dataset.out ? +n.dataset.out * B : Infinity, fx: n.dataset.fx || "rise" }));
+
+  // ---- content ----
+  const PROMPT = "Build a booking page for my cousin's salon in Nairobi";
+  const CHATQ = "Make me a revision plan for my exams";
+  const DESQ = "Poster for our campus hackathon";
+  const CODE = [
+    ['<span class="k">&lt;!doctype html&gt;</span>'],
+    ['<span class="k">&lt;html</span> <span class="a">lang</span>=<span class="s">"en"</span><span class="k">&gt;</span>'],
+    ['<span class="k">&lt;head&gt;</span>'],
+    ['  <span class="k">&lt;title&gt;</span>Amani Salon · Book online<span class="k">&lt;/title&gt;</span>'],
+    ['  <span class="k">&lt;meta</span> <span class="a">name</span>=<span class="s">"viewport"</span> <span class="a">content</span>=<span class="s">"width=device-width"</span><span class="k">&gt;</span>'],
+    ['  <span class="k">&lt;link</span> <span class="a">rel</span>=<span class="s">"stylesheet"</span> <span class="a">href</span>=<span class="s">"styles.css"</span><span class="k">&gt;</span>'],
+    ['<span class="k">&lt;/head&gt;</span>'],
+    ['<span class="k">&lt;body&gt;</span>'],
+    ['  <span class="k">&lt;nav&gt;&lt;b&gt;</span>Amani Salon<span class="k">&lt;/b&gt;</span> … <span class="k">&lt;a</span> <span class="a">href</span>=<span class="s">"#book"</span><span class="k">&gt;</span>Book now<span class="k">&lt;/a&gt;&lt;/nav&gt;</span>'],
+    ['  <span class="k">&lt;h1&gt;</span>Your look, booked in 30 seconds.<span class="k">&lt;/h1&gt;</span>'],
+    ['  <span class="k">&lt;p&gt;</span>Braids, cuts and nails in Kilimani, Nairobi.<span class="k">&lt;/p&gt;</span>'],
+    ['  <span class="k">&lt;section</span> <span class="a">class</span>=<span class="s">"services"</span><span class="k">&gt;</span>'],
+    ['    <span class="k">&lt;div&gt;</span>Knotless braids <span class="k">&lt;span&gt;</span>KSh 2,500<span class="k">&lt;/span&gt;&lt;/div&gt;</span>'],
+    ['    <span class="k">&lt;div&gt;</span>Cut &amp; style <span class="k">&lt;span&gt;</span>KSh 800<span class="k">&lt;/span&gt;&lt;/div&gt;</span>'],
+    ['    <span class="k">&lt;div&gt;</span>Gel nails <span class="k">&lt;span&gt;</span>KSh 1,200<span class="k">&lt;/span&gt;&lt;/div&gt;</span>'],
+    ['  <span class="k">&lt;/section&gt;</span>'],
+    ['  <span class="k">&lt;form</span> <span class="a">id</span>=<span class="s">"book"</span><span class="k">&gt;</span>'],
+    ['    <span class="k">&lt;input</span> <span class="a">name</span>=<span class="s">"name"</span> <span class="a">required</span><span class="k">&gt;</span>'],
+    ['    <span class="k">&lt;select</span> <span class="a">name</span>=<span class="s">"service"</span><span class="k">&gt;</span>…<span class="k">&lt;/select&gt;</span>'],
+    ['    <span class="k">&lt;input</span> <span class="a">type</span>=<span class="s">"datetime-local"</span><span class="k">&gt;</span>'],
+    ['    <span class="k">&lt;button&gt;</span>Book now<span class="k">&lt;/button&gt;</span>'],
+    ['  <span class="k">&lt;/form&gt;</span>'],
+    ['  <span class="k">&lt;script</span> <span class="a">src</span>=<span class="s">"booking.js"</span><span class="k">&gt;&lt;/script&gt;</span>'],
+    ['<span class="k">&lt;/body&gt;&lt;/html&gt;</span>'],
+  ].map((l, i) => `<span class="ln">${i + 1}</span>${l[0]}`);
+  const ANSWER = [
+    "<b>Your 7-day revision plan</b>",
+    "",
+    "<span class=\"day\">Mon</span>  Maths · past papers, 2 h",
+    "<span class=\"day\">Tue</span>  Biology · diagrams + flashcards",
+    "<span class=\"day\">Wed</span>  Chemistry · equations drill",
+    "<span class=\"day\">Thu</span>  Maths · your weakest topics",
+    "<span class=\"day\">Fri</span>  English · one timed essay",
+    "<span class=\"day\">Sat</span>  Full mock exam, then mark it",
+    "<span class=\"day\">Sun</span>  Rest. Light review only.",
+    "",
+    "<b>Tip:</b> 50 min on, 10 off. Sleep is part of the plan.",
+  ];
+
+  // ---- camera: [beat, x, y, zoom] in app pixels; each move eases in over 1.4 beats ----
+  const CAM_DESK = [[10, 800, 500, 1], [11, 766, 450, 1.55], [18.6, 766, 450, 1.55], [19, 940, 500, 1.2], [21, 640, 330, 1.9], [26, 1000, 470, 1.55], [31, 1000, 470, 1.35], [33.5, 1110, 150, 1.9], [37, 900, 500, 1.15], [41, 950, 470, 2.1], [42.6, 766, 500, 1.45], [55, 800, 500, 1], [56.5, 1450, 330, 1.55], [60, 766, 760, 1.5], [65, 766, 250, 1.7], [77, 800, 500, 1], [79, 766, 450, 1.5], [82.4, 960, 500, 1.15], [85, 1060, 500, 1.45], [89.5, 1180, 300, 1.7], [92, 800, 500, 1], [94.5, 766, 500, 1.55], [101, 800, 500, 1]];
+  const CAM_PHONE = [[0, 195, 422, 1]];
+  // ---- cursor: [beat, x, y, click] ----
+  const CUR_DESK = [[10, 1050, 760], [11.5, 700, 512, 1], [17, 1090, 512], [18, 1080, 512, 1], [30, 760, 50], [31, 762, 44, 1], [34, 1205, 44], [35, 1210, 44, 1], [41.2, 1060, 515], [42, 1062, 516, 1], [45.5, 900, 340], [46, 905, 345, 1], [56.5, 1400, 560], [63.5, 1000, 470], [64.5, 1080, 512, 1], [77.5, 820, 515], [78.5, 832, 516, 1], [81.5, 1090, 512], [82, 1080, 512, 1], [89.5, 1240, 44], [90, 1244, 44, 1], [95.5, 1180, 500], [96, 1184, 500, 1], [102, 1100, 760]];
+  const CUR_PHONE = [[10, 280, 700], [11.5, 128, 802, 1], [17, 350, 802], [18, 350, 802, 1], [30.5, 120, 252], [31, 120, 252, 1], [34.5, 330, 252], [35, 330, 252, 1], [41.5, 300, 740], [42, 300, 740, 1], [45.5, 200, 330], [46, 200, 330, 1], [64, 350, 802], [64.5, 350, 802, 1], [78, 170, 802], [78.5, 170, 802, 1], [81.5, 350, 802], [82, 350, 802, 1], [89.5, 330, 175], [90, 330, 175, 1], [95.5, 300, 455], [96, 300, 455, 1]];
+
+  function camAt(list, beat) {
+    let prev = list[0], cur = list[0];
+    for (const k of list) { if (k[0] <= beat) { prev = cur; cur = k; } }
+    const k = inOut((beat - cur[0]) / 1.4);
+    const p = prev === cur ? cur : prev;
+    return [p[1] + (cur[1] - p[1]) * k, p[2] + (cur[2] - p[2]) * k, p[3] + (cur[3] - p[3]) * k];
+  }
+  function cursorAt(list, beat) {
+    let i = 0;
+    while (i < list.length - 1 && list[i + 1][0] <= beat) i++;
+    const a = list[i], b = list[i + 1];
+    if (!b || beat < a[0]) return [a[1], a[2]];
+    const k = inOut((beat - a[0]) / (b[0] - a[0]));
+    return [a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k];
+  }
+  const typed = (text, from, to, beat) => text.slice(0, Math.round(text.length * clamp((beat - from) / (to - from))));
+  const decay = (list, t, tau) => { let v = 0; for (const b of list) { const d = t - b * B; if (d >= 0 && d < tau * 6) v = Math.max(v, Math.exp(-d / tau)); } return v; };
+  const wob = (t, f, p) => Math.sin(t * f + p) * 0.6 + Math.sin(t * f * 2.3 + p * 1.7) * 0.4;
+
+  function layout() {
+    const W = stage.clientWidth, H = stage.clientHeight;
+    const phone = isPhone(), square = isSquare();
+    app.parentElement.parentElement.parentElement.classList.toggle("phone", phone);
+    document.querySelector(".stage").classList.toggle("phone", phone);
+    let dw, dh, dx, dy;
+    if (phone) { dh = H * 0.7; dw = dh * (390 / 844); dx = (W - dw) / 2; dy = H * 0.265; }
+    else if (square) { dw = W * 0.88; dh = dw / 1.52; dx = (W - dw) / 2; dy = H * 0.3; }
+    else { dw = W * 0.62; dh = dw / 1.52; dx = W * 0.355; dy = (H - dh) / 2; }
+    Object.assign(device.style, { left: `${dx}px`, top: `${dy}px`, width: `${dw}px`, height: `${dh}px` });
+    return { phone };
+  }
+
+  function render(t) {
+    const beat = t / B;
+    const { phone } = layout();
+    for (const { s, from, to } of scenes) s.style.visibility = t >= from && t < to ? "visible" : "hidden";
+    for (const { n, at, out, fx } of items) {
+      const d = t - at;
+      if (d < 0 || t >= out) { n.style.opacity = "0"; continue; }
+      let o = 1, tr = "";
+      if (fx === "slam") { const k = outExpo(d / 260); o = clamp(d / 40); tr = `scale(${1.8 - 0.8 * k})`; }
+      else if (fx === "stamp") { const k = outBack(d / 320); o = clamp(d / 40); tr = `rotate(-6deg) scale(${2.4 - 1.4 * k})`; }
+      else if (fx === "pop") { const k = outBack(d / 340); o = clamp(d / 90); tr = `scale(${0.6 + 0.4 * k})`; }
+      else if (fx === "left") { const k = outExpo(d / 380); o = clamp(d / 120); tr = `translateX(${-8 * (1 - k)}cqmin)`; }
+      else { const k = outExpo(d / 340); o = clamp(d / 140); tr = `translateY(${4 * (1 - k)}cqmin)`; }
+      if (out !== Infinity && out - t < 160) o *= clamp((out - t) / 160);
+      n.style.opacity = String(o);
+      n.style.transform = tr;
+    }
+
+    // Background
+    el("blobA").style.transform = `translate(${-20 + Math.sin(t / 3000) * 14}cqw, ${-30 + Math.cos(t / 3700) * 10}cqh)`;
+    el("blobB").style.transform = `translate(${55 + Math.cos(t / 4100) * 12}cqw, ${50 + Math.sin(t / 3300) * 10}cqh)`;
+    el("strike").style.transform = `scaleX(${outExpo((t - 3 * B) / 300)}) rotate(-5deg)`;
+
+    // Device: flies in at 10, leaves at 103.5
+    const inK = outExpo((t - 10 * B) / 900), outK = clamp((t - 103.5 * B) / (0.5 * B));
+    const show = beat >= 10 && beat < 104;
+    device.style.visibility = show ? "visible" : "hidden";
+    el("caps").style.visibility = show ? "visible" : "hidden";
+    device.style.opacity = String(clamp((t - 10 * B) / 200) * (1 - outK));
+    device.style.transform = `perspective(1400px) translateY(${(1 - inK) * 30}cqh) rotateX(${(1 - inK) * 28}deg) scale(${(0.9 + 0.1 * inK) * (1 - 0.15 * outK)})`;
+
+    // Views
+    const view = beat < 18.6 ? "home" : beat < 41 ? "build" : beat < 60 ? "home" : beat < 78 ? "chat" : beat < 82.2 ? "home" : beat < 94 ? "design" : "home";
+    el("vHome").style.visibility = view === "home" ? "visible" : "hidden";
+    el("vBuild").style.visibility = view === "build" ? "visible" : "hidden";
+    el("vChat").style.visibility = view === "chat" ? "visible" : "hidden";
+    el("vDesign").style.visibility = view === "design" ? "visible" : "hidden";
+    const composerOn = view === "home" || view === "chat" && phone || (view === "chat" && beat < 64.6) || (view === "design" && phone);
+    el("composer").style.visibility = view === "build" || (view === "design" && !phone) ? "hidden" : "visible";
+    void composerOn;
+    el("suggest").style.visibility = view === "home" && !(beat >= 10 && beat < 18.6 && phone && beat > 11) ? "visible" : "hidden";
+    el("banner").style.visibility = view === "home" ? "visible" : "hidden";
+    el("composer").classList.toggle("dock", view === "chat" || view === "design");
+    const navOn = view === "build" ? "navCode" : view === "design" || (beat >= 78 && beat < 94) ? "navDesign" : "navChat";
+    for (const id of ["navChat", "navCode", "navDesign"]) el(id).classList.toggle("on", id === navOn);
+
+    // Composer text and mode
+    let txt = "", mode = "mChat";
+    if (beat >= 11.5 && beat < 18.6) { mode = "mCode"; txt = typed(PROMPT, 12.5, 17, beat); }
+    else if (beat >= 60 && beat < 64.6) { txt = typed(CHATQ, 61, 64, beat); }
+    else if (beat >= 78.5 && beat < 82.2) { mode = "mDesign"; txt = typed(DESQ, 79, 81.5, beat); }
+    else if (beat >= 18.6 && beat < 60 && beat > 41) { txt = ""; }
+    const caret = Math.floor(t / 280) % 2 ? "" : '<span class="caret"></span>';
+    el("ctext").innerHTML = txt ? txt.replace(/&/g, "&amp;").replace(/</g, "&lt;") + caret : '<span class="ph">Message Wanlly</span>';
+    for (const id of ["mChat", "mCode", "mDesign"]) el(id).classList.toggle("on", id === mode);
+
+    // Credits
+    const cr = beat < 41 ? 17 : beat < 53.5 ? 2 : beat < 54.5 ? Math.round(2 + 4 * clamp((beat - 53.5) / 1)) : beat < 66 ? 6 : beat < 84 ? 5 : 3;
+    document.querySelectorAll(".crn").forEach((n) => (n.textContent = String(cr)));
+    el("ccr").classList.toggle("low", beat >= 41 && beat < 54.5);
+
+    // Build
+    const steps = [21, 23, 25, 27];
+    steps.forEach((b, i) => el(`s${i + 1}`).classList.toggle("done", beat >= b));
+    el("bmeter").style.width = `${clamp((beat - 19.5) / 9.5) * 100}%`;
+    const built = beat >= 29;
+    el("bspin").style.display = built ? "none" : "inline-block";
+    el("bspin").style.transform = `rotate(${t * 0.8}deg)`;
+    el("bhead").textContent = built ? "✓ Built in 14 seconds" : "Building your app…";
+    const lines = Math.floor(CODE.length * clamp((beat - 20) / 9.5));
+    el("code").innerHTML = CODE.slice(0, lines).join("\n") + (lines < CODE.length && beat >= 20 ? '<span class="caret"></span>' : "");
+    const prev = beat >= 31;
+    el("tCode").classList.toggle("on", !prev);
+    el("tPrev").classList.toggle("on", prev);
+    el("code").style.visibility = prev ? "hidden" : "inherit";
+    el("files").style.visibility = prev ? "hidden" : "inherit";
+    el("preview").style.visibility = prev ? "inherit" : "hidden";
+    el("pubBtn").textContent = beat >= 36 ? "Update" : beat >= 35 ? "Publishing…" : "Publish";
+    el("liveUrl").style.opacity = String(clamp((beat - 36) / 0.5));
+
+    // Earn
+    const dlg = beat >= 43 && beat < 55;
+    el("dim").style.visibility = el("dialog").style.visibility = dlg ? "visible" : "hidden";
+    el("dim").style.opacity = String(clamp((beat - 43) / 0.4) * (1 - clamp((beat - 54.6) / 0.4)));
+    el("dialog").style.opacity = el("dim").style.opacity;
+    el("dialog").style.transform = `scale(${0.94 + 0.06 * outBack((t - 43 * B) / 300)})`;
+    const vid = beat >= 46.6;
+    el("dlist").style.display = vid ? "none" : "block";
+    el("dvid").style.display = vid ? "block" : "none";
+    el("optAd").classList.toggle("sel", beat >= 46);
+    const vk = clamp((beat - 47) / 6);
+    el("vbar").style.width = `${vk * 100}%`;
+    el("vtm").textContent = vk >= 1 ? "Done ✓" : `0:0${Math.max(0, 5 - Math.floor(vk * 5))}`;
+    const ring = el("ringRail");
+    if (!phone) {
+      const rk = beat >= 56.6 && beat < 60 ? clamp((beat - 56.6) / 0.4) * (1 - clamp((beat - 59.5) / 0.5)) : 0;
+      Object.assign(ring.style, { left: "1306px", top: "12px", width: "288px", height: "676px", opacity: String(rk) });
+    } else ring.style.opacity = "0";
+
+    // Chat answer streams
+    const ak = clamp((beat - 66) / 10);
+    const total = ANSWER.join("\n");
+    const plain = ANSWER.map((l) => l.replace(/<[^>]+>/g, ""));
+    const showChars = Math.round(plain.join("\n").length * ak);
+    let left = showChars;
+    const out = [];
+    for (let i = 0; i < ANSWER.length && left > 0; i++) {
+      const p = plain[i];
+      if (left >= p.length) { out.push(ANSWER[i]); left -= p.length + 1; }
+      else { out.push(p.slice(0, left)); left = 0; }
+    }
+    void total;
+    el("answer").innerHTML = beat >= 66 ? out.join("\n") + (ak < 1 ? '<span class="caret"></span>' : "") : "";
+
+    // Design
+    el("dspin").style.display = beat >= 88.5 ? "none" : "inline-block";
+    el("dspin").style.transform = `rotate(${t * 0.8}deg)`;
+    el("dhead").textContent = beat >= 88.5 ? "✓ Poster ready" : "Designing…";
+    el("dlBtn").textContent = beat >= 90 ? "Downloaded ✓" : "Download PNG";
+
+    // Invite
+    const inv = beat >= 94.5 && beat < 103.6;
+    el("invite").style.visibility = inv ? "visible" : "hidden";
+    el("invite").style.opacity = String(clamp((beat - 94.5) / 0.4));
+    el("invite").style.transform = `scale(${0.94 + 0.06 * outBack((t - 94.5 * B) / 300)})`;
+    el("copyBtn").textContent = beat >= 96.3 ? "Copied ✓" : "Copy";
+    if (inv) { el("dim").style.visibility = "visible"; el("dim").style.opacity = String(clamp((beat - 94.5) / 0.4)); }
+
+    // Camera + cursor
+    const vw = viewport.clientWidth, vh = viewport.clientHeight;
+    const AW = phone ? 390 : 1600, AH = phone ? 844 : 1000;
+    const [cx, cy, z] = camAt(phone ? CAM_PHONE : CAM_DESK, beat);
+    const fit = Math.min(vw / AW, vh / AH), s = fit * z;
+    let tx = vw / 2 - cx * s, ty = vh / 2 - cy * s;
+    tx = AW * s >= vw ? Math.min(0, Math.max(vw - AW * s, tx)) : (vw - AW * s) / 2;
+    ty = AH * s >= vh ? Math.min(0, Math.max(vh - AH * s, ty)) : (vh - AH * s) / 2;
+    app.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
+    const [ux, uy] = cursorAt(phone ? CUR_PHONE : CUR_DESK, beat);
+    el("cursor").style.transform = `translate(${ux}px, ${uy}px)`;
+    el("cursor").style.opacity = beat >= 10.5 && beat < 103 ? "1" : "0";
+    const clicks = (phone ? CUR_PHONE : CUR_DESK).filter((k) => k[3]).map((k) => k[0]);
+    const ck = decay(clicks, t, 120);
+    el("tap").style.opacity = String(ck);
+    el("tap").style.transform = `scale(${1 + (1 - ck) * 1.4})`;
+    el("cursor").querySelector(".dot").style.opacity = phone ? String(ck > 0.05 ? 1 : 0) : "0";
+
+    // Hits
+    const hit = decay(HITS, t, 90);
+    el("cam").style.transform = `translate(${wob(t, 0.11, 1) * hit * 0.8}cqmin, ${wob(t, 0.13, 4) * hit * 0.8}cqmin) scale(${1 + hit * 0.012})`;
+    el("flash").style.opacity = String(decay(FLASH, t, 60) * 0.75);
+    el("turb").setAttribute("seed", String(Math.floor(t / 42) % 9 + 1));
+
+    el("scrub").value = String(Math.round(t));
+    el("time").textContent = `${fmt(t)} / ${fmt(TOTAL)}`;
+  }
+
+  const audio = el("audio");
+  let t = 0, playing = false, last = performance.now();
+  function frame(now) {
+    if (playing) {
+      t = !audio.paused && audio.readyState >= 2 ? audio.currentTime * 1000 : Math.min(TOTAL, t + (now - last));
+      if (t >= TOTAL) { t = TOTAL; stop(); }
+    }
+    last = now;
+    render(t);
+    requestAnimationFrame(frame);
+  }
+  function start() { if (t >= TOTAL) t = 0; playing = true; el("play").textContent = "Pause"; try { audio.currentTime = t / 1000; audio.play().catch(() => {}); } catch {} }
+  function stop() { playing = false; el("play").textContent = "Play with sound"; audio.pause(); }
+  function seek(ms) { t = Math.max(0, Math.min(TOTAL, ms)); try { audio.currentTime = t / 1000; } catch {} render(t); }
+  el("play").addEventListener("click", () => (playing ? stop() : start()));
+  el("replay").addEventListener("click", () => { t = 0; start(); });
+  el("scrub").addEventListener("input", (e) => seek(+e.target.value));
+  const SHAPES = [["", "16:9"], ["vertical", "9:16"], ["square", "1:1"]];
+  let shape = 0;
+  function setShape(i) {
+    shape = i;
+    document.documentElement.classList.remove("vertical", "square");
+    if (SHAPES[i][0]) document.documentElement.classList.add(SHAPES[i][0]);
+    el("shape").textContent = `Format: ${SHAPES[i][1]}`;
+    render(t);
+  }
+  el("shape").addEventListener("click", () => setShape((shape + 1) % SHAPES.length));
+  if (location.hash === "#vertical") setShape(1);
+  if (location.hash === "#square") setShape(2);
+  if (location.hash.startsWith("#capture")) {
+    document.documentElement.classList.add("recording");
+    if (location.hash === "#capture-vertical") document.documentElement.classList.add("vertical");
+    if (location.hash === "#capture-square") document.documentElement.classList.add("square");
+    window.__seek = (ms) => { playing = false; seek(ms); };
+  }
+  render(0);
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(() => { last = performance.now(); requestAnimationFrame(frame); });
+})();
+</script>
