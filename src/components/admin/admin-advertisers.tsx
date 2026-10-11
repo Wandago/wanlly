@@ -58,6 +58,7 @@ type Campaign = {
 const PLACEMENTS: [string, string][] = [
   ["rail_cover", "Side panel card"],
   ["rail_banner", "Side panel banner"],
+  ["rail_extra", "Side panel third spot"],
   ["sidebar_card", "Left sidebar card"],
   ["phone_banner", "Phone banner"],
   ["tablet_banner", "Tablet banner"],

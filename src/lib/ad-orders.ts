@@ -12,7 +12,7 @@ import { SITE_URL } from "./site";
  */
 
 /** Where a visual campaign shows: every banner and sponsor-card space in the app. */
-export const VISUAL_PLACEMENTS = ["rail_cover", "rail_banner", "sidebar_card", "phone_banner", "tablet_banner", "job_card", "job_line", "between_turns", "home_banner", "builder_banner", "builder_code", "support_banner", "profile_side", "projects_banner"];
+export const VISUAL_PLACEMENTS = ["rail_cover", "rail_banner", "rail_extra", "sidebar_card", "phone_banner", "tablet_banner", "job_card", "job_line", "between_turns", "home_banner", "builder_banner", "builder_code", "support_banner", "profile_side", "projects_banner"];
 /** A suggested ad shows under an AI answer when the conversation matches its topics. */
 export const SUGGESTED_PLACEMENTS = ["suggested"];
 

@@ -211,6 +211,7 @@ function SlimRail({ wideOnly, onExpand }: { wideOnly: boolean; onExpand: () => v
 function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void }) {
   const top = useRotation(useSponsors("rail_cover", RAIL_SPONSORS), 45000);
   const banner = useRotation(useSponsors("rail_banner", RAIL_SPONSORS), 60000, 2);
+  const extra = useRotation(useSponsors("rail_extra", RAIL_SPONSORS), 55000, 4);
   // Who gets each slot: a sold campaign booked for it always shows; otherwise the ad network;
   // Wanlly's own house sponsors only fill what's left (or a network size that came back empty).
   const network = useNetwork();
@@ -224,8 +225,12 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
           »
         </button>
         {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
-        <div className="hidden [@media(min-height:860px)]:block">
+        {/* Laptop screens fit two units over the earn button; tall ones a third. */}
+        <div className="hidden [@media(min-height:740px)]:block">
           {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
+        </div>
+        <div className="hidden [@media(min-height:1060px)]:block">
+          {network && has("300x250") && !extra.campaignId && bannerSize !== "300x600" ? <NetworkFrame size="300x250" network={network.name} placement="rail_extra" /> : <CoverCard sponsor={extra} placement="rail_extra" />}
         </div>
         <div className="mt-auto">
           <EarnMini />

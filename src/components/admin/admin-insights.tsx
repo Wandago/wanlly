@@ -44,6 +44,7 @@ const country = (code: string) => {
 const PLACEMENT_LABEL: Record<string, string> = {
   rail_cover: "Right panel · cover card",
   rail_banner: "Right panel · banner",
+  rail_extra: "Right panel · third spot (tall screens)",
   sidebar_card: "Left sidebar · card",
   phone_banner: "Phone · bottom banner",
   tablet_banner: "Tablet · bottom banner",
