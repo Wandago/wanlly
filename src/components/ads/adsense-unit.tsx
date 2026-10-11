@@ -14,6 +14,8 @@ const loaded = new Set<string>();
 function loadAdsense(client: string) {
   if (loaded.has(client) || typeof document === "undefined") return;
   loaded.add(client);
+  // Already on every page from the root layout; only add it if it's missing.
+  if (document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) return;
   const s = document.createElement("script");
   s.async = true;
   s.crossOrigin = "anonymous";

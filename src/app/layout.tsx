@@ -3,6 +3,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { PageBeacon } from "@/components/page-beacon";
 import { SITE_URL } from "@/lib/site";
+
+/** Wanlly's Google AdSense publisher id (public: it appears in every ad request). */
+const ADSENSE_CLIENT = "ca-pub-9927775455061931";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image", title: "Wanlly · Frontier AI for everyone with an idea", description: DESCRIPTION },
   // Ad network site verification (a label only; nothing runs).
   // Monetag site verification: wanlly.africa, and the code it gave for the ads site too.
-  other: { monetag: ["ff01947e2985eff24df4cccf657afd3e", "a4afdb23dd54a039b0a0e7bf98b75c0e"] },
+  other: { monetag: ["ff01947e2985eff24df4cccf657afd3e", "a4afdb23dd54a039b0a0e7bf98b75c0e"], "google-adsense-account": ADSENSE_CLIENT },
 };
 
 export const viewport: Viewport = {
@@ -54,6 +57,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <head>
         {/* Applies a chosen light or dark theme before first paint, so the page never flashes. */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* Google AdSense, on every page as AdSense asks: verifies the site and serves the ad units. */}
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />
       </head>
       <body className="h-full">
         <ClerkProvider appearance={clerkAppearance}>
