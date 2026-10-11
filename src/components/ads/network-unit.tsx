@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { frameUrl, sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { markNetworkEmpty, useNetwork } from "@/lib/ads-context";
 import { AdsenseUnit } from "./adsense-unit";
@@ -23,10 +23,11 @@ export const DIRECT_SANDBOX = "allow-scripts allow-same-origin allow-popups allo
  * tab when clicked but can't touch Wanlly. The page says whether an ad appeared: until then the
  * frame stays invisible, and if none does, the slot goes back to sponsors.
  */
-export function NetworkUnit({ size, network, placement }: { size: NetworkSize; network: string; placement: string }) {
+export function NetworkUnit({ size, network, placement, onFilled }: { size: NetworkSize; network: string; placement: string; onFilled?: (filled: boolean) => void }) {
   const { w, h } = sizeOf(size);
   const frame = useRef<HTMLIFrameElement>(null);
   const [filled, setFilled] = useState(false);
+  const shown = useRef(false);
   const net = useNetwork();
   const host = net?.host ?? "";
   // Iframe-only banners load straight from the network's own site.
@@ -40,8 +41,14 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     const onMessage = (e: MessageEvent) => {
       if (e.source !== frame.current?.contentWindow) return;
       const m = (e.data as { wanllyAd?: string })?.wanllyAd;
-      if (m === "filled") setFilled(true);
+      if (m === "filled") {
+        shown.current = true;
+        setFilled(true);
+      }
       if (m === "empty") markNetworkEmpty(name, size);
+      // A script that was blocked (usually an ad blocker) or broke: unless an ad still shows
+      // within a moment (some throw harmless errors), go to the next network.
+      if (m === "blocked" || m === "error") window.setTimeout(() => shown.current || markNetworkEmpty(name, size), 2500);
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -50,9 +57,12 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
   // after a while, so the slot goes back to sponsors instead of staying blank.
   useEffect(() => {
     if (filled || direct) return;
-    const t = window.setTimeout(() => markNetworkEmpty(name, size), 10_000);
+    const t = window.setTimeout(() => markNetworkEmpty(name, size), 9_000);
     return () => window.clearTimeout(t);
   }, [filled, direct, name, size, src]);
+  useEffect(() => {
+    onFilled?.(filled);
+  }, [filled, onFilled]);
   // Google AdSense: drawn on the page itself, as AdSense requires.
   const google = net?.google?.[size];
   const onGoogle = useCallback((ok: boolean) => (ok ? setFilled(true) : markNetworkEmpty(name, size)), [name, size]);
@@ -84,5 +94,23 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     <Tracked placement={placement} format="display" creative={`network:${name || "network"}`} className="shrink-0" paused={!filled}>
       {iframe}
     </Tracked>
+  );
+}
+
+/**
+ * A network banner that waits behind `fallback`: the fallback shows until the network's ad has
+ * actually appeared, so a slow or empty network never leaves a blank box. The banner is laid out
+ * (invisibly) the whole time, as networks need it on the page to fill it.
+ */
+export function NetworkOrFallback({ fallback, children }: { fallback: ReactNode; children: (onFilled: (filled: boolean) => void) => ReactNode }) {
+  const [filled, setFilled] = useState(false);
+  if (!fallback) return <>{children(setFilled)}</>;
+  return (
+    <div className="relative w-full">
+      {!filled && fallback}
+      <div className={filled ? "flex w-full flex-col items-center" : "pointer-events-none absolute top-0 left-0 opacity-0"} aria-hidden={!filled}>
+        {children(setFilled)}
+      </div>
+    </div>
   );
 }

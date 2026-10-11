@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import type { NetworkSize } from "@/lib/ad-network";
 import { RAIL_SPONSORS, type Sponsor } from "@/lib/catalog";
 import { useReward, useWorkspace } from "@/lib/workspace-store";
@@ -10,7 +10,7 @@ import { DisplayCreative } from "./creatives";
 import { Tracked } from "./tracked";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
-import { NetworkUnit } from "./network-unit";
+import { NetworkOrFallback, NetworkUnit } from "./network-unit";
 import { DisplaySlot } from "./display-slot";
 import { useLocalSetting } from "@/lib/use-local-setting";
 
@@ -110,12 +110,16 @@ function DisplayFrame({ sponsor }: { sponsor: Sponsor }) {
 }
 
 /** A network banner in the same rounded frame as Wanlly's own ads. */
-function NetworkFrame({ size, network, placement }: { size: NetworkSize; network: string; placement: string }) {
+function NetworkFrame({ size, network, placement, fallback }: { size: NetworkSize; network: string; placement: string; fallback: ReactNode }) {
   return (
-    <div className="flex animate-rise flex-col items-center gap-1.5 rounded-2xl border border-line bg-surface p-2 shadow-soft">
-      <span className="self-start px-1 text-[11px] tracking-[0.07em] text-faint uppercase">Advertisement</span>
-      <NetworkUnit size={size} network={network} placement={placement} />
-    </div>
+    <NetworkOrFallback fallback={fallback}>
+      {(onFilled) => (
+        <div className="flex w-full animate-rise flex-col items-center gap-1.5 rounded-2xl border border-line bg-surface p-2 shadow-soft">
+          <span className="self-start px-1 text-[11px] tracking-[0.07em] text-faint uppercase">Advertisement</span>
+          <NetworkUnit size={size} network={network} placement={placement} onFilled={onFilled} />
+        </div>
+      )}
+    </NetworkOrFallback>
   );
 }
 
@@ -224,13 +228,13 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
         <button type="button" onClick={onSlim} title="Make the side panel narrower" aria-label="Make the side panel narrower" className="-mb-1.5 self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
           »
         </button>
-        {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" /> : <CoverCard sponsor={top} />}
+        {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" fallback={<CoverCard sponsor={top} />} /> : <CoverCard sponsor={top} />}
         {/* Laptop screens fit two units over the earn button; tall ones a third. */}
         <div className="hidden [@media(min-height:740px)]:block">
-          {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" /> : <DisplayFrame sponsor={banner} />}
+          {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" fallback={<DisplayFrame sponsor={banner} />} /> : <DisplayFrame sponsor={banner} />}
         </div>
         <div className="hidden [@media(min-height:1060px)]:block">
-          {network && has("300x250") && !extra.campaignId && bannerSize !== "300x600" ? <NetworkFrame size="300x250" network={network.name} placement="rail_extra" /> : <CoverCard sponsor={extra} placement="rail_extra" />}
+          {network && has("300x250") && !extra.campaignId && bannerSize !== "300x600" ? <NetworkFrame size="300x250" network={network.name} placement="rail_extra" fallback={<CoverCard sponsor={extra} placement="rail_extra" />} /> : <CoverCard sponsor={extra} placement="rail_extra" />}
         </div>
         <div className="mt-auto">
           <EarnMini />

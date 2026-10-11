@@ -102,8 +102,10 @@ export function useSuggested(context: string, hidden: string[]): Sponsor | null 
 }
 
 /* Network and size pairs that just answered with no ad. They're skipped for 10 minutes, so the
-   slot goes to the next network (or a sponsor) instead of an empty box, then tried again. */
+   slot goes to the next network (or a sponsor) instead of an empty box, then tried again. Kept for
+   the browser tab (sessionStorage), so moving between pages doesn't wait on the same empty network. */
 const EMPTY_FOR = 10 * 60_000;
+const EMPTY_KEY = "wanlly-empty-networks";
 const emptySizes = new Set<string>();
 let emptyVersion = 0;
 const emptyListeners = new Set<() => void>();
@@ -111,15 +113,38 @@ const changed = () => {
   emptyVersion++;
   emptyListeners.forEach((fn) => fn());
 };
+function forget(key: string, after: number) {
+  window.setTimeout(() => {
+    emptySizes.delete(key);
+    save();
+    changed();
+  }, after);
+}
+const until = new Map<string, number>();
+function save() {
+  try {
+    sessionStorage.setItem(EMPTY_KEY, JSON.stringify(Object.fromEntries([...until].filter(([k]) => emptySizes.has(k)))));
+  } catch {}
+}
+if (typeof window !== "undefined") {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(EMPTY_KEY) ?? "{}") as Record<string, number>;
+    for (const [key, t] of Object.entries(saved))
+      if (typeof t === "number" && t > Date.now()) {
+        emptySizes.add(key);
+        until.set(key, t);
+        forget(key, t - Date.now());
+      }
+  } catch {}
+}
 export function markNetworkEmpty(network: string, size: string) {
   const key = `${network}:${size}`;
   if (emptySizes.has(key)) return;
   emptySizes.add(key);
+  until.set(key, Date.now() + EMPTY_FOR);
+  save();
   changed();
-  window.setTimeout(() => {
-    emptySizes.delete(key);
-    changed();
-  }, EMPTY_FOR);
+  forget(key, EMPTY_FOR);
 }
 const subscribeEmpty = (fn: () => void) => {
   emptyListeners.add(fn);

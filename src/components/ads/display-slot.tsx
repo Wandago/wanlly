@@ -5,7 +5,7 @@ import { sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { useWorkspace } from "@/lib/workspace-store";
 import { useWidth } from "./creatives";
-import { NetworkUnit } from "./network-unit";
+import { NetworkOrFallback, NetworkUnit } from "./network-unit";
 import { Tracked } from "./tracked";
 
 /*
@@ -60,7 +60,18 @@ export function DisplaySlot({
       </Tracked>
     );
   } else if (network && netSize) {
-    body = <NetworkUnit size={netSize} network={network.name} placement={placement} />;
+    // The fallback stays until the network's ad has appeared (NetworkOrFallback), with this
+    // slot's label shown only over the real banner.
+    body = (
+      <NetworkOrFallback fallback={fallback}>
+        {(onFilled) => (
+          <>
+            {label && fallback && <span className="self-start text-[11px] tracking-[0.07em] text-faint uppercase">{label}</span>}
+            <NetworkUnit size={netSize} network={network.name} placement={placement} onFilled={onFilled} />
+          </>
+        )}
+      </NetworkOrFallback>
+    );
   }
   const isBanner = !!campaign?.size || !!(network && netSize);
   useEffect(() => {
@@ -68,7 +79,7 @@ export function DisplaySlot({
   }, [isBanner, onBanner]);
   return (
     <div ref={ref} className={`flex w-full flex-col items-center gap-1.5 ${isBanner ? className : ""}`}>
-      {isBanner && label && <span className="self-start text-[11px] tracking-[0.07em] text-faint uppercase">{label}</span>}
+      {isBanner && label && !(network && netSize && !campaign?.size && fallback) && <span className="self-start text-[11px] tracking-[0.07em] text-faint uppercase">{label}</span>}
       {body}
     </div>
   );
