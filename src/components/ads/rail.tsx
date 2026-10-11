@@ -233,7 +233,11 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
         <div className="hidden [@media(min-height:740px)]:block">
           {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" fallback={<DisplayFrame sponsor={banner} />} /> : <DisplayFrame sponsor={banner} />}
         </div>
-        <div className="hidden [@media(min-height:1060px)]:block">
+        {/* Mid-height screens: a compact card fills the space a full third unit wouldn't fit. */}
+        <div className="hidden [@media(min-height:880px)]:block [@media(min-height:1150px)]:hidden">
+          <CompactCard sponsor={extra} placement="rail_extra" />
+        </div>
+        <div className="hidden [@media(min-height:1150px)]:block">
           {network && has("300x250") && !extra.campaignId && bannerSize !== "300x600" ? <NetworkFrame size="300x250" network={network.name} placement="rail_extra" fallback={<CoverCard sponsor={extra} placement="rail_extra" />} /> : <CoverCard sponsor={extra} placement="rail_extra" />}
         </div>
         <div className="mt-auto">
@@ -241,6 +245,32 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
         </div>
       </div>
     </aside>
+  );
+}
+
+/** A short sponsor card: picture strip, name and headline. */
+function CompactCard({ sponsor, placement }: { sponsor: Sponsor; placement: string }) {
+  const { dispatch } = useWorkspace();
+  return (
+    <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
+      <article className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
+        <div className="h-[84px] overflow-hidden">
+          <Cover sponsor={sponsor} className="h-full" />
+        </div>
+        <div className="flex items-center gap-3 p-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center justify-between gap-2">
+              <b className="truncate text-[13px] font-semibold">{sponsor.name}</b>
+              <SponsoredLabel sponsor={sponsor} />
+            </div>
+            <p className="line-clamp-1 text-xs text-muted">{sponsor.headline}</p>
+          </div>
+          <button type="button" onClick={() => openSponsor(sponsor, placement) || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })} className="shrink-0 rounded-[9px] border border-line px-2.5 py-1 text-xs font-medium hover:border-faint">
+            {sponsor.cta}
+          </button>
+        </div>
+      </article>
+    </Tracked>
   );
 }
 
