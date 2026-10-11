@@ -1,7 +1,7 @@
 "use client";
 
 import * as Dialog from "@radix-ui/react-dialog";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { SPOT_SPONSOR } from "@/lib/catalog";
 import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon, type IconName } from "./icon";
@@ -56,6 +56,20 @@ export function EarnDialog() {
   const [playing, setPlaying] = useState<null | "self">(null);
   const close = () => dispatch({ type: "setEarnOpen", open: false });
   const offers = useOffers();
+  // The survey wall's address for this person, once surveys are set up (null: not yet / off).
+  const [wall, setWall] = useState<string | null>(null);
+  const [surveying, setSurveying] = useState(false);
+  useEffect(() => {
+    if (!earnOpen || wall) return;
+    let live = true;
+    fetch("/api/surveys/wall", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b) => live && b?.url && setWall(b.url))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [earnOpen, wall]);
   // The partner's page opens in a new tab with a one-time click id, so their confirmation can
   // credit this person. Opened first, then pointed at the link, so pop-up blockers allow it.
   const startOffer = async (id: string) => {
@@ -77,13 +91,28 @@ export function EarnDialog() {
       open={earnOpen}
       onOpenChange={(open) => {
         dispatch({ type: "setEarnOpen", open });
-        if (!open) setPlaying(null);
+        if (!open) {
+          setPlaying(null);
+          setSurveying(false);
+        }
       }}
     >
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-[rgb(8_9_12/0.45)]" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 z-50 flex w-[440px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3.5 rounded-[20px] border border-line bg-surface p-5 text-fg shadow-soft">
-          {playing ? (
+        <Dialog.Content className={`fixed top-1/2 left-1/2 z-50 flex ${surveying && wall ? "h-[min(760px,calc(100dvh-32px))] w-[560px]" : "w-[440px]"} max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col gap-3.5 rounded-[20px] border border-line bg-surface p-5 text-fg shadow-soft`}>
+          {surveying && wall ? (
+            <>
+              <header className="flex items-center gap-2">
+                <button type="button" onClick={() => setSurveying(false)} className="rounded-md px-1.5 py-0.5 text-sm text-muted hover:bg-hover hover:text-fg">
+                  ← Back
+                </button>
+                <Dialog.Title className="font-display text-base font-semibold">Surveys</Dialog.Title>
+                <span className="ml-auto text-xs text-faint">by CPX Research</span>
+              </header>
+              <iframe title="Surveys" src={wall} className="min-h-0 w-full flex-1 rounded-[14px] border border-line bg-white" referrerPolicy="no-referrer" />
+              <p className="text-xs text-faint">Credits arrive once CPX Research confirms the survey, usually within minutes. Answer honestly: surveys you&apos;re screened out of pay nothing, and rushed answers can be taken back.</p>
+            </>
+          ) : playing ? (
             <>
               <Dialog.Title className="sr-only">Sponsor spot</Dialog.Title>
               <div className="overflow-hidden rounded-[14px] border border-line">
@@ -132,8 +161,9 @@ export function EarnDialog() {
                 icon="search"
                 title="Answer a short survey"
                 detail="Pays more than an ad · credits arrive when the survey company confirms"
-                gain="Soon"
-                locked
+                gain={wall ? "Open" : "Soon"}
+                locked={!wall}
+                onClick={() => setSurveying(true)}
               />
               <Option icon="flame" title="Daily streak" detail="Watch on five days in a row for a bonus Opus answer" gain="Soon" locked />
               <p className="border-t border-line pt-3 text-xs text-faint">
