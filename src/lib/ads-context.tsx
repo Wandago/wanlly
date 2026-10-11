@@ -16,7 +16,8 @@ type Served = Sponsor & { placements: string[] };
 type Native = { code: string; height: number };
 const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
 /** One ad network as /api/ads sends it; the list comes best-paying first. */
-type NetInfo = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; direct: Record<string, string>; codes: Record<string, string>; native?: Native };
+type Google = { client: string; slot: string };
+type NetInfo = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; direct: Record<string, string>; codes: Record<string, string>; google?: Record<string, Google>; native?: Native };
 const AdsContext = createContext<{ ads: Served[]; seen: number; networks: NetInfo[]; host: string; house: Sponsor[] }>({ ads: [], seen: 0, networks: [], host: "", house: [] });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
@@ -138,18 +139,20 @@ export function useNetwork() {
     const by: Record<string, string> = {};
     const direct: Record<string, string> = {};
     const codes: Record<string, string> = {};
+    const google: Record<string, Google> = {};
     for (const n of networks)
       for (const size of n.sizes) {
         if (by[size] || emptySizes.has(`${n.name}:${size}`)) continue;
         by[size] = n.name;
         if (n.direct[size]) direct[size] = n.direct[size];
         if (n.codes[size]) codes[size] = n.codes[size];
+        if (n.google?.[size]) google[size] = n.google[size];
       }
     const nativeFrom = networks.find((n) => n.native && !emptySizes.has(`${n.name}:native`));
     const native = nativeFrom?.native ? { ...nativeFrom.native, name: nativeFrom.name } : undefined;
     const sizes = Object.keys(by) as NetworkSize[];
     if (!sizes.length && !native) return null;
-    return { name: networks[0]?.name ?? "", sizes, by, host, direct, codes, native };
+    return { name: networks[0]?.name ?? "", sizes, by, host, direct, codes, google, native };
   }, [networks, host, version]);
 }
 

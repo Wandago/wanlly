@@ -72,6 +72,18 @@ export function directSrc(code: string | undefined): string | null {
 }
 
 /**
+ * A Google AdSense unit, from the code AdSense gives ("<ins class=\"adsbygoogle\" data-ad-client=…
+ * data-ad-slot=…>"). AdSense must run on Wanlly's own pages, never inside a frame, so these are
+ * drawn inline (components/ads/adsense-unit.tsx) instead of through the banner host.
+ */
+export function adsenseUnit(code: string | undefined): { client: string; slot: string } | null {
+  if (!code || !/adsbygoogle/.test(code)) return null;
+  const client = /data-ad-client\s*=\s*["'](ca-pub-\d{6,20})["']/.exec(code)?.[1];
+  const slot = /data-ad-slot\s*=\s*["'](\d{4,20})["']/.exec(code)?.[1];
+  return client && slot ? { client, slot } : null;
+}
+
+/**
  * A site-wide tag pasted where a banner should go: Monetag's MultiTag / OnClick ("…/tag.min.js"
  * with a zone), push or pop-under scripts. They draw nothing in a banner space (it stays blank)
  * and open the advertiser's site on the next click, so they are never served as banners.

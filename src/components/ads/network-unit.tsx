@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { frameUrl, sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { markNetworkEmpty, useNetwork } from "@/lib/ads-context";
+import { AdsenseUnit } from "./adsense-unit";
 import { Tracked } from "./tracked";
 
 /**
@@ -52,6 +53,15 @@ export function NetworkUnit({ size, network, placement }: { size: NetworkSize; n
     const t = window.setTimeout(() => markNetworkEmpty(name, size), 10_000);
     return () => window.clearTimeout(t);
   }, [filled, direct, name, size, src]);
+  // Google AdSense: drawn on the page itself, as AdSense requires.
+  const google = net?.google?.[size];
+  const onGoogle = useCallback((ok: boolean) => (ok ? setFilled(true) : markNetworkEmpty(name, size)), [name, size]);
+  if (google)
+    return (
+      <Tracked placement={placement} format="display" creative={`network:${name || "google"}`} className="shrink-0" paused={!filled}>
+        <AdsenseUnit client={google.client} slot={google.slot} w={w} h={h} onState={onGoogle} />
+      </Tracked>
+    );
   const iframe = (
     <iframe
       key={src}

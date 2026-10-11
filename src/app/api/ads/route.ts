@@ -1,6 +1,6 @@
 import { rawSql } from "@/db";
 import { SPEND_SQL, ensureCampaignColumns } from "@/lib/ad-orders";
-import { directSrc, siteWideTag } from "@/lib/ad-network";
+import { adsenseUnit, directSrc, siteWideTag } from "@/lib/ad-network";
 import { loadNetworks } from "@/lib/ad-network-server";
 import { rankNetworks, slotOrder } from "@/lib/ad-rank";
 import { affiliateSponsor } from "@/lib/affiliates";
@@ -50,17 +50,25 @@ export async function GET(req: Request) {
             if (n.audience === "off") return [];
             const direct: Record<string, string> = {};
             const codes: Record<string, string> = {};
+            const google: Record<string, { client: string; slot: string }> = {};
             const sizes: string[] = [];
             for (const [size, code] of Object.entries(n.units)) {
               // Pop-under and push tags pasted into a banner size would leave the space blank.
               if (siteWideTag(code)) continue;
+              // AdSense runs on Wanlly's own page, never in a frame.
+              const g = adsenseUnit(code);
+              if (g) {
+                google[size] = g;
+                sizes.push(size);
+                continue;
+              }
               const src = directSrc(code);
               if (src) direct[size] = src;
               else if (networks.host && code) codes[size] = code;
               if (src || networks.host) sizes.push(size);
             }
             const native = n.native && networks.host ? { code: n.native, height: n.nativeHeight ?? 280 } : undefined;
-            return sizes.length || native ? [{ name: n.name, audience: n.audience, sizes, direct, codes, native }] : [];
+            return sizes.length || native ? [{ name: n.name, audience: n.audience, sizes, direct, codes, google, native }] : [];
           }),
           ranks,
         ),

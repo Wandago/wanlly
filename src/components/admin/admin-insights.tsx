@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when, Loading } from "./admin-ui";
+import { AdsenseUnit } from "../ads/adsense-unit";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
-import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, siteWideTag, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
+import { NETWORK_SIZES as UNIT_SIZES, adsenseUnit, directSrc, frameUrl, siteWideTag, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 import { MoneyPanel } from "./admin-money";
 
@@ -534,6 +535,17 @@ function BannerPreview({ size, net, host, direct, code }: { size: NetworkSize; n
     blocked: "The network's script didn't load in this browser, usually an ad-blocking extension. Try a private window with extensions off.",
     error: "The network's script failed while running. If it mentions storage, cookies or SecurityError, set up a banner host (see the docs).",
   };
+  const google = adsenseUnit(code);
+  if (google)
+    return (
+      <div className="flex flex-col gap-1.5">
+        <AdsenseUnit client={google.client} slot={google.slot} w={w} h={h} />
+        <small className="text-xs text-muted">
+          Google AdSense unit {google.slot}. It runs on Wanlly&apos;s pages directly (AdSense doesn&apos;t allow frames), so no banner host is needed. Until AdSense approves
+          wanlly.africa this box stays empty.
+        </small>
+      </div>
+    );
   if (siteWideTag(code))
     return (
       <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
