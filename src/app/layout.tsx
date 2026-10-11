@@ -19,7 +19,8 @@ export const metadata: Metadata = {
   openGraph: { type: "website", siteName: "Wanlly", title: "Wanlly · Frontier AI for everyone with an idea", description: DESCRIPTION, locale: "en_KE" },
   twitter: { card: "summary_large_image", title: "Wanlly · Frontier AI for everyone with an idea", description: DESCRIPTION },
   // Ad network site verification (a label only; nothing runs).
-  other: { monetag: "ff01947e2985eff24df4cccf657afd3e" },
+  // Monetag site verification: wanlly.africa, and the code it gave for the ads site too.
+  other: { monetag: ["ff01947e2985eff24df4cccf657afd3e", "a4afdb23dd54a039b0a0e7bf98b75c0e"] },
 };
 
 export const viewport: Viewport = {

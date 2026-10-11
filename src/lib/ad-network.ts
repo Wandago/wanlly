@@ -72,6 +72,15 @@ export function directSrc(code: string | undefined): string | null {
 }
 
 /**
+ * A site-wide tag pasted where a banner should go: Monetag's MultiTag / OnClick ("…/tag.min.js"
+ * with a zone), push or pop-under scripts. They draw nothing in a banner space (it stays blank)
+ * and open the advertiser's site on the next click, so they are never served as banners.
+ */
+export function siteWideTag(code: string | undefined): boolean {
+  return !!code && /\/tag\.min\.js|dataset\.zone\s*=|data-zone\s*=|\bpopunder\b|\bonclick\b.*zone|\/sw\.js/i.test(code);
+}
+
+/**
  * The banner host's page for one banner: the code travels after "#", which browsers never send
  * to a server, so the host just returns the same small page every time.
  */

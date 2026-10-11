@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bar, Card, Chip, Empty, Kpi, Pills, Table, api, btnGhost, num, pct, usd, when, Loading } from "./admin-ui";
 import { NetworkSlot, useNetworkTestSwitch } from "../ads/network-slot";
 import { DIRECT_SANDBOX, frameSandbox } from "../ads/network-unit";
-import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
+import { NETWORK_SIZES as UNIT_SIZES, directSrc, frameUrl, siteWideTag, sizeOf, type NetworkConfig, type NetworkSize } from "@/lib/ad-network";
 import { TrendChart } from "./trend-chart";
 import { MoneyPanel } from "./admin-money";
 
@@ -534,6 +534,13 @@ function BannerPreview({ size, net, host, direct, code }: { size: NetworkSize; n
     blocked: "The network's script didn't load in this browser, usually an ad-blocking extension. Try a private window with extensions off.",
     error: "The network's script failed while running. If it mentions storage, cookies or SecurityError, set up a banner host (see the docs).",
   };
+  if (siteWideTag(code))
+    return (
+      <p className="rounded-lg bg-bad/10 px-3 py-2 text-[13px] text-bad">
+        This isn&apos;t a banner code: it&apos;s a site-wide tag (pop-under, push or MultiTag). In a banner space it shows nothing and opens the ad on the next click, so
+        Wanlly won&apos;t serve it here. In the network&apos;s dashboard, create a <b>banner</b> zone of {w}×{h} and paste that code instead, or remove this one.
+      </p>
+    );
   return (
     <div className="flex flex-col gap-1.5">
       <div className="overflow-x-auto pb-1">

@@ -1,6 +1,6 @@
 import { rawSql } from "@/db";
 import { SPEND_SQL, ensureCampaignColumns } from "@/lib/ad-orders";
-import { directSrc } from "@/lib/ad-network";
+import { directSrc, siteWideTag } from "@/lib/ad-network";
 import { loadNetworks } from "@/lib/ad-network-server";
 import { rankNetworks, slotOrder } from "@/lib/ad-rank";
 import { affiliateSponsor } from "@/lib/affiliates";
@@ -52,6 +52,8 @@ export async function GET(req: Request) {
             const codes: Record<string, string> = {};
             const sizes: string[] = [];
             for (const [size, code] of Object.entries(n.units)) {
+              // Pop-under and push tags pasted into a banner size would leave the space blank.
+              if (siteWideTag(code)) continue;
               const src = directSrc(code);
               if (src) direct[size] = src;
               else if (networks.host && code) codes[size] = code;
