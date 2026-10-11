@@ -1,5 +1,6 @@
 import "server-only";
 import { rawSql } from "@/db";
+import { alertTeam } from "./alerts";
 import { emailHtml, emailText } from "./email-layout";
 import { mailReady, sendMail } from "./mail";
 import { SITE_URL } from "./site";
@@ -79,6 +80,7 @@ function teamInbox(): string | null {
 
 /** Emails the advertiser (with their private link) or the team. Never throws. */
 export async function adMail(to: "team" | string, subject: string, heading: string, paragraphs: string[], button?: { label: string; url: string }) {
+  if (to === "team") await alertTeam("offer", heading, paragraphs.map((p) => p.replace(/\*\*/g, "")), { link: button?.url, email: false });
   const address = to === "team" ? teamInbox() : to;
   if (!address || !mailReady()) return;
   const content = { preview: paragraphs[0]?.slice(0, 120) ?? heading, heading, paragraphs, button, signoff: to === "team" ? "Wanlly" : "The Wanlly ads team" };

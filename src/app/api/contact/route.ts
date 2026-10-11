@@ -1,3 +1,5 @@
+import { alertTeam } from "@/lib/alerts";
+import { SITE_URL } from "@/lib/site";
 import { db, schema } from "@/db";
 import { field, isEmail, smallJson } from "@/lib/forms";
 import { SAY } from "@/lib/messages";
@@ -17,6 +19,7 @@ export async function POST(req: Request) {
   if (!name || !isEmail(email) || message.length < 5) return Response.json({ error: "Please add your name, a valid email and a message." }, { status: 422 });
   try {
     await db().insert(schema.contactMessages).values({ name, email, topic, message, networkCountry: req.headers.get("cf-ipcountry") });
+    await alertTeam("contact", `${name} · ${topic}`, [email, message.slice(0, 1200)], { link: `${SITE_URL}/admin#messages` });
     return Response.json({ ok: true });
   } catch (e) {
     console.error("contact failed", e);

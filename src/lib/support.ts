@@ -1,5 +1,6 @@
 import "server-only";
 import { rawSql } from "@/db";
+import { alertTeam } from "./alerts";
 import { emailHtml, emailText } from "./email-layout";
 import { mailReady, sendMail } from "./mail";
 import { SITE_URL } from "./site";
@@ -38,6 +39,7 @@ function teamInbox(): string | null {
 
 /** Tells the team a ticket needs them. Never throws: the ticket is saved either way. */
 export async function notifyTeam(t: { id: number; subject: string; category: string; email: string | null; body: string; reply?: boolean }) {
+  await alertTeam("support", `#${t.id} ${t.subject}`, [`${t.email ?? "Someone"} · ${t.category}${t.reply ? " · new reply" : ""}`, t.body.slice(0, 600)], { link: `${SITE_URL}/admin#support`, email: false });
   const to = teamInbox();
   if (!to || !mailReady()) return;
   const content = {

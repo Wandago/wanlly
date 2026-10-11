@@ -1,3 +1,5 @@
+import { alertTeam } from "@/lib/alerts";
+import { SITE_URL } from "@/lib/site";
 import { db, schema } from "@/db";
 import { channelOf, cleanFirstTouch } from "@/lib/first-touch";
 import { field, isEmail, smallJson } from "@/lib/forms";
@@ -44,6 +46,7 @@ export async function POST(req: Request) {
       if (!/first_touch|channel/.test(`${e} ${(e as { cause?: unknown }).cause}`)) throw e;
       rows = await save(values);
     }
+    await alertTeam("beta", name, [email, values.country ? `From: ${values.country}` : "", `Wants to build: ${build.slice(0, 400)}`, values.source ? `Heard about us: ${values.source}` : ""], { link: `${SITE_URL}/admin#beta` });
     return Response.json({ ok: true, code: rows[0].inviteCode });
   } catch (e) {
     console.error("beta application failed", e);

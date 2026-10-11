@@ -1,3 +1,5 @@
+import { alertTeam } from "@/lib/alerts";
+import { SITE_URL } from "@/lib/site";
 import { db, schema } from "@/db";
 import { CATEGORIES, FORMATS } from "@/lib/campaigns";
 import { field, isEmail, smallJson } from "@/lib/forms";
@@ -29,6 +31,7 @@ export async function POST(req: Request) {
         message: field(data, "message", 2000),
         networkCountry: req.headers.get("cf-ipcountry"),
       });
+    await alertTeam("advertiser", company, [`${contactName} · ${email}`, `Sells: ${category}`, field(data, "budget", 60) ? `Budget: ${field(data, "budget", 60)}` : "", field(data, "message", 2000).slice(0, 800)], { link: `${SITE_URL}/admin#advertisers` });
     return Response.json({ ok: true });
   } catch (e) {
     console.error("advertise failed", e);

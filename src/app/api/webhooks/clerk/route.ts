@@ -1,3 +1,5 @@
+import { alertTeam } from "@/lib/alerts";
+import { SITE_URL } from "@/lib/site";
 import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { eq, sql } from "drizzle-orm";
 import type { NextRequest } from "next/server";
@@ -25,6 +27,7 @@ export async function POST(req: NextRequest) {
     await q`
       insert into users (id, email, name, phone_verified) values (${u.id}, ${email}, ${name}, ${phoneVerified})
       on conflict (id) do update set email = excluded.email, name = excluded.name, phone_verified = users.phone_verified or excluded.phone_verified, updated_at = now()`;
+    if (evt.type === "user.created") await alertTeam("signup", name ?? email ?? u.id, [email ?? "", `Signed up with ${u.external_accounts?.[0]?.provider?.replace("oauth_", "") ?? "email"}`], { link: `${SITE_URL}/admin#users` });
   }
 
   if (evt.type === "user.deleted" && evt.data.id) {
