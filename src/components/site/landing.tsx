@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ClaudeMark, GeminiMark } from "./brand-marks";
 import type { ReactNode } from "react";
 import { FLOOR_CREDITS, MODEL_COUNT } from "@/lib/catalog";
+import { ProductHuntBadge } from "./product-hunt-badge";
 import { Icon, type IconName } from "../icon";
 import { SpinLoader } from "../spin-mark";
 
@@ -43,6 +44,7 @@ function Hero() {
               How it&apos;s free
             </Link>
           </div>
+          <ProductHuntBadge className="anim-rise [animation-delay:210ms]" />
           <dl className="anim-rise mt-2 grid w-full max-w-[460px] grid-cols-3 border-t border-line pt-5 [animation-delay:240ms]">
             {[
               ["1", "ad a day to start"],
