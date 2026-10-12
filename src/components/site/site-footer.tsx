@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Mark } from "./mark";
-import { ProductHuntBadge } from "./product-hunt-badge";
+import { LaunchBadges } from "./product-hunt-badge";
 
 const COLUMNS = [
   { title: "Product", links: [["Chat", "/#product"], ["Code", "/#product"], ["Design", "/#product"], ["How it's free", "/#how"]] },
@@ -18,7 +18,7 @@ export function SiteFooter() {
             <b className="font-display text-base font-semibold tracking-[-0.02em]">Wanlly</b>
           </Link>
           <p className="max-w-[34ch] text-[13px] text-muted">Frontier AI for students and creators everywhere, paid for by sponsors you choose to see.</p>
-          <ProductHuntBadge className="mt-1" />
+          <LaunchBadges className="mt-1" />
         </div>
         {COLUMNS.map((c) => (
           <div key={c.title} className="flex flex-col gap-2.5">
