@@ -127,6 +127,7 @@ export function CampaignBuilder() {
   return (
     <main className="mx-auto grid w-full max-w-[1080px] gap-10 px-4 pt-12 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,380px)]">
       <form
+        method="post"
         className="flex min-w-0 flex-col gap-8"
         onSubmit={(e) => {
           e.preventDefault();

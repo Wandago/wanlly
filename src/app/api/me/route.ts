@@ -41,6 +41,15 @@ export async function DELETE(req: Request) {
     // Generated designs are deleted outright; the project rows stay marked deleted.
     const owned = await db().select({ id: schema.projects.id }).from(schema.projects).where(eq(schema.projects.ownerId, userId));
     if (owned.length) await db().delete(schema.designVersions).where(inArray(schema.designVersions.projectId, owned.map((p) => p.id)));
+    // Builder apps: their files, build history and any published copy go too, and what the
+    // projects were called or about is blanked, so nothing the person wrote is left behind.
+    if (owned.length) {
+      const ids = owned.map((p) => p.id);
+      await db().delete(schema.buildSteps).where(inArray(schema.buildSteps.projectId, ids)).catch(() => {});
+      await db().delete(schema.buildFiles).where(inArray(schema.buildFiles.projectId, ids)).catch(() => {});
+      await db().update(schema.projects).set({ name: "Deleted", about: "", instructions: "" }).where(eq(schema.projects.ownerId, userId));
+    }
+    await db().delete(schema.publishedSites).where(eq(schema.publishedSites.ownerId, userId)).catch(() => {});
     // Conversations are deleted outright.
     const convos = await db().select({ id: schema.conversations.id }).from(schema.conversations).where(eq(schema.conversations.userId, userId));
     if (convos.length) {

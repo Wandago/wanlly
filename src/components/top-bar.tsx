@@ -1,7 +1,7 @@
 "use client";
 
 import * as Menu from "@radix-ui/react-dropdown-menu";
-import { IMAGE_MODEL_NAME, MODELS, TOOLS, getModel, isLive } from "@/lib/catalog";
+import { IMAGE_MODEL_NAME, MODELS, TOOLS, dataNote, getModel, isLive } from "@/lib/catalog";
 import { useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "./icon";
 
@@ -61,6 +61,7 @@ export function ModelPicker() {
                       <CreditTag credits={on ? m.credits : "Soon"} from />
                     </span>
                     <small className="col-start-1 text-[13px] text-muted">{m.description}</small>
+                    <small className={`col-span-2 text-[11.5px] leading-snug ${dataNote(m).private ? "text-good" : "text-faint"}`}>{dataNote(m).private ? "🔒 " : "ⓘ "}{dataNote(m).text}</small>
                   </Menu.RadioItem>
                   );
                 })}

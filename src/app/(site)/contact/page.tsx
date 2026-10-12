@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { ContactForm } from "@/components/site/contact-form";
 import { Icon } from "@/components/icon";
 
-export const metadata: Metadata = { title: "Contact · Wanlly", description: "Questions, partnerships, press and advertising." };
+export const metadata: Metadata = { alternates: { canonical: "/contact" }, title: "Contact · Wanlly", description: "Questions, partnerships, press and advertising." };
 
 const WAYS = [
   { icon: "chat" as const, title: "Questions and support", text: "Something not working, or not sure how something works? Send us a note." },

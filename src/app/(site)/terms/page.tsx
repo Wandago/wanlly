@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProsePage } from "@/components/site/prose";
 
-export const metadata: Metadata = { title: "Terms · Wanlly" };
+export const metadata: Metadata = { alternates: { canonical: "/terms" }, title: "Terms · Wanlly" };
 
 export default function TermsPage() {
   return (
@@ -21,7 +21,7 @@ export default function TermsPage() {
         <li>Follow the usage policies of the AI provider you use, and the law. No harmful or illegal content.</li>
       </ul>
       <h2>Your work</h2>
-      <p>You own what you create. We only use it to run Wanlly for you, and we never train AI on it. AI can make mistakes, so check anything important.</p>
+      <p>You own what you create. We only use it to run Wanlly for you, and we never use it to train AI. The AI provider you pick may have its own rules, shown before you use each model. AI can make mistakes, so check anything important.</p>
       <h2>Accounts</h2>
       <p>We may slow down, pause or close accounts that break these terms. A person reviews every pause, and you can appeal by <Link href="/contact" className="text-fg underline underline-offset-4">contacting us</Link>.</p>
     </ProsePage>

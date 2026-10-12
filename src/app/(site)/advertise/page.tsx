@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AdvertisePage } from "@/components/site/advertise-page";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: "/advertise" },
   title: "Advertise · Wanlly",
   description: "Reach students and young creators while they build. Sponsor cards, banners, videos, pop-up cards and trials in Wanlly's free AI workspace.",
 };

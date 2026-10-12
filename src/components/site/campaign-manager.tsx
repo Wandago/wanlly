@@ -77,6 +77,7 @@ export function CampaignManager({ reference }: { reference: string }) {
               <p className="text-sm text-good">If that email has campaigns with us, fresh links are on their way.</p>
             ) : (
               <form
+                method="post"
                 className="flex gap-2"
                 onSubmit={async (e) => {
                   e.preventDefault();

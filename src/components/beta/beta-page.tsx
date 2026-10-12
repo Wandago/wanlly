@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { readFirstTouch } from "@/lib/first-touch";
 import { Icon } from "../icon";
 import { SpinLoader } from "../spin-mark";
-import { REFERRAL_CREDITS } from "@/lib/catalog";
+import { MODEL_COUNT, REFERRAL_CREDITS } from "@/lib/catalog";
 import { SAY } from "@/lib/messages";
 
 const COUNTRIES = ["Kenya", "Nigeria", "Ghana", "Uganda", "Tanzania", "Rwanda", "South Africa", "Egypt", "India", "Pakistan", "Bangladesh", "Indonesia", "Philippines", "Vietnam", "Brazil", "Mexico", "United Kingdom", "United States", "Other"];
@@ -134,7 +134,7 @@ export function BetaPage() {
             {[
               ["1", "ad a day to start"],
               ["0", "subscriptions"],
-              ["10+", "top AI models: Claude, Gemini, Grok, DeepSeek and more"],
+              [String(MODEL_COUNT), "AI models: Claude, Gemini, Grok, DeepSeek and open models"],
               ["0", "cards, subscriptions or API keys"],
             ].map(([n, l]) => (
               <div key={l} className="flex flex-col gap-1 rounded-2xl border border-line bg-surface p-4">
@@ -181,7 +181,7 @@ export function BetaPage() {
                 <h2 className="font-display text-[clamp(28px,4vw,40px)] font-semibold tracking-[-0.03em]">Apply for the beta</h2>
                 <p className="text-muted">We review every application by hand.</p>
               </div>
-              <form onSubmit={submit} className="flex flex-col gap-3.5">
+              <form method="post" onSubmit={submit} className="flex flex-col gap-3.5">
                 <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-name">Name<input id="b-name" name="name" required autoComplete="name" className={field} /></label>
                 <label className="flex flex-col gap-1.5 text-[13px] font-medium" htmlFor="b-email">Email<input id="b-email" name="email" type="email" required autoComplete="email" className={field} /></label>
                 <SelectOrType id="b-country" name="country" label="Country" options={COUNTRIES} placeholder="Type your country" required field={field} />

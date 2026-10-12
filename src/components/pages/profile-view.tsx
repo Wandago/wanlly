@@ -369,7 +369,7 @@ function DataPanel() {
     dispatch({ type: "toast", text: "Couldn't delete your account just now. Try again" });
   };
   return (
-    <Panel title="Your data" note="Wanlly never trains AI on your prompts, files or projects.">
+    <Panel title="Your data" note="Wanlly never uses your work to train AI. AI providers have their own rules: each model shows its data policy before you pick it.">
       <div id="data" className="flex flex-col">
         <Line icon="clip" title="Download my data" detail="Your account, settings, projects and every credit in and out, as one file">
           <a href="/api/me/export" download className={btnGhost}>

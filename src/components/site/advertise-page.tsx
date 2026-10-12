@@ -174,7 +174,7 @@ export function AdvertisePage() {
       <section id="formats" className="mx-auto flex w-full max-w-[1080px] scroll-mt-20 flex-col gap-6 px-4 py-16 sm:px-6">
         <div className="flex flex-col gap-2">
           <h2 className="font-display text-3xl font-semibold tracking-[-0.025em]">Formats</h2>
-          <p className="max-w-[620px] text-[15px] text-muted">Visual ads and suggested ads are self-serve: <a href="/advertise/create" className="font-medium text-fg underline underline-offset-2">create a campaign</a>. You offer the price, per 1,000 views or per click, and set a budget it never goes over. For videos, pop-up cards and trials, talk to us.</p>
+          <p className="max-w-[620px] text-[15px] text-muted">For visual ads and suggested ads, <a href="/advertise/create" className="font-medium text-fg underline underline-offset-2">build your campaign online</a>: make the ad, offer a price per 1,000 views or per click, and set a budget it never goes over. We review it and confirm the price, usually within a working day, and it goes live once paid. For videos, pop-up cards and trials, talk to us.</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Format icon="grid" title="Sponsor cards" text="A card with your picture, one line and a button, in the side panels people keep open while they work.">
@@ -240,7 +240,7 @@ export function AdvertisePage() {
               <p className="text-[15px] text-muted">We&apos;ll reply by email within a few days with what we can offer.</p>
             </div>
           ) : (
-            <form onSubmit={submit} className="flex flex-col gap-4">
+            <form method="post" onSubmit={submit} className="flex flex-col gap-4">
               <div>
                 <h2 className="font-display text-2xl font-semibold tracking-[-0.02em]">Apply to advertise</h2>
                 <p className="mt-1 text-[13px] text-muted">No commitment. We&apos;ll come back with a proposal.</p>

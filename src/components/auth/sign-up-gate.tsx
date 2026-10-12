@@ -82,7 +82,7 @@ export function SignUpGate() {
   return (
     <div className="flex w-full max-w-[400px] flex-col gap-5 rounded-[20px] border border-line bg-surface p-6 shadow-soft">
       {step === "ask" && (
-        <form onSubmit={check} className="flex flex-col gap-4">
+        <form method="post" onSubmit={check} className="flex flex-col gap-4">
           <div>
             <h1 className="font-display text-xl font-semibold tracking-[-0.02em]">Create your account</h1>
             <p className="mt-1 text-sm text-muted">Wanlly is in a private beta. Enter the email you applied with to continue.</p>

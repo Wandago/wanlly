@@ -34,7 +34,7 @@ export function ContactForm({ initialTopic = "General" }: { initialTopic?: strin
     );
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-5 sm:p-6">
+    <form method="post" onSubmit={submit} className="flex flex-col gap-3.5 rounded-2xl border border-line bg-surface p-5 sm:p-6">
       <div className="grid gap-3.5 sm:grid-cols-2">
         <label htmlFor="c-name" className="flex flex-col gap-1.5 text-[13px] font-medium">
           Name

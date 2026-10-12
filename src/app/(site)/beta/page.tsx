@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { BetaPage } from "@/components/beta/beta-page";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = { alternates: { canonical: "/beta" },
   title: "Wanlly · Private beta",
   description: "Frontier AI, paid for by ads. Chat, code and design with the world's top AI models. Apply for the beta.",
 };

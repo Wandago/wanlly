@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ClaudeMark, GeminiMark } from "./brand-marks";
 import type { ReactNode } from "react";
-import { FLOOR_CREDITS } from "@/lib/catalog";
+import { FLOOR_CREDITS, MODEL_COUNT } from "@/lib/catalog";
 import { Icon, type IconName } from "../icon";
 import { SpinLoader } from "../spin-mark";
 
@@ -47,7 +47,7 @@ function Hero() {
             {[
               ["1", "ad a day to start"],
               ["0", "cards needed"],
-              ["5", "frontier models"],
+              [String(MODEL_COUNT), "AI models to choose from"],
             ].map(([n, l]) => (
               <div key={l} className="flex flex-col">
                 <dt className="order-2 text-xs text-muted">{l}</dt>
@@ -324,7 +324,7 @@ function Everywhere() {
 
 function Promises() {
   const items: [IconName, string, string][] = [
-    ["shield", "Your work stays yours", "Wanlly never trains AI on your prompts, files or projects."],
+    ["shield", "Your work stays yours", "Wanlly never uses your work to train AI. AI providers have their own rules: each model shows its data policy before you pick it."],
     ["lock", "Sponsors see nothing", "Advertisers never see what you write or build. Ads are matched to the page, not to you."],
     ["check", "Honest about costs", "Every reply shows its model and what it cost. No surprise limits."],
   ];

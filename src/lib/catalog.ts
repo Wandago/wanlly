@@ -77,6 +77,20 @@ export const MODELS: Model[] = [
   { id: "grok-top", name: "Grok 4.7", group: "Other providers", description: "xAI. Its most capable model", credits: 4, provider: "xai" },
 ];
 
+/** How many models Wanlly offers (including ones whose provider isn't connected yet). */
+export const MODEL_COUNT = MODELS.length;
+
+/**
+ * What happens to what you send this model, shown before you pick it. Keep in step with the
+ * privacy page. `private` marks the providers whose terms say they don't train on API data.
+ */
+export function dataNote(m: Model): { text: string; private: boolean } {
+  if (m.provider === "anthropic" || m.group === "Anthropic") return { text: "Anthropic doesn't train on what you send through Wanlly. Best for private work.", private: true };
+  if (m.provider === "google") return { text: "Testing tier: Google may use prompts and replies to improve its products. Avoid private details.", private: false };
+  if (m.group === "Open models") return { text: "Runs on a free host that may log prompts. Don't share anything private.", private: false };
+  return { text: "The provider's own data policy applies; see Privacy. Avoid private details.", private: false };
+}
+
 /** The model new accounts start on, and the one suggested when credits are short. Live on Google's free tier. */
 export const CHEAPEST_MODEL_ID = "gemini-flash";
 

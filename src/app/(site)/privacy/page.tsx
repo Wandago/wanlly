@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProsePage } from "@/components/site/prose";
 
-export const metadata: Metadata = { title: "Privacy · Wanlly" };
+export const metadata: Metadata = { alternates: { canonical: "/privacy" }, title: "Privacy · Wanlly" };
 
 export default function PrivacyPage() {
   return (
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
       </ul>
       <h2>Who we share it with</h2>
       <p>
-        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini, xAI for Grok, DeepSeek, and the hosts of the open models: NVIDIA, Cerebras, Groq, Mistral and OpenRouter), Clerk (sign-in), Meta (WhatsApp, only the verification message you send us), Neon (database), Cloudflare (hosting and security) and our ad partners. Advertisers never receive your prompts or your work.
+        Only the services that run Wanlly: AI providers (Anthropic for Claude, Google for Gemini, xAI for Grok, DeepSeek, and the hosts of the open models: NVIDIA, Cerebras, Groq, Mistral and OpenRouter), Clerk (sign-in), Meta (WhatsApp, only the verification message you send us), Neon (database), Cloudflare (hosting and security), and the ad and survey partners listed below. Advertisers never receive your prompts or your work.
       </p>
       <p>
         <strong>Gemini during testing:</strong> while Wanlly uses Google&apos;s free Gemini access for testing, Google may use those prompts and replies to improve its products. We&apos;ll tell you clearly before that applies to you, and you can choose Claude instead.
@@ -37,9 +37,32 @@ export default function PrivacyPage() {
       <p>
         <strong>Open models and Auto (free):</strong> these run on free tiers from NVIDIA, Cerebras, Groq, Mistral or OpenRouter. Some of these hosts may log prompts or use them to improve their services. Don&apos;t share anything private with these models; choose Claude for sensitive work.
       </p>
+      <h2>Ad and survey partners</h2>
+      <p>Ads pay for Wanlly. These are the companies whose code or links can appear on Wanlly, and what each one receives:</p>
+      <ul>
+        <li>
+          <strong>Google AdSense</strong> (banners on Wanlly&apos;s own pages): your IP address, browser and device details, the page you&apos;re on and cookies Google sets. Google may use cookies to personalise ads; see{" "}
+          <a href="https://policies.google.com/technologies/partner-sites" className="text-fg underline underline-offset-4">how Google uses information from sites that use its services</a>.
+        </li>
+        <li>
+          <strong>Adsterra and Monetag</strong> (banners shown from our separate ad address, ads.wanlly.africa): your IP address, browser and device details and the fact that you viewed the ad. Their code runs in a sealed frame and can&apos;t read Wanlly pages, your account or your work.
+        </li>
+        <li>
+          <strong>CPX Research</strong> (surveys, only if you open them): your Wanlly account ID, name and email, so surveys can reach you and pay you, plus whatever you answer in the survey itself.
+        </li>
+        <li><strong>Direct sponsors</strong> (brands that book ads with us): only totals, such as how many people saw or clicked their ad. Never your identity, your prompts or your work.</li>
+      </ul>
+      <p>Ads chosen from your chat are picked in your browser; your messages are never sent to an ad partner. You can block ad cookies in your browser; Wanlly still works.</p>
+      <h2>How long we keep it, and deleting it</h2>
+      <ul>
+        <li>Your account, projects and chats are kept while your account is open, so you can come back to them.</li>
+        <li>Delete a chat or project and it&apos;s gone from Wanlly. Delete your account (Profile → Delete account) and we remove your name, email, profile, memory and work. We keep an anonymous record of credits earned and spent, with nothing that identifies you, for accounting and fraud checks.</li>
+        <li>Security and fraud signals are kept only as long as needed to stop abuse.</li>
+        <li>Can&apos;t use the Profile page? Email us from the address on your account via the <Link href="/contact" className="text-fg underline underline-offset-4">contact page</Link> and we&apos;ll delete it for you within 30 days.</li>
+      </ul>
       <h2>What we never do</h2>
       <ul>
-        <li>We never train AI on your prompts, files or projects.</li>
+        <li>We never use your prompts, files or projects to train AI ourselves. Some AI providers have their own rules (see above); each model shows its policy before you pick it.</li>
         <li>We never sell your personal information.</li>
         <li>We never target ads using sensitive information such as health, religion or politics.</li>
       </ul>
