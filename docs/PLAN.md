@@ -103,6 +103,9 @@ No extra service is needed, so it stays free.
 3. Stripe for the Plus plan (no monthly fee, only per-transaction).
 4. Monitoring: Sentry alerts, a daily spend report, and abuse dashboards.
 
+### Later: Wanlly Sign
+An e-signature product (like DocuSign) at `sign.wanlly.com`, in the same app and Worker. Plan: `docs/SIGN.md`. Prototype: `prototype/sign.html`.
+
 ### Later: Plugins
 Connect outside tools over MCP (Model Context Protocol), starting with GitHub, Google Drive and Notion. Sponsored plugins become a native ad format.
 
