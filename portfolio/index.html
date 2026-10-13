@@ -1,5 +1,5 @@
 <title>Louis Wandago</title>
-<meta name="description" content="AI tools built by Louis Wandago in Nairobi: TumaCV, Wanlly, Reachly, SokoOS and Chess Arena.">
+<meta name="description" content="AI products and ad-operations tools built by Louis Wandago in Nairobi.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -102,6 +102,11 @@
   .status.live { color: var(--live); }
   .status.build { color: var(--build); }
   .status.proto { color: var(--proto); }
+  .status.planned { color: var(--muted); }
+  .group { font: 500 13px/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 56px 0 12px; }
+  .group[hidden] { display: none !important; }
+  .aside { margin: 20px 0 0; max-width: 70ch; color: var(--muted); font-size: 15px; }
+  .aside b { color: var(--ink); }
   .visit { display: inline-block; margin-top: 16px; font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--accent); padding-bottom: 1px; }
   .visit:hover { color: var(--accent); }
 
@@ -164,19 +169,20 @@
   </header>
 
   <section class="hero">
-    <span class="eyebrow">AI products, built and shipped from Nairobi</span>
+    <span class="eyebrow">AI products and ad-ops tools, built in Nairobi</span>
     <h1>Louis <span class="last">Wandago</span></h1>
     <p class="lede">
       I build AI tools for people who are usually an afterthought in AI products:
       <strong>Kenyan job seekers, small sellers on Instagram and WhatsApp, creators, and people who can't pay
       for a subscription.</strong> They're priced in shillings, take M-Pesa, and when the AI makes a call,
-      the tool shows you why.
+      the tool shows you why. I also build tools that take the repetitive work out of running ad campaigns
+      on Jumia, from proof-of-execution screenshots to the monthly report.
     </p>
     <div class="facts" aria-label="At a glance">
-      <div><b>5</b><span>AI tools</span></div>
-      <div><b>1</b><span>Live in production</span></div>
-      <div><b>4</b><span>Kinds of AI: text, vision, speech, engine</span></div>
-      <div><b>KES</b><span>M-Pesa built in</span></div>
+      <div><b>8</b><span>Tools</span></div>
+      <div><b>2</b><span>Live</span></div>
+      <div><b>5</b><span>In build or prototype</span></div>
+      <div><b>1</b><span>Planned</span></div>
     </div>
   </section>
 
@@ -189,10 +195,12 @@
         <button type="button" id="f-vision" data-filter="vision" aria-pressed="false">Vision</button>
         <button type="button" id="f-speech" data-filter="speech" aria-pressed="false">Speech</button>
         <button type="button" id="f-engine" data-filter="engine" aria-pressed="false">Engine</button>
+        <button type="button" id="f-auto" data-filter="automation" aria-pressed="false">Ad ops</button>
       </div>
     </div>
 
-    <ol class="tools">
+    <p class="group" id="g-ai">AI products</p>
+    <ol class="tools" aria-labelledby="g-ai">
       <li class="tool" data-kinds="text vision">
         <span class="idx">Writing · Vision</span>
         <div>
@@ -327,6 +335,90 @@
         </div>
       </li>
     </ol>
+
+    <p class="group" id="g-ads">Ad operations</p>
+    <ol class="tools" aria-labelledby="g-ads">
+      <li class="tool" data-kinds="automation">
+        <span class="idx">Ad ops</span>
+        <div>
+          <h3>Campaign Report Builder</h3>
+          <p class="what">A web app that turns a month's campaign numbers into a .pptx in the same design as the original Jumia campaign report. Works for any brand and any month.</p>
+          <span class="status live">Live</span><br>
+          <a class="visit" href="https://claude.ai/artifact/WrWBe1MxPHrFaNkijHBxrq">Open the builder ↗</a>
+        </div>
+        <div>
+          <p class="label">What it does</p>
+          <ul class="ai">
+            <li>You fill in the month's numbers and swap in new charts or screenshots.</li>
+            <li>Every field starts pre-filled with the July 2026 Rebune report as a worked example, so you only edit what changed.</li>
+            <li>Organised into 21 sections that follow the report deck.</li>
+            <li>One click, “Generate &amp; download .pptx”, builds the finished deck.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">.pptx export</span><span class="chip">Web app</span><span class="chip">Runs in the browser</span>
+            </div>
+          </div>
+          <p class="note">Template: Jumia campaign report. Example data: Rebune, July 2026.</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="automation">
+        <span class="idx">Ad ops</span>
+        <div>
+          <h3>Jumia POE Builder</h3>
+          <p class="what">A free Chrome extension that collects proof of execution for the month's Jumia campaigns and puts it straight into a PowerPoint.</p>
+          <span class="status build">In progress</span>
+        </div>
+        <div>
+          <p class="label">What it does</p>
+          <ul class="ai">
+            <li>Checks live Jumia pages for the campaigns running that month.</li>
+            <li>Captures dated proof-of-execution screenshots.</li>
+            <li>Places the screenshots into a PowerPoint, ready to send.</li>
+            <li>Covers Sponsored Products, Sponsored Brands, display banners and product floors.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">Chrome extension</span><span class="chip">No API keys</span><span class="chip">No AI</span><span class="chip">Free</span>
+            </div>
+          </div>
+          <p class="note">Every screenshot carries its capture date, so the proof matches the flight dates.</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="automation">
+        <span class="idx">Ad ops</span>
+        <div>
+          <h3>Media Plan &amp; IO Generator</h3>
+          <p class="what">The next step after reporting: plan the campaign and paper it in one go.</p>
+          <span class="status planned">Planned</span>
+        </div>
+        <div>
+          <p class="label">What it will do</p>
+          <ul class="ai">
+            <li>You enter a budget and the channels.</li>
+            <li>It generates the media plan automatically.</li>
+            <li>It generates the matching insertion order (IO).</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Input → output</p>
+            <div class="chips">
+              <span class="chip model">Budget + channels</span><span class="chip">Media plan</span><span class="chip">Insertion order</span>
+            </div>
+          </div>
+        </div>
+      </li>
+    </ol>
+    <p class="aside" id="aside-bf">Related: the <b>Black Friday 2026 Campaign Planner</b>, an Excel workbook that tracks every Black Friday campaign by package, category and date.</p>
     <p class="empty" id="empty" hidden>No tools match that filter.</p>
   </section>
 
@@ -334,7 +426,7 @@
     <div>
       <p class="eyebrow">About</p>
       <h2 id="about-title">I build for the person on the other side of the screen</h2>
-      <p>I'm Louis Wandago, a builder in Nairobi. I design and ship complete products on my own, from the database and payments to the interface and the model calls. I keep them on free tiers until they earn their keep.</p>
+      <p>I'm Louis Wandago, a builder in Nairobi. I design and ship complete products on my own, from the database and payments to the interface and the model calls. Alongside them I build ad-ops tools that turn hours of reporting and screenshotting into a single click. I keep them on free tiers until they earn their keep.</p>
       <p>I also teach. My courses <b>Prompting for Everyone</b> and <b>Design Fundamentals for Builders</b> cover what I've learned building these tools.</p>
     </div>
     <ul class="principles" aria-label="How I build">
@@ -367,6 +459,12 @@
         if (match) shown++;
       });
       empty.hidden = shown !== 0;
+      document.querySelectorAll(".group").forEach(function (g) {
+        var list = g.nextElementSibling;
+        var any = Array.prototype.some.call(list.querySelectorAll(".tool"), function (t) { return !t.hidden; });
+        g.hidden = !any; list.hidden = !any;
+      });
+      document.getElementById("aside-bf").hidden = !(filter === "all" || filter === "automation");
     }
     buttons.forEach(function (b) { b.addEventListener("click", function () { apply(b.dataset.filter); }); });
 
