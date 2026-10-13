@@ -104,7 +104,7 @@ No extra service is needed, so it stays free.
 4. Monitoring: Sentry alerts, a daily spend report, and abuse dashboards.
 
 ### Later: Wanlly Sign
-An e-signature product (like DocuSign) at `sign.wanlly.com`, in the same app and Worker. Plan: `docs/SIGN.md`. Prototype: `prototype/sign.html`.
+An e-signature product (like DocuSign) at `sign.wanlly.com`. It lives in its own repo, `wandago/wanlly-sign`, with its own plan and prototype, and shares Clerk sign-in and the credit ledger with Wanlly.
 
 ### Later: Plugins
 Connect outside tools over MCP (Model Context Protocol), starting with GitHub, Google Drive and Notion. Sponsored plugins become a native ad format.
