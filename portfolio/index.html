@@ -1,0 +1,374 @@
+<title>Louis Wandago</title>
+<meta name="description" content="AI tools built by Louis Wandago in Nairobi: TumaCV, Wanlly, Reachly, SokoOS and Chess Arena.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a builder's index. Big name, then one full-width row per tool,
+     each read left to right: what it is, what the AI does, what it runs on. */
+  :root {
+    --bg: #f2f3ee;
+    --surface: #ffffff;
+    --ink: #131a16;
+    --muted: #59625c;
+    --line: #d6dad2;
+    --accent: #0a6b4a;
+    --accent-ink: #ffffff;
+    --mark: #e2a21b;
+    --live: #0a6b4a;
+    --build: #a8660a;
+    --proto: #4a5bb0;
+    --display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+    --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1411; --surface: #161d19; --ink: #e8ece6; --muted: #9aa59d;
+      --line: #2a332e; --accent: #3fbf8a; --accent-ink: #08130e; --mark: #f0b43a;
+      --live: #3fbf8a; --build: #e0a040; --proto: #8b9cf0; color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f1411; --surface: #161d19; --ink: #e8ece6; --muted: #9aa59d;
+    --line: #2a332e; --accent: #3fbf8a; --accent-ink: #08130e; --mark: #f0b43a;
+    --live: #3fbf8a; --build: #e0a040; --proto: #8b9cf0; color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font-family: var(--body); font-size: 16px; line-height: 1.6;
+    padding-inline: clamp(16px, 4vw, 48px); padding-block: 0 48px;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; }
+  a { color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 3px solid var(--mark); outline-offset: 3px; border-radius: 4px; }
+
+  /* Header */
+  header.top {
+    display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding-block: 24px; border-bottom: 1px solid var(--line);
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+  }
+  header.top nav { display: flex; gap: 20px; flex-wrap: wrap; }
+  header.top nav a { text-decoration: none; }
+  header.top nav a:hover { color: var(--ink); }
+
+  /* Hero */
+  .hero { padding-block: clamp(48px, 9vw, 112px) clamp(32px, 5vw, 56px); display: grid; gap: 28px; }
+  .eyebrow { font-family: var(--mono); font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+  h1 {
+    font-family: var(--display); font-weight: 800; margin: 0;
+    font-size: clamp(56px, 13vw, 168px); line-height: .88; letter-spacing: -.045em;
+    text-wrap: balance;
+  }
+  h1 .last { display: block; color: transparent; -webkit-text-stroke: 2px var(--ink); }
+  @supports not (-webkit-text-stroke: 2px black) { h1 .last { color: var(--accent); } }
+  .lede { max-width: 60ch; font-size: clamp(18px, 2.1vw, 21px); color: var(--muted); margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+  }
+  .facts div { padding: 18px 16px 18px 0; display: grid; gap: 2px; }
+  .facts div + div { padding-left: 16px; border-left: 1px solid var(--line); }
+  .facts b { font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .facts span { font-size: 13px; color: var(--muted); }
+
+  /* Filter */
+  .work-head { display: flex; justify-content: space-between; align-items: end; gap: 16px; flex-wrap: wrap; padding-block: 56px 20px; }
+  h2 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.02em; margin: 0; line-height: 1.1; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .filters button {
+    font: 500 13px/1 var(--mono); padding: 9px 13px; border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--line); background: transparent; color: var(--muted);
+  }
+  .filters button:hover { color: var(--ink); border-color: var(--ink); }
+  .filters button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+  /* Tool rows */
+  .tools { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+  .tool {
+    display: grid; grid-template-columns: 96px minmax(0, 1.05fr) minmax(0, 1.25fr) minmax(0, .8fr);
+    gap: 28px; padding-block: 36px; border-bottom: 1px solid var(--line);
+  }
+  .tool .idx { font-family: var(--mono); font-size: 13px; color: var(--muted); padding-top: 10px; }
+  .tool h3 { font-family: var(--display); font-weight: 800; font-size: clamp(34px, 4.4vw, 52px); letter-spacing: -.035em; line-height: 1; margin: 0 0 12px; }
+  .tool .what { margin: 0 0 16px; max-width: 46ch; }
+  .status { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .06em; }
+  .status::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+  .status.live { color: var(--live); }
+  .status.build { color: var(--build); }
+  .status.proto { color: var(--proto); }
+  .visit { display: inline-block; margin-top: 16px; font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--accent); padding-bottom: 1px; }
+  .visit:hover { color: var(--accent); }
+
+  .label { font: 500 11px/1 var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 0 0 12px; }
+  .ai { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+  .ai li { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: 8px; font-size: 15px; line-height: 1.5; }
+  .ai li::before { content: "→"; color: var(--accent); font-family: var(--mono); }
+
+  .spec { display: grid; gap: 14px; align-content: start; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font: 400 12px/1.2 var(--mono); padding: 5px 8px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); background: var(--surface); }
+  .chip.model { border-color: var(--accent); color: var(--accent); }
+  .note {
+    font-family: var(--mono); font-size: 12.5px; line-height: 1.55; color: var(--ink);
+    background: var(--surface); border-left: 3px solid var(--mark); padding: 10px 12px; margin: 0;
+  }
+
+  .tool[hidden] { display: none !important; }
+  .empty { padding-block: 32px; color: var(--muted); }
+
+  /* About + teaching */
+  .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 48px; padding-block: 72px 24px; }
+  .about p { margin: 0 0 14px; max-width: 58ch; }
+  .principles { list-style: none; padding: 0; margin: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+  .principles li { padding-block: 14px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+  .principles b { font-family: var(--display); font-weight: 600; font-size: 19px; }
+  .principles span { color: var(--muted); font-size: 15px; }
+
+  footer {
+    margin-top: 48px; padding-block: 28px; border-top: 2px solid var(--ink);
+    display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 13px; color: var(--muted);
+  }
+  footer .big { font-family: var(--display); font-weight: 800; font-size: 22px; color: var(--ink); letter-spacing: -.02em; }
+
+  @media (max-width: 900px) {
+    .tool { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .tool .idx { padding-top: 0; }
+    .about { grid-template-columns: minmax(0, 1fr); gap: 32px; }
+  }
+  @media (max-width: 620px) {
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts div:nth-child(3) { padding-left: 0; border-left: 0; border-top: 1px solid var(--line); }
+    .facts div:nth-child(4) { border-top: 1px solid var(--line); }
+    h1 .last { -webkit-text-stroke-width: 1.5px; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tool { transition: background-color .2s ease; }
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span>Louis Wandago · Nairobi, Kenya</span>
+    <nav aria-label="Sections">
+      <a href="#work">Tools</a>
+      <a href="#about">About</a>
+      <a href="https://github.com/Wandago">GitHub ↗</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <span class="eyebrow">AI products, built and shipped from Nairobi</span>
+    <h1>Louis <span class="last">Wandago</span></h1>
+    <p class="lede">
+      I build AI tools for people who are usually an afterthought in AI products:
+      <strong>Kenyan job seekers, small sellers on Instagram and WhatsApp, creators, and people who can't pay
+      for a subscription.</strong> They're priced in shillings, take M-Pesa, and when the AI makes a call,
+      the tool shows you why.
+    </p>
+    <div class="facts" aria-label="At a glance">
+      <div><b>5</b><span>AI tools</span></div>
+      <div><b>1</b><span>Live in production</span></div>
+      <div><b>4</b><span>Kinds of AI: text, vision, speech, engine</span></div>
+      <div><b>KES</b><span>M-Pesa built in</span></div>
+    </div>
+  </section>
+
+  <section id="work" aria-labelledby="work-title">
+    <div class="work-head">
+      <h2 id="work-title">The tools</h2>
+      <div class="filters" role="group" aria-label="Filter by kind of AI">
+        <button type="button" id="f-all" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" id="f-text" data-filter="text" aria-pressed="false">Writing</button>
+        <button type="button" id="f-vision" data-filter="vision" aria-pressed="false">Vision</button>
+        <button type="button" id="f-speech" data-filter="speech" aria-pressed="false">Speech</button>
+        <button type="button" id="f-engine" data-filter="engine" aria-pressed="false">Engine</button>
+      </div>
+    </div>
+
+    <ol class="tools">
+      <li class="tool" data-kinds="text vision">
+        <span class="idx">Writing · Vision</span>
+        <div>
+          <h3>TumaCV</h3>
+          <p class="what">Tailored CVs and cover letters for Kenyan job seekers. Paste a job, get an application written for it, and pay per application with M-Pesa, Airtel Money or card.</p>
+          <span class="status live">Live</span><br>
+          <a class="visit" href="https://tumacv.vercel.app">tumacv.vercel.app ↗</a>
+        </div>
+        <div>
+          <p class="label">What the AI does</p>
+          <ul class="ai">
+            <li>Rewrites your CV and drafts a cover letter for each specific job posting.</li>
+            <li>Reads a job advert from a screenshot, so you don't have to retype it.</li>
+            <li>Writes two industry news articles a day and a personal insight on your dashboard.</li>
+            <li>Runs its own marketing: writes posts for X, LinkedIn and Facebook, plus win-back emails, then sends them by email, WhatsApp and SMS.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">Gemini</span><span class="chip">Next.js</span><span class="chip">Supabase</span><span class="chip">IntaSend</span><span class="chip">Resend</span><span class="chip">Vercel</span>
+            </div>
+          </div>
+          <p class="note">One shared AI caller falls back to the next model when one is retired or rate-limited.</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="text vision">
+        <span class="idx">Writing · Vision</span>
+        <div>
+          <h3>Wanlly</h3>
+          <p class="what">A free AI workspace with four tools: Chat, Code, Design and Images. They share one composer. You earn credits by choosing to watch short sponsor spots, so nobody is locked out for lack of a card.</p>
+          <span class="status proto">Prototype · build plan done</span>
+        </div>
+        <div>
+          <p class="label">What the AI does</p>
+          <ul class="ai">
+            <li>Chats on a fast default model, with a stronger model unlocked using credits.</li>
+            <li>Code mode works on your GitHub repos through a GitHub App and opens pull requests.</li>
+            <li>Generates images and design previews in the same flow: prompt, working card, result.</li>
+            <li>Charges from the real token count the model reports, and refunds when a call fails.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">Claude Haiku 5.5</span><span class="chip model">Claude Sonnet 5.5</span><span class="chip">Cloudflare</span><span class="chip">Neon</span><span class="chip">Clerk</span><span class="chip">R2</span>
+            </div>
+          </div>
+          <p class="note">Unit cost: about $0.0006 per chat message, so $5 covers roughly 8,000 free messages.</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="text vision">
+        <span class="idx">Writing · Vision</span>
+        <div>
+          <h3>Reachly</h3>
+          <p class="what">Verified creator profiles. A creator connects their accounts and gets one public page a brand can trust, because every number says where it came from.</p>
+          <span class="status build">In build</span>
+        </div>
+        <div>
+          <p class="label">What the AI does</p>
+          <ul class="ai">
+            <li>Reads an uploaded insights screenshot and turns it into numbers the creator reviews before saving.</li>
+            <li>Profiles the creator: category, content pillars, audience, tone, languages and brand safety, with a confidence level and its reasoning.</li>
+            <li>Cross-checks follower counts against the YouTube Data API.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">Gemini Flash-Lite</span><span class="chip">YouTube API</span><span class="chip">Next.js</span><span class="chip">Supabase</span>
+            </div>
+          </div>
+          <p class="note">Every figure is tagged Verified (from the platform), Self-reported (from a screenshot) or Claimed (typed in).</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="speech vision">
+        <span class="idx">Speech · Vision</span>
+        <div>
+          <h3>SokoOS</h3>
+          <p class="what">The operating system for Kenyan businesses that sell on Instagram, TikTok and WhatsApp. It covers orders, M-Pesa payments, riders, stock and a ledger that balances itself. Installable and works offline.</p>
+          <span class="status build">In build</span>
+        </div>
+        <div>
+          <p class="label">What the AI does</p>
+          <ul class="ai">
+            <li><b>Smart Capture:</b> say a sale out loud or point the camera at a receipt, and it books the transaction.</li>
+            <li>Decides credit or debit from the words you used, and shows its reasoning.</li>
+            <li>Imports an M-Pesa or bank statement and skips anything already booked, matched by transaction code.</li>
+            <li><b>Your CFO:</b> a plain brief on what the business kept, where money went, and what needs attention, with the working behind every figure.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">On-device speech</span><span class="chip">Next.js PWA</span><span class="chip">TypeScript</span>
+            </div>
+          </div>
+          <p class="note">Understands how sellers talk: “three thousand five hundred from Grace”, “packaging for 2k cash”, “paid the rider 350 bob”.</p>
+        </div>
+      </li>
+
+      <li class="tool" data-kinds="engine">
+        <span class="idx">Engine</span>
+        <div>
+          <h3>Chess Arena</h3>
+          <p class="what">Paid bracket chess tournaments. Register, get seeded into a live bracket, play on a server-enforced clock, and the winner takes the prize pool.</p>
+          <span class="status build">In build</span>
+        </div>
+        <div>
+          <p class="label">What the AI does</p>
+          <ul class="ai">
+            <li>Runs every finished game through Stockfish and flags games that look engine-assisted.</li>
+            <li>Sends flagged games to an admin for review instead of banning anyone automatically.</li>
+            <li>Validates every move on the server, so a client can't forge a move or a result.</li>
+          </ul>
+        </div>
+        <div class="spec">
+          <div>
+            <p class="label">Runs on</p>
+            <div class="chips">
+              <span class="chip model">Stockfish</span><span class="chip">Next.js</span><span class="chip">Supabase</span><span class="chip">IntaSend</span>
+            </div>
+          </div>
+          <p class="note">A drawn knockout match never stalls the bracket: it spawns a tiebreak with colours swapped and the clock halved.</p>
+        </div>
+      </li>
+    </ol>
+    <p class="empty" id="empty" hidden>No tools match that filter.</p>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="about-title">
+    <div>
+      <p class="eyebrow">About</p>
+      <h2 id="about-title">I build for the person on the other side of the screen</h2>
+      <p>I'm Louis Wandago, a builder in Nairobi. I design and ship complete products on my own, from the database and payments to the interface and the model calls. I keep them on free tiers until they earn their keep.</p>
+      <p>I also teach. My courses <b>Prompting for Everyone</b> and <b>Design Fundamentals for Builders</b> cover what I've learned building these tools.</p>
+    </div>
+    <ul class="principles" aria-label="How I build">
+      <li><b>Show the working</b><span>When the AI decides something, the reasoning or the source is on screen.</span></li>
+      <li><b>Pay the way people pay</b><span>M-Pesa first, priced in shillings, with free paths for those who can't pay.</span></li>
+      <li><b>Know the cost per use</b><span>Every model call is budgeted, and you're charged only for what was actually used.</span></li>
+      <li><b>A person makes the final call</b><span>Flags go to a reviewer, and extracted numbers go to the creator to confirm.</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <span class="big">Louis Wandago</span>
+    <span style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <a href="https://github.com/Wandago">github.com/Wandago ↗</a>
+    </span>
+  </footer>
+</div>
+
+<script>
+  (function () {
+    var buttons = document.querySelectorAll(".filters button");
+    var tools = document.querySelectorAll(".tool");
+    var empty = document.getElementById("empty");
+    function apply(filter) {
+      var shown = 0;
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.filter === filter)); });
+      tools.forEach(function (t) {
+        var match = filter === "all" || t.dataset.kinds.split(" ").indexOf(filter) !== -1;
+        t.hidden = !match;
+        if (match) shown++;
+      });
+      empty.hidden = shown !== 0;
+    }
+    buttons.forEach(function (b) { b.addEventListener("click", function () { apply(b.dataset.filter); }); });
+
+  })();
+</script>
