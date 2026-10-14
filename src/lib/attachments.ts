@@ -29,6 +29,55 @@ const decode = (s: string) =>
     e[0] === "#" ? String.fromCodePoint(e[1].toLowerCase() === "x" ? parseInt(e.slice(2), 16) : Number(e.slice(1))) : (ENTITIES[e.toLowerCase()] ?? m),
   );
 
+const NAME = ["n", "name", "title", "label", "category", "product", "path", "key"];
+const VALUE = ["v", "value", "count", "total", "sessions", "views", "price", "amount", "share"];
+const KIDS = ["c", "children", "items", "sub", "nodes", "rows", "data"];
+const pick = (o: Record<string, unknown>, keys: string[]) => keys.find((k) => k in o);
+
+/**
+ * JSON as a short readable outline: named items with their numbers, biggest first, a few levels
+ * deep. Thousands of raw rows swamp a model (it starts rewriting the data instead of answering);
+ * the outline keeps what matters.
+ */
+export function outlineJson(root: unknown): string {
+  const lines: string[] = [];
+  const fmt = (v: unknown) => (typeof v === "number" ? v.toLocaleString("en-US") : String(v));
+  const walk = (v: unknown, depth: number, pad: string) => {
+    if (lines.length > 600) return;
+    if (Array.isArray(v)) {
+      const objs = v.filter((x) => x && typeof x === "object" && !Array.isArray(x)) as Record<string, unknown>[];
+      if (!objs.length) {
+        lines.push(`${pad}${v.slice(0, 40).map(fmt).join(", ")}${v.length > 40 ? `, … (${v.length} in all)` : ""}`);
+        return;
+      }
+      const nk = pick(objs[0], NAME);
+      const vk = pick(objs[0], VALUE);
+      const kk = pick(objs[0], KIDS);
+      const sorted = vk && typeof objs[0][vk] === "number" ? [...objs].sort((a, b) => Number(b[vk]) - Number(a[vk])) : objs;
+      const keep = depth === 0 ? 25 : depth === 1 ? 10 : 6;
+      for (const o of sorted.slice(0, keep)) {
+        const label = nk ? fmt(o[nk]) : JSON.stringify(o).slice(0, 120);
+        lines.push(`${pad}- ${label}${vk ? `: ${fmt(o[vk])}` : ""}`);
+        if (kk && depth < 3 && o[kk]) walk(o[kk], depth + 1, `${pad}  `);
+      }
+      if (sorted.length > keep) lines.push(`${pad}  (+${sorted.length - keep} more)`);
+      return;
+    }
+    if (v && typeof v === "object") {
+      for (const [k, x] of Object.entries(v as Record<string, unknown>)) {
+        if (x && typeof x === "object") {
+          lines.push(`${pad}${k}:`);
+          walk(x, depth, `${pad}  `);
+        } else lines.push(`${pad}${k}: ${fmt(x)}`);
+      }
+      return;
+    }
+    lines.push(`${pad}${fmt(v)}`);
+  };
+  walk(root, 0, "");
+  return lines.join("\n");
+}
+
 export function readableHtml(html: string): string {
   const title = decode(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? "");
   const desc = decode(html.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i)?.[1] ?? "");
@@ -37,9 +86,9 @@ export function readableHtml(html: string): string {
   const data = [...html.matchAll(/<script\b[^>]*type=["']application\/(?:ld\+)?json["'][^>]*>([\s\S]*?)<\/script>/gi)]
     .map((m) => {
       try {
-        return JSON.stringify(JSON.parse(m[1]));
+        return outlineJson(JSON.parse(m[1]));
       } catch {
-        return m[1].trim();
+        return m[1].trim().slice(0, 8_000);
       }
     })
     .filter(Boolean);
@@ -55,7 +104,7 @@ export function readableHtml(html: string): string {
     .replace(/[ \t\f\v]+/g, " ")
     .replace(/ *\n[\s]*/g, "\n")
     .trim();
-  const json = data.length ? `\n\nData embedded in the page (JSON):\n${data.join("\n").slice(0, 80_000)}` : "";
+  const json = data.length ? `\n\nData in the page (summarised: biggest items first):\n${data.join("\n").slice(0, 16_000)}` : "";
   return [title && `Page title: ${title}`, desc && `Description: ${desc}`, body].filter(Boolean).join("\n").slice(0, 30_000) + json;
 }
 
@@ -82,7 +131,10 @@ export function readAttachments(raw: unknown, opts: { readable?: boolean } = {})
       meta.push({ name, mime, size: Math.round((a.data.length * 3) / 4) });
     } else if (typeof a.text === "string") {
       const html = /html/i.test(mime) || /\.html?$/i.test(name);
-      const body = opts.readable && html && a.text.length > 8_000 ? `(The readable text of this web page; scripts and markup removed.)\n${readableHtml(a.text)}` : a.text.slice(0, 120_000);
+      const body =
+        opts.readable && html && a.text.length > 8_000
+          ? `(Attached for reference: the readable text and data of this web page, with scripts and markup removed. Use it to answer; don't rebuild or reprint the page unless asked.)\n${readableHtml(a.text)}`
+          : a.text.slice(0, 120_000);
       total += body.length;
       text += `\n\n<file name="${name}">\n${body}\n</file>`;
       meta.push({ name, mime: mime || "text/plain", size: body.length });

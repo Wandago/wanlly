@@ -101,7 +101,10 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
   const { adFormat, spotAspect } = TOOLS[job.tool];
   // A booked campaign for this slot if there is one, otherwise the tool's house sponsor.
   // Offers that match what this job is about come first (matching happens here, in the browser).
-  const context = `${job.prompt} ${(job.text ?? "").slice(0, 2000)}`;
+  // The reply joins the match only once it's finished and no ad is playing: while a video plays, a
+  // streaming reply must not swap it for another sponsor's (that cut people's ads short).
+  const settled = job.status !== "working" && job.spot !== "playing";
+  const context = settled ? `${job.prompt} ${(job.text ?? "").slice(0, 2000)}` : job.prompt;
   const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", [TOOLS[job.tool].sponsor], context);
   const sponsor = options[(job.id.length + job.prompt.length) % options.length];
   const showCard = job.status === "working" || job.spot === "playing";
