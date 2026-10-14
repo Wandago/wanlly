@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
 import { SupportTab } from "./admin-support";
+import { ComeBackEmails } from "./admin-nudges";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when, Loading } from "./admin-ui";
 import type { FirstTouch } from "@/lib/first-touch";
 import { inviteMessage } from "@/lib/beta-invite";
@@ -292,6 +293,7 @@ function Beta() {
           </p>
         </Card>
       )}
+      <ComeBackEmails />
       <Card
         title="Beta applications"
         note={mailOn ? "Approving lets that email in straight away and emails them the invite from Wanlly's mailbox. Decisions are logged." : "Approving lets that email in straight away. Then send the invite from your own email (or add SMTP_USER and SMTP_PASS in Cloudflare to send it automatically). Decisions are logged."}

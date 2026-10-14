@@ -62,7 +62,7 @@ function session(socket: Socket) {
   return { expect, upgrade, close: () => socket.close().catch(() => {}) };
 }
 
-export async function sendMail({ to, subject, text, html, replyTo }: { to: string; subject: string; text: string; html?: string; replyTo?: string }) {
+export async function sendMail({ to, subject, text, html, replyTo, unsubscribe }: { to: string; subject: string; text: string; html?: string; replyTo?: string; unsubscribe?: string }) {
   const user = process.env.SMTP_USER;
   const pass = process.env.SMTP_PASS;
   if (!user || !pass) throw new Error("Email isn't set up");
@@ -104,6 +104,8 @@ export async function sendMail({ to, subject, text, html, replyTo }: { to: strin
       `Subject: ${header(clean(subject))}`,
       `Date: ${new Date().toUTCString().replace("GMT", "+0000")}`,
       `Message-ID: <${crypto.randomUUID()}@${domain}>`,
+      // One-click unsubscribe, shown by Gmail and others next to the sender (RFC 8058).
+      ...(unsubscribe ? [`List-Unsubscribe: <${clean(unsubscribe)}>`, "List-Unsubscribe-Post: List-Unsubscribe=One-Click"] : []),
       "MIME-Version: 1.0",
       content,
       ".",

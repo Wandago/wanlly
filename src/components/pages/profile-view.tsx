@@ -552,6 +552,7 @@ export function ProfileView() {
                     ["bonusReady", "Your daily bonus is ready", "Push only"],
                     ["weeklySummary", "Weekly summary", "What you built and what it cost"],
                     ["productNews", "Product news", "New models and features, about once a month"],
+                    ["comeBack", "Pick up where you left off", "A reminder about your unfinished work if you've been away a week or more (two at most)"],
                   ] as const
                 ).map(([k, label, detail]) => (
                   <Switch key={k} label={label} detail={detail} on={s.notify[k]} onChange={(v) => save({ notify: { ...s.notify, [k]: v } })} />

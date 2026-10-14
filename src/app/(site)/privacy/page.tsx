@@ -26,6 +26,9 @@ export default function PrivacyPage() {
         <li>To run Wanlly and send your requests to the AI model you choose.</li>
         <li>To pay for it with ads, and to make sure rewards are fair and real.</li>
         <li>To keep accounts safe and stop bots and misuse.</li>
+        <li>
+          To remind you, at most twice after a quiet week, about the project or chat you last worked on (by its name only, never what you wrote), or, if you applied to the beta, that your place is ready. Every email has a one-click unsubscribe, and you can turn them off on your Profile.
+        </li>
       </ul>
       <h2>Who we share it with</h2>
       <p>

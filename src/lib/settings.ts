@@ -5,7 +5,7 @@ import { MODELS, type ToolId } from "./catalog";
 export const AD_TOPICS = ["Learning and courses", "Developer tools", "Laptops and phones", "Jobs and internships", "Money and banking", "Design tools", "Games", "Travel"] as const;
 export const THEMES = ["system", "light", "dark"] as const;
 const TOOLS: ToolId[] = ["chat", "code", "design", "images"];
-const NOTIFY = ["coworkerNeedsOk", "bonusReady", "weeklySummary", "productNews"] as const;
+const NOTIFY = ["coworkerNeedsOk", "bonusReady", "weeklySummary", "productNews", "comeBack"] as const;
 
 export type Theme = (typeof THEMES)[number];
 export type Settings = {
@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   personalisedAds: true,
   memory: true,
   videoSound: false,
-  notify: { coworkerNeedsOk: true, bonusReady: true, weeklySummary: true, productNews: false },
+  notify: { coworkerNeedsOk: true, bonusReady: true, weeklySummary: true, productNews: false, comeBack: true },
 };
 
 const LIVE_MODELS = new Set(MODELS.filter((m) => m.id !== "gpt" && m.id !== "grok").map((m) => m.id));

@@ -34,6 +34,15 @@ const worker = {
     if (!tags || !(res.headers.get("content-type") || "").includes("text/html")) return res;
     return new HTMLRewriter().on("head", { element: (head) => head.append(tags, { html: true }) }).transform(res);
   },
+  // Daily jobs (the cron in wrangler.jsonc): come-back emails. The app decides whether they're on.
+  async scheduled(event, env, ctx) {
+    const secret = env.CRON_SECRET || env.CLERK_SECRET_KEY;
+    if (!secret) return;
+    const req = new Request("https://wanlly.africa/api/cron/nudges", { method: "POST", headers: { authorization: `Bearer ${secret}` } });
+    ctx.waitUntil(
+      site.fetch(req, env, ctx).then(async (r) => console.log("cron nudges", r.status, (await r.text()).slice(0, 300))),
+    );
+  },
 };
 
 export default worker;

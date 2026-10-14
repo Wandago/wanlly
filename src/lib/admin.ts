@@ -37,6 +37,8 @@ export const FLAGS = {
   signupOpen: "",
   /** On: beta applications are approved the moment they arrive and the invite is emailed at once. */
   betaAutoApprove: "",
+  /** On: come-back emails (lib/nudges.ts) go out every day from the Worker's cron. */
+  nudgesAuto: "",
 } as const;
 export type FlagKey = keyof typeof FLAGS;
 
