@@ -178,7 +178,10 @@ function geminiThinking(model: string, fast: boolean) {
   const major = Number(model.match(/^gemini-(\d+)/)?.[1] ?? 0);
   if (major >= 3) return { thinkingLevel: fast ? "minimal" : "low" };
   if (major === 2) return { thinkingBudget: fast ? 0 : 1024 };
-  return null;
+  // Aliases like "gemini-flash-latest" give no version: cap thinking anyway (Gemini counts it
+  // against the reply's length limit, and a big attachment can make it think the whole limit away).
+  // A model that won't take this answers 400 and is asked again without it.
+  return { thinkingBudget: fast ? 512 : 2048 };
 }
 
 /**
@@ -199,16 +202,17 @@ function argoPrice(): { usdIn: number; usdOut: number } | null {
   return i >= 0 && o >= 0 && (i || o) ? { usdIn: i, usdOut: o } : null;
 }
 
-async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true, pinned?: string): AsyncGenerator<ReplyEvent> {
+async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true, pinned?: string, noThinking = false): AsyncGenerator<ReplyEvent> {
   const request = (model: string, thinking: boolean) => {
-    const t = thinking ? geminiThinking(model, fast) : null;
+    const t = thinking && !noThinking ? geminiThinking(model, fast) : null;
+    const off = noThinking && /^gemini-(2\.5|flash)/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
     return JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: turns.map((t) => ({
         role: t.role === "assistant" ? "model" : "user",
         parts: [...(t.files ?? []).map((f) => ({ inlineData: { mimeType: f.mime, data: f.data } })), { text: t.text }],
       })),
-      generationConfig: { maxOutputTokens: maxTokens, ...(t ? { thinkingConfig: t } : {}) },
+      generationConfig: { maxOutputTokens: maxTokens, ...(t ? { thinkingConfig: t } : off) },
     });
   };
   // A busy model gets one more try after a pause, then the next model (or key) is tried. All of
@@ -266,6 +270,7 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   let inputTokens = 0;
   let outputTokens = 0;
   let stop = "end";
+  let wrote = false;
   const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
   let buf = "";
   for (;;) {
@@ -284,7 +289,11 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
       };
       if (chunk.promptFeedback?.blockReason) stop = "refusal";
       const cand = chunk.candidates?.[0];
-      for (const part of cand?.content?.parts ?? []) if (part.text && !part.thought) yield { type: "text", text: part.text };
+      for (const part of cand?.content?.parts ?? [])
+        if (part.text && !part.thought) {
+          wrote = true;
+          yield { type: "text", text: part.text };
+        }
       if (cand?.finishReason) stop = cand.finishReason === "MAX_TOKENS" ? "max_tokens" : cand.finishReason === "STOP" ? "end" : "refusal";
       if (chunk.usageMetadata) {
         inputTokens = chunk.usageMetadata.promptTokenCount ?? inputTokens;
@@ -292,6 +301,9 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
       }
     }
   }
+  // It thought until the limit and wrote nothing: once more, without thinking, before anyone
+  // sees "hit its length limit" on an empty reply.
+  if (!wrote && stop === "max_tokens" && !noThinking && !signal.aborted) return yield* gemini(system, turns, maxTokens, signal, fast, pinned, true);
   yield { type: "done", inputTokens, outputTokens, stop };
 }
 
