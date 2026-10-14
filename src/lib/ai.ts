@@ -38,6 +38,7 @@ export function providers(): Providers {
   return {
     anthropic: !!process.env.ANTHROPIC_API_KEY,
     google,
+    argo: !!argoModel(),
     nvidia,
     xai: !!process.env.XAI_API_KEY,
     deepseek: !!process.env.DEEPSEEK_API_KEY,
@@ -48,7 +49,7 @@ export function providers(): Providers {
 
 /** Model cost in US dollars for one reply. Gemini and the NVIDIA-hosted models run on free tiers for now, so they're 0. */
 export function replyCostUsd(modelId: string, inputTokens: number, outputTokens: number): number {
-  const c = CLAUDE[modelId] ?? GROK[modelId] ?? DEEPSEEK[modelId];
+  const c = CLAUDE[modelId] ?? GROK[modelId] ?? DEEPSEEK[modelId] ?? (modelId === "gemini-argo" ? argoPrice() : null);
   return c ? (inputTokens * c.usdIn + outputTokens * c.usdOut) / 1e6 : 0;
 }
 
@@ -180,7 +181,25 @@ function geminiThinking(model: string, fast: boolean) {
   return null;
 }
 
-async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true): AsyncGenerator<ReplyEvent> {
+/**
+ * Gemini Argo: one specific Google model, named exactly as Google lists it, in GEMINI_ARGO_MODEL
+ * (e.g. "gemini-argo-preview"). It uses GEMINI_ARGO_KEY when set (a paid key, say), otherwise the
+ * Gemini keys. Optional GEMINI_ARGO_PRICE ("1.25,10": US$ per million input and output tokens)
+ * lets Admin count what it costs.
+ */
+export function argoModel(): string {
+  return (process.env.GEMINI_ARGO_MODEL ?? "").trim().replace(/^models\//, "");
+}
+function argoKeys(): string[] {
+  const own = (process.env.GEMINI_ARGO_KEY ?? "").trim();
+  return own ? [own] : geminiKeys();
+}
+function argoPrice(): { usdIn: number; usdOut: number } | null {
+  const [i, o] = (process.env.GEMINI_ARGO_PRICE ?? "").split(",").map(Number);
+  return i >= 0 && o >= 0 && (i || o) ? { usdIn: i, usdOut: o } : null;
+}
+
+async function* gemini(system: string, turns: Turn[], maxTokens: number, signal: AbortSignal, fast = true, pinned?: string): AsyncGenerator<ReplyEvent> {
   const request = (model: string, thinking: boolean) => {
     const t = thinking ? geminiThinking(model, fast) : null;
     return JSON.stringify({
@@ -196,7 +215,8 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   // this happens before any words arrive, so the person only sees a slightly longer wait.
   // Models that recently timed out or were overloaded go to the back of the line for a while;
   // ones whose quota is used up are skipped until it resets.
-  const options = await geminiTries(5);
+  // A pinned model (Gemini Argo) is tried on each of its keys only: never swapped for Flash.
+  const options = pinned ? argoKeys().map((key, k) => ({ key, model: pinned, slot: `argo${k}:${pinned}` })) : await geminiTries(5);
   const tries = options.length ? [options[0], ...options].slice(0, 5) : [];
   let res: Response | null = null;
   let error: ProviderError | null = null;
@@ -240,7 +260,7 @@ async function* gemini(system: string, turns: Turn[], maxTokens: number, signal:
   }
   if (!res?.body) {
     // Gemini is used up or busy: the other free hosts take it, when there are any.
-    if (!signal.aborted && hasPool() && !turns.some((t) => t.files?.length)) return yield* pool(system, turns, maxTokens, signal, false);
+    if (!pinned && !signal.aborted && hasPool() && !turns.some((t) => t.files?.length)) return yield* pool(system, turns, maxTokens, signal, false);
     throw error ?? new ProviderError(tries.length ? "failed" : "busy", tries.length ? "" : "Every Gemini key has used today's free quota");
   }
   let inputTokens = 0;
@@ -1055,6 +1075,7 @@ export async function checkProviders() {
   const signal = AbortSignal.timeout(20_000);
   for (const [provider, modelId] of [
     ["google", "gemini-flash"],
+    ["argo", "gemini-argo"],
     ["anthropic", "haiku"],
     ["nvidia", "glm-flash"],
     ["xai", "grok"],
@@ -1070,6 +1091,8 @@ export async function checkProviders() {
     let model =
       provider === "google"
         ? (await geminiModels(geminiKeys()[0])).join(" → ")
+        : provider === "argo"
+          ? argoModel()
         : provider === "nvidia"
           ? await nvidiaModel(modelId)
           : provider === "xai"
@@ -1107,6 +1130,11 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
   const max = MAX_OUTPUT[opts.tool === "code" || opts.tool === "design" ? opts.tool : "chat"];
   // Models the catalog lists as coming soon (no provider) never run, whatever keys are set.
   if (!MODELS.find((m) => m.id === opts.modelId)?.provider) throw new ProviderError("unavailable");
+  if (opts.modelId === "gemini-argo") {
+    const model = argoModel();
+    if (!model || !argoKeys().length) throw new ProviderError("unavailable");
+    return gemini(opts.system, opts.turns, max, opts.signal, opts.tool === "chat", model);
+  }
   if (opts.modelId === "gemini-flash") {
     if (!geminiKeys().length) throw new ProviderError("unavailable");
     return gemini(opts.system, opts.turns, max, opts.signal, opts.tool === "chat");
