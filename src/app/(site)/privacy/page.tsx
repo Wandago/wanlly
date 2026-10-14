@@ -27,8 +27,10 @@ export default function PrivacyPage() {
         <li>To pay for it with ads, and to make sure rewards are fair and real.</li>
         <li>To keep accounts safe and stop bots and misuse.</li>
         <li>
-          To remind you, at most twice after a quiet week, about the project or chat you last worked on (by its name only, never what you wrote), or, if you applied to the beta, that your place is ready. Every email has a one-click unsubscribe, and you can turn them off on your Profile.
+          To remind you, at most twice after a few quiet days, about the project or chat you last worked on (by its name only, never what you wrote), or, if you applied to the beta, that your place is ready. Every email has a one-click unsubscribe, and you can turn them off on your Profile.
         </li>
+        <li>To tell you about big launches and important updates (Product news), a few times a year. Turn it off on your Profile or with the unsubscribe link.</li>
+        <li>To reply to questions you send us. When instant replies are on, the first reply may include a short answer written by Wanlly&apos;s AI from facts about Wanlly; a person still reads every message.</li>
       </ul>
       <h2>Who we share it with</h2>
       <p>

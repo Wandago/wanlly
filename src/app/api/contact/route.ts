@@ -1,4 +1,7 @@
+import { after } from "next/server";
 import { alertTeam } from "@/lib/alerts";
+import { autoReply, ensureMessageColumns } from "@/lib/auto-reply";
+import { rawSql } from "@/db";
 import { SITE_URL } from "@/lib/site";
 import { db, schema } from "@/db";
 import { field, isEmail, smallJson } from "@/lib/forms";
@@ -18,7 +21,14 @@ export async function POST(req: Request) {
   const topic = TOPICS.includes(field(data, "topic", 40)) ? field(data, "topic", 40) : "General";
   if (!name || !isEmail(email) || message.length < 5) return Response.json({ error: "Please add your name, a valid email and a message." }, { status: 422 });
   try {
-    await db().insert(schema.contactMessages).values({ name, email, topic, message, networkCountry: req.headers.get("cf-ipcountry") });
+    const [row] = await db().insert(schema.contactMessages).values({ name, email, topic, message, networkCountry: req.headers.get("cf-ipcountry") }).returning({ id: schema.contactMessages.id });
+    // The instant reply (when switched on) goes out after the response, and is kept for Admin.
+    after(async () => {
+      const sent = await autoReply({ to: email, name, topic, question: message });
+      if (sent === null) return;
+      await ensureMessageColumns();
+      await rawSql()`update contact_messages set auto_reply = ${sent || "(acknowledgement only)"} where id = ${row.id}`;
+    });
     await alertTeam("contact", `${name} · ${topic}`, [email, message.slice(0, 1200)], { link: `${SITE_URL}/admin#messages` });
     return Response.json({ ok: true });
   } catch (e) {

@@ -9,8 +9,9 @@
 		"binding": "ASSETS"
 	},
 	"observability": { "enabled": true },
-	// Daily at 07:15 UTC (10:15 in Nairobi): come-back emails (workers/site/entry.js → /api/cron/nudges).
-	"triggers": { "crons": ["15 7 * * *"] },
+	// Hourly (workers/site/entry.js → /api/cron/nudges): announcement batches every run, and come-back
+	// emails in the 07:05 UTC run (10:05 in Nairobi).
+	"triggers": { "crons": ["5 * * * *"] },
 	// Keep the variables set in the Cloudflare dashboard on every deploy; without this, each deploy
 	// deletes the plain-text ones (secrets are always kept).
 	"keep_vars": true

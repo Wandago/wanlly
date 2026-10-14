@@ -9,7 +9,7 @@ import { SITE_URL } from "./site";
  * Come-back emails ("nudges"):
  *  - beta1 / beta2: approved beta applicants who never created their account (2 and 7+ days after
  *    approval), mentioning what they said they wanted to build.
- *  - idle7 / idle21: people who stopped using Wanlly, about the project or chat they last worked
+ *  - idle3 / idle10: people who stopped using Wanlly (3 and 10+ days quiet), about the project or chat they last worked
  *    on (its name or title only, never what they wrote), or ideas to start with if they never did.
  * Each person gets at most two per quiet spell; using Wanlly again starts a new spell. Anyone can
  * unsubscribe in one click, and account holders can turn them off on their Profile page.
@@ -17,7 +17,7 @@ import { SITE_URL } from "./site";
  * on, or by hand from that card.
  */
 
-export type NudgeKind = "beta1" | "beta2" | "idle7" | "idle21";
+export type NudgeKind = "beta1" | "beta2" | "idle3" | "idle10";
 export type Nudge = { kind: NudgeKind; email: string; userId: string | null; ref: string; subject: string; text: string; html: string };
 
 const DAY = 86_400_000;
@@ -100,18 +100,18 @@ function betaEmail(stage: 1 | 2, a: { name: string; email: string; build: string
 
 type Last = { tool: string | null; kind?: string | null; projectId: number | null; title: string | null; credits: number };
 
-function idleEmail(stage: 7 | 21, u: { name: string | null; email: string }, last: Last) {
+function idleEmail(stage: 3 | 10, u: { name: string | null; email: string }, last: Last) {
   const name = firstName(u.name, u.email);
   const hi = name ? `${name}, ` : "";
-  const kind = stage === 7 ? "idle7" : "idle21";
+  const kind = stage === 3 ? "idle3" : "idle10";
   const title = quotable(last.title);
   const credits = last.credits > 0 ? `You still have **${last.credits} credits** waiting.` : "Your first ad each day gives you a bonus to start with.";
   const open = (path: string, label: string) => ({ label, url: `${SITE_URL}${path}` });
 
   if (title && last.projectId && last.tool === "code" && last.kind === "build")
-    return render(kind, u.email, stage === 7 ? `${hi}“${title}” is waiting for you` : `Ready to put “${title}” online?`, {
+    return render(kind, u.email, stage === 3 ? `${hi}“${title}” is waiting for you` : `Ready to put “${title}” online?`, {
       preview: "It's saved exactly where you left it. Publish it in one click.",
-      heading: stage === 7 ? `Ready to finish “${title}”?` : `“${title}” could be live today`,
+      heading: stage === 3 ? `Ready to finish “${title}”?` : `“${title}” could be live today`,
       paragraphs: [
         `You started **${title}** on Wanlly. It's saved exactly where you left it.`,
         "Most people finish with three small steps: add their real details, press Publish, and share the link. When friends join Wanlly from your app, you both get 20 credits.",
@@ -120,14 +120,14 @@ function idleEmail(stage: 7 | 21, u: { name: string | null; email: string }, las
       button: open(`/build/${last.projectId}`, `Open ${title.length > 28 ? "your app" : title}`),
     });
   if (title && last.projectId && last.tool === "design")
-    return render(kind, u.email, stage === 7 ? `${hi}your design “${title}” is one tweak away` : `Want another version of “${title}”?`, {
+    return render(kind, u.email, stage === 3 ? `${hi}your design “${title}” is one tweak away` : `Want another version of “${title}”?`, {
       preview: "Ask for a change in plain words, then download it.",
       heading: `Back to “${title}”?`,
       paragraphs: [`Your design **${title}** is saved. Ask for any change in plain words ("bigger title", "make it orange", "add the date"), then download it to share.`, credits],
       button: open(`/design/${last.projectId}`, "Open your design"),
     });
   if (title)
-    return render(kind, u.email, stage === 7 ? `${hi}still working on “${title}”?` : `Take “${title}” further`, {
+    return render(kind, u.email, stage === 3 ? `${hi}still working on “${title}”?` : `Take “${title}” further`, {
       preview: "Pick up where you left off, or turn it into something you can share.",
       heading: `Still working on “${title}”?`,
       paragraphs: [
@@ -136,7 +136,7 @@ function idleEmail(stage: 7 | 21, u: { name: string | null; email: string }, las
       ],
       button: open("/app", "Continue on Wanlly"),
     });
-  return render(kind, u.email, stage === 7 ? `${hi}your first build takes two minutes` : "Three things to make on Wanlly this week", {
+  return render(kind, u.email, stage === 3 ? `${hi}your first build takes two minutes` : "Three things to make on Wanlly this week", {
     preview: "A website, a poster or a study plan, free.",
     heading: "Not sure where to start?",
     paragraphs: [
@@ -175,7 +175,7 @@ export async function dueNudges(limit = 200): Promise<Nudge[]> {
     else if (!b.beta2 && now - ms(b.reviewed_at) >= 7 * DAY && now - ms(b.beta1) >= 5 * DAY) out.push({ kind: "beta2", email: b.email, userId: null, ref: "beta2", ...betaEmail(2, b) });
   }
 
-  // Accounts quiet for a week or more (but not long gone), who haven't turned these off.
+  // Accounts quiet for 3 days or more (but not long gone), who haven't turned these off.
   const idle = (await q`
     with act as (
       select u.id, u.name, lower(u.email) as email,
@@ -192,19 +192,19 @@ export async function dueNudges(limit = 200): Promise<Nudge[]> {
       (select row_to_json(p) from (select id, name, tool, kind from projects where owner_id = a.id and deleted_at is null order by updated_at desc limit 1) p) as project,
       (select title from conversations where user_id = a.id and title <> 'New chat' order by created_at desc limit 1) as chat
     from act a
-    where a.last_active < now() - interval '7 days' and a.last_active > now() - interval '60 days'
+    where a.last_active < now() - interval '3 days' and a.last_active > now() - interval '60 days'
     order by a.last_active desc
     limit ${limit}`) as { id: string; name: string | null; email: string; last_active: string | Date; credits: number; project: { id: number; name: string; tool: string; kind: string | null } | null; chat: string | null }[];
   if (idle.length) {
     const refs = (await q`select email, ref, sent_at from email_nudges where email = any(${idle.map((i) => i.email)}) and ref like 'idle%'`) as { email: string; ref: string; sent_at: string | Date }[];
     for (const u of idle) {
       const spell = new Date(u.last_active).toISOString().slice(0, 10);
-      const sent7 = refs.find((r) => r.email === u.email && r.ref === `idle7:${spell}`);
-      const sent21 = refs.some((r) => r.email === u.email && r.ref === `idle21:${spell}`);
+      const first = refs.find((r) => r.email === u.email && r.ref === `idle3:${spell}`);
+      const second = refs.some((r) => r.email === u.email && r.ref === `idle10:${spell}`);
       const quietDays = (now - ms(u.last_active)) / DAY;
       const last: Last = u.project ? { tool: u.project.tool, kind: u.project.kind, projectId: u.project.id, title: u.project.name, credits: u.credits } : { tool: "chat", projectId: null, title: u.chat, credits: u.credits };
-      if (!sent7) out.push({ kind: "idle7", email: u.email, userId: u.id, ref: `idle7:${spell}`, ...idleEmail(7, u, last) });
-      else if (!sent21 && quietDays >= 21 && now - ms(sent7.sent_at) >= 10 * DAY) out.push({ kind: "idle21", email: u.email, userId: u.id, ref: `idle21:${spell}`, ...idleEmail(21, u, last) });
+      if (!first) out.push({ kind: "idle3", email: u.email, userId: u.id, ref: `idle3:${spell}`, ...idleEmail(3, u, last) });
+      else if (!second && quietDays >= 10 && now - ms(first.sent_at) >= 6 * DAY) out.push({ kind: "idle10", email: u.email, userId: u.id, ref: `idle10:${spell}`, ...idleEmail(10, u, last) });
     }
   }
   return out;

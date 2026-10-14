@@ -34,7 +34,7 @@ const worker = {
     if (!tags || !(res.headers.get("content-type") || "").includes("text/html")) return res;
     return new HTMLRewriter().on("head", { element: (head) => head.append(tags, { html: true }) }).transform(res);
   },
-  // Daily jobs (the cron in wrangler.jsonc): come-back emails. The app decides whether they're on.
+  // Hourly jobs (the cron in wrangler.jsonc): announcement batches and, once a day, come-back emails.
   async scheduled(event, env, ctx) {
     const secret = env.CRON_SECRET || env.CLERK_SECRET_KEY;
     if (!secret) return;

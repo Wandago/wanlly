@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   personalisedAds: true,
   memory: true,
   videoSound: false,
-  notify: { coworkerNeedsOk: true, bonusReady: true, weeklySummary: true, productNews: false, comeBack: true },
+  notify: { coworkerNeedsOk: true, bonusReady: true, weeklySummary: true, productNews: true, comeBack: true },
 };
 
 const LIVE_MODELS = new Set(MODELS.filter((m) => m.id !== "gpt" && m.id !== "grok").map((m) => m.id));

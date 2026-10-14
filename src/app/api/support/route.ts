@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { autoReply } from "@/lib/auto-reply";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { field, smallJson } from "@/lib/forms";
@@ -58,6 +60,7 @@ export async function POST(req: Request) {
     const [ticket] = await d.insert(t).values({ userId, email: me?.email ?? null, subject, category, page }).returning();
     await d.insert(m).values({ ticketId: ticket.id, authorId: userId, body });
     await notifyTeam({ id: ticket.id, subject, category, email: ticket.email, body });
+    if (ticket.email) after(() => autoReply({ to: ticket.email!, name: "", topic: category, question: `${subject}\n\n${body}`, ticket: ticket.id }).then(() => {}));
     return Response.json({ ticket });
   } catch (e) {
     console.error("support POST failed", e);

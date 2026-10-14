@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Card, Chip, api, btnDark, btnGhost } from "./admin-ui";
 
-type Due = { kind: "beta1" | "beta2" | "idle7" | "idle21"; email: string; subject: string; text: string; html: string };
+type Due = { kind: "beta1" | "beta2" | "idle3" | "idle10"; email: string; subject: string; text: string; html: string };
 type Data = { auto: boolean; mailReady: boolean; perRun: number; stats: { sent30: Record<string, number>; optouts: number }; due: Due[] };
 
 const KIND: Record<Due["kind"], string> = {
   beta1: "Beta: approved, no account (1st)",
   beta2: "Beta: approved, no account (last)",
-  idle7: "Quiet 7+ days",
-  idle21: "Quiet 21+ days",
+  idle3: "Quiet 3+ days",
+  idle10: "Quiet 10+ days",
 };
 
 /** Admin → Beta: come-back emails (lib/nudges.ts). See who's due, read each email, send now or daily. */
@@ -30,7 +30,7 @@ export function ComeBackEmails() {
 
   const flip = async () => {
     if (!data) return;
-    const reason = window.prompt(data.auto ? "Stop sending come-back emails every day? Give a reason for the log." : "Send come-back emails automatically every day at 10:15 Nairobi time? Give a reason for the log.");
+    const reason = window.prompt(data.auto ? "Stop sending come-back emails every day? Give a reason for the log." : "Send come-back emails automatically every day at 10:05 Nairobi time? Give a reason for the log.");
     if (!reason) return;
     try {
       await api("/api/admin/flags", "POST", { key: "nudgesAuto", on: !data.auto, reason });
@@ -57,7 +57,7 @@ export function ComeBackEmails() {
   return (
     <Card
       title="Come-back emails"
-      note="Approved applicants who never made an account get up to two reminders (mentioning what they said they'd build). People quiet for a week get up to two notes about the project or chat they last worked on: its name only, never what they wrote; sensitive topics are left out. One-click unsubscribe; turned off per person on their Profile."
+      note="Approved applicants who never made an account get up to two reminders (mentioning what they said they'd build). People quiet for 3 days get up to two notes (day 3 and day 10) about the project or chat they last worked on: its name only, never what they wrote; sensitive topics are left out. One-click unsubscribe; turned off per person on their Profile."
       actions={
         data && (
           <span className="flex gap-2">
@@ -76,7 +76,7 @@ export function ComeBackEmails() {
       ) : (
         <div className="flex flex-col gap-3">
           <p className="flex flex-wrap items-center gap-2 text-[13px]">
-            <Chip s={data.auto ? "active" : "pending"} label={data.auto ? "Daily at 10:15 Nairobi" : "Manual"} />
+            <Chip s={data.auto ? "active" : "pending"} label={data.auto ? "Daily at 10:05 Nairobi" : "Manual"} />
             <span className="text-muted">
               {data.due.length} due now · {sent} sent in 30 days · {data.stats.optouts} unsubscribed
             </span>

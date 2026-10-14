@@ -7,6 +7,7 @@ import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
 import { SupportTab } from "./admin-support";
 import { ComeBackEmails } from "./admin-nudges";
+import { Announcements } from "./admin-announcements";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when, Loading } from "./admin-ui";
 import type { FirstTouch } from "@/lib/first-touch";
 import { inviteMessage } from "@/lib/beta-invite";
@@ -17,7 +18,7 @@ type Tab = "overview" | "traffic" | "ads" | "advertisers" | "abuse" | "users" | 
 type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused" | "visitorsToday" | "viewsToday" | "adViewsToday" | "revenueToday" | "costToday", number>;
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
 type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string; channel?: string | null; firstTouch?: FirstTouch | null };
-type Message = { id: number; name: string; email: string; topic: string; message: string; networkCountry: string | null; handledAt: string | null; createdAt: string };
+type Message = { id: number; name: string; email: string; topic: string; message: string; networkCountry: string | null; handledAt: string | null; createdAt: string; autoReply: string | null; reply: string | null; repliedAt: string | null };
 type User = { id: string; email: string | null; name: string | null; country: string | null; role: string; status: string; createdAt: string; credits: number; spentToday: number; lastActive: string | null };
 
 /** Hook for a list that reloads when its query changes and can be patched locally after an action. */
@@ -294,6 +295,7 @@ function Beta() {
         </Card>
       )}
       <ComeBackEmails />
+      <Announcements />
       <Card
         title="Beta applications"
         note={mailOn ? "Approving lets that email in straight away and emails them the invite from Wanlly's mailbox. Decisions are logged." : "Approving lets that email in straight away. Then send the invite from your own email (or add SMTP_USER and SMTP_PASS in Cloudflare to send it automatically). Decisions are logged."}
@@ -378,8 +380,49 @@ function Beta() {
 
 function Messages() {
   const [show, setShow] = useState<"open" | "handled" | "all">("open");
-  const { items, setItems, error } = useList<Message>(`/api/admin/messages?show=${show}`, "messages");
+  const { items, setItems, extra, error } = useList<Message>(`/api/admin/messages?show=${show}`, "messages");
   const [note, setNote] = useState("");
+  const [autoState, setAuto] = useState<boolean | null>(null);
+  const isAuto = autoState ?? extra.autoReply === true;
+  // The reply being written, per message, and which one is drafting with AI.
+  const [drafts, setDrafts] = useState<Record<number, string>>({});
+  const [busy, setBusy] = useState<number | null>(null);
+  const flipAuto = async () => {
+    const reason = window.prompt(isAuto ? "Stop instant replies to questions? Give a reason for the log." : "Reply to every question instantly (with an AI answer from Wanlly's facts where it can)? Give a reason for the log.");
+    if (!reason) return;
+    try {
+      await api("/api/admin/flags", "POST", { key: "autoReply", on: !isAuto, reason });
+      setAuto(!isAuto);
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
+  const draft = async (m: Message) => {
+    setBusy(m.id);
+    try {
+      const { draft } = await api<{ draft: string }>(`/api/admin/messages/${m.id}/draft`, "POST");
+      setDrafts((d) => ({ ...d, [m.id]: draft }));
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+  const send = async (m: Message) => {
+    const text = drafts[m.id]?.trim();
+    if (!text) return;
+    setBusy(m.id);
+    try {
+      await api(`/api/admin/messages/${m.id}/reply`, "POST", { text });
+      setItems((xs) => (xs ?? []).map((x) => (x.id === m.id ? { ...x, reply: text, repliedAt: new Date().toISOString(), handledAt: x.handledAt ?? new Date().toISOString() } : x)));
+      setDrafts((d) => ({ ...d, [m.id]: "" }));
+      setNote(`✓ Reply sent to ${m.email}.`);
+    } catch (e) {
+      setNote((e as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const mark = async (m: Message, handled: boolean) => {
     setNote("");
@@ -396,8 +439,12 @@ function Messages() {
   return (
     <Card
       title="Messages"
-      note="From the contact page. Reply from your own email, then mark it handled."
+      note={isAuto ? "From the contact page. Instant replies are on: each sender gets a thank-you, with a short answer from Wanlly's facts where it can (shown under the message). Reply here to follow up." : "From the contact page. Reply here (it goes from Wanlly's mailbox), or turn on instant replies."}
       actions={
+        <span className="flex flex-wrap items-center gap-2">
+        <button type="button" className={isAuto ? btnGhost : btnDark} onClick={flipAuto}>
+          {isAuto ? "Stop instant replies" : "Reply instantly"}
+        </button>
         <Pills
           label="Show"
           value={show}
@@ -408,9 +455,10 @@ function Messages() {
             ["all", "All"],
           ]}
         />
+        </span>
       }
     >
-      {note && <p className="text-[13px] text-bad">{note}</p>}
+      {note && <p className={`text-[13px] ${note.startsWith("✓") ? "text-good" : "text-bad"}`}>{note}</p>}
       {error ? (
         <Empty>{error}</Empty>
       ) : !items ? (
@@ -433,11 +481,46 @@ function Messages() {
                   {when(m.createdAt)}
                   {m.networkCountry && ` · network ${m.networkCountry}`}
                 </small>
+                {m.autoReply && (
+                  <details className="mt-2 rounded-lg bg-hover px-3 py-2 text-[13px]">
+                    <summary className="cursor-pointer text-muted">Instant reply sent</summary>
+                    <p className="mt-1 whitespace-pre-wrap">{m.autoReply}</p>
+                  </details>
+                )}
+                {m.reply && (
+                  <details className="mt-2 rounded-lg border border-line px-3 py-2 text-[13px]">
+                    <summary className="cursor-pointer text-muted">You replied {m.repliedAt ? when(m.repliedAt) : ""}</summary>
+                    <p className="mt-1 whitespace-pre-wrap">{m.reply}</p>
+                  </details>
+                )}
+                {drafts[m.id] !== undefined && (
+                  <div className="mt-2 flex flex-col gap-2">
+                    <textarea
+                      className="min-h-[140px] w-full rounded-lg border border-line bg-bg px-3 py-2 text-[13px] outline-none focus:border-fg"
+                      value={drafts[m.id]}
+                      onChange={(e) => setDrafts((d) => ({ ...d, [m.id]: e.target.value }))}
+                      placeholder={`Hi ${m.name.split(" ")[0]},`}
+                    />
+                    <div className="flex flex-wrap gap-1.5">
+                      <button type="button" className={btnDark} disabled={busy === m.id || !drafts[m.id]?.trim()} onClick={() => send(m)}>
+                        {busy === m.id ? "Working…" : "Send reply"}
+                      </button>
+                      <button type="button" className={btnGhost} disabled={busy === m.id} onClick={() => draft(m)}>
+                        Draft with AI
+                      </button>
+                      <a href={reply(m)} className={btnGhost}>
+                        Use my email app
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-wrap gap-1.5">
-                <a href={reply(m)} className={btnDark}>
-                  Reply
-                </a>
+                {drafts[m.id] === undefined && (
+                  <button type="button" className={btnDark} onClick={() => setDrafts((d) => ({ ...d, [m.id]: `Hi ${m.name.split(" ")[0]},\n\n` }))}>
+                    Reply
+                  </button>
+                )}
                 <button type="button" className={btnGhost} onClick={() => mark(m, !m.handledAt)}>
                   {m.handledAt ? "Reopen" : "Mark handled"}
                 </button>

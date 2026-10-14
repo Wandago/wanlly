@@ -39,6 +39,8 @@ export const FLAGS = {
   betaAutoApprove: "",
   /** On: come-back emails (lib/nudges.ts) go out every day from the Worker's cron. */
   nudgesAuto: "",
+  /** On: questions from the contact page and new support tickets get an instant reply (lib/auto-reply.ts). */
+  autoReply: "",
 } as const;
 export type FlagKey = keyof typeof FLAGS;
 
