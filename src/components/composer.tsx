@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useGithubConnect } from "./github-connect";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, getModel } from "@/lib/catalog";
+import { BIG_FILE_CHARS, CHEAPEST_MODEL_ID, SPOT_SPONSOR, TOOLS, TOOL_ORDER, bigFilePick, getModel } from "@/lib/catalog";
+import type { Attachment } from "@/lib/attach";
 import { isConnected, useReward, useWorkspace } from "@/lib/workspace-store";
 import { replyParts } from "@/lib/followups";
 import { Icon } from "./icon";
@@ -77,6 +78,37 @@ function Gate() {
         </>
       )}
     </div>
+  );
+}
+
+/**
+ * A big file on a lighter model: suggests the strongest connected model for reading it, with the
+ * price difference, once per file set. Lighter models tend to drift or invent details on long files.
+ */
+function BigFileHint({ items }: { items: Attachment[] }) {
+  const { modelId, providers, tool, dispatch } = useWorkspace();
+  const [dismissed, setDismissed] = useState("");
+  const key = items.map((f) => f.id).join(",");
+  const size = items.reduce((n, f) => n + (f.text?.length ?? 0) + (f.mime === "application/pdf" ? ((f.data?.length ?? 0) * 3) / 4 : 0), 0);
+  const pick = size >= BIG_FILE_CHARS && tool !== "images" ? bigFilePick(modelId, providers) : null;
+  if (!pick || dismissed === key) return null;
+  const now = getModel(modelId);
+  const extra = pick.model.credits - now.credits;
+  return (
+    <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl bg-code px-3 py-2 text-[13px] text-muted">
+      <span className="min-w-0 flex-1">
+        <b className="font-medium text-fg">Big file attached.</b> {now.name} can miss or invent details in long files; {pick.model.name} {pick.why}
+        {extra > 0 ? ` (${pick.model.credits} credits a reply instead of ${now.credits}).` : "."}
+      </span>
+      <span className="flex gap-1.5">
+        <button type="button" onClick={() => dispatch({ type: "setModel", modelId: pick.model.id })} className="rounded-lg bg-fg px-2.5 py-1 text-[12.5px] font-medium text-bg">
+          Use {pick.model.name}
+        </button>
+        <button type="button" onClick={() => setDismissed(key)} className="rounded-lg px-2.5 py-1 text-[12.5px] hover:bg-hover">
+          Keep {now.name}
+        </button>
+      </span>
+    </p>
   );
 }
 
@@ -186,6 +218,7 @@ export function Composer({ showSuggestions }: { showSuggestions: boolean }) {
           </p>
         )}
         <AttachmentTray items={files.items} onRemove={files.remove} />
+        {connected && <BigFileHint items={files.items} />}
         <label htmlFor="composer-input" className="sr-only">
           Message
         </label>

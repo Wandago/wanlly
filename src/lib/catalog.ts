@@ -99,6 +99,30 @@ export const CHEAPEST_MODEL_ID = "gemini-flash";
 export type Providers = { anthropic: boolean; google: boolean; argo: boolean; nvidia: boolean; xai: boolean; deepseek: boolean; pool: boolean };
 /** Whether a model can run, given which providers have keys. */
 export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
+/**
+ * Models that read big files carefully, best first, with why. When someone attaches a large file on
+ * a lighter model, the composer suggests the first of these that's connected (Claude once its key
+ * is added). Any model in this list counts as already strong enough, so no hint shows.
+ */
+const BIG_FILE_PICKS: { id: string; why: string }[] = [
+  { id: "sonnet", why: "reads long files closely and sticks to what's in them" },
+  { id: "opus", why: "reads long files closely and sticks to what's in them" },
+  { id: "gemini-argo", why: "handles long files and careful analysis well" },
+  { id: "kimi", why: "is built for long documents" },
+  { id: "deepseek-pro", why: "reasons carefully over long files" },
+  { id: "glm", why: "handles long files and big tasks well" },
+];
+/** Characters of attached text (or a PDF's bytes) from which the hint shows. */
+export const BIG_FILE_CHARS = 20_000;
+
+export function bigFilePick(modelId: string, p: Providers | null): { model: Model; why: string } | null {
+  if (BIG_FILE_PICKS.some((x) => x.id === modelId)) return null;
+  for (const x of BIG_FILE_PICKS) {
+    const m = MODELS.find((y) => y.id === x.id);
+    if (m && isLive(m, p)) return { model: m, why: x.why };
+  }
+  return null;
+}
 export const IMAGE_MODEL_NAME = "Gemini Image";
 /** Bonus credits for the first video each day (about $0.04). Every later video earns SPOT_REWARD. */
 export const FLOOR_CREDITS = 8;
