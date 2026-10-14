@@ -30,7 +30,10 @@ const SYSTEM: Record<"chat" | "code", string> = {
     "lists when they help, and fenced code blocks with a language tag. Many people read on a phone, so keep lines short. " +
     "If they ask you to build a web page or small browser app, give one complete self-contained HTML file in a ```html " +
     "block; Wanlly previews it beside the chat and lets them download it. Only build what they asked for; if they mean existing " +
-    "code or a repository you haven't seen, ask for it instead of inventing it." +
+    "code or a repository you haven't seen, ask for it instead of inventing it. " +
+    "When they attach files (a page, document, image or data), build your answer on what's in them: use their real names, products, prices and wording, and say which parts you used. " +
+    "When they ask for something for their own business, product or audience (emails, posts, plans, copy), make it specific to what they've told you or shared, in this chat or their files; " +
+    "if you know too little to do that, ask one short question first rather than giving generic advice. Don't recommend third-party tools or services unless they ask for them." +
     " Wanlly can save their code to GitHub for them: if they ask to push, upload or save to GitHub (or share a repository link), don't give git commands. Tell them to press \"Save to GitHub\" under your reply: Wanlly connects their GitHub and saves the files to the repository they name or link. Never ask for passwords or tokens.",
   code:
     "You are the coding assistant in Wanlly, a free AI workspace for students and independent creators. Write complete, " +
@@ -65,7 +68,7 @@ export async function POST(req: Request) {
 
   const data = await jsonUpTo(req, MAX_BODY);
   if (!data) return Response.json({ error: "That's too much to send at once. Attach smaller or fewer files." }, { status: 413 });
-  const attached = readAttachments(data.attachments);
+  const attached = readAttachments(data.attachments, { readable: data.tool === "chat" });
   if (!attached) return Response.json({ error: "Those files can't be sent. Use images, PDFs or text files, up to 4 at a time." }, { status: 400 });
   const typed = typeof data.message === "string" ? data.message.trim().slice(0, 6000) : "";
   // A message can be just files; the model still needs a sentence to go on.
@@ -145,7 +148,8 @@ export async function POST(req: Request) {
     await release(userId, price, ref).catch(() => {});
     return Response.json({ error: SAY.busy }, { status: 503 });
   }
-  turns.push({ role: "user", text: text + attached.text, files: attached.files.map((f) => ({ mime: f.mime, data: f.data })) });
+  // Files first, then what they asked: the question is the last thing the model reads.
+  turns.push({ role: "user", text: attached.text ? `${attached.text.trim()}\n\n${text}` : text, files: attached.files.map((f) => ({ mime: f.mime, data: f.data })) });
   // Providers want turns to alternate and start with the person, so merge any repeats.
   turns = turns.reduce<Turn[]>((acc, t) => {
     const last = acc[acc.length - 1];
