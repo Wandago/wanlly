@@ -235,10 +235,14 @@ export function zipFiles(files: { name: string; code: string }[]): Blob {
  */
 const STORAGE_SHIM = `<script>(function(){function mem(){var d={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(d,k)?d[k]:null},setItem:function(k,v){d[k]=String(v)},removeItem:function(k){delete d[k]},clear:function(){d={}},key:function(i){return Object.keys(d)[i]||null},get length(){return Object.keys(d).length}}}["localStorage","sessionStorage"].forEach(function(n){try{window[n].getItem("x")}catch(e){try{Object.defineProperty(window,n,{value:mem(),configurable:true})}catch(_){}}});try{document.cookie}catch(e){var c="";try{Object.defineProperty(document,"cookie",{get:function(){return c},set:function(v){c=String(v).split(";")[0]},configurable:true})}catch(_){}}})()</script>`;
 
-/** The page as the canvas shows it: the project plus the storage stand-ins, first thing in <head>. */
+/** Lets the canvas keep the reader's place: the page reports its scroll and can be told where to scroll. */
+const SCROLL_SHIM = `<script>(function(){var t;addEventListener("scroll",function(){clearTimeout(t);t=setTimeout(function(){parent.postMessage({wanllyScroll:scrollY},"*")},60)},{passive:true});addEventListener("message",function(e){if(e.source===parent&&e.data&&typeof e.data.wanllyScrollTo==="number")scrollTo(0,e.data.wanllyScrollTo)})})()</script>`;
+
+/** The page as the canvas shows it: the project plus the storage and scroll stand-ins, first thing in <head>. */
 export function previewHtml(html: string): string {
   if (!html) return "";
-  if (/<head(\s[^>]*)?>/i.test(html)) return html.replace(/<head(\s[^>]*)?>/i, (m) => m + STORAGE_SHIM);
-  if (/<html(\s[^>]*)?>/i.test(html)) return html.replace(/<html(\s[^>]*)?>/i, (m) => `${m}<head>${STORAGE_SHIM}</head>`);
-  return STORAGE_SHIM + html;
+  const shim = STORAGE_SHIM + SCROLL_SHIM;
+  if (/<head(\s[^>]*)?>/i.test(html)) return html.replace(/<head(\s[^>]*)?>/i, (m) => m + shim);
+  if (/<html(\s[^>]*)?>/i.test(html)) return html.replace(/<html(\s[^>]*)?>/i, (m) => `${m}<head>${shim}</head>`);
+  return shim + html;
 }

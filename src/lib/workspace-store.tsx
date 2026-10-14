@@ -350,6 +350,17 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         }
         const reader = r.body.pipeThrough(new TextDecoderStream()).getReader();
         let buf = "";
+        // Words are shown in small batches (about 12 a second), not one re-render per chunk: a long
+        // code reply re-renders and re-highlights everything written so far each time, which made
+        // the screen stutter while pages were being written.
+        let pendingText = "";
+        let flushTimer: number | null = null;
+        const flush = () => {
+          if (flushTimer !== null) window.clearTimeout(flushTimer);
+          flushTimer = null;
+          if (pendingText) dispatch({ type: "jobText", id, text: pendingText });
+          pendingText = "";
+        };
         for (;;) {
           const { value, done } = await reader.read();
           if (done) break;
@@ -367,19 +378,23 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
               }
             } else if (ev.type === "text") {
               gotText = true;
-              dispatch({ type: "jobText", id, text: ev.text });
+              pendingText += ev.text;
+              flushTimer ??= window.setTimeout(flush, 80);
             } else if (ev.type === "done") {
+              flush();
               dispatch({ type: "jobDone", id, charged: ev.charged, stop: ev.stop });
               window.dispatchEvent(new Event("wanlly:break"));
               const acct = accountFrom(ev);
               if (acct) dispatch(acct);
             } else if (ev.type === "error") {
+              flush();
               dispatch({ type: "jobError", id, message: ev.message });
               const acct = accountFrom(ev);
               if (acct) dispatch(acct);
             }
           }
         }
+        flush();
       } catch (e) {
         const stopped = e instanceof Error && e.name === "AbortError";
         if (stopped && gotText) dispatch({ type: "jobDone", id, charged: live.current.jobs.find((j) => j.id === id)?.credits ?? 0, stop: "interrupted" });

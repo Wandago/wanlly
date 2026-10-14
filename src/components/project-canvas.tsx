@@ -111,6 +111,71 @@ function ServerCard({ job }: { job: Job }) {
   );
 }
 
+/**
+ * Two stacked frames: each new version of the page loads in the hidden one and only takes over once
+ * it has loaded, scrolled to where the reader was. So the preview never blanks or jumps while the
+ * reply is written. Every version is a fresh load, so scripts from a half-written page never linger.
+ */
+function SwapFrame({ html, title }: { html: string; title: string }) {
+  const [docs, setDocs] = useState<[string, string]>([html, ""]);
+  const [front, setFront] = useState(0);
+  const frames = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
+  const scroll = useRef(0);
+  const back = 1 - front;
+
+  // A new version goes into the back frame (unless the front already shows it).
+  const [seen, setSeen] = useState(html);
+  if (html !== seen) {
+    setSeen(html);
+    if (html !== docs[front]) setDocs((d) => (front === 0 ? [d[0], html] : [html, d[1]]));
+  }
+
+  useEffect(() => {
+    const onMessage = (e: MessageEvent) => {
+      const y = (e.data as { wanllyScroll?: unknown } | null)?.wanllyScroll;
+      if (e.source === frames[front].current?.contentWindow && typeof y === "number") scroll.current = y;
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  });
+
+  const latest = useRef(docs);
+  useEffect(() => {
+    latest.current = docs;
+  }, [docs]);
+  const swapTimer = useRef<number | null>(null);
+  useEffect(() => () => void (swapTimer.current && window.clearTimeout(swapTimer.current)), []);
+  const onLoad = (i: number) => {
+    if (i !== back || !docs[i]) return;
+    frames[i].current?.contentWindow?.postMessage({ wanllyScrollTo: scroll.current }, "*");
+    // A frame to let the scroll land before showing it.
+    const loaded = docs[i];
+    if (swapTimer.current) window.clearTimeout(swapTimer.current);
+    swapTimer.current = window.setTimeout(() => {
+      if (latest.current[i] === loaded) setFront(i); // not when a newer version has started loading there
+    }, 50);
+  };
+
+  return (
+    <>
+      {[0, 1].map((i) => (
+        <iframe
+          key={i}
+          ref={frames[i]}
+          title={i === front ? title : undefined}
+          aria-hidden={i !== front || undefined}
+          tabIndex={i === front ? undefined : -1}
+          sandbox="allow-scripts allow-modals allow-forms allow-popups"
+          referrerPolicy="no-referrer"
+          srcDoc={docs[i]}
+          onLoad={() => onLoad(i)}
+          className={`absolute inset-0 h-full w-full bg-white ${i === front ? "z-[1]" : "pointer-events-none opacity-0"}`}
+        />
+      ))}
+    </>
+  );
+}
+
 /** The canvas panel itself, shown when a reply's preview is open. */
 export function ProjectCanvas() {
   const canvas = useCanvas();
@@ -122,7 +187,7 @@ export function ProjectCanvas() {
   const [doc, setDoc] = useState("");
   const streaming = job?.status === "working";
 
-  // While the reply is being written, the preview catches up at most every 1.5 s (a steady pace,
+  // While the reply is being written, the preview catches up at most every 2 s (a steady pace,
   // even when words arrive non-stop). A finished reply shows straight away.
   const latest = useRef("");
   const pending = useRef<number | null>(null);
@@ -136,7 +201,7 @@ export function ProjectCanvas() {
         last.current = Date.now();
         setDoc(latest.current);
       },
-      Math.max(0, 1500 - (Date.now() - last.current)),
+      Math.max(0, 2000 - (Date.now() - last.current)),
     );
   }, [project, streaming]);
   useEffect(
@@ -180,15 +245,7 @@ export function ProjectCanvas() {
       </header>
       <div className="relative min-h-0 flex-1">
         {view === "preview" ? (
-          <iframe
-            // A fresh load when the reply finishes, so scripts that ran on a half-written page start clean.
-            key={`${job.id}:${reload}:${streaming ? "live" : "done"}`}
-            title={`${project.title} preview`}
-            sandbox="allow-scripts allow-modals allow-forms allow-popups"
-            referrerPolicy="no-referrer"
-            srcDoc={shown}
-            className="absolute inset-0 h-full w-full bg-white"
-          />
+          <SwapFrame key={`${job.id}:${reload}`} html={shown} title={`${project.title} preview`} />
         ) : (
           <pre className="absolute inset-0 overflow-auto p-4 font-mono text-[12px] leading-[1.55] whitespace-pre-wrap">{project.html}</pre>
         )}
