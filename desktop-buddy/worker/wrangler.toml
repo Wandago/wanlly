@@ -1,0 +1,7 @@
+name = "wanlly-buddy-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Pick a voice in your ElevenLabs account (Voices → copy the voice ID).
+ELEVENLABS_VOICE_ID = "your-elevenlabs-voice-id"

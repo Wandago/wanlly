@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LSUIElement</key>
+	<true/>
+	<key>WorkerBaseURL</key>
+	<string>https://your-worker-name.your-subdomain.workers.dev</string>
+	<key>WorkerAppToken</key>
+	<string></string>
+	<key>PostHogAPIKey</key>
+	<string></string>
+	<key>EmailSignupURL</key>
+	<string></string>
+	<key>FeedbackURL</key>
+	<string></string>
+	<key>OnboardingVideoURL</key>
+	<string></string>
+	<key>SUFeedURL</key>
+	<string></string>
+	<key>SUPublicEDKey</key>
+	<string></string>
+	<key>VoiceTranscriptionProvider</key>
+	<string>assemblyai</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Wanlly Buddy uses your microphone so you can talk to it</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Wanlly Buddy needs screen recording access to see your screen and help you.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Wanlly Buddy uses speech recognition to transcribe your voice when you talk to it</string>
+</dict>
+</plist>
