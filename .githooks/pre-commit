@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Mechanical gate: nothing is committed while scripts/check.sh fails. See HARNESS.md.
+exec "$(git rev-parse --show-toplevel)/scripts/check.sh"

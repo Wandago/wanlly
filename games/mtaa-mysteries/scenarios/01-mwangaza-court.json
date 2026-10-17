@@ -1,0 +1,945 @@
+{
+  "id": "mwangaza-court",
+  "title": "The Treasurer of Mwangaza Court",
+  "location": "South C, Nairobi",
+  "tone": "Warm neighbourhood drama with a sharp edge",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "An apartment-block harambee for a new water pump ends with the treasurer found in the dark back stairwell.",
+  "contentNotes": [
+    "A fatal fall in a stairwell, not described graphically",
+    "Debt and money worries in a savings group"
+  ],
+  "reviewFlags": [
+    "South C is a real Nairobi neighbourhood; Mwangaza Court and everyone in it are fictional. Check that the rooftop harambee, back stairwell and gate logbook feel true to a mid-size South C block.",
+    "Kiswahili lines ('Nimefika kwa nyumba…', 'Pole, tutaongea kesho') need a native-speaker check for natural phrasing.",
+    "Confirm that live-streaming an estate harambee on Facebook is common enough to be unremarkable."
+  ],
+  "intro": "It's Saturday night on the rooftop of Mwangaza Court, a six-storey block in South C. The residents' committee is holding a [[harambee|community fundraiser]] for a new borehole pump, with pilau, a borrowed sound system and a Facebook live stream for residents who couldn't make it. At 21:10 the treasurer, Grace Achieng' Otieno, slipped downstairs to fetch her receipt book. At 21:35 her nephew found her at the foot of the back stairwell, between the fourth and fifth floors. Grace was alive at 21:15 and had fallen by 21:25. Someone at this harambee knows exactly how she got there.",
+  "victim": {
+    "id": "grace",
+    "name": "Grace Achieng' Otieno",
+    "description": "48, primary school teacher and the committee's treasurer for six years. Precise, generous, and known for keeping every receipt."
+  },
+  "scene": "stairwell",
+  "window": {
+    "from": "21:15",
+    "to": "21:25"
+  },
+  "places": [
+    {
+      "id": "rooftop",
+      "name": "Rooftop (the harambee)"
+    },
+    {
+      "id": "stairwell",
+      "name": "Back stairwell, 4th–5th floor landing"
+    },
+    {
+      "id": "flat4b",
+      "name": "Flat 4B (Grace's flat)",
+      "restricted": true
+    },
+    {
+      "id": "gate",
+      "name": "Gate and askari booth"
+    },
+    {
+      "id": "parking",
+      "name": "Parking yard"
+    },
+    {
+      "id": "kiosk",
+      "name": "Mama Pendo's kiosk, across the road"
+    }
+  ],
+  "routes": [
+    [
+      "rooftop",
+      "stairwell",
+      1
+    ],
+    [
+      "stairwell",
+      "flat4b",
+      1
+    ],
+    [
+      "stairwell",
+      "gate",
+      3
+    ],
+    [
+      "stairwell",
+      "parking",
+      4
+    ],
+    [
+      "gate",
+      "parking",
+      1
+    ],
+    [
+      "gate",
+      "kiosk",
+      3
+    ]
+  ],
+  "characters": [
+    {
+      "id": "brian",
+      "name": "Brian Kiprono",
+      "age": 34,
+      "occupation": "IT support technician",
+      "bio": "Committee chairman. Organised tonight's sound system and the Facebook live stream.",
+      "relation": "Has worked with Grace on the committee for three years.",
+      "secret": "You are three months behind on your own monthly contribution and have been hoping nobody checks.",
+      "goal": "Find out who did this, and keep the committee's reputation intact.",
+      "knowledge": [
+        {
+          "id": "k-brian",
+          "text": "At 20:30 I borrowed Daniel's spare key to the back-stairwell store to bring up extra plastic chairs. It's still in my jacket pocket."
+        }
+      ]
+    },
+    {
+      "id": "wambui",
+      "name": "Wambui Kamau",
+      "age": 29,
+      "occupation": "Nurse",
+      "bio": "Committee secretary and tonight's MC. Listens to true-crime podcasts on night shifts.",
+      "relation": "Grace was her mentor when she first moved into the block.",
+      "secret": "You have accepted a nursing job in the UK and fly in six weeks. You haven't told the committee you are leaving your post.",
+      "goal": "Make sure the right person is named. Keep your move abroad quiet until you choose to share it.",
+      "knowledge": [
+        {
+          "id": "k-wambui",
+          "text": "I was on the mic from about 21:05 until 21:36, running the pledge count, and Faith was dancing by the speakers the whole time. I reached Grace at 21:37, and I could tell she had fallen some minutes earlier.",
+          "facts": [
+            {
+              "char": "faith",
+              "place": "rooftop",
+              "from": "21:05",
+              "to": "21:30"
+            },
+            {
+              "char": "wambui",
+              "place": "rooftop",
+              "from": "21:05",
+              "to": "21:36"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kevin",
+      "name": "Kevin Otieno",
+      "age": 26,
+      "occupation": "Recent graduate, job-hunting",
+      "bio": "Staying with his aunt in 4B while he looks for work.",
+      "relation": "Grace's nephew. Neighbours heard them argue loudly this afternoon.",
+      "secret": "You smoke, which Grace banned in her flat. This afternoon she found your cigarettes, and found out you took KSh 2,000 from her purse to clear your kiosk debt. That was the argument.",
+      "goal": "Find your aunt's killer. Keep the money and the smoking out of it if you can.",
+      "knowledge": [
+        {
+          "id": "k-kevin",
+          "text": "I was at Mama Pendo's kiosk across the road from just after 21:05 until about 21:28, watching the match replay on her TV. I walked back in through the gate at 21:31 and found Aunt Grace at 21:35.",
+          "facts": [
+            {
+              "char": "kevin",
+              "place": "kiosk",
+              "from": "21:08",
+              "to": "21:28"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "faith",
+      "name": "Faith Njeri Mwangi",
+      "age": 41,
+      "occupation": "Salon owner",
+      "bio": "Runs Njeri's Touch, the salon on the ground floor. The life of every party.",
+      "relation": "Grace had been chasing her for overdue [[chama|savings group]] contributions.",
+      "secret": "You owe the chama KSh 40,000 and took a loan from a [[shylock|informal moneylender]] to cover salon rent. You have been terrified Grace would name you tonight.",
+      "goal": "Don't let your debt become the story. Help find who did it.",
+      "knowledge": [
+        {
+          "id": "k-faith",
+          "text": "Grace texted me at 19:40: 'Tonight I'm only announcing totals, not names. [[Pole, tutaongea kesho.|Sorry, we'll talk tomorrow.]]' She was never going to shame me in public."
+        }
+      ]
+    },
+    {
+      "id": "daniel",
+      "name": "Daniel Mutua",
+      "age": 45,
+      "occupation": "Caretaker",
+      "bio": "The landlord's caretaker. Has a key to every door in the block.",
+      "relation": "Grace had complained to the landlord about missed water-tanker deliveries.",
+      "secret": "You take small 'tips' from the water-tanker driver for logging deliveries early. Grace's complaint was close to the truth.",
+      "goal": "Find out what happened. Keep the tanker tips quiet.",
+      "knowledge": [
+        {
+          "id": "k-daniel",
+          "text": "From 21:14 to 21:26 I was at the gate, helping the tent-hire driver load the rented tent poles onto his lorry. I signed his delivery note at 21:19.",
+          "facts": [
+            {
+              "char": "daniel",
+              "place": "gate",
+              "from": "21:14",
+              "to": "21:26"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "joseph",
+      "name": "Joseph Ekai",
+      "age": 40,
+      "occupation": "Night askari (security guard)",
+      "bio": "The block's night guard for five years. Keeps a careful logbook.",
+      "relation": "Grace brought him a flask of tea most evenings.",
+      "secret": "Some nights you leave the gate for an hour to visit your girlfriend in the next estate. Not tonight, but last month's logbook has a few entries you made up.",
+      "goal": "Help find the truth without losing your job.",
+      "knowledge": [
+        {
+          "id": "k-joseph",
+          "text": "At 21:21 a car alarm chirped, so I walked into the parking yard with my torch. Nobody was in the yard and every car was locked. I was back at the gate by 21:24.",
+          "facts": [
+            {
+              "nobody": true,
+              "except": [
+                "joseph"
+              ],
+              "place": "parking",
+              "from": "21:21",
+              "to": "21:23"
+            },
+            {
+              "char": "joseph",
+              "place": "parking",
+              "from": "21:21",
+              "to": "21:23"
+            }
+          ],
+          "recall": "I remember one more thing. At about 21:14, from the gate, I saw a shadow pass the fifth-floor window of the back stairwell, going down. Whoever it was wore one of tonight's green event lanyards. Committee members and helpers all had one."
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "brian",
+    "wambui",
+    "kevin",
+    "faith",
+    "daniel",
+    "joseph"
+  ],
+  "variantName": "The chairman's cable",
+  "roles": {
+    "brian": "culprit",
+    "wambui": "detective",
+    "joseph": "witness",
+    "daniel": "insider",
+    "faith": "secret",
+    "kevin": "secret"
+  },
+  "timeline": {
+    "grace": [
+      {
+        "from": "20:00",
+        "to": "21:10",
+        "place": "rooftop",
+        "note": "Hosting the pledge table"
+      },
+      {
+        "from": "21:12",
+        "to": "21:15",
+        "place": "flat4b",
+        "note": "Fetches the receipt book; sends WhatsApp at 21:15"
+      },
+      {
+        "from": "21:16",
+        "to": "21:40",
+        "place": "stairwell",
+        "note": "Confronted on the landing; falls at about 21:19"
+      }
+    ],
+    "brian": [
+      {
+        "from": "20:00",
+        "to": "21:13",
+        "place": "rooftop",
+        "note": "Runs the stream; walks to the back-stairwell door at 21:13"
+      },
+      {
+        "from": "21:14",
+        "to": "21:20",
+        "place": "stairwell",
+        "note": "Waits on the landing, argues with Grace, pushes her"
+      },
+      {
+        "from": "21:24",
+        "to": "21:30",
+        "place": "parking",
+        "note": "Goes down the back stairs to his car to make his story true"
+      },
+      {
+        "from": "21:36",
+        "to": "22:00",
+        "place": "rooftop"
+      }
+    ],
+    "wambui": [
+      {
+        "from": "20:00",
+        "to": "21:36",
+        "place": "rooftop",
+        "note": "MC on the mic"
+      },
+      {
+        "from": "21:37",
+        "to": "21:50",
+        "place": "stairwell",
+        "note": "Checks Grace"
+      }
+    ],
+    "faith": [
+      {
+        "from": "20:00",
+        "to": "22:00",
+        "place": "rooftop",
+        "note": "Dancing by the speakers"
+      }
+    ],
+    "kevin": [
+      {
+        "from": "20:30",
+        "to": "20:55",
+        "place": "flat4b"
+      },
+      {
+        "from": "21:05",
+        "to": "21:28",
+        "place": "kiosk",
+        "note": "Match replay; pays M-Pesa at 21:17"
+      },
+      {
+        "from": "21:31",
+        "to": "21:31",
+        "place": "gate"
+      },
+      {
+        "from": "21:35",
+        "to": "21:40",
+        "place": "stairwell",
+        "note": "Finds Grace"
+      }
+    ],
+    "daniel": [
+      {
+        "from": "20:00",
+        "to": "20:40",
+        "place": "rooftop"
+      },
+      {
+        "from": "20:45",
+        "to": "21:30",
+        "place": "gate",
+        "note": "Tent lorry, 21:14–21:26"
+      }
+    ],
+    "joseph": [
+      {
+        "from": "20:00",
+        "to": "21:20",
+        "place": "gate"
+      },
+      {
+        "from": "21:21",
+        "to": "21:23",
+        "place": "parking",
+        "note": "Car alarm check"
+      },
+      {
+        "from": "21:24",
+        "to": "22:00",
+        "place": "gate"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-msg",
+      "where": "start",
+      "title": "Grace's last message, 21:15",
+      "text": "Sent to the family WhatsApp group at 21:15: '[[Nimefika kwa nyumba, nachukua receipt book, narudi juu sasa hivi.|I've got home, I'm grabbing the receipt book, I'm heading back up right now.]]'",
+      "facts": [
+        {
+          "char": "grace",
+          "place": "flat4b",
+          "from": "21:15"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-found",
+      "where": "start",
+      "title": "Found at 21:35",
+      "text": "Kevin found Grace at 21:35 on the landing between the fourth and fifth floors and shouted for help. Wambui, a nurse, reached her at 21:37 and says she had fallen some minutes earlier. The back-stairwell lights have been broken for weeks. The lift and the main stairs are at the front of the building.",
+      "facts": [
+        {
+          "char": "kevin",
+          "place": "stairwell",
+          "from": "21:35"
+        },
+        {
+          "char": "wambui",
+          "place": "stairwell",
+          "from": "21:37"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-5a",
+      "where": "start",
+      "title": "The neighbour in 5A",
+      "text": "Mrs Wairimu in 5A heard a cry and a clatter in the back stairwell and checked her phone: 21:19. She assumed it was children and did not open her door.",
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-live",
+      "where": "rooftop",
+      "title": "The Facebook live stream, 21:05–21:30",
+      "text": "The committee's live stream ran from Brian's phone on a tripod. From 21:05 to 21:30, Wambui is on the mic counting pledges and Faith is dancing by the speakers, both on camera the whole time. At 21:13 Brian walks out of frame towards the back-stairwell door and does not appear again before the stream ends.",
+      "facts": [
+        {
+          "char": "wambui",
+          "place": "rooftop",
+          "from": "21:05",
+          "to": "21:30"
+        },
+        {
+          "char": "faith",
+          "place": "rooftop",
+          "from": "21:05",
+          "to": "21:30"
+        },
+        {
+          "char": "brian",
+          "place": "rooftop",
+          "from": "21:13"
+        }
+      ],
+      "about": [
+        "brian",
+        "wambui",
+        "faith"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-receipt",
+      "where": "stairwell",
+      "title": "Receipt book on the landing",
+      "text": "Grace's receipt book lies open on the landing. Tucked inside is a list headed 'Defaulters, 3 months+', with Faith Njeri's name at the top: KSh 40,000. The book's last page, where Grace copied the committee's M-Pesa paybill totals, has been torn out.",
+      "about": [
+        "faith"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-cig",
+      "where": "stairwell",
+      "title": "Cigarette ends on the stairs",
+      "text": "Three cigarette ends on the fourth-floor step, cold and stale. Somebody has been smoking here regularly, out of sight of the flats.",
+      "about": [
+        "kevin"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-ledger",
+      "where": "flat4b",
+      "title": "Grace's ledger and sticky note",
+      "text": "The committee ledger is open on Grace's table. A sticky note in her handwriting: 'Borehole fund KSh 186,000 moved 14 Feb from committee paybill to a personal line ending …4471. That is B's line. Confront B before the AGM.'",
+      "about": [
+        "brian"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-purse",
+      "where": "flat4b",
+      "title": "Grace's purse",
+      "text": "An envelope in Grace's purse is labelled 'Kevin: rent help? NO.' and is KSh 2,000 short. A crushed cigarette packet sits on top of the kitchen bin.",
+      "about": [
+        "kevin"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-logbook",
+      "where": "gate",
+      "title": "The askari's logbook",
+      "text": "In Joseph's handwriting: '21:10 all quiet. 21:14 tent lorry (Kitengela Hires), caretaker loading poles. 21:21 car alarm, checked parking with torch. NO ONE in yard, all cars locked. 21:24 back at gate. 21:26 lorry left, caretaker signed. 21:31 Kevin in from kiosk.'",
+      "facts": [
+        {
+          "char": "joseph",
+          "place": "gate",
+          "from": "21:10",
+          "to": "21:20"
+        },
+        {
+          "char": "joseph",
+          "place": "parking",
+          "from": "21:21",
+          "to": "21:23"
+        },
+        {
+          "nobody": true,
+          "except": [
+            "joseph"
+          ],
+          "place": "parking",
+          "from": "21:21",
+          "to": "21:23"
+        },
+        {
+          "char": "joseph",
+          "place": "gate",
+          "from": "21:24",
+          "to": "21:30"
+        },
+        {
+          "char": "daniel",
+          "place": "gate",
+          "from": "21:14",
+          "to": "21:26"
+        },
+        {
+          "char": "kevin",
+          "place": "gate",
+          "from": "21:31"
+        }
+      ],
+      "about": [
+        "joseph",
+        "daniel",
+        "kevin"
+      ],
+      "tags": [
+        "alibi",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-car",
+      "where": "parking",
+      "title": "Brian's car",
+      "text": "Brian's Toyota Fielder, with the committee sticker on the windscreen. The doors are locked. On the back seat, in plain view, is a coiled orange extension cable.",
+      "about": [
+        "brian"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-kiosk",
+      "where": "kiosk",
+      "title": "Mama Pendo's statement",
+      "text": "'Kevin was here from just after nine, watching the match replay. He paid me KSh 150 by M-Pesa at 21:17 for cigarettes and left after the second half kicked off, around 21:28. He even cleared the KSh 2,000 he owed me, this afternoon.'",
+      "facts": [
+        {
+          "char": "kevin",
+          "place": "kiosk",
+          "from": "21:08",
+          "to": "21:28"
+        }
+      ],
+      "about": [
+        "kevin"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "At 21:13 you followed Grace into the back stairwell to beg her not to raise the KSh 186,000 at the AGM. When she came out of 4B with the receipt book, you argued on the dark landing and you pushed her. You tore out the page with the M-Pesa totals, went down the back stairs to the parking yard (arriving at 21:24), and came back up the front stairs at 21:36.",
+    "cover": {
+      "text": "I went down to my car at 21:12 to fetch an extension cable for the speakers, sorted out the cable mess in the parking yard, and came back up about 21:35.",
+      "place": "parking",
+      "from": "21:12",
+      "to": "21:30"
+    },
+    "danger": "Joseph sometimes checks the parking yard. The live stream may show which door you left by. And you never did bring the cable up."
+  },
+  "solution": {
+    "motive": "Grace had discovered that Brian moved KSh 186,000 of the borehole fund from the committee paybill to his own line in February, and she planned to confront him before the AGM.",
+    "method": "He waited in the dark back stairwell, argued with Grace on the landing when she came out of 4B, and pushed her. Then he tore out the page with the paybill totals and went down to the parking yard to make his cable story true.",
+    "summary": "Brian Kiprono did it. He is the only person the evidence doesn't place away from the stairwell, and his 'I was at my car' story fails twice: the askari found the yard empty at 21:21, and the cable he claimed to fetch is still on his back seat.",
+    "decisive": [
+      "c-logbook",
+      "c-car",
+      "c-ledger"
+    ],
+    "path": [
+      "The live stream clears Wambui and Faith: both are on camera on the rooftop for the whole window.",
+      "Mama Pendo clears Kevin (at the kiosk 21:08–21:28, six minutes from the stairwell). The askari's logbook clears Joseph and Daniel (at the gate or parking yard, three to four minutes away).",
+      "That leaves Brian with no alibi. The stream shows him walking to the back-stairwell door at 21:13.",
+      "Brian's story puts him at his car from 21:12. But Joseph checked the yard with a torch at 21:21 and found nobody there, and the cable he 'went to fetch' is still on his back seat.",
+      "Grace's sticky note in 4B gives the motive: KSh 186,000 moved to 'B's line', and 'Confront B before the AGM'."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "faith",
+      "suspicion": "Her name tops Grace's defaulters list, and she owes KSh 40,000.",
+      "explanation": "Grace had already texted Faith that she would only announce totals, not names. And the live stream shows Faith dancing on the rooftop for the whole window.",
+      "clues": [
+        "c-receipt",
+        "c-live"
+      ]
+    },
+    {
+      "char": "kevin",
+      "suspicion": "He argued with Grace, took money from her purse, and smokes on those very stairs.",
+      "explanation": "The argument was about the cigarettes and the KSh 2,000, which he used to clear a kiosk debt. Mama Pendo puts him at her kiosk for the whole window.",
+      "clues": [
+        "c-purse",
+        "c-cig",
+        "c-kiosk"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "The caretaker's keys",
+      "summary": "Same night, different culprit: Daniel the caretaker, whose water-tanker scheme Grace had uncovered. Brian really was at his car.",
+      "roles": {
+        "daniel": "culprit",
+        "brian": "insider",
+        "wambui": "detective",
+        "joseph": "witness",
+        "faith": "secret",
+        "kevin": "secret"
+      },
+      "characters": {
+        "daniel": {
+          "secret": "Some nights you sleep in the empty flat 6C without telling the landlord.",
+          "knowledge": [
+            {
+              "id": "k-daniel",
+              "text": "At 20:30 I lent Brian my spare key to the back-stairwell store so he could bring up extra chairs."
+            }
+          ]
+        },
+        "joseph": {
+          "knowledge": [
+            {
+              "id": "k-joseph",
+              "text": "At 21:21 a car alarm chirped, so I walked into the parking yard with my torch. Brian was at his car boot, untangling an orange extension cable. I was back at the gate by 21:24.",
+              "facts": [
+                {
+                  "char": "brian",
+                  "place": "parking",
+                  "from": "21:21",
+                  "to": "21:23"
+                },
+                {
+                  "char": "joseph",
+                  "place": "parking",
+                  "from": "21:21",
+                  "to": "21:23"
+                }
+              ],
+              "recall": "I remember one more thing. At about 21:14, from the gate, I saw a shadow pass the fifth-floor window of the back stairwell, going down. Whoever it was wore one of tonight's green event lanyards. Committee members and helpers all had one."
+            }
+          ]
+        }
+      },
+      "timeline": {
+        "brian": [
+          {
+            "from": "20:00",
+            "to": "21:11",
+            "place": "rooftop"
+          },
+          {
+            "from": "21:16",
+            "to": "21:32",
+            "place": "parking",
+            "note": "Really does fetch and untangle the cable"
+          },
+          {
+            "from": "21:37",
+            "to": "22:00",
+            "place": "rooftop"
+          }
+        ],
+        "daniel": [
+          {
+            "from": "20:00",
+            "to": "21:12",
+            "place": "rooftop",
+            "note": "Carrying chairs; leaves by the back-stairwell door at 21:12"
+          },
+          {
+            "from": "21:14",
+            "to": "21:21",
+            "place": "stairwell",
+            "note": "Confronts Grace about the tanker receipts and pushes her"
+          },
+          {
+            "from": "21:28",
+            "to": "21:40",
+            "place": "gate",
+            "note": "Arrives late for the tent lorry, out of breath"
+          }
+        ]
+      },
+      "clues": {
+        "update": {
+          "c-live": {
+            "text": "The committee's live stream ran from Brian's phone on a tripod. From 21:05 to 21:30, Wambui is on the mic counting pledges and Faith is dancing by the speakers, both on camera the whole time. At 21:11 Brian heads for the front stairs. At 21:12 Daniel carries a stack of chairs out through the back-stairwell door. Neither comes back before the stream ends.",
+            "facts": [
+              {
+                "char": "wambui",
+                "place": "rooftop",
+                "from": "21:05",
+                "to": "21:30"
+              },
+              {
+                "char": "faith",
+                "place": "rooftop",
+                "from": "21:05",
+                "to": "21:30"
+              },
+              {
+                "char": "brian",
+                "place": "rooftop",
+                "from": "21:11"
+              },
+              {
+                "char": "daniel",
+                "place": "rooftop",
+                "from": "21:12"
+              }
+            ],
+            "about": [
+              "brian",
+              "daniel",
+              "wambui",
+              "faith"
+            ]
+          },
+          "c-ledger": {
+            "text": "The committee ledger is open on Grace's table. A sticky note in her handwriting: 'Tanker receipts: 9 deliveries charged Jan–Mar, KSh 3,500 each. The tanker company says only 3 came. All logged by D.M. Tell landlord Monday.'",
+            "about": [
+              "daniel"
+            ]
+          },
+          "c-logbook": {
+            "text": "In Joseph's handwriting: '21:10 all quiet. 21:16 chairman into parking, opened his boot. 21:21 car alarm, checked parking with torch. Chairman at his boot with a cable. 21:24 back at gate. 21:26 tent lorry arrived, no caretaker to load, driver waiting. 21:28 caretaker came from the back door, out of breath, signed. 21:31 Kevin in from kiosk.'",
+            "facts": [
+              {
+                "char": "joseph",
+                "place": "gate",
+                "from": "21:10",
+                "to": "21:20"
+              },
+              {
+                "char": "joseph",
+                "place": "parking",
+                "from": "21:21",
+                "to": "21:23"
+              },
+              {
+                "char": "joseph",
+                "place": "gate",
+                "from": "21:24",
+                "to": "21:30"
+              },
+              {
+                "char": "brian",
+                "place": "parking",
+                "from": "21:16"
+              },
+              {
+                "char": "brian",
+                "place": "parking",
+                "from": "21:21",
+                "to": "21:23"
+              },
+              {
+                "char": "daniel",
+                "place": "gate",
+                "from": "21:10",
+                "to": "21:27",
+                "absent": true
+              },
+              {
+                "char": "daniel",
+                "place": "gate",
+                "from": "21:28"
+              },
+              {
+                "char": "kevin",
+                "place": "gate",
+                "from": "21:31"
+              }
+            ],
+            "about": [
+              "joseph",
+              "brian",
+              "daniel",
+              "kevin"
+            ]
+          },
+          "c-car": {
+            "text": "Brian's Toyota Fielder, with the committee sticker on the windscreen. The boot has been opened recently: the spare-wheel cover is pushed aside and an empty cable box lies inside. Whatever was in it has been taken out.",
+            "about": [
+              "brian"
+            ],
+            "tags": [
+              "alibi"
+            ]
+          }
+        }
+      },
+      "culprit": {
+        "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+        "truth": "You carried chairs down the back stairwell at 21:12 and waited for Grace on the landing. She had your tanker receipts. When she refused to keep quiet, you pushed her. You took the long way round to the gate and arrived at 21:28, two minutes after the tent lorry, which had been waiting for you.",
+        "cover": {
+          "text": "From 21:10 I was at the gate waiting for the tent-hire lorry, then loading the poles until it left.",
+          "place": "gate",
+          "from": "21:10",
+          "to": "21:26"
+        },
+        "danger": "Joseph logs everything. And the live stream was running when you walked out with the chairs."
+      },
+      "solution": {
+        "motive": "Grace had proof that Daniel charged residents for nine water-tanker deliveries when only three came, and she was going to tell the landlord on Monday.",
+        "method": "He carried chairs out through the back-stairwell door at 21:12, waited on the dark landing, and pushed her when she refused to keep quiet. He reached the gate at 21:28, late for the tent lorry.",
+        "summary": "Daniel Mutua did it. He leaves the stream through the back-stairwell door at 21:12, and the askari's log shows he was not at the gate until 21:28, even though the lorry was waiting for him from 21:26.",
+        "decisive": [
+          "c-logbook",
+          "c-live",
+          "c-ledger"
+        ],
+        "path": [
+          "The live stream clears Wambui and Faith, and Mama Pendo clears Kevin.",
+          "The askari's logbook places Brian at his car at 21:16 and 21:21–21:23, four minutes from the stairwell, which covers the whole window. Joseph clears himself the same way.",
+          "Daniel claims he was at the gate from 21:10. The log says the lorry waited from 21:26 with no caretaker, and Daniel arrived out of breath from the back door at 21:28.",
+          "The stream shows Daniel leaving through the back-stairwell door at 21:12, just before Grace came out of 4B.",
+          "The sticky note in 4B gives the motive: nine tanker deliveries charged and three delivered, all logged by D.M."
+        ]
+      },
+      "redHerrings": [
+        {
+          "char": "faith",
+          "suspicion": "Her name tops Grace's defaulters list, and she owes KSh 40,000.",
+          "explanation": "Grace had already texted Faith that she would only announce totals, not names. And the live stream shows Faith dancing on the rooftop for the whole window.",
+          "clues": [
+            "c-receipt",
+            "c-live"
+          ]
+        },
+        {
+          "char": "kevin",
+          "suspicion": "He argued with Grace, took money from her purse, and smokes on those very stairs.",
+          "explanation": "The argument was about the cigarettes and the KSh 2,000, which he used to clear a kiosk debt. Mama Pendo puts him at her kiosk for the whole window.",
+          "clues": [
+            "c-purse",
+            "c-cig",
+            "c-kiosk"
+          ]
+        }
+      ]
+    }
+  ],
+  "map": {
+    "vision": 6,
+    "spawn": "rooftop",
+    "legend": {
+      "R": "rooftop",
+      "S": "stairwell",
+      "F": "flat4b",
+      "G": "gate",
+      "P": "parking",
+      "K": "kiosk"
+    },
+    "errands": [
+      {
+        "label": "Stack the plastic chairs",
+        "seconds": 3
+      },
+      {
+        "label": "Sweep the landing",
+        "seconds": 3
+      },
+      {
+        "label": "Sign the visitors' book",
+        "seconds": 2
+      },
+      {
+        "label": "Carry a crate of sodas",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " ################ #####               ",
+      " #RRRRRRRRRRRRRR# #SSS#               ",
+      " #RRRrRRRRRRRRRR:.:SSS#               ",
+      " #RRRRRRRRRR1RRR# #SSS#               ",
+      " #RRRRRRRRRRRRRR# #SSS#               ",
+      " ################ #SsS# ##########    ",
+      "                  #SSS# #FFFFFFFF#    ",
+      "                  #SSS:.:FFfFFFFF#    ",
+      "                  #SS2# #FFFFFFFF#    ",
+      "                  #SSS# #FFFFFFfF#    ",
+      "                  #sSS# ##########    ",
+      "                  #SSS#               ",
+      "                  ##:##               ",
+      "                    .                 ",
+      " ###########        .     ########    ",
+      " #PPPPPPPPP#  ######:##   #KKKKKK#    ",
+      " #PPpPPPPPP#  #GGGGGGG#   #KKKkKK#    ",
+      " #PPPPPPPPP:..:GgGGGGG:...:KKKKKK#    ",
+      " #PPPPPPPPP#  #GGGGGG3#   #KKKKK4#    ",
+      " ###########  #########   ########    ",
+      "                                      "
+    ]
+  }
+}

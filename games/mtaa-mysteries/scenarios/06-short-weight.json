@@ -1,0 +1,685 @@
+{
+  "id": "short-weight",
+  "title": "Short Weight at Kianjogu Market",
+  "location": "Market town, Nyeri County",
+  "tone": "Daylight, small-town and rural; a community that trusts its scales",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "A respected cooperative chairwoman leaves the AGM to check the avocado weights and never comes back.",
+  "contentNotes": [
+    "A death under a toppled stack of crates, not described graphically",
+    "Farmers being cheated, and debt"
+  ],
+  "reviewFlags": [
+    "Kianjogu Market and the Tumaini Avocado Growers cooperative are fictional; Nyeri County's avocado and coffee farming is real. Check the cooperative details (AGM in the market hall, a weighing shed, the county extension officer, cess receipts).",
+    "Kikuyu names and the Kiswahili interjection 'Utaona!' need a native-speaker check for naturalness.",
+    "Abdi is a Somali Kenyan export broker. Check that he reads as a full character, not a stereotype of the 'outsider trader'."
+  ],
+  "intro": "It's AGM day for the Tumaini Avocado Growers cooperative at Kianjogu Market, in the hills of Nyeri County. Two hundred farmers have packed the market hall to hear the chairwoman, Teresia Wangari Maina, report on prices, a new export contract and complaints that avocados are being 'short-weighed'. At 10:35, during the tea break, Teresia tells the hall she is going to 'check something in the store' and walks out. At 11:05 the store-keeper finds her under a toppled stack of avocado crates. The county doctor says it happened between 10:40 and 11:00, and the stack could not have fallen on its own.",
+  "victim": {
+    "id": "teresia",
+    "name": "Teresia Wangari Maina",
+    "description": "57, chairwoman of the cooperative for eight years. A widow and coffee-turned-avocado farmer, respected for honesty and feared for her memory."
+  },
+  "scene": "store",
+  "window": {
+    "from": "10:40",
+    "to": "11:00"
+  },
+  "places": [
+    {
+      "id": "store",
+      "name": "Produce store"
+    },
+    {
+      "id": "weighbridge",
+      "name": "Weighing shed"
+    },
+    {
+      "id": "hall",
+      "name": "Market hall (the AGM)"
+    },
+    {
+      "id": "market",
+      "name": "Market stalls"
+    },
+    {
+      "id": "kiosk",
+      "name": "Tea kiosk across the lane"
+    },
+    {
+      "id": "stage",
+      "name": "Matatu stage"
+    },
+    {
+      "id": "office",
+      "name": "Cooperative office",
+      "restricted": true
+    }
+  ],
+  "routes": [
+    [
+      "store",
+      "weighbridge",
+      1
+    ],
+    [
+      "store",
+      "hall",
+      2
+    ],
+    [
+      "store",
+      "market",
+      2
+    ],
+    [
+      "store",
+      "kiosk",
+      2
+    ],
+    [
+      "hall",
+      "market",
+      1
+    ],
+    [
+      "hall",
+      "office",
+      1
+    ],
+    [
+      "market",
+      "stage",
+      3
+    ],
+    [
+      "weighbridge",
+      "stage",
+      3
+    ]
+  ],
+  "characters": [
+    {
+      "id": "peris",
+      "name": "Peris Nyokabi Gitau",
+      "age": 45,
+      "occupation": "Farmer and vice-chair",
+      "bio": "Vice-chair of the cooperative for five years. Keeps the keys to the scale boxes in the weighing shed.",
+      "relation": "Teresia's deputy and expected successor.",
+      "secret": "You have been selling some of your own avocados to a broker on the side, breaking the cooperative's collective-sale rule.",
+      "goal": "Help find out what happened. Keep your side sales quiet.",
+      "knowledge": [
+        {
+          "id": "k-peris",
+          "text": "At 10:30 Teresia told me she was going to 'check the weights in the store myself' after the tea break."
+        }
+      ]
+    },
+    {
+      "id": "njoroge",
+      "name": "Mzee Njoroge Wachira",
+      "age": 66,
+      "occupation": "Farmer",
+      "bio": "A founding member. Lost the chair election to Teresia in 2019 and has never let it go.",
+      "relation": "Shouted at Teresia during this morning's session.",
+      "secret": "You are quietly negotiating to sell your farm to a developer, and your children don't know.",
+      "goal": "Find who did it. Keep the farm sale secret.",
+      "knowledge": [
+        {
+          "id": "k-njoroge",
+          "text": "I took the floor at 10:40 and spoke until 11:00 about the price of fertiliser. Caroline wrote it all down.",
+          "facts": [
+            {
+              "char": "njoroge",
+              "place": "hall",
+              "from": "10:40",
+              "to": "11:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "caroline",
+      "name": "Caroline Muthoni",
+      "age": 28,
+      "occupation": "Cooperative clerk",
+      "bio": "The cooperative's clerk and minute-taker. Holds the office keys and the ledgers.",
+      "relation": "Teresia hired her and paid her college fees.",
+      "secret": "You use the cooperative's office computer to run a side business typing CVs.",
+      "goal": "Find the truth for Teresia. Keep the CV business quiet.",
+      "knowledge": [
+        {
+          "id": "k-caroline",
+          "text": "I took the minutes in the hall from 10:30 to 11:05 without leaving my seat.",
+          "facts": [
+            {
+              "char": "caroline",
+              "place": "hall",
+              "from": "10:30",
+              "to": "11:05"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "abdi",
+      "name": "Abdi Hassan Farah",
+      "age": 35,
+      "occupation": "Avocado export broker",
+      "bio": "Buys from the cooperative for supermarkets in Europe. Grew up in Garissa, studied agribusiness in Nairobi, and knows the price of everything.",
+      "relation": "Teresia refused to sign his new contract until he paid last season's arrears.",
+      "secret": "Your export licence is under review after a shipment was rejected in Rotterdam.",
+      "goal": "Find who did it. Keep the licence review quiet before the contract is signed.",
+      "knowledge": [
+        {
+          "id": "k-abdi",
+          "text": "From 10:30 until after 11:00 I was at the matatu stage, loading crates onto my lorry. I paid the county cess at 10:52.",
+          "facts": [
+            {
+              "char": "abdi",
+              "place": "stage",
+              "from": "10:30",
+              "to": "11:10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gladys",
+      "name": "Gladys Jebet",
+      "age": 38,
+      "occupation": "County agricultural extension officer",
+      "bio": "Posted to Nyeri from Kericho last year. Knows scales, soils and every way a farmer can be cheated.",
+      "relation": "Had been helping Teresia document the short-weighing complaints.",
+      "secret": "You have applied for a transfer back to Kericho, and might leave before the investigation you started is finished.",
+      "goal": "Solve it. Don't reveal your transfer request yet.",
+      "knowledge": [
+        {
+          "id": "k-gladys",
+          "text": "I ran an avocado-grading demonstration for about twenty farmers at the market stalls, from 10:35 to 11:05.",
+          "facts": [
+            {
+              "char": "gladys",
+              "place": "market",
+              "from": "10:35",
+              "to": "11:05"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kamau",
+      "name": "Kamau Gitonga",
+      "age": 24,
+      "occupation": "Boda boda rider",
+      "bio": "Carries the cooperative's crates from the farms to the market on his motorbike.",
+      "relation": "Teresia lent him the deposit for his motorbike.",
+      "secret": "You have missed three repayments on that loan and have been avoiding her.",
+      "goal": "Find who did it. Keep the missed repayments quiet.",
+      "knowledge": [
+        {
+          "id": "k-kamau",
+          "text": "From about 10:40 I sat at the tea kiosk across the lane, waiting for a delivery job. At about 10:47 I saw someone come out of the store's side door and walk towards the weighing shed.",
+          "facts": [
+            {
+              "char": "kamau",
+              "place": "kiosk",
+              "from": "10:40",
+              "to": "11:00"
+            }
+          ],
+          "recall": "I remember one more detail: whoever it was wore one of the cooperative's green AGM aprons, and walked fast with their head down."
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "peris",
+    "njoroge",
+    "gladys",
+    "abdi",
+    "caroline",
+    "kamau"
+  ],
+  "variantName": "The tampered scale",
+  "roles": {
+    "peris": "culprit",
+    "gladys": "detective",
+    "kamau": "witness",
+    "caroline": "insider",
+    "njoroge": "secret",
+    "abdi": "secret"
+  },
+  "timeline": {
+    "teresia": [
+      {
+        "from": "09:00",
+        "to": "10:35",
+        "place": "hall"
+      },
+      {
+        "from": "10:38",
+        "to": "11:30",
+        "place": "store",
+        "note": "Checks the crates against the weighing tickets"
+      }
+    ],
+    "peris": [
+      {
+        "from": "09:00",
+        "to": "10:38",
+        "place": "hall"
+      },
+      {
+        "from": "10:41",
+        "to": "10:47",
+        "place": "store",
+        "note": "Argues with Teresia and pushes the crate stack onto her"
+      },
+      {
+        "from": "10:48",
+        "to": "10:56",
+        "place": "weighbridge",
+        "note": "Puts the calibration weight back in her bag; logs a fake weighing"
+      },
+      {
+        "from": "10:59",
+        "to": "11:30",
+        "place": "hall"
+      }
+    ],
+    "njoroge": [
+      {
+        "from": "09:00",
+        "to": "11:30",
+        "place": "hall"
+      }
+    ],
+    "caroline": [
+      {
+        "from": "09:00",
+        "to": "11:30",
+        "place": "hall"
+      }
+    ],
+    "abdi": [
+      {
+        "from": "09:00",
+        "to": "10:20",
+        "place": "hall"
+      },
+      {
+        "from": "10:30",
+        "to": "11:10",
+        "place": "stage"
+      }
+    ],
+    "gladys": [
+      {
+        "from": "09:00",
+        "to": "10:30",
+        "place": "hall"
+      },
+      {
+        "from": "10:35",
+        "to": "11:05",
+        "place": "market"
+      }
+    ],
+    "kamau": [
+      {
+        "from": "09:30",
+        "to": "10:30",
+        "place": "stage"
+      },
+      {
+        "from": "10:40",
+        "to": "11:05",
+        "place": "kiosk"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-left",
+      "where": "start",
+      "title": "Teresia leaves the AGM",
+      "text": "At 10:35, during the tea break, Teresia told the hall she was 'going to check something in the store' and walked out. The meeting resumed at 10:40.",
+      "facts": [
+        {
+          "char": "teresia",
+          "place": "hall",
+          "from": "10:35"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-found",
+      "where": "start",
+      "title": "Found at 11:05",
+      "text": "At 11:05 the store-keeper found Teresia under a toppled stack of avocado crates. The county doctor says it happened between about 10:40 and 11:00. Marks on the floor show the stack was pushed from the aisle side. It did not fall by itself.",
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-shout",
+      "where": "start",
+      "title": "Tempers at the AGM",
+      "text": "At 10:20 Mzee Njoroge shouted across the hall at Teresia: '[[Utaona!|You'll see!]]' Abdi, the broker, left the meeting soon afterwards following a heated exchange with her about arrears. Everyone attending was given a green AGM apron.",
+      "about": [
+        "njoroge",
+        "abdi"
+      ],
+      "tags": [
+        "red-herring",
+        "identity"
+      ]
+    },
+    {
+      "id": "c-minutes",
+      "where": "hall",
+      "title": "The meeting minutes",
+      "text": "Caroline's minutes: '10:40 to 11:00, Mzee Njoroge Wachira has the floor (fertiliser prices).' The secretary's signature runs down every page, 10:30 to 11:05. Next to the vice-chair's name: 'stepped out 10:38, returned 10:59'.",
+      "facts": [
+        {
+          "char": "njoroge",
+          "place": "hall",
+          "from": "10:40",
+          "to": "11:00"
+        },
+        {
+          "char": "caroline",
+          "place": "hall",
+          "from": "10:30",
+          "to": "11:05"
+        },
+        {
+          "char": "peris",
+          "place": "hall",
+          "from": "10:59"
+        }
+      ],
+      "about": [
+        "njoroge",
+        "caroline",
+        "peris"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-demo",
+      "where": "market",
+      "title": "The county Facebook post",
+      "text": "The county's agriculture Facebook page posted photos from Gladys's grading demonstration, timestamped 10:36 to 11:04, with Gladys in every frame.",
+      "facts": [
+        {
+          "char": "gladys",
+          "place": "market",
+          "from": "10:36",
+          "to": "11:04"
+        }
+      ],
+      "about": [
+        "gladys"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-cess",
+      "where": "stage",
+      "title": "The cess receipt and the turn-boy",
+      "text": "Abdi's lorry turn-boy: 'He was here loading with us from half past ten until we left, after eleven.' A county cess receipt, stamped at the stage, is timed 10:52.",
+      "facts": [
+        {
+          "char": "abdi",
+          "place": "stage",
+          "from": "10:30",
+          "to": "11:10"
+        }
+      ],
+      "about": [
+        "abdi"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-kiosk",
+      "where": "kiosk",
+      "title": "The tea kiosk owner",
+      "text": "'Kamau sat right there from about 10:40 until after eleven, waiting for a job. He had two cups of tea and paid by M-Pesa at 10:47.'",
+      "facts": [
+        {
+          "char": "kamau",
+          "place": "kiosk",
+          "from": "10:40",
+          "to": "11:02"
+        }
+      ],
+      "about": [
+        "kamau"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-weighlog",
+      "where": "weighbridge",
+      "title": "The weighing-shed log",
+      "text": "The handwritten log for scale #2 ends: 'P. Nyokabi, test weighing, 0 kg, 10:52.' The scale-box padlock is open. There's only one key, and the vice-chair keeps it.",
+      "facts": [
+        {
+          "char": "peris",
+          "place": "weighbridge",
+          "from": "10:52"
+        }
+      ],
+      "about": [
+        "peris"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-weight",
+      "where": "weighbridge",
+      "title": "Scale #2",
+      "text": "Scale #2's brass calibration weight is missing from its slot. Gladys tests the scale with a known sack: it reads 1.5 kg light.",
+      "about": [
+        "peris"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-notebook",
+      "where": "store",
+      "title": "Teresia's notebook",
+      "text": "Teresia's notebook, open on a crate in her handwriting: 'Scale #2 short by 1.5 kg a crate since March, about 1,200 kg a month. Only P. has the key to the scale box. Tell the AGM today.'",
+      "about": [
+        "peris"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-arrears",
+      "where": "office",
+      "title": "The arrears file",
+      "text": "A file on Abdi Hassan Farah: 'KSh 380,000 unpaid since last season. No new contract until paid.' Pinned to it is a printout of Abdi's SMS at 10:25: 'Mama, I will pay on Friday, please don't embarrass me in front of the AGM.'",
+      "about": [
+        "abdi"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "Since March you have used scale #2 to short-weigh members' avocados by 1.5 kg a crate, and sold the difference to a broker. Teresia worked it out. At 10:41 you followed her into the store and begged her not to tell the AGM. When she refused, you pushed the crate stack onto her. You went to the weighing shed, refitted the brass weight, logged a 'test weighing' to explain why you were there, and slipped back into the hall at 10:59.",
+    "cover": {
+      "text": "At 10:38 I went to the market stalls for airtime and some [[sukuma|kale, the everyday greens]], and came back to the hall at about 11:00.",
+      "place": "market",
+      "from": "10:40",
+      "to": "10:58"
+    },
+    "danger": "You signed the weighing log. Someone at the kiosk may have seen the store's side door. Teresia kept notes on everything."
+  },
+  "solution": {
+    "motive": "Peris had been short-weighing members' avocados on scale #2 and selling the difference. Teresia's notebook proved it and she was about to tell the AGM.",
+    "method": "Peris followed Teresia into the store, argued with her, and pushed the crate stack onto her. Then she went to the weighing shed, refitted the calibration weight and logged a fake 'test weighing'.",
+    "summary": "Peris Nyokabi Gitau did it. Everyone else is placed away from the store for the whole window. Peris says she was at the market stalls, but she signed the weighing log at 10:52. The weighing shed is one minute from the store, and the scale she alone holds the key to reads 1.5 kg light.",
+    "decisive": [
+      "c-weighlog",
+      "c-notebook",
+      "c-weight"
+    ],
+    "path": [
+      "The minutes clear Njoroge and Caroline, the county photos clear Gladys, the cess receipt and turn-boy clear Abdi, and the kiosk owner clears Kamau.",
+      "Peris left the hall at 10:38 and returned at 10:59, right across the window. She says she went to the market stalls.",
+      "But the weighing-shed log has her own entry at 10:52, one minute from the store, and the scale-box padlock is open.",
+      "Teresia's notebook ('Only P. has the key') and the scale reading 1.5 kg light give the motive."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "njoroge",
+      "suspicion": "He shouted 'Utaona!' at Teresia twenty minutes before she died.",
+      "explanation": "An old rival's bluster. The minutes show him holding the floor in the hall for the whole window.",
+      "clues": [
+        "c-shout",
+        "c-minutes"
+      ]
+    },
+    {
+      "char": "abdi",
+      "suspicion": "He owes the cooperative KSh 380,000, Teresia was blocking his contract, and he left the meeting angry.",
+      "explanation": "He was pleading for time, not plotting. His turn-boy and the cess receipt put him at the matatu stage for the whole window.",
+      "clues": [
+        "c-arrears",
+        "c-cess"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "The ghost members",
+      "summary": "Same trail, different motive: Teresia had discovered forty 'ghost members' Peris had registered to inflate the cooperative's numbers for a county grant.",
+      "clues": {
+        "update": {
+          "c-notebook": {
+            "text": "Teresia's notebook, open on a crate in her handwriting: 'Members' register: 41 names nobody has ever met, all signed up by P. in January, just before the county grant application. The grant pays per member. Tell the AGM today.'"
+          },
+          "c-weight": {
+            "text": "The scale-box padlock is open and the box has been searched. A pile of membership cards held with a rubber band is stuffed behind the scale, all filled in with the same pen in the same handwriting."
+          }
+        }
+      },
+      "culprit": {
+        "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+        "truth": "In January you registered forty-one 'ghost members' so the cooperative's county grant, which pays per member, would come in larger, and you kept the difference. Teresia found the names. At 10:41 you followed her into the store and begged her not to tell the AGM. When she refused, you pushed the crate stack onto her. You hid the fake membership cards behind scale #2 in the weighing shed, logged a 'test weighing', and slipped back into the hall at 10:59.",
+        "cover": {
+          "text": "At 10:38 I went to the market stalls for airtime and some [[sukuma|kale, the everyday greens]], and came back to the hall at about 11:00.",
+          "place": "market",
+          "from": "10:40",
+          "to": "10:58"
+        },
+        "danger": "You signed the weighing log. Someone at the kiosk may have seen the store's side door. Teresia kept notes on everything."
+      },
+      "solution": {
+        "motive": "Peris had registered forty-one ghost members to inflate a per-member county grant, and Teresia was about to expose it.",
+        "method": "She pushed the crate stack onto Teresia in the store, then hid the fake membership cards in the weighing shed.",
+        "summary": "Peris Nyokabi Gitau did it. The alibi trail is the same: her own 10:52 entry in the weighing log breaks her market-stall story, and the fake cards behind scale #2 match Teresia's notebook.",
+        "decisive": [
+          "c-weighlog",
+          "c-notebook",
+          "c-weight"
+        ],
+        "path": [
+          "The minutes, county photos, cess receipt and kiosk owner clear everyone except Peris.",
+          "Peris claims she was at the market stalls, but she signed the weighing log at 10:52, a minute from the store.",
+          "The fake membership cards stuffed behind scale #2, in one hand, match Teresia's note about 41 ghost members signed up by P."
+        ]
+      }
+    }
+  ],
+  "map": {
+    "vision": 7,
+    "spawn": "hall",
+    "legend": {
+      "H": "hall",
+      "O": "office",
+      "M": "market",
+      "S": "store",
+      "W": "weighbridge",
+      "K": "kiosk",
+      "T": "stage"
+    },
+    "errands": [
+      {
+        "label": "Hand out AGM aprons",
+        "seconds": 2
+      },
+      {
+        "label": "Sort a crate of avocados",
+        "seconds": 3
+      },
+      {
+        "label": "Fetch tea for the committee",
+        "seconds": 3
+      },
+      {
+        "label": "Load crates onto a lorry",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " ########################             ",
+      " #HHHHHHHHHH##MMMMMMMMMM#             ",
+      " #HHhHHHHHHH##MMMMMMMMMM#             ",
+      " #HHHHHHHHHH##MMMMMMmMMM#             ",
+      " #HHHHHHHHHH::MMMMMMMMMM#             ",
+      " #HHHHHH1HHH##MMM2MMMMMM#    ######## ",
+      " #HHHHHHHHHH##MMMMMMMMMM:....:TTTTTT# ",
+      " #HHHHHHHHHH##MMMMMMMMMM#    #TTTTTT# ",
+      " ###:#####:######:#######    #TTTtTT# ",
+      " #OOOOO#  .      .           #TTTTTT# ",
+      " #OOOOO#  .  ####:########## #TTTTTT# ",
+      " #OOoOO#  .  #SSSSSS##WWWWW# #TTTTTT# ",
+      " #OOOOO#  ...:SSSSSS::WwWWW:.:TTT4TT# ",
+      " #######     #SsSSSS##WWWWW# #TTTTTT# ",
+      "             #SSSSSS##WWWwW# ######## ",
+      "             ###:###########          ",
+      "                .                     ",
+      "             ###:####                 ",
+      "             #KkKKKK#                 ",
+      "             #KKKK3K#                 ",
+      "             ########                 "
+    ]
+  }
+}
