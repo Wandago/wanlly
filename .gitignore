@@ -1,0 +1,10 @@
+# Secrets (HARNESS.md: never in the repo)
+.env
+.env.*
+!.env.example
+
+# Per-machine Claude Code state
+.claude/state/
+.claude/settings.local.json
+
+node_modules/
