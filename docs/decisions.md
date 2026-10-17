@@ -45,3 +45,8 @@ consecutive numbers, plus `**Date:**`, `**Decision:**` and `**Why:**` lines.
 **Date:** 2026-10-17
 **Decision:** Work follows `HARNESS.md`. Every rule has a written form and a mechanical gate (Claude Code hooks, git pre-commit, CI). `scripts/check.sh` is the only definition of "verified".
 **Why:** Rewording prompts doesn't stop a model from skipping verification or claiming success on broken work. A gate that blocks the run does.
+
+## D-009: Mtaa Mysteries lives in games/ with no dependencies
+**Date:** 2026-10-17
+**Decision:** The murder-mystery game is a self-contained project in `games/mtaa-mysteries/`: Node standard library only, Server-Sent Events plus POST, a vanilla JS client, and JSON scenarios proved fair by a checker. `scripts/check.sh` runs its `npm run check`.
+**Why:** It is unrelated to Wanlly's product, so it stays isolated and easy to move to its own repo. No dependencies means no unverified packages (HARNESS.md), and the checker turns "every mystery is solvable" into a gate instead of a hope.

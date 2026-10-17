@@ -1,0 +1,20 @@
+{
+  "name": "mtaa-mysteries",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An online social-deduction murder-mystery game set across Kenya.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "lint": "node scripts/lint.js",
+    "check:scenarios": "node scripts/check-scenarios.js",
+    "test": "node --test test/*.test.js",
+    "render": "node scripts/render-scenarios.js",
+    "check": "npm run -s check:scenarios && npm run -s lint && npm test -s",
+    "e2e": "node scripts/e2e.mjs"
+  }
+}

@@ -10,6 +10,10 @@ rather than appending a diary.
 Planning is done (`docs/PLAN.md`), the prototype is done (`prototype/index.html`), and the harness is in place.
 No app code exists yet.
 
+## Side project: Mtaa Mysteries (`games/mtaa-mysteries/`)
+
+A playable v1 is in place: rules engine, rooms, client, 6 scenarios × 2 variants, all 10 design documents, 55 tests and a browser e2e run (`npm run e2e`). Next: private playtests and a cultural review of each scenario (see its `docs/09-roadmap.md`). Open items: a reviewed Kiswahili/Sheng blocklist, a hosting choice near East Africa, and persistence before public launch.
+
 ## Next step
 
 Phase 0 (accounts) is manual, outside the repo. Then Phase 1, step 1: the

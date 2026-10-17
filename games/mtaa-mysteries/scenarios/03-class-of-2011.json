@@ -1,0 +1,922 @@
+{
+  "id": "class-of-2011",
+  "title": "Class of 2011",
+  "location": "Lakeside lodge, Kisumu",
+  "tone": "Nostalgic and bittersweet, old friends and older secrets",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "A fifteen-year reunion on Lake Victoria. The man who promised to tell the truth about an old exam scandal never gives his speech.",
+  "contentNotes": [
+    "A death by a blow, not described graphically",
+    "Drinking, and a character hiding a relapse"
+  ],
+  "reviewFlags": [
+    "Winam University and the lodge are fictional; Kisumu, Lake Victoria and the Dunga shoreline are real. Check the lodge details (fish banda on the beach, boat shed, cottages) feel right for a Kisumu lakeside venue.",
+    "The cast mixes communities on purpose (Luo, Luhya, Kalenjin, Somali Kenyan). Check names and professions read naturally, and that no community is made the 'suspicious' one.",
+    "Exam leaks in Kenyan universities are a real and sensitive topic. Keep the 2010 scandal fictional and specific to this story."
+  ],
+  "intro": "Fifteen years after graduating from Winam University, the class of 2011 has taken over a lakeside lodge in Kisumu: tilapia on the grill, a DJ playing their old campus anthems, a WhatsApp group buzzing with old photos. At 20:45 Collins Wekesa tapped his glass and promised that at 22:00 he would 'tell the truth about the 2010 Statistics exam'. At 21:30 he was seen walking into the boat shed on the shore. At 22:10 the boatman found him there. Collins was alive at 21:30 and stopped answering his phone by 21:50.",
+  "victim": {
+    "id": "collins",
+    "name": "Collins Wekesa",
+    "description": "36, deputy principal of a secondary school in Bungoma and the reunion's treasurer. Earnest, funny, and done with keeping other people's secrets."
+  },
+  "scene": "boathouse",
+  "window": {
+    "from": "21:30",
+    "to": "21:50"
+  },
+  "places": [
+    {
+      "id": "hall",
+      "name": "Main hall (dinner and DJ)"
+    },
+    {
+      "id": "garden",
+      "name": "Fire-pit garden"
+    },
+    {
+      "id": "boathouse",
+      "name": "Boat shed on the shore"
+    },
+    {
+      "id": "beach",
+      "name": "Fish banda on the beach"
+    },
+    {
+      "id": "parking",
+      "name": "Car park"
+    },
+    {
+      "id": "cottages",
+      "name": "Block B cottages",
+      "restricted": true
+    }
+  ],
+  "routes": [
+    [
+      "hall",
+      "garden",
+      1
+    ],
+    [
+      "garden",
+      "boathouse",
+      3
+    ],
+    [
+      "garden",
+      "cottages",
+      2
+    ],
+    [
+      "cottages",
+      "boathouse",
+      3
+    ],
+    [
+      "boathouse",
+      "beach",
+      2
+    ],
+    [
+      "beach",
+      "garden",
+      3
+    ],
+    [
+      "hall",
+      "parking",
+      2
+    ],
+    [
+      "parking",
+      "boathouse",
+      5
+    ]
+  ],
+  "characters": [
+    {
+      "id": "kiprop",
+      "name": "Dr Kiprop Rotich",
+      "age": 37,
+      "occupation": "University lecturer",
+      "bio": "Now teaches statistics at Winam University, where they all studied. Up for promotion. Limping after last Saturday's staff football match.",
+      "relation": "Shared a hostel room with Collins in first year.",
+      "secret": "Your PhD thesis leaned heavily on a classmate's unpublished work. You call it 'inspiration'.",
+      "goal": "Help find out what happened. Keep your thesis out of any conversation.",
+      "knowledge": [
+        {
+          "id": "k-kiprop",
+          "text": "At 21:20 Collins came to the fire pit and told me quietly: 'Tonight I name names about 2010. I'm sorry, Kip.'",
+          "facts": [
+            {
+              "char": "kiprop",
+              "place": "garden",
+              "from": "21:20"
+            },
+            {
+              "char": "collins",
+              "place": "garden",
+              "from": "21:20"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "atieno",
+      "name": "Atieno Ochieng'",
+      "age": 36,
+      "occupation": "Corporate lawyer",
+      "bio": "Nairobi lawyer, class WhatsApp group admin, and tonight's organiser and MC.",
+      "relation": "Collins's closest friend from campus.",
+      "secret": "In 2010 you knew the Statistics exam had leaked, and you said nothing, because you had bought a copy yourself.",
+      "goal": "Find who did this to your friend. Keep your own part in 2010 hidden if you can.",
+      "knowledge": [
+        {
+          "id": "k-atieno",
+          "text": "I ran games on the mic from 21:20 until about 22:00. At 21:52 I rang Collins to say his speech was next. He didn't pick up.",
+          "facts": [
+            {
+              "char": "atieno",
+              "place": "hall",
+              "from": "21:20",
+              "to": "22:00"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "nafula",
+      "name": "Nafula Simiyu",
+      "age": 35,
+      "occupation": "Radio presenter",
+      "bio": "Hosts a breakfast show on a Kisumu radio station. Asks questions for a living.",
+      "relation": "Collins's ex. They broke up badly in final year and argued again tonight.",
+      "secret": "Collins asked you to help him go public about 2010 on your show. You agreed, then got scared and told him no at 21:15. That was the argument.",
+      "goal": "Find the truth. Avoid admitting you backed out on him.",
+      "knowledge": [
+        {
+          "id": "k-nafula",
+          "text": "From about 21:25 until nearly 22:00 I sat at the fish banda on the beach with Mercy, eating fried tilapia and complaining about Collins.",
+          "facts": [
+            {
+              "char": "nafula",
+              "place": "beach",
+              "from": "21:25",
+              "to": "21:55"
+            },
+            {
+              "char": "mercy",
+              "place": "beach",
+              "from": "21:25",
+              "to": "21:55"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hussein",
+      "name": "Hussein Ali Omar",
+      "age": 37,
+      "occupation": "Hardware businessman",
+      "bio": "Runs a hardware business in Kisumu and paid for tonight's venue. Always the sharpest-dressed man in the room.",
+      "relation": "Collins, as treasurer, had been chasing Hussein's sponsorship pledge.",
+      "secret": "Your sponsorship cheque bounced on Friday. The business is in trouble and you are embarrassed.",
+      "goal": "Help solve it. Keep the bounced cheque quiet.",
+      "knowledge": [
+        {
+          "id": "k-hussein",
+          "text": "I gave my sponsor's toast in the hall at 21:35, and stayed by the bar afterwards until about 21:55.",
+          "facts": [
+            {
+              "char": "hussein",
+              "place": "hall",
+              "from": "21:31",
+              "to": "21:55"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mercy",
+      "name": "Mercy Akinyi",
+      "age": 36,
+      "occupation": "Nurse",
+      "bio": "A nurse in Kisumu and the class's unofficial agony aunt.",
+      "relation": "Was Collins's study partner all four years.",
+      "secret": "You are the anonymous source who told Collins last year who sold the 2010 exam.",
+      "goal": "Make sure the right person is named. Protect yourself as the source.",
+      "knowledge": [
+        {
+          "id": "k-mercy",
+          "text": "From 21:25 I sat at the fish banda with Nafula. At about 21:35 I saw a phone torch bobbing down the path from the garden towards the boat shed.",
+          "facts": [
+            {
+              "char": "mercy",
+              "place": "beach",
+              "from": "21:25",
+              "to": "21:55"
+            }
+          ],
+          "recall": "I remember one more detail: the person with the torch walked unevenly, favouring one leg, like someone with a sore ankle."
+        }
+      ]
+    },
+    {
+      "id": "tom",
+      "name": "Tom Omondi",
+      "age": 37,
+      "occupation": "Matatu SACCO manager",
+      "bio": "The class clown, now managing a matatu SACCO on the Kisumu–Busia route.",
+      "relation": "Owes Collins KSh 20,000 from a business idea that failed.",
+      "secret": "You promised your wife you had stopped drinking. Tonight you have been drinking alone in your car.",
+      "goal": "Help find who did it. Don't let anyone find out about the drinking.",
+      "knowledge": [
+        {
+          "id": "k-tom",
+          "text": "From about 21:25 until 22:00 I sat in my Probox in the car park with a quarter bottle. The car-park askari knocked on my window once.",
+          "facts": [
+            {
+              "char": "tom",
+              "place": "parking",
+              "from": "21:25",
+              "to": "22:00"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "kiprop",
+    "hussein",
+    "nafula",
+    "tom",
+    "atieno",
+    "mercy"
+  ],
+  "variantName": "The 2010 exam",
+  "roles": {
+    "kiprop": "culprit",
+    "nafula": "detective",
+    "mercy": "witness",
+    "atieno": "insider",
+    "hussein": "secret",
+    "tom": "secret"
+  },
+  "timeline": {
+    "collins": [
+      {
+        "from": "20:00",
+        "to": "21:15",
+        "place": "hall",
+        "note": "Promises his 22:00 speech at 20:45"
+      },
+      {
+        "from": "21:16",
+        "to": "21:27",
+        "place": "garden",
+        "note": "Argues with Nafula at 21:15; talks to Kiprop at 21:20"
+      },
+      {
+        "from": "21:30",
+        "to": "22:15",
+        "place": "boathouse",
+        "note": "Seen entering at 21:30"
+      }
+    ],
+    "kiprop": [
+      {
+        "from": "20:00",
+        "to": "21:10",
+        "place": "hall"
+      },
+      {
+        "from": "21:12",
+        "to": "21:32",
+        "place": "garden"
+      },
+      {
+        "from": "21:35",
+        "to": "21:42",
+        "place": "boathouse",
+        "note": "Confronts Collins and strikes him with an oar"
+      },
+      {
+        "from": "21:45",
+        "to": "21:58",
+        "place": "cottages",
+        "note": "Changes his wet shirt"
+      },
+      {
+        "from": "22:01",
+        "to": "22:30",
+        "place": "hall"
+      }
+    ],
+    "atieno": [
+      {
+        "from": "20:00",
+        "to": "22:30",
+        "place": "hall"
+      }
+    ],
+    "nafula": [
+      {
+        "from": "20:00",
+        "to": "21:10",
+        "place": "hall"
+      },
+      {
+        "from": "21:12",
+        "to": "21:20",
+        "place": "garden"
+      },
+      {
+        "from": "21:25",
+        "to": "21:55",
+        "place": "beach"
+      }
+    ],
+    "hussein": [
+      {
+        "from": "20:00",
+        "to": "21:55",
+        "place": "hall"
+      }
+    ],
+    "mercy": [
+      {
+        "from": "20:00",
+        "to": "21:20",
+        "place": "hall"
+      },
+      {
+        "from": "21:25",
+        "to": "21:55",
+        "place": "beach"
+      }
+    ],
+    "tom": [
+      {
+        "from": "20:00",
+        "to": "21:20",
+        "place": "hall"
+      },
+      {
+        "from": "21:25",
+        "to": "22:00",
+        "place": "parking"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-promise",
+      "where": "start",
+      "title": "The promise at 20:45",
+      "text": "At 20:45 Collins tapped his glass: 'At ten o'clock I'll tell the truth about the 2010 Statistics exam. Some of you won't like it.' The hall laughed nervously.",
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-seen",
+      "where": "start",
+      "title": "Seen at 21:30",
+      "text": "A boda rider delivering fish to the beach banda saw Collins walk into the boat shed at 21:30 with his phone torch on.",
+      "facts": [
+        {
+          "char": "collins",
+          "place": "boathouse",
+          "from": "21:30"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-found",
+      "where": "start",
+      "title": "Found at 22:10",
+      "text": "Atieno rang Collins at 21:52 to call him up for his speech. No answer. At 22:10 the lodge boatman found him in the boat shed beside an upturned canoe, struck with an oar. Rain began falling at about 21:40.",
+      "facts": [
+        {
+          "char": "atieno",
+          "place": "hall",
+          "from": "21:52"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-dj",
+      "where": "hall",
+      "title": "The DJ's video and the bar tab",
+      "text": "The DJ filmed the hall from the booth between 21:20 and 22:00. Atieno is on the mic the whole time. Hussein gives his sponsor's toast at 21:35, then stays at the bar; his tab shows rounds at 21:31 and 21:47.",
+      "facts": [
+        {
+          "char": "atieno",
+          "place": "hall",
+          "from": "21:20",
+          "to": "22:00"
+        },
+        {
+          "char": "hussein",
+          "place": "hall",
+          "from": "21:31",
+          "to": "21:55"
+        }
+      ],
+      "about": [
+        "atieno",
+        "hussein"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-banda",
+      "where": "beach",
+      "title": "Mama Akoth at the fish banda",
+      "text": "'The radio lady and the nurse sat with me from half past nine until almost ten, eating and talking about men.'",
+      "facts": [
+        {
+          "char": "nafula",
+          "place": "beach",
+          "from": "21:30",
+          "to": "21:52"
+        },
+        {
+          "char": "mercy",
+          "place": "beach",
+          "from": "21:30",
+          "to": "21:52"
+        }
+      ],
+      "about": [
+        "nafula",
+        "mercy"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-askari",
+      "where": "parking",
+      "title": "The car-park askari's note",
+      "text": "'Probox, white, gentleman inside from 21:25 to 22:00, did not get out. Knocked at 21:45, he waved. Quarter bottle on the seat.'",
+      "facts": [
+        {
+          "char": "tom",
+          "place": "parking",
+          "from": "21:25",
+          "to": "22:00"
+        }
+      ],
+      "about": [
+        "tom"
+      ],
+      "tags": [
+        "alibi",
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-garden",
+      "where": "garden",
+      "title": "The fire-pit waiter",
+      "text": "'At 21:15 the radio lady shouted at Mr Collins and walked off. Then Dr Kiprop and Mr Collins talked by the fire until about 21:27, and Mr Collins went down to the lake. The doctor sat a few minutes more, then went down the same path at about 21:32.'",
+      "facts": [
+        {
+          "char": "kiprop",
+          "place": "garden",
+          "from": "21:20",
+          "to": "21:32"
+        },
+        {
+          "char": "collins",
+          "place": "garden",
+          "from": "21:20",
+          "to": "21:27"
+        },
+        {
+          "char": "nafula",
+          "place": "garden",
+          "from": "21:15"
+        }
+      ],
+      "about": [
+        "kiprop",
+        "nafula"
+      ],
+      "tags": [
+        "decisive",
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-photos",
+      "where": "boathouse",
+      "title": "Screenshots in Collins's jacket",
+      "text": "Printed WhatsApp screenshots from 2010: someone selling the Statistics exam paper at KSh 1,500 a copy. The seller's number is saved as 'Kip Room 14'. Collins has written on the back: 'Tonight. No more hiding.'",
+      "about": [
+        "kiprop"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-cheque",
+      "where": "boathouse",
+      "title": "A bounced cheque",
+      "text": "Also in Collins's jacket: Hussein's sponsorship cheque for KSh 150,000, stamped 'Refer to drawer' by the bank, with Collins's note: 'H, sort this tonight or I tell the class.'",
+      "about": [
+        "hussein"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-prints",
+      "where": "boathouse",
+      "title": "Footprints in the wet sand",
+      "text": "Sharp footprints of a man's smart shoe lead out of the shed and up the path towards the Block B cottages, not the hall or the beach. Because the rain began at 21:40 and the prints are sharp, they were made after it started.",
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-turndown",
+      "where": "cottages",
+      "title": "The housekeeping turndown sheet",
+      "text": "'Block B, cottages 1 to 5, turndown 21:35 to 21:42. All empty, lights off.' Cottage 5 is Dr Rotich's.",
+      "facts": [
+        {
+          "nobody": true,
+          "place": "cottages",
+          "from": "21:35",
+          "to": "21:42"
+        }
+      ],
+      "about": [
+        "kiprop"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "In 2010 you sold copies of the leaked Statistics exam. Collins was about to say so in front of everyone, and it would end your career. At 21:32 you followed him down to the boat shed and begged him. When he refused, you struck him with an oar. You walked up to your cottage in the rain at 21:42, changed your wet shirt, and came back to the hall at 22:01.",
+    "cover": {
+      "text": "After talking to Collins by the fire, I went to my cottage at 21:30 to mark exam scripts, and came back to the hall at about 22:00.",
+      "place": "cottages",
+      "from": "21:30",
+      "to": "21:58"
+    },
+    "danger": "Housekeeping does turndown in the evening. You left prints in the wet sand. Your ankle makes you easy to recognise walking."
+  },
+  "solution": {
+    "motive": "Kiprop sold the leaked 2010 Statistics exam as a student. Collins had the screenshots and was about to name him, which would end Kiprop's academic career.",
+    "method": "He followed Collins down to the boat shed at 21:32 and struck him with an oar when he refused to stay quiet, then walked up to his cottage in the rain.",
+    "summary": "Dr Kiprop Rotich did it. Everyone else is placed away from the shore for the whole window. Kiprop says he was in his cottage from 21:30, but the turndown sheet shows the cottages empty at 21:35–21:42, the waiter saw him take the lake path at 21:32, and after-rain footprints lead from the shed to the cottages.",
+    "decisive": [
+      "c-turndown",
+      "c-garden",
+      "c-prints",
+      "c-photos"
+    ],
+    "path": [
+      "The DJ's video clears Atieno and Hussein. Mama Akoth clears Nafula and Mercy. The askari clears Tom.",
+      "Kiprop says he was in his cottage from 21:30. The waiter saw him take the lake path at 21:32, and housekeeping found every cottage empty from 21:35 to 21:42.",
+      "Sharp footprints made after the 21:40 rain lead from the boat shed to the cottages, not to the hall or the beach.",
+      "The screenshots in Collins's jacket ('Kip Room 14') give the motive."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "nafula",
+      "suspicion": "Collins's ex shouted at him at 21:15, just before he died.",
+      "explanation": "She had backed out of helping him go public on her radio show. She spent the whole window at the fish banda with Mercy.",
+      "clues": [
+        "c-garden",
+        "c-banda"
+      ]
+    },
+    {
+      "char": "tom",
+      "suspicion": "He owes Collins money and disappeared from the hall for half an hour.",
+      "explanation": "He was drinking secretly in his car. The askari saw him there the whole time.",
+      "clues": [
+        "c-askari"
+      ]
+    },
+    {
+      "char": "hussein",
+      "suspicion": "Collins was threatening to expose his bounced cheque tonight.",
+      "explanation": "Embarrassing, but the DJ's video shows him in the hall for the whole window.",
+      "clues": [
+        "c-cheque",
+        "c-dj"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "The sponsor's cheque",
+      "summary": "Same reunion, different culprit: Hussein, whose bounced cheque was about to be read out. Kiprop's 2010 secret is real, but this time it's a red herring.",
+      "roles": {
+        "hussein": "culprit",
+        "kiprop": "secret",
+        "nafula": "detective",
+        "mercy": "witness",
+        "atieno": "insider",
+        "tom": "secret"
+      },
+      "characters": {
+        "kiprop": {
+          "secret": "In 2010 you sold copies of the leaked Statistics exam. Collins was about to say so. You did not hurt him, but the screenshots in his jacket will make you look guilty.",
+          "goal": "Find the real culprit before the 2010 screenshots convict you.",
+          "knowledge": [
+            {
+              "id": "k-kiprop",
+              "text": "At 21:20 Collins came to the fire pit and told me quietly: 'Tonight I name names about 2010. I'm sorry, Kip.' I went up to my cottage at 21:28 to calm down and mark scripts, and stayed there until about 22:00.",
+              "facts": [
+                {
+                  "char": "kiprop",
+                  "place": "garden",
+                  "from": "21:20"
+                },
+                {
+                  "char": "kiprop",
+                  "place": "cottages",
+                  "from": "21:30",
+                  "to": "21:58"
+                }
+              ]
+            }
+          ]
+        },
+        "hussein": {
+          "secret": "Your hardware business is close to collapse and you have been hiding it from your family.",
+          "knowledge": [
+            {
+              "id": "k-hussein",
+              "text": "Collins texted me at 21:00: 'The cheque bounced. Sort it tonight or I tell everyone at ten.'"
+            }
+          ]
+        },
+        "mercy": {
+          "knowledge": [
+            {
+              "id": "k-mercy",
+              "text": "From 21:25 I sat at the fish banda with Nafula. At about 21:33 I saw a phone torch moving fast along the shore path from the hall side towards the boat shed.",
+              "facts": [
+                {
+                  "char": "mercy",
+                  "place": "beach",
+                  "from": "21:25",
+                  "to": "21:55"
+                }
+              ],
+              "recall": "I remember one more detail: the torch beam bounced off a pair of shiny leather shoes, loafers rather than trainers."
+            }
+          ]
+        }
+      },
+      "timeline": {
+        "hussein": [
+          {
+            "from": "20:00",
+            "to": "21:28",
+            "place": "hall",
+            "note": "Slips out before his scheduled toast"
+          },
+          {
+            "from": "21:33",
+            "to": "21:40",
+            "place": "boathouse",
+            "note": "Begs Collins to keep quiet about the cheque; strikes him with an oar"
+          },
+          {
+            "from": "21:46",
+            "to": "21:52",
+            "place": "parking",
+            "note": "Wipes his shoes with a cloth from his boot"
+          },
+          {
+            "from": "21:54",
+            "to": "22:30",
+            "place": "hall"
+          }
+        ],
+        "kiprop": [
+          {
+            "from": "20:00",
+            "to": "21:10",
+            "place": "hall"
+          },
+          {
+            "from": "21:12",
+            "to": "21:28",
+            "place": "garden"
+          },
+          {
+            "from": "21:30",
+            "to": "22:00",
+            "place": "cottages",
+            "note": "Marks scripts, as he says"
+          },
+          {
+            "from": "22:03",
+            "to": "22:30",
+            "place": "hall"
+          }
+        ]
+      },
+      "clues": {
+        "update": {
+          "c-dj": {
+            "text": "The DJ filmed the hall from the booth between 21:20 and 22:00. Atieno is on the mic the whole time. Hussein's sponsor's toast was due at 21:35, but he is nowhere to be seen; Atieno jokes, 'Our sponsor has gone to find money!' He reappears at the bar at 21:54.",
+            "facts": [
+              {
+                "char": "atieno",
+                "place": "hall",
+                "from": "21:20",
+                "to": "22:00"
+              },
+              {
+                "char": "hussein",
+                "place": "hall",
+                "from": "21:30",
+                "to": "21:53",
+                "absent": true
+              },
+              {
+                "char": "hussein",
+                "place": "hall",
+                "from": "21:54"
+              }
+            ],
+            "tags": [
+              "alibi",
+              "decisive"
+            ]
+          },
+          "c-garden": {
+            "text": "'At 21:15 the radio lady shouted at Mr Collins and walked off. Then Dr Kiprop and Mr Collins talked by the fire until about 21:27, and Mr Collins went down to the lake. The doctor went the other way, up to the cottages, at 21:28.'",
+            "facts": [
+              {
+                "char": "kiprop",
+                "place": "garden",
+                "from": "21:20",
+                "to": "21:28"
+              },
+              {
+                "char": "collins",
+                "place": "garden",
+                "from": "21:20",
+                "to": "21:27"
+              },
+              {
+                "char": "nafula",
+                "place": "garden",
+                "from": "21:15"
+              }
+            ],
+            "tags": [
+              "red-herring"
+            ]
+          },
+          "c-askari": {
+            "text": "'Probox, white, gentleman inside from 21:25 to 22:00, did not get out. Knocked at 21:45, he waved. Quarter bottle on the seat. Also: the big sponsor came half-running into the car park at 21:46, wiped his shoes with a cloth from his boot, and went back in at 21:52.'",
+            "facts": [
+              {
+                "char": "tom",
+                "place": "parking",
+                "from": "21:25",
+                "to": "22:00"
+              },
+              {
+                "char": "hussein",
+                "place": "parking",
+                "from": "21:46",
+                "to": "21:52"
+              }
+            ],
+            "about": [
+              "tom",
+              "hussein"
+            ],
+            "tags": [
+              "alibi",
+              "decisive"
+            ]
+          },
+          "c-cheque": {
+            "tags": [
+              "motive",
+              "decisive"
+            ]
+          },
+          "c-photos": {
+            "tags": [
+              "red-herring"
+            ]
+          },
+          "c-prints": {
+            "text": "Sharp footprints of a man's leather loafer lead out of the shed along the shore path, towards the car park. Because the rain began at 21:40 and the prints are sharp, they were made after it started."
+          },
+          "c-turndown": {
+            "text": "'Block B, cottages 1 to 4 empty. Cottage 5, Dr Rotich at his desk marking, 21:35 to 21:42. Asked us not to disturb.'",
+            "facts": [
+              {
+                "char": "kiprop",
+                "place": "cottages",
+                "from": "21:30",
+                "to": "21:58"
+              }
+            ],
+            "tags": [
+              "alibi"
+            ]
+          }
+        }
+      },
+      "culprit": {
+        "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+        "truth": "Your KSh 150,000 sponsorship cheque bounced, and Collins was going to read it out to the whole class at 22:00. You slipped out of the hall at 21:28, before your own toast, and found him at the boat shed. When he would not give you a week, you struck him with an oar. You went round by the shore path to the car park, wiped your loafers with a cloth from your boot, and were back at the bar by 21:54.",
+        "cover": {
+          "text": "I gave my toast at 21:35 and stayed at the bar until about 22:00.",
+          "place": "hall",
+          "from": "21:30",
+          "to": "21:55"
+        },
+        "danger": "The DJ was filming. The car-park askari doesn't miss much. Your loafers left prints."
+      },
+      "solution": {
+        "motive": "Hussein's KSh 150,000 sponsorship cheque had bounced, and Collins, the treasurer, was going to tell the class at 22:00.",
+        "method": "He slipped out before his own toast, struck Collins with an oar in the boat shed, and went round by the shore path to the car park to clean his shoes.",
+        "summary": "Hussein Ali Omar did it. He claims he gave his toast at 21:35, but the DJ's video shows him missing from 21:30 to 21:53, the askari saw him cleaning his shoes in the car park at 21:46, and after-rain loafer prints lead from the shed towards the car park.",
+        "decisive": [
+          "c-dj",
+          "c-askari",
+          "c-cheque"
+        ],
+        "path": [
+          "Mama Akoth clears Nafula and Mercy, the askari clears Tom, the DJ clears Atieno, and housekeeping saw Kiprop marking in Cottage 5.",
+          "Hussein says he gave his toast at 21:35. The DJ's video shows his toast never happened and he was gone from 21:30 to 21:53.",
+          "The askari saw him rush into the car park at 21:46 and wipe his shoes. The after-rain prints are loafers, heading that way.",
+          "The bounced cheque and Collins's note, 'sort this tonight or I tell the class', give the motive."
+        ]
+      },
+      "redHerrings": [
+        {
+          "char": "kiprop",
+          "suspicion": "The 2010 screenshots in Collins's jacket name 'Kip Room 14'.",
+          "explanation": "Kiprop really did sell the exam in 2010, but housekeeping saw him marking in his cottage for the whole window.",
+          "clues": [
+            "c-photos",
+            "c-turndown"
+          ]
+        },
+        {
+          "char": "nafula",
+          "suspicion": "Collins's ex shouted at him at 21:15, just before he died.",
+          "explanation": "She had backed out of helping him go public on her radio show. She spent the whole window at the fish banda with Mercy.",
+          "clues": [
+            "c-garden",
+            "c-banda"
+          ]
+        },
+        {
+          "char": "tom",
+          "suspicion": "He owes Collins money and disappeared from the hall for half an hour.",
+          "explanation": "He was drinking secretly in his car. The askari saw him there the whole time.",
+          "clues": [
+            "c-askari"
+          ]
+        }
+      ]
+    }
+  ]
+}

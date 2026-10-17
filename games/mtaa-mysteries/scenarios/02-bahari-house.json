@@ -1,0 +1,705 @@
+{
+  "id": "bahari-house",
+  "title": "Blackout at Bahari House",
+  "location": "Old Town, Mombasa",
+  "tone": "Candlelit and atmospheric, an old house full of old loyalties",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "A heritage hotel's manager of thirty years is found in his office when the power comes back on.",
+  "contentNotes": [
+    "A death by a blow, not described graphically",
+    "A family business facing sale"
+  ],
+  "reviewFlags": [
+    "Old Town Mombasa is real; Bahari House and its staff and guests are fictional. Check the hotel's layout (open courtyard, first-floor gallery, roof terrace) against real Old Town Swahili houses.",
+    "Power cuts in Old Town and live taarab at a hotel dinner: confirm these are plausible and not presented as a cliché.",
+    "Check names and dress (leso, buibui) are used respectfully and accurately for the coast."
+  ],
+  "intro": "Bahari House is a restored Swahili merchant's house in Mombasa's Old Town: a courtyard open to the sky, carved doors, a first-floor gallery and a roof terrace looking towards Fort Jesus. Tonight a Nairobi consortium is finalising its purchase, and dinner is tense. At 20:40 the power fails across Old Town. The taarab band plays on unplugged, lanterns are lit, and the manager, Rashid Omar Bakari, goes up to his office to phone the power company. When the lights return at 21:10 he is found on his office floor. He was alive at 20:47 and did not answer his phone at 21:05.",
+  "victim": {
+    "id": "rashid",
+    "name": "Rashid Omar Bakari",
+    "description": "61, manager of Bahari House for thirty years. Courteous, stubborn, and fiercely protective of the building."
+  },
+  "scene": "office",
+  "window": {
+    "from": "20:47",
+    "to": "21:05"
+  },
+  "places": [
+    {
+      "id": "office",
+      "name": "Manager's office"
+    },
+    {
+      "id": "gallery",
+      "name": "First-floor gallery"
+    },
+    {
+      "id": "room4",
+      "name": "Guest rooms, second floor"
+    },
+    {
+      "id": "roof",
+      "name": "Roof terrace"
+    },
+    {
+      "id": "courtyard",
+      "name": "Courtyard (dinner and taarab)"
+    },
+    {
+      "id": "reception",
+      "name": "Reception"
+    },
+    {
+      "id": "kitchen",
+      "name": "Kitchen"
+    },
+    {
+      "id": "generator",
+      "name": "Generator shed, back lane",
+      "restricted": true
+    }
+  ],
+  "routes": [
+    [
+      "office",
+      "gallery",
+      1
+    ],
+    [
+      "gallery",
+      "room4",
+      1
+    ],
+    [
+      "room4",
+      "roof",
+      1
+    ],
+    [
+      "gallery",
+      "courtyard",
+      2
+    ],
+    [
+      "gallery",
+      "reception",
+      2
+    ],
+    [
+      "gallery",
+      "kitchen",
+      2
+    ],
+    [
+      "courtyard",
+      "reception",
+      1
+    ],
+    [
+      "courtyard",
+      "kitchen",
+      1
+    ],
+    [
+      "courtyard",
+      "generator",
+      2
+    ]
+  ],
+  "characters": [
+    {
+      "id": "lydia",
+      "name": "Lydia Chebet",
+      "age": 33,
+      "occupation": "Conservation architect",
+      "bio": "From Eldoret, now with a Nairobi heritage firm. Surveyed the coral-stone walls for the sale. Wore a green fringed [[leso|a printed cotton wrap]] at dinner.",
+      "relation": "Rashid challenged every line of her structural report.",
+      "secret": "You have applied for a job at the investor's own company, and haven't told the heritage board.",
+      "goal": "Help find out what happened. Keep your job application private.",
+      "knowledge": [
+        {
+          "id": "k-lydia",
+          "text": "At about 20:20, from my seat at dinner, I saw Mzee Yusuf go up to the gallery and slip an envelope under the office door.",
+          "facts": [
+            {
+              "char": "yusuf",
+              "place": "gallery",
+              "from": "20:20"
+            },
+            {
+              "char": "lydia",
+              "place": "courtyard",
+              "from": "20:20"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "peter",
+      "name": "Peter Njoroge Kamau",
+      "age": 55,
+      "occupation": "Property investor",
+      "bio": "Leads the Nairobi consortium buying Bahari House. Wants a rooftop bar and twenty more rooms.",
+      "relation": "Argued with Rashid at dinner, loudly, in front of everyone.",
+      "secret": "The consortium's bank loan fell through yesterday. If the sale is delayed, you lose your deposit and your partners.",
+      "goal": "Clear your name fast. Don't let anyone learn the loan has collapsed.",
+      "knowledge": [
+        {
+          "id": "k-peter",
+          "text": "When the lights went out I stayed at my table in the courtyard, on a phone call with my partners, from 20:44 until the lights came back.",
+          "facts": [
+            {
+              "char": "peter",
+              "place": "courtyard",
+              "from": "20:44",
+              "to": "21:10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "amina",
+      "name": "Amina Said",
+      "age": 38,
+      "occupation": "Assistant manager",
+      "bio": "Twelve years at Bahari House. Knows every key and every creaky stair.",
+      "relation": "Rashid's protégée, expected to take over when he retired.",
+      "secret": "You have secretly agreed to manage the investor's new hotel if the sale goes through, the opposite of what Rashid wanted.",
+      "goal": "Find who did this. Keep your deal with the investor quiet.",
+      "knowledge": [
+        {
+          "id": "k-amina",
+          "text": "When the power failed I went to the generator shed with Baraka the watchman. We tried to start it three times and it wouldn't catch. I came back to the courtyard at about 21:05.",
+          "facts": [
+            {
+              "char": "amina",
+              "place": "generator",
+              "from": "20:45",
+              "to": "21:03"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "omar",
+      "name": "Omar Hassan",
+      "age": 24,
+      "occupation": "Night receptionist",
+      "bio": "Studies hospitality management by day and works the front desk by night.",
+      "relation": "Rashid hired him straight out of college.",
+      "secret": "On quiet nights you let your cousin sleep in empty Room 7 without registering him.",
+      "goal": "Help find the truth. Don't let Room 7 come up.",
+      "knowledge": [
+        {
+          "id": "k-omar",
+          "text": "I never left the desk during the blackout. At about 20:58, through the courtyard arch, I saw a phone torch moving along the first-floor gallery, away from the office end.",
+          "facts": [
+            {
+              "char": "omar",
+              "place": "reception",
+              "from": "20:40",
+              "to": "21:10"
+            }
+          ],
+          "recall": "One more detail comes back to me: the person with the torch wore something long and patterned, a leso or a scarf, with fringes that swung as they walked."
+        }
+      ]
+    },
+    {
+      "id": "achieng",
+      "name": "Achieng' Odhiambo",
+      "age": 45,
+      "occupation": "Travel journalist",
+      "bio": "Writing a feature on Old Town hotels for a travel magazine. Never without her camera.",
+      "relation": "Interviewed Rashid this afternoon about the house's history.",
+      "secret": "Your 'independent' feature is partly paid for by the investor's PR firm. You haven't disclosed it.",
+      "goal": "Solve it. Keep the PR money out of the story.",
+      "knowledge": [
+        {
+          "id": "k-achieng",
+          "text": "I'd gone up to the roof terrace at 20:38 to photograph the dhows' lights. When the blackout hit, I stayed up there shooting long exposures of a dark Old Town until the power came back.",
+          "facts": [
+            {
+              "char": "achieng",
+              "place": "roof",
+              "from": "20:45",
+              "to": "21:10"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "yusuf",
+      "name": "Mzee Yusuf Abdalla",
+      "age": 68,
+      "occupation": "Retired teacher",
+      "bio": "Has lived in Room 2 for a year. Plays [[bao|a traditional board game of pits and seeds]] in the courtyard every evening.",
+      "relation": "Rashid's oldest friend, and months behind on his bill.",
+      "secret": "Rashid has let you stay without paying since your pension stopped. You are ashamed and have told no one.",
+      "goal": "Find who did this to your friend. Keep your unpaid bill private.",
+      "knowledge": [
+        {
+          "id": "k-yusuf",
+          "text": "When the lights went out I went to the kitchen to help Mama Rehema make ginger tea on the gas stove, and I stayed there until the power came back.",
+          "facts": [
+            {
+              "char": "yusuf",
+              "place": "kitchen",
+              "from": "20:42",
+              "to": "21:10"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "lydia",
+    "peter",
+    "achieng",
+    "yusuf",
+    "amina",
+    "omar"
+  ],
+  "variantName": "The structural report",
+  "roles": {
+    "lydia": "culprit",
+    "achieng": "detective",
+    "omar": "witness",
+    "amina": "insider",
+    "peter": "secret",
+    "yusuf": "secret"
+  },
+  "timeline": {
+    "rashid": [
+      {
+        "from": "20:00",
+        "to": "20:30",
+        "place": "courtyard",
+        "note": "Dinner; argues with Peter at 20:15"
+      },
+      {
+        "from": "20:33",
+        "to": "21:30",
+        "place": "office",
+        "note": "Phones the power company at 20:47; struck at about 20:52"
+      }
+    ],
+    "lydia": [
+      {
+        "from": "20:00",
+        "to": "20:40",
+        "place": "courtyard"
+      },
+      {
+        "from": "20:43",
+        "to": "20:46",
+        "place": "room4",
+        "note": "Says she has a migraine"
+      },
+      {
+        "from": "20:48",
+        "to": "20:55",
+        "place": "office",
+        "note": "Confronts Rashid about his letter; strikes him with the brass lamp"
+      },
+      {
+        "from": "20:56",
+        "to": "20:59",
+        "place": "gallery",
+        "note": "Walks back along the gallery by phone torch"
+      },
+      {
+        "from": "21:00",
+        "to": "21:15",
+        "place": "room4"
+      }
+    ],
+    "peter": [
+      {
+        "from": "20:00",
+        "to": "21:15",
+        "place": "courtyard"
+      }
+    ],
+    "amina": [
+      {
+        "from": "20:00",
+        "to": "20:42",
+        "place": "courtyard"
+      },
+      {
+        "from": "20:44",
+        "to": "21:03",
+        "place": "generator"
+      },
+      {
+        "from": "21:05",
+        "to": "21:20",
+        "place": "courtyard"
+      }
+    ],
+    "omar": [
+      {
+        "from": "20:00",
+        "to": "21:15",
+        "place": "reception"
+      }
+    ],
+    "achieng": [
+      {
+        "from": "20:00",
+        "to": "20:38",
+        "place": "courtyard"
+      },
+      {
+        "from": "20:42",
+        "to": "21:10",
+        "place": "roof"
+      }
+    ],
+    "yusuf": [
+      {
+        "from": "20:00",
+        "to": "20:17",
+        "place": "courtyard"
+      },
+      {
+        "from": "20:19",
+        "to": "20:20",
+        "place": "gallery",
+        "note": "Slips an envelope under the office door"
+      },
+      {
+        "from": "20:22",
+        "to": "20:40",
+        "place": "courtyard"
+      },
+      {
+        "from": "20:41",
+        "to": "21:15",
+        "place": "kitchen"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-call",
+      "where": "start",
+      "title": "The last call and the unanswered one",
+      "text": "The office landline log shows Rashid's call to the power company ending at 20:47. At 21:05 Omar rang the office extension to say the generator had failed. Nobody answered.",
+      "facts": [
+        {
+          "char": "rashid",
+          "place": "office",
+          "from": "20:47"
+        },
+        {
+          "char": "omar",
+          "place": "reception",
+          "from": "21:05"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-found",
+      "where": "start",
+      "title": "Found when the lights came on",
+      "text": "When the power returned at 21:10, Omar went up and found Rashid on the floor beside his desk. A heavy brass oil lamp lay next to him. The doctor staying in Room 6 says he was struck once and fell. The office has one door, onto the gallery.",
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-dinner",
+      "where": "start",
+      "title": "The dinner photo, 20:20",
+      "text": "The hotel posted a dinner photo at 20:20: Rashid at the head of the table, Peter in white linen, Amina in a navy [[buibui|a long black or navy overgarment]], Achieng' in jeans with her camera. Lydia is the only guest in a green fringed leso.",
+      "facts": [
+        {
+          "char": "lydia",
+          "place": "courtyard",
+          "from": "20:20"
+        },
+        {
+          "char": "peter",
+          "place": "courtyard",
+          "from": "20:20"
+        },
+        {
+          "char": "rashid",
+          "place": "courtyard",
+          "from": "20:20"
+        }
+      ],
+      "about": [
+        "lydia"
+      ],
+      "tags": [
+        "identity"
+      ]
+    },
+    {
+      "id": "c-argument",
+      "where": "start",
+      "title": "The argument at dinner",
+      "text": "At 20:15, in front of every guest, Peter told Rashid: 'You cannot stop this sale, old man. One way or another, it is happening.' Rashid walked out of dinner at 20:30.",
+      "about": [
+        "peter"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-letter",
+      "where": "office",
+      "title": "The letter on the desk",
+      "text": "A draft letter on Rashid's desk, addressed to the county heritage office: 'I have reason to believe the structural report signed by L. Chebet overstates the damage to the coral-stone walls, so that the new owners can demolish the east wing. I have asked an independent engineer to inspect it.' Beside it, a bank deposit slip for KSh 1,200,000 into an account in the name of 'L. Chebet', which someone has tried to tear in half.",
+      "about": [
+        "lydia"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-ledger",
+      "where": "office",
+      "title": "The guest ledger",
+      "text": "The guest ledger is open at Room 2: 'Mzee Yusuf, unpaid since June, KSh 162,000.' In the margin, in Rashid's pencil: 'Talk to Y. tonight.' Under the door, an envelope marked 'For Rashid, from Y.A.'",
+      "about": [
+        "yusuf"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-thread",
+      "where": "office",
+      "title": "Threads on the door latch",
+      "text": "Caught on the office door latch: a few long green cotton threads, twisted like the fringe of a wrap.",
+      "about": [
+        "lydia"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-camera",
+      "where": "roof",
+      "title": "Achieng's long exposures",
+      "text": "Achieng's camera holds eleven long exposures shot from the roof terrace between 20:46 and 21:06, each with her own silhouette at the edge of the frame. The 20:58 frame looks down into the courtyard and catches a phone torch on the first-floor gallery, lighting a woman in a long green fringed leso walking away from the office.",
+      "facts": [
+        {
+          "char": "achieng",
+          "place": "roof",
+          "from": "20:46",
+          "to": "21:06"
+        },
+        {
+          "char": "lydia",
+          "place": "gallery",
+          "from": "20:58"
+        }
+      ],
+      "about": [
+        "achieng",
+        "lydia"
+      ],
+      "tags": [
+        "alibi",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-video",
+      "where": "courtyard",
+      "title": "The taarab singer's phone video",
+      "text": "The band's singer filmed the unplugged set from 20:44 to 21:06. Peter is at the front table by lantern-light the whole time, on the phone, waving his free hand.",
+      "facts": [
+        {
+          "char": "peter",
+          "place": "courtyard",
+          "from": "20:44",
+          "to": "21:06"
+        }
+      ],
+      "about": [
+        "peter"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-cctv",
+      "where": "reception",
+      "title": "The reception camera",
+      "text": "Only the reception camera has battery backup. From 20:40 to 21:10 it shows Omar at the front desk throughout, working by lantern.",
+      "facts": [
+        {
+          "char": "omar",
+          "place": "reception",
+          "from": "20:40",
+          "to": "21:10"
+        }
+      ],
+      "about": [
+        "omar"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-cook",
+      "where": "kitchen",
+      "title": "Mama Rehema, the cook",
+      "text": "'Mzee Yusuf came in as soon as the lights went, and stayed with me the whole time, stirring the tea and telling me about his students. He never left until the lights came back.'",
+      "facts": [
+        {
+          "char": "yusuf",
+          "place": "kitchen",
+          "from": "20:42",
+          "to": "21:10"
+        }
+      ],
+      "about": [
+        "yusuf"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-genlog",
+      "where": "generator",
+      "title": "The generator logbook",
+      "text": "Signed by Amina Said and Baraka the watchman: '20:46 start attempt, failed. 20:52 failed. 21:01 failed, fuel line blocked. 21:03 gave up.' Baraka adds in pencil: 'Madam with me the whole time, holding the torch.'",
+      "facts": [
+        {
+          "char": "amina",
+          "place": "generator",
+          "from": "20:45",
+          "to": "21:03"
+        }
+      ],
+      "about": [
+        "amina"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "Peter's consortium paid you KSh 1.2 million to write a structural report that would let them demolish the east wing. At dinner Rashid told you he had written to the county. At 20:48 you went to his office by phone torch, begged him to tear up the letter, and when he refused you struck him with the brass lamp. You walked back along the gallery to your room at about 20:58.",
+    "cover": {
+      "text": "I had a migraine. I went up to my room at 20:40 and lay in the dark until the lights came back.",
+      "place": "room4",
+      "from": "20:43",
+      "to": "21:10"
+    },
+    "danger": "Your leso is the only green one tonight. Someone may have seen your torch on the gallery. You tried to tear the deposit slip but didn't have time to take it."
+  },
+  "solution": {
+    "motive": "Lydia was paid KSh 1.2 million to exaggerate the damage in her structural report, and Rashid had written to the county to expose it.",
+    "method": "She went to his office by phone torch during the blackout, argued with him, and struck him with the brass oil lamp. Then she walked back along the gallery to her room.",
+    "summary": "Lydia Chebet did it. Everyone else is placed away from the office, and Lydia's migraine story fails: Achieng's 20:58 photo shows a woman in the only green leso of the night on the gallery, walking away from the office, and green threads are caught on the office latch.",
+    "decisive": [
+      "c-camera",
+      "c-thread",
+      "c-letter"
+    ],
+    "path": [
+      "The taarab video clears Peter, the reception camera clears Omar, the cook clears Yusuf, the generator log clears Amina, and Achieng's own photo series places her on the roof.",
+      "Lydia has no alibi beyond her own claim to be in her room.",
+      "The 20:20 dinner photo shows Lydia is the only person in a green fringed leso. At 20:58, Achieng's frame catches a woman in a green fringed leso on the gallery, walking away from the office. So Lydia was not in her room.",
+      "Green fringe threads on the office door latch put that wrap at the office door.",
+      "The draft letter and the KSh 1.2 million deposit slip give the motive: Rashid was about to expose her report."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "peter",
+      "suspicion": "He threatened Rashid at dinner: 'One way or another, it is happening.'",
+      "explanation": "He was desperate because his bank loan had collapsed, not because he planned violence. The singer's video shows him at his table for the whole window.",
+      "clues": [
+        "c-argument",
+        "c-video"
+      ]
+    },
+    {
+      "char": "yusuf",
+      "suspicion": "He owes KSh 162,000, Rashid planned to 'talk to Y. tonight', and he was seen at the office door.",
+      "explanation": "The envelope holds KSh 3,000 and a thank-you note. Rashid had been letting his old friend stay for free. Mama Rehema puts Yusuf in the kitchen for the whole blackout.",
+      "clues": [
+        "c-ledger",
+        "c-cook"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "The architect's daughter",
+      "summary": "Same evidence trail, different motive and relationship: Lydia is the daughter of the architect Rashid blamed for a roof collapse in 2004.",
+      "characters": {
+        "lydia": {
+          "secret": "Professionally you use your mother's surname. Your father's name would mean something in this house."
+        }
+      },
+      "clues": {
+        "update": {
+          "c-letter": {
+            "text": "A letter in Rashid's hand, dated today and addressed 'To Lydia': 'I recognised you tonight; you have your father's face. In 2004 I let the board blame him for the east-wing roof when the fault was mine. He never worked again. But your report is not justice, it is revenge on this house. Tomorrow I tell the county both truths.' Under it, an old newspaper cutting: 'Architect Chebet barred after hotel roof collapse'."
+          }
+        }
+      },
+      "culprit": {
+        "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+        "truth": "Your father was the architect Rashid blamed for the 2004 roof collapse. He never worked again. You took this survey under your mother's surname and wrote a report that would let the new owners tear the house down. Rashid recognised you tonight and wrote that he would expose the report as revenge. At 20:48 you went to his office by phone torch. When he would not burn the letter, you struck him with the brass lamp, and walked back along the gallery at about 20:58.",
+        "cover": {
+          "text": "I had a migraine. I went up to my room at 20:40 and lay in the dark until the lights came back.",
+          "place": "room4",
+          "from": "20:43",
+          "to": "21:10"
+        },
+        "danger": "Your leso is the only green one tonight. Someone may have seen your torch on the gallery. The letter names your father."
+      },
+      "solution": {
+        "motive": "Lydia's father was the architect Rashid wrongly blamed for the 2004 roof collapse. Her report was revenge, and Rashid had recognised her and was about to expose it.",
+        "method": "She went to his office by phone torch during the blackout, and struck him with the brass oil lamp when he refused to destroy his letter.",
+        "summary": "Lydia Chebet did it, out of a twenty-year-old grievance. The evidence trail is the same: the green leso on the gallery at 20:58 breaks her migraine alibi, and the letter and newspaper cutting reveal who she really is.",
+        "decisive": [
+          "c-camera",
+          "c-thread",
+          "c-letter"
+        ],
+        "path": [
+          "The taarab video, reception camera, cook, generator log and roof photos clear Peter, Omar, Yusuf, Amina and Achieng'.",
+          "Lydia's alibi is only her own word.",
+          "The only green fringed leso of the night is on the gallery at 20:58, walking away from the office, and green threads are caught on the office latch.",
+          "The letter 'To Lydia' and the 2004 newspaper cutting show the motive: a father ruined by Rashid, and a report written for revenge."
+        ]
+      }
+    }
+  ]
+}

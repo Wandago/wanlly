@@ -15,6 +15,7 @@ Read only the file the current step needs.
 - `docs/PLAN.md`: full build plan (stack, phases 0–8, money). Read only the section for the current phase.
 - `docs/harness/contract.md`: template for turning a request into a bounded task
 - `docs/harness/two-pass.md`: execution pass and adversarial review pass prompts
+- `games/mtaa-mysteries/`: separate project, a Kenyan murder-mystery social deduction game. Start at its `README.md`. Run `npm run check` inside it (also run by `scripts/check.sh`). Its `scenarios/` and `docs/scenarios/` contain spoilers.
 - `prototype/index.html`: clickable UI reference. Design tokens are at the top of `<style>`, app logic in `<script>`.
 - `scripts/check.sh`: the verification command (the single sensor entry point)
 - `scripts/test-harness.sh`: tests that the gates still block what they should

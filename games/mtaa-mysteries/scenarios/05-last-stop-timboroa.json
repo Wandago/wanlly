@@ -1,0 +1,667 @@
+{
+  "id": "last-stop-timboroa",
+  "title": "The Last Stop Before Timboroa",
+  "location": "Roadside stopover on the Nakuru–Eldoret highway",
+  "tone": "Cold, misty, late-night road trip with a locked-room puzzle",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "A touring band stops for nyama choma on a freezing night. Their manager is found inside a store room padlocked from the outside.",
+  "contentNotes": [
+    "A death by a blow, not described graphically",
+    "A character driving without a licence"
+  ],
+  "reviewFlags": [
+    "Timboroa is real and known as one of the highest, coldest points on the highway; the stopover and its owners are fictional. Check the stopover details (grill hall, lodge rooms, petrol station next door, truckers on the roadside).",
+    "The music copyright dispute is fictional. Don't name a real collecting society, and check the registration detail is plausible for Kenyan musicians.",
+    "Check the band's genre, slang and the 'tour cap' merch for authenticity."
+  ],
+  "intro": "Kanjo Sound, a six-piece benga-fusion band, is driving overnight from Nairobi to a festival in Eldoret. At 21:30 they pull into a roadside stopover below Timboroa, where the mist is thick and the cold bites. Mzee Kariuki fires up the grill, the truck drivers ask for a song, and the band's manager and sound engineer, Kelvin 'KK' Kamande, locks himself in the equipment store room to fix a wireless mic kit. At 23:05 Mzee Kariuki unlocks the store and finds KK on the floor. The padlock had been locked from the outside. KK was alive at 22:28, and from 22:50 his phone rang unanswered inside the room.",
+  "victim": {
+    "id": "kk",
+    "name": "Kelvin 'KK' Kamande",
+    "description": "39, the band's manager and sound engineer. Built Kanjo Sound from a church youth band into a touring act. Generous, controlling, and owed money by half the industry."
+  },
+  "scene": "store",
+  "window": {
+    "from": "22:30",
+    "to": "22:50"
+  },
+  "places": [
+    {
+      "id": "store",
+      "name": "Equipment store room"
+    },
+    {
+      "id": "yard",
+      "name": "Yard"
+    },
+    {
+      "id": "dining",
+      "name": "Grill and dining hall"
+    },
+    {
+      "id": "rooms",
+      "name": "Lodge rooms"
+    },
+    {
+      "id": "van",
+      "name": "The band van",
+      "restricted": true
+    },
+    {
+      "id": "roadside",
+      "name": "Roadside wall by the highway"
+    },
+    {
+      "id": "petrol",
+      "name": "Petrol station shop next door"
+    }
+  ],
+  "routes": [
+    [
+      "store",
+      "yard",
+      1
+    ],
+    [
+      "yard",
+      "dining",
+      1
+    ],
+    [
+      "yard",
+      "rooms",
+      1
+    ],
+    [
+      "yard",
+      "van",
+      1
+    ],
+    [
+      "yard",
+      "roadside",
+      2
+    ],
+    [
+      "roadside",
+      "petrol",
+      1
+    ]
+  ],
+  "characters": [
+    {
+      "id": "baraka",
+      "name": "Baraka Mwangi",
+      "age": 31,
+      "occupation": "Lead guitarist",
+      "bio": "Lead guitarist and the band's quiet songwriter. Plays with custom guitar picks printed 'BM'.",
+      "relation": "KK has managed him since he was nineteen.",
+      "secret": "You have been talking to another band about joining them after this tour.",
+      "goal": "Help find out what happened. Keep your talks with the other band quiet.",
+      "knowledge": [
+        {
+          "id": "k-baraka",
+          "text": "At check-in I saw Halima put the spare store-room key in the van's glovebox."
+        }
+      ]
+    },
+    {
+      "id": "jiru",
+      "name": "Wanjiru 'Jiru' Nduta",
+      "age": 27,
+      "occupation": "Lead singer",
+      "bio": "The voice of the band. Her solo single is trending.",
+      "relation": "KK threatened to sue if she left the band.",
+      "secret": "You have signed a solo deal with a Nairobi label. KK found out this week.",
+      "goal": "Find who did this. Keep the solo deal quiet until it's announced.",
+      "knowledge": [
+        {
+          "id": "k-jiru",
+          "text": "At 21:50 I fetched my mic stand from the store room, and lost a gold earring there. From 22:25 until almost 23:00 I sang an acoustic set for the truck drivers in the dining hall.",
+          "facts": [
+            {
+              "char": "jiru",
+              "place": "store",
+              "from": "21:50"
+            },
+            {
+              "char": "jiru",
+              "place": "dining",
+              "from": "22:25",
+              "to": "22:55"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "otieno",
+      "name": "Otieno 'Sticks' Okoth",
+      "age": 35,
+      "occupation": "Drummer",
+      "bio": "Drummer, joker, and the band's back-up driver.",
+      "relation": "KK paid his hospital bills last year.",
+      "secret": "You don't have a valid driving licence. You've failed the test twice, and you've driven the van on this tour anyway.",
+      "goal": "Help solve it. Keep the licence problem quiet.",
+      "knowledge": [
+        {
+          "id": "k-otieno",
+          "text": "From about 22:28 to 22:52 I was in the petrol station shop next door, buying airtime and watching the football on their TV.",
+          "facts": [
+            {
+              "char": "otieno",
+              "place": "petrol",
+              "from": "22:28",
+              "to": "22:52"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "halima",
+      "name": "Halima Jeptoo",
+      "age": 29,
+      "occupation": "Driver and tour manager",
+      "bio": "Drives the van and runs the tour schedule. Grew up near Eldoret and knows every stop on this road.",
+      "relation": "KK hired her after the last driver crashed.",
+      "secret": "A club owner in Nakuru paid you cash to book the band for less, and you kept the difference.",
+      "goal": "Find who did it. Keep the Nakuru cash quiet.",
+      "knowledge": [
+        {
+          "id": "k-halima",
+          "text": "At check-in at 21:30, Mzee Kariuki gave me the spare key to the store room, and I put it on the hook in the van's glovebox. From 22:30 until about 22:48 I sat on the roadside wall, where the signal is better, on a video call with my daughter.",
+          "facts": [
+            {
+              "char": "halima",
+              "place": "van",
+              "from": "21:30"
+            },
+            {
+              "char": "halima",
+              "place": "roadside",
+              "from": "22:30",
+              "to": "22:48"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kariuki",
+      "name": "Mzee Kariuki Gathecha",
+      "age": 63,
+      "occupation": "Stopover owner",
+      "bio": "Runs the stopover his father built, and mans the grill himself.",
+      "relation": "Has hosted KK's bands for ten years.",
+      "secret": "You are selling the stopover to a petrol company next month and haven't told your staff.",
+      "goal": "Find who did this under your roof. Keep the sale quiet.",
+      "knowledge": [
+        {
+          "id": "k-kariuki",
+          "text": "I was at the grill all evening. At 22:40, through the window, a truck's headlights lit up a figure at the store-room door, pulling it shut.",
+          "facts": [
+            {
+              "char": "kariuki",
+              "place": "dining",
+              "from": "22:20",
+              "to": "23:00"
+            }
+          ],
+          "recall": "I remember one more detail: the figure wore the band's black tour cap, with some kind of strap slung across the back."
+        }
+      ]
+    },
+    {
+      "id": "lucy",
+      "name": "Lucy Wangari",
+      "age": 24,
+      "occupation": "Documentary YouTuber",
+      "bio": "Filming a tour documentary for her YouTube channel. Her camera is always rolling.",
+      "relation": "KK gave her permission to film everything.",
+      "secret": "KK wasn't paying you, so you secretly sold the documentary rights to a streaming company.",
+      "goal": "Solve it. Keep the streaming deal quiet.",
+      "knowledge": [
+        {
+          "id": "k-lucy",
+          "text": "I filmed Jiru's acoustic set from beside the grill, from 22:25 to 22:55.",
+          "facts": [
+            {
+              "char": "lucy",
+              "place": "dining",
+              "from": "22:25",
+              "to": "22:55"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "baraka",
+    "jiru",
+    "halima",
+    "otieno",
+    "lucy",
+    "kariuki"
+  ],
+  "variantName": "The songwriter's credits",
+  "roles": {
+    "baraka": "culprit",
+    "lucy": "detective",
+    "kariuki": "witness",
+    "halima": "insider",
+    "jiru": "secret",
+    "otieno": "secret"
+  },
+  "timeline": {
+    "kk": [
+      {
+        "from": "21:30",
+        "to": "22:15",
+        "place": "dining"
+      },
+      {
+        "from": "22:17",
+        "to": "23:20",
+        "place": "store",
+        "note": "Messages the band at 22:28; struck at about 22:36"
+      }
+    ],
+    "baraka": [
+      {
+        "from": "21:30",
+        "to": "22:10",
+        "place": "dining"
+      },
+      {
+        "from": "22:12",
+        "to": "22:27",
+        "place": "rooms"
+      },
+      {
+        "from": "22:29",
+        "to": "22:31",
+        "place": "van",
+        "note": "Takes the spare key from the glovebox"
+      },
+      {
+        "from": "22:33",
+        "to": "22:41",
+        "place": "store",
+        "note": "Confronts KK, strikes him with a mic stand, padlocks the door"
+      },
+      {
+        "from": "22:43",
+        "to": "22:44",
+        "place": "van",
+        "note": "Drops the key back in the glovebox"
+      },
+      {
+        "from": "22:46",
+        "to": "23:10",
+        "place": "rooms"
+      }
+    ],
+    "jiru": [
+      {
+        "from": "21:30",
+        "to": "21:47",
+        "place": "dining"
+      },
+      {
+        "from": "21:49",
+        "to": "21:52",
+        "place": "store",
+        "note": "Fetches her mic stand, loses an earring"
+      },
+      {
+        "from": "21:54",
+        "to": "23:00",
+        "place": "dining"
+      }
+    ],
+    "otieno": [
+      {
+        "from": "21:30",
+        "to": "22:20",
+        "place": "dining"
+      },
+      {
+        "from": "22:26",
+        "to": "22:55",
+        "place": "petrol"
+      }
+    ],
+    "halima": [
+      {
+        "from": "21:30",
+        "to": "21:32",
+        "place": "van",
+        "note": "Puts the spare key in the glovebox"
+      },
+      {
+        "from": "21:35",
+        "to": "22:20",
+        "place": "dining"
+      },
+      {
+        "from": "22:25",
+        "to": "22:50",
+        "place": "roadside"
+      },
+      {
+        "from": "22:55",
+        "to": "23:10",
+        "place": "rooms"
+      }
+    ],
+    "kariuki": [
+      {
+        "from": "21:00",
+        "to": "23:00",
+        "place": "dining"
+      },
+      {
+        "from": "23:05",
+        "to": "23:20",
+        "place": "store",
+        "note": "Unlocks the store and finds KK"
+      }
+    ],
+    "lucy": [
+      {
+        "from": "21:30",
+        "to": "23:00",
+        "place": "dining"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-lastmsg",
+      "where": "start",
+      "title": "KK's last message, 22:28",
+      "text": "To the band WhatsApp group at 22:28: 'Wireless kit sorted. Coming to eat in 20, don't finish the [[mbuzi|goat meat]].' From 22:50, calls to his phone rang unanswered inside the store room.",
+      "facts": [
+        {
+          "char": "kk",
+          "place": "store",
+          "from": "22:28"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-locked",
+      "where": "start",
+      "title": "The locked store room",
+      "text": "At 23:05 Mzee Kariuki unlocked the padlock on the store-room door and found KK on the floor beside the mixing desk, struck with a mic stand. The store room has one door and a barred window. Mzee Kariuki says the only key never left his belt.",
+      "facts": [
+        {
+          "char": "kariuki",
+          "place": "store",
+          "from": "23:05"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-caps",
+      "where": "start",
+      "title": "Tour merch",
+      "text": "Everyone in the band and crew is wearing the black Kanjo Sound tour cap against the cold: Jiru, Baraka, Sticks, Halima and Lucy. Mzee Kariuki wears a knitted [[kofia|cap]].",
+      "tags": [
+        "identity"
+      ]
+    },
+    {
+      "id": "c-pick",
+      "where": "store",
+      "title": "A guitar pick under the desk",
+      "text": "A black guitar pick printed 'BM' lies under the mixing desk, near KK's hand. It's clean, not trodden into the dust like everything else on the floor.",
+      "about": [
+        "baraka"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-earring",
+      "where": "store",
+      "title": "A gold earring by the door",
+      "text": "A gold hoop earring lies by the door, half under a speaker case.",
+      "about": [
+        "jiru"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-laptop",
+      "where": "store",
+      "title": "KK's laptop",
+      "text": "KK's laptop is open on the mixing desk at an email from the music copyright society: 'Registration query: six works recently registered with B. Mwangi as sole composer match works registered by Kanjo Sound (K. Kamande, manager) in 2021.' Below it, KK's unsent reply: 'Baraka, we talk tonight, or I go to the society and the lawyers.'",
+      "about": [
+        "baraka"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-footage",
+      "where": "dining",
+      "title": "Lucy's footage, 22:25–22:55",
+      "text": "Jiru sings for the truck drivers non-stop. Mzee Kariuki is at the grill in every wide shot. Lucy's own voice asks the drivers questions between songs throughout. At 22:29 the van's interior light flicks on in the yard, visible through the window, for about two minutes.",
+      "facts": [
+        {
+          "char": "jiru",
+          "place": "dining",
+          "from": "22:25",
+          "to": "22:55"
+        },
+        {
+          "char": "kariuki",
+          "place": "dining",
+          "from": "22:25",
+          "to": "22:55"
+        },
+        {
+          "char": "lucy",
+          "place": "dining",
+          "from": "22:25",
+          "to": "22:55"
+        }
+      ],
+      "about": [
+        "jiru",
+        "kariuki",
+        "lucy"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-shop",
+      "where": "petrol",
+      "title": "The petrol station shop",
+      "text": "The shop's camera shows Sticks in his tour cap watching football by the till from 22:28 to 22:52. He bought airtime by M-Pesa at 22:40.",
+      "facts": [
+        {
+          "char": "otieno",
+          "place": "petrol",
+          "from": "22:28",
+          "to": "22:52"
+        }
+      ],
+      "about": [
+        "otieno"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-trucker",
+      "where": "roadside",
+      "title": "A trucker's statement",
+      "text": "'The lady driver sat on that wall on a video call from about half past ten until a quarter to eleven, maybe a bit after. I lent her my power bank. She never went into the yard.'",
+      "facts": [
+        {
+          "char": "halima",
+          "place": "roadside",
+          "from": "22:30",
+          "to": "22:48"
+        }
+      ],
+      "about": [
+        "halima"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-towels",
+      "where": "rooms",
+      "title": "Mama Kariuki's towel round",
+      "text": "'At 22:38 I knocked on Room 2, the guitarist's room, with towels. No answer. The door was unbolted and the room was dark and empty, so I left them on the bed. When I passed again at 22:50 the light was on.'",
+      "facts": [
+        {
+          "char": "baraka",
+          "place": "rooms",
+          "from": "22:38",
+          "absent": true
+        },
+        {
+          "char": "baraka",
+          "place": "rooms",
+          "from": "22:50"
+        }
+      ],
+      "about": [
+        "baraka"
+      ],
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-glovebox",
+      "where": "van",
+      "title": "The van's glovebox",
+      "text": "The spare store key is in the glovebox, but not on its hook, where Halima always hangs it. It's lying loose next to an empty guitar-string packet.",
+      "about": [
+        "halima",
+        "baraka"
+      ],
+      "tags": [
+        "red-herring",
+        "decisive"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "You registered six of the band's songs as your own with the copyright society, and KK found out. At 22:29 you took the spare key from the van's glovebox. At 22:33 you went into the store to beg KK not to go to the lawyers. When he refused, you struck him with a mic stand. You padlocked the door at about 22:40 to make it look impossible, dropped the key back in the glovebox at 22:43, and went to your room at 22:46.",
+    "cover": {
+      "text": "From about 22:15 I was in my room restringing my guitar. I didn't come out until I heard the shouting.",
+      "place": "rooms",
+      "from": "22:15",
+      "to": "22:50"
+    },
+    "danger": "Mzee Kariuki's wife does a towel round. You may have dropped a pick. The van light comes on when you open the door."
+  },
+  "solution": {
+    "motive": "Baraka had registered six of the band's songs as his own, and KK was about to go to the copyright society and the lawyers.",
+    "method": "He took the spare store key from the van, struck KK with a mic stand, padlocked the door from outside to make it look like a locked room, and returned the key to the glovebox.",
+    "summary": "Baraka Mwangi did it. The 'locked room' was locked with the spare key from the van. Everyone else is placed away from the store for the whole window, while Baraka's 'in my room' story fails: Mama Kariuki found Room 2 empty at 22:38.",
+    "decisive": [
+      "c-towels",
+      "c-pick",
+      "c-laptop",
+      "c-glovebox"
+    ],
+    "path": [
+      "Lucy's footage clears Jiru, Mzee Kariuki and Lucy. The shop camera clears Sticks, and the trucker clears Halima.",
+      "The locked door isn't impossible: there's a spare key, and it has been moved off its hook in the glovebox. The van light came on at 22:29.",
+      "Baraka says he was in Room 2 from 22:15, but Mama Kariuki found it dark and empty at 22:38.",
+      "A clean 'BM' pick lies under the desk by KK's hand, and the copyright email on KK's laptop gives the motive."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "jiru",
+      "suspicion": "Her earring is in the store room, and KK was threatening to sue her.",
+      "explanation": "She lost the earring fetching her mic stand at 21:50. Lucy's footage shows her singing for the whole window.",
+      "clues": [
+        "c-earring",
+        "c-footage"
+      ]
+    },
+    {
+      "char": "halima",
+      "suspicion": "She put the spare key in the glovebox, and she's the only one who's supposed to know it's there.",
+      "explanation": "Baraka saw her put it there at check-in. The trucker puts her on the roadside wall for the whole window.",
+      "clues": [
+        "c-glovebox",
+        "c-trucker"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "The door money",
+      "summary": "Same evidence trail, different motive: KK had discovered Baraka skimming the cash door takings on the last three gigs.",
+      "clues": {
+        "update": {
+          "c-laptop": {
+            "text": "KK's laptop is open at a spreadsheet titled 'Door money: Thika, Naivasha, Nakuru'. Each gig shows a gap of KSh 20,000–35,000 between the tickets the venue counted and the cash Baraka handed in. KK's note at the bottom: 'B collected all three. Confront tonight.'"
+          }
+        }
+      },
+      "culprit": {
+        "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+        "truth": "You have been skimming the cash door takings for three gigs running, and KK worked it out. At 22:29 you took the spare key from the van's glovebox. At 22:33 you went into the store to talk him out of firing you. When he said he'd call the police, you struck him with a mic stand. You padlocked the door to make it look impossible, dropped the key back in the glovebox at 22:43, and went to your room at 22:46.",
+        "cover": {
+          "text": "From about 22:15 I was in my room restringing my guitar. I didn't come out until I heard the shouting.",
+          "place": "rooms",
+          "from": "22:15",
+          "to": "22:50"
+        },
+        "danger": "Mzee Kariuki's wife does a towel round. You may have dropped a pick. The van light comes on when you open the door."
+      },
+      "solution": {
+        "motive": "Baraka had been skimming the cash door takings, and KK's spreadsheet proved it.",
+        "method": "He took the spare store key from the van, struck KK with a mic stand, padlocked the door from outside, and returned the key.",
+        "summary": "Baraka Mwangi did it, to hide the missing door money. The alibi trail is the same: Room 2 was empty at 22:38, the spare key was moved, and his pick lies by KK's hand.",
+        "decisive": [
+          "c-towels",
+          "c-pick",
+          "c-laptop",
+          "c-glovebox"
+        ],
+        "path": [
+          "The footage, shop camera and trucker clear everyone except Baraka.",
+          "The spare key in the glovebox has been moved, so the locked room is explained.",
+          "Room 2 was empty at 22:38, so Baraka's cover story is false.",
+          "The pick and the door-money spreadsheet connect him to the store and give the motive."
+        ]
+      }
+    }
+  ]
+}

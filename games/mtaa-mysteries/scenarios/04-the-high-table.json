@@ -1,0 +1,644 @@
+{
+  "id": "the-high-table",
+  "title": "The High Table",
+  "location": "Garden wedding venue, Nakuru",
+  "tone": "Bright daytime celebration with something rotten under the gold ribbons",
+  "minutes": 20,
+  "players": {
+    "min": 4,
+    "max": 6
+  },
+  "teaser": "A guest collapses at the high table at a Nakuru garden wedding. Someone tampered with his glass while the family posed for photos.",
+  "contentNotes": [
+    "A death caused by something added to a drink (no substance named, not described graphically)",
+    "Land fraud and family conflict"
+  ],
+  "victimPresent": false,
+  "reviewFlags": [
+    "The venue is fictional; Nakuru and Bahati are real. Check that the wedding programme (choir in the tent, family photos by colour-coded side, a land title as a wedding gift) matches real Nakuru weddings.",
+    "Double allocation of land titles is a real and painful issue. Keep it specific to this fictional family and avoid implying any real office or official.",
+    "Check that a retired police inspector running a church women's guild reads naturally, and that a caterer's expired licence isn't a lazy stereotype."
+  ],
+  "intro": "It's 15:00 on a bright Saturday at a garden venue outside Nakuru. The choir has sung the couple into the reception tent, the pilau is steaming in the caterers' tent, and the photographer is marshalling family groups in the photo garden by the lake view: the groom's side in maroon ties, the bride's side in gold. At 14:40 the groom's uncle announced his wedding gift, a plot in Bahati. At 15:20 the bride's cousin Stephen came back to the high table, drank his passion juice, and collapsed. His glass had sat alone at his place from 15:03, when he stepped away to take a call, until 15:20.",
+  "victim": {
+    "id": "stephen",
+    "name": "Stephen Mwaura",
+    "description": "44, a land surveyor and the bride's cousin. Quiet, meticulous, and the person the family calls when a boundary is in doubt."
+  },
+  "scene": "drinks",
+  "window": {
+    "from": "15:03",
+    "to": "15:20"
+  },
+  "places": [
+    {
+      "id": "drinks",
+      "name": "High table and drinks station"
+    },
+    {
+      "id": "tent",
+      "name": "Reception tent"
+    },
+    {
+      "id": "photo",
+      "name": "Photo garden by the lake view"
+    },
+    {
+      "id": "kitchen",
+      "name": "Caterers' tent"
+    },
+    {
+      "id": "changing",
+      "name": "Bridal changing room, main house",
+      "restricted": true
+    },
+    {
+      "id": "carpark",
+      "name": "Car park"
+    }
+  ],
+  "routes": [
+    [
+      "drinks",
+      "tent",
+      1
+    ],
+    [
+      "drinks",
+      "photo",
+      4
+    ],
+    [
+      "drinks",
+      "kitchen",
+      2
+    ],
+    [
+      "drinks",
+      "carpark",
+      3
+    ],
+    [
+      "tent",
+      "kitchen",
+      2
+    ],
+    [
+      "tent",
+      "changing",
+      2
+    ],
+    [
+      "tent",
+      "carpark",
+      3
+    ],
+    [
+      "changing",
+      "carpark",
+      3
+    ]
+  ],
+  "characters": [
+    {
+      "id": "jackson",
+      "name": "Jackson Kimani Ndung'u",
+      "age": 58,
+      "occupation": "Retired land officer",
+      "bio": "The groom's uncle and chief host. Gave the couple a plot in Bahati as a wedding gift, to loud applause.",
+      "relation": "Stephen surveyed land for the family for years.",
+      "secret": "You 'borrowed' the sound-system deposit from the groom's harambee money and haven't put it back.",
+      "goal": "Help find out what happened. Keep the harambee money out of it.",
+      "knowledge": [
+        {
+          "id": "k-jackson",
+          "text": "At 15:02 I watched a waiter pour Stephen's passion juice and set it at his place on the high table, just as Stephen stepped away with his phone."
+        }
+      ]
+    },
+    {
+      "id": "shiku",
+      "name": "Wanjiku 'Shiku' Mburu",
+      "age": 29,
+      "occupation": "Maid of honour",
+      "bio": "The bride's younger sister, a bank teller in Nakuru. Running the bridal party like a military operation.",
+      "relation": "Argued with Stephen this morning about seating.",
+      "secret": "You have been secretly dating the groom's best man for a year. Stephen saw you together and told you to tell the families.",
+      "goal": "Help find the truth. Keep your relationship secret until after the wedding.",
+      "knowledge": [
+        {
+          "id": "k-shiku",
+          "text": "From 14:50 until about 15:25 I was in the photo garden with the bridal party, holding my sister's train between shots.",
+          "facts": [
+            {
+              "char": "shiku",
+              "place": "photo",
+              "from": "14:50",
+              "to": "15:25"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "rose",
+      "name": "Rose Nyambura",
+      "age": 47,
+      "occupation": "Retired police inspector",
+      "bio": "Chairs the church women's guild and led the choir that sang the couple in. Thirty years in the police, and still notices everything.",
+      "relation": "Knew Stephen from church.",
+      "secret": "You took early retirement after an internal inquiry you would rather not discuss.",
+      "goal": "Find the culprit. Keep the inquiry out of the conversation.",
+      "knowledge": [
+        {
+          "id": "k-rose",
+          "text": "I led the choir in the reception tent from 15:00 to 15:30. The church live-streamed it for relatives in the diaspora.",
+          "facts": [
+            {
+              "char": "rose",
+              "place": "tent",
+              "from": "15:00",
+              "to": "15:30"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "esther",
+      "name": "Esther Chepkoech",
+      "age": 31,
+      "occupation": "Wedding planner",
+      "bio": "Runs a Nakuru events company. Clipboard, two phones and a walkie-talkie.",
+      "relation": "Stephen complained about her seating plan this morning.",
+      "secret": "You double-booked today's DJ with another wedding and have been quietly paying both.",
+      "goal": "Solve it before the guests panic. Keep the DJ mix-up quiet.",
+      "knowledge": [
+        {
+          "id": "k-esther",
+          "text": "From 15:03 to 15:25 I was in the main house helping the bride into her second outfit. The zip broke and I had to sew her in.",
+          "facts": [
+            {
+              "char": "esther",
+              "place": "changing",
+              "from": "15:03",
+              "to": "15:25"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "felix",
+      "name": "Felix Odera",
+      "age": 33,
+      "occupation": "Wedding photographer",
+      "bio": "Official photographer. Shoots on two cameras and never misses a timestamp.",
+      "relation": "Photographed Stephen's own wedding years ago.",
+      "secret": "You sell candid wedding photos to a gossip blog under a fake name.",
+      "goal": "Help find who did it. Keep the blog side-hustle secret.",
+      "knowledge": [
+        {
+          "id": "k-felix",
+          "text": "I was in the photo garden shooting family groups from 14:50 to 15:25. At about 15:12 my assistant's walkie crackled: 'Groom's uncle is missing from the family shot.'",
+          "facts": [
+            {
+              "char": "felix",
+              "place": "photo",
+              "from": "14:50",
+              "to": "15:25"
+            },
+            {
+              "char": "jackson",
+              "place": "photo",
+              "from": "15:10",
+              "to": "15:15",
+              "absent": true
+            }
+          ],
+          "recall": "I remember one more detail. Through the long lens, at about 15:11, I caught someone at the high table in a dark suit and a maroon tie, bending over the place settings."
+        }
+      ]
+    },
+    {
+      "id": "hadija",
+      "name": "Hadija Mohammed",
+      "age": 40,
+      "occupation": "Caterer",
+      "bio": "Runs Bahati Bites catering. Feeding 300 guests today.",
+      "relation": "Her waiter poured Stephen's drink.",
+      "secret": "Your catering licence expired in March and you haven't renewed it.",
+      "goal": "Clear your business's name. Keep the licence problem quiet.",
+      "knowledge": [
+        {
+          "id": "k-hadija",
+          "text": "From 15:00 to 15:25 I never left the caterers' tent. My staff and I were plating 300 portions of pilau.",
+          "facts": [
+            {
+              "char": "hadija",
+              "place": "kitchen",
+              "from": "15:00",
+              "to": "15:25"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "seatPriority": [
+    "jackson",
+    "shiku",
+    "rose",
+    "hadija",
+    "felix",
+    "esther"
+  ],
+  "variantName": "The double plot",
+  "roles": {
+    "jackson": "culprit",
+    "rose": "detective",
+    "felix": "witness",
+    "esther": "insider",
+    "shiku": "secret",
+    "hadija": "secret"
+  },
+  "timeline": {
+    "stephen": [
+      {
+        "from": "14:30",
+        "to": "14:50",
+        "place": "tent"
+      },
+      {
+        "from": "14:55",
+        "to": "15:02",
+        "place": "drinks",
+        "note": "Waiter pours his juice at 15:02"
+      },
+      {
+        "from": "15:05",
+        "to": "15:17",
+        "place": "carpark",
+        "note": "On the phone in his car"
+      },
+      {
+        "from": "15:20",
+        "to": "15:40",
+        "place": "drinks",
+        "note": "Drinks and collapses at 15:22"
+      }
+    ],
+    "jackson": [
+      {
+        "from": "14:30",
+        "to": "14:45",
+        "place": "tent",
+        "note": "Announces the Bahati plot at 14:40"
+      },
+      {
+        "from": "14:50",
+        "to": "15:06",
+        "place": "photo",
+        "note": "First family groups"
+      },
+      {
+        "from": "15:10",
+        "to": "15:13",
+        "place": "drinks",
+        "note": "Tampers with Stephen's glass"
+      },
+      {
+        "from": "15:14",
+        "to": "15:20",
+        "place": "tent",
+        "note": "Walks through the tent, caught on the live stream"
+      },
+      {
+        "from": "15:26",
+        "to": "15:35",
+        "place": "photo",
+        "note": "Retaken family photo"
+      }
+    ],
+    "shiku": [
+      {
+        "from": "14:50",
+        "to": "15:25",
+        "place": "photo"
+      }
+    ],
+    "felix": [
+      {
+        "from": "14:50",
+        "to": "15:25",
+        "place": "photo"
+      }
+    ],
+    "rose": [
+      {
+        "from": "14:30",
+        "to": "15:30",
+        "place": "tent"
+      }
+    ],
+    "esther": [
+      {
+        "from": "14:30",
+        "to": "15:00",
+        "place": "tent"
+      },
+      {
+        "from": "15:03",
+        "to": "15:25",
+        "place": "changing"
+      }
+    ],
+    "hadija": [
+      {
+        "from": "14:30",
+        "to": "15:30",
+        "place": "kitchen"
+      }
+    ]
+  },
+  "clues": [
+    {
+      "id": "c-collapse",
+      "where": "start",
+      "title": "Collapse at the high table",
+      "text": "At 15:20 Stephen came back to the high table and drank his passion juice. At 15:22 he collapsed. A doctor among the guests says something was added to the drink. The waiter poured it at 15:02. Stephen stepped away with his phone at 15:03, and the glass sat alone at his place until he came back.",
+      "facts": [
+        {
+          "char": "stephen",
+          "place": "drinks",
+          "from": "15:02"
+        },
+        {
+          "char": "stephen",
+          "place": "drinks",
+          "from": "15:20"
+        }
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-dress",
+      "where": "start",
+      "title": "The dress code and the programme",
+      "text": "The invitation's dress code: the groom's family in maroon ties and scarves, the bride's family in gold. The programme lists family photos in the photo garden from 14:50 to 15:30, while the choir sings in the tent.",
+      "tags": [
+        "identity"
+      ]
+    },
+    {
+      "id": "c-gift",
+      "where": "start",
+      "title": "The gift at 14:40",
+      "text": "At 14:40 Uncle Jackson announced his gift to the couple: a title deed for a plot in Bahati. Guests saw Stephen frowning and stepping out to make a phone call right afterwards.",
+      "about": [
+        "jackson"
+      ],
+      "tags": [
+        "timeline"
+      ]
+    },
+    {
+      "id": "c-stream",
+      "where": "tent",
+      "title": "The church live stream",
+      "text": "The live stream points at the choir. Rose leads from 15:00 to 15:30 without a break. At 15:15, a man in a dark suit and maroon tie, Uncle Jackson, crosses the back of the frame from the high-table end, heading towards the car park side.",
+      "facts": [
+        {
+          "char": "rose",
+          "place": "tent",
+          "from": "15:00",
+          "to": "15:30"
+        },
+        {
+          "char": "jackson",
+          "place": "tent",
+          "from": "15:15"
+        }
+      ],
+      "about": [
+        "rose",
+        "jackson"
+      ],
+      "tags": [
+        "alibi",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-photolog",
+      "where": "photo",
+      "title": "Felix's photo log",
+      "text": "Felix's camera timestamps show bridal-party shots from 14:50 to 15:25, with Shiku in nearly every frame and Felix's own shadow in many. The groom's family group, scheduled for 15:10, is marked 'postponed: uncle missing'. It was retaken at 15:26 with Jackson in it.",
+      "facts": [
+        {
+          "char": "shiku",
+          "place": "photo",
+          "from": "14:50",
+          "to": "15:25"
+        },
+        {
+          "char": "felix",
+          "place": "photo",
+          "from": "14:50",
+          "to": "15:25"
+        },
+        {
+          "char": "jackson",
+          "place": "photo",
+          "from": "15:07",
+          "to": "15:25",
+          "absent": true
+        },
+        {
+          "char": "jackson",
+          "place": "photo",
+          "from": "15:26"
+        }
+      ],
+      "about": [
+        "shiku",
+        "felix",
+        "jackson"
+      ],
+      "tags": [
+        "alibi",
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-kitchen",
+      "where": "kitchen",
+      "title": "The caterers' statement",
+      "text": "Hadija's three cooks: 'Madam never left the tent from 15:00 to 15:25. We were plating 300 portions of pilau and she was shouting at all of us.'",
+      "facts": [
+        {
+          "char": "hadija",
+          "place": "kitchen",
+          "from": "15:00",
+          "to": "15:25"
+        }
+      ],
+      "about": [
+        "hadija"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-licence",
+      "where": "kitchen",
+      "title": "A certificate in a drawer",
+      "text": "Hadija's food-handling licence, expired in March, is folded in a drawer under the cash box. Beside it is a renewal form, filled in but never submitted.",
+      "about": [
+        "hadija"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-bride",
+      "where": "changing",
+      "title": "The bride's statement",
+      "text": "'Esther was with me from about 15:03 until 15:25. The zip broke and she sewed me into the dress. She didn't leave once, she wouldn't let me move.'",
+      "facts": [
+        {
+          "char": "esther",
+          "place": "changing",
+          "from": "15:03",
+          "to": "15:25"
+        }
+      ],
+      "about": [
+        "esther"
+      ],
+      "tags": [
+        "alibi"
+      ]
+    },
+    {
+      "id": "c-glass",
+      "where": "drinks",
+      "title": "Stephen's place setting",
+      "text": "Stephen's place card is bent, as if it was picked up and put back in a hurry. There is a faint residue on the rim of his glass. Under the table is a maroon cufflink.",
+      "tags": [
+        "decisive"
+      ]
+    },
+    {
+      "id": "c-note",
+      "where": "drinks",
+      "title": "A note under the plate",
+      "text": "Under Stephen's side plate is a note in gold ink: 'Stay out of my business. S.'",
+      "about": [
+        "shiku"
+      ],
+      "tags": [
+        "red-herring"
+      ]
+    },
+    {
+      "id": "c-report",
+      "where": "carpark",
+      "title": "Stephen's car",
+      "text": "The parking boy says Stephen sat in his car on a phone call from about 15:05 to 15:17. On the dashboard is a printed search from the Lands registry for the Bahati plot: two different owners registered in 2019, both transfers signed by J. K. Ndung'u. Stephen's sticky note: 'Tell the couple before they build. J must explain today.'",
+      "facts": [
+        {
+          "char": "stephen",
+          "place": "carpark",
+          "from": "15:05",
+          "to": "15:17"
+        }
+      ],
+      "about": [
+        "jackson"
+      ],
+      "tags": [
+        "motive",
+        "decisive"
+      ]
+    }
+  ],
+  "culprit": {
+    "objective": "Don't be the top vote. You may lie about anything, including your whereabouts.",
+    "truth": "The Bahati plot you gave the couple had already been sold to someone else in 2019, and you signed both transfers. Stephen found out at lunch and was going to tell everyone. At 15:07 you slipped out of the family photos, and at 15:10 you added something to his glass at the high table. You walked back through the tent at 15:15 and rejoined the photos at 15:26.",
+    "cover": {
+      "text": "I was in the photo garden with the family from 15:00 until after Stephen collapsed.",
+      "place": "photo",
+      "from": "15:00",
+      "to": "15:25"
+    },
+    "danger": "The photographer keeps a log. The church was live-streaming the tent. You lost a cufflink."
+  },
+  "solution": {
+    "motive": "Jackson had sold the 'gift' plot in Bahati twice, signing both transfers, and Stephen had the Lands search to prove it.",
+    "method": "He slipped out of the family photos and added something to Stephen's unattended glass at the high table, then walked back through the tent.",
+    "summary": "Jackson Kimani Ndung'u did it. Everyone else is placed away from the high table for the whole window. Jackson says he was at the family photos, but Felix's log shows the groom's family shot postponed with 'uncle missing', and the live stream catches him coming from the high-table end at 15:15.",
+    "decisive": [
+      "c-photolog",
+      "c-stream",
+      "c-report"
+    ],
+    "path": [
+      "The photo log clears Shiku and Felix, the live stream clears Rose, the cooks clear Hadija, and the bride clears Esther.",
+      "Jackson claims he was at the family photos the whole time. Felix's log shows the groom's family photo postponed at 15:10 because the uncle was missing, and retaken at 15:26.",
+      "The live stream shows Jackson crossing the tent from the high-table end at 15:15, a minute from Stephen's glass. A maroon cufflink (groom's side) lies under the high table.",
+      "The Lands search in Stephen's car gives the motive: the plot was sold twice, with both transfers signed by Jackson."
+    ]
+  },
+  "redHerrings": [
+    {
+      "char": "shiku",
+      "suspicion": "A note signed 'S.' under Stephen's plate says 'Stay out of my business', and she argued with him this morning.",
+      "explanation": "Stephen had seen Shiku with the best man and told her to come clean to the families. She spent the whole window in the photo garden.",
+      "clues": [
+        "c-note",
+        "c-photolog"
+      ]
+    },
+    {
+      "char": "hadija",
+      "suspicion": "Her waiter poured the drink, and she's hiding an expired licence.",
+      "explanation": "The licence is a paperwork problem, not a motive. Her cooks put her in the caterers' tent for the whole window.",
+      "clues": [
+        "c-licence",
+        "c-kitchen"
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "id": "B",
+      "name": "New hiding places",
+      "summary": "Same solution, with the clues moved: Stephen had given his Lands search to the bride for safekeeping, and the note and cufflink turn up elsewhere. The group has to search in different places.",
+      "clues": {
+        "update": {
+          "c-report": {
+            "where": "changing",
+            "title": "An envelope in the bride's bag",
+            "text": "In the bride's bag in the changing room is a brown envelope Stephen handed her at lunch: a printed search from the Lands registry for the Bahati plot, showing two different owners registered in 2019, both transfers signed by J. K. Ndung'u. His note: 'Read this after the photos. J must explain today.' The bride hadn't opened it.",
+            "facts": []
+          },
+          "c-note": {
+            "where": "carpark",
+            "title": "A note on Stephen's windscreen",
+            "text": "Tucked under Stephen's windscreen wiper is a note in gold ink: 'Stay out of my business. S.'"
+          },
+          "c-bride": {
+            "where": "tent",
+            "title": "The bride's statement",
+            "text": "Told to Rose in the tent: 'Esther was with me in the house from about 15:03 until 15:25. The zip broke and she sewed me into the dress. She didn't leave once.'"
+          }
+        }
+      }
+    }
+  ]
+}

@@ -83,7 +83,19 @@ check_app() {
   done
 }
 
-# 6. harness: the gates still block what they should
+# 6. games: each game under games/ runs its own lint, scenario checker and tests
+check_games() {
+  local dir found=0
+  for dir in games/*/; do
+    [ -f "$dir/package.json" ] || continue
+    found=1
+    local out
+    if out=$(cd "$dir" && npm run -s check 2>&1); then pass "game:$(basename "$dir")"; else fail "game:$(basename "$dir")" <<<"$(grep -E '^(not ok|FAIL|#? ?fail|.*error)' <<<"$out" | head -n 20; tail -n 15 <<<"$out")"; fi
+  done
+  [ "$found" = 1 ] || skip games "no games yet"
+}
+
+# 7. harness: the gates still block what they should
 check_harness() {
   if [ "${HARNESS_SKIP_SELFTEST:-}" = 1 ]; then skip harness "disabled by HARNESS_SKIP_SELFTEST"; return; fi
   local out
@@ -95,6 +107,7 @@ check_secrets
 check_decisions
 check_prototype
 check_app
+check_games
 check_harness
 
 if [ "$failed" = 1 ]; then echo "check.sh: FAILED"; exit 1; fi
