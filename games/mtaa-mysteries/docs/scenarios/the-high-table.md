@@ -47,6 +47,53 @@ It's 15:00 on a bright Saturday at a garden venue outside Nakuru. The choir has 
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **7 tiles** · players start in **Reception tent**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+
+ #########################
+ #CCCCC##TTTTTTTTTTTTTTTT#
+ #CCcCC##TTTTTTTTTTTTTTTT#
+ #CCCCC::TTTtTTTTTTTTTTTT#
+ #CCCCC##TTTTTTTTT1TTTTTT#
+ #CCCCC##TTTTTTTTTTTTTTTT#
+ ########TTTTTTTTTTTTTtTT#
+        #TTTTTTTTTTTTTTTT#
+        #TTTTTTTTTTTTTTTT# #########
+ ###### ########:######### #KKkKKKK#
+ #AAAA# #DDDdDDDDDDDDDDDD# #KKKKKKK#
+ #AAAA:.:DDDDDDDDDDDDdDDD:.:KKKKKKK#
+ #AAAA# ########:######### #KKK3KkK#
+ #AaAA#         .          #########
+ #AAAA#         .
+ #A4AA# ########:#########
+ ###### #PPPPPPPPPPPPPPPP#
+        #PPPPPPPPPPPP2PPP#
+        #PPPPPpPPPPPPPPPP#
+        #PPPPPPPPPPPPPPPP#
+        ##################
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| T | Reception tent | 2 |
+| D | High table and drinks station | 2 |
+| P | Photo garden by the lake view | 1 |
+| K | Caterers' tent | 2 |
+| C | Bridal changing room, main house (restricted) | 1 |
+| A | Car park | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Hand out programmes | 2 |
+| 2. Straighten the photo backdrop | 3 |
+| 3. Carry a tray of chapati | 3 |
+| 4. Guide a car into a space | 3 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

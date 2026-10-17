@@ -1,6 +1,8 @@
 // Mtaa Mysteries client. Everything the server sends is rendered with text nodes only.
 // The server decides what each player may see; this file only displays it.
 
+import { MapView } from "./map.js";
+
 const app = document.getElementById("app");
 const live = document.getElementById("live");
 const toastEl = document.getElementById("toast");
@@ -71,6 +73,23 @@ function toast(text) {
 }
 const announce = (t) => { live.textContent = t; };
 
+// ---- The walkable map (one persistent instance; see map.js)
+const mapView = new MapView({
+  send: async (x, y) => {
+    if (!session) return null;
+    const r = await fetch(`/api/rooms/${session.code}/pos`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: session.token, x, y }) });
+    return r.json().catch(() => null);
+  },
+  act: async (type, extra) => {
+    const r = await act(type, extra);
+    if (type === "search" && r?.ok) { ui.quiet = false; render(); }
+    return r;
+  },
+  toast: (t) => toast(t),
+  announce: (t) => announce(t),
+});
+const MOVABLE = ["discovery", "investigate1", "investigate2", "arguments"];
+
 // ---- Network
 async function api(path, body) {
   const r = await fetch(path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {});
@@ -98,11 +117,13 @@ function connect(code, token, playerId) {
   es = new EventSource(`/api/rooms/${code}/stream?token=${encodeURIComponent(token)}`);
   es.onopen = () => { conn = "live"; render(); };
   es.onerror = () => { conn = "reconnecting"; render(); };
+  es.addEventListener("pos", (e) => mapView.setPositions(JSON.parse(e.data)));
   es.onmessage = (e) => {
     const data = JSON.parse(e.data);
     if (data.removed) return dropSession(data.removed === "kicked" ? "The host removed you from the room." : data.removed === "unknown" ? "That room session has ended." : "You left the room.");
     view = data;
     offset = data.serverNow - Date.now();
+    mapView.setGame(data.game, data.me?.id);
     const phase = data.game?.phase ?? "lobby";
     if (phase !== lastPhase) {
       announce(`${PHASE[phase]?.name ?? "Lobby"}. ${PHASE[phase]?.guide ?? ""}`);
@@ -288,6 +309,7 @@ function lobby() {
             h("select", { id: "pace", onChange: (e) => act("setSettings", { pace: e.target.value }) },
               [["quick", "Quick (about 12 minutes)"], ["standard", "Standard (about 15 minutes)"], ["relaxed", "Relaxed (about 23 minutes, good for text-only groups)"]]
                 .map(([id, label]) => h("option", { value: id, selected: v.settings.pace === id }, label)))),
+          h("label", { class: "check" }, h("input", { type: "checkbox", checked: v.settings.map, onChange: (e) => act("setSettings", { map: e.target.checked }) }), "Walkable map (walk to places to search; turn off for the simpler list mode)"),
           h("label", { class: "check" }, h("input", { type: "checkbox", checked: v.settings.scoring, onChange: (e) => act("setSettings", { scoring: e.target.checked }) }), "Keep score"),
           h("label", { class: "check" }, h("input", { type: "checkbox", checked: v.isPublic, onChange: (e) => act("setSettings", { isPublic: e.target.checked }) }), "List this room publicly"),
           h("button", { class: "btn primary block", onClick: () => act("start"),
@@ -451,6 +473,7 @@ function casePanel() {
 function actPanel() {
   const G = g();
   const m = me();
+  if (G.scenario.map && MOVABLE.includes(G.phase)) return mapPanel();
   if (!m) return h("div", { class: "card" }, h("p", { class: "muted" }, PHASE[G.phase].guide));
   if (G.phase === "briefing") return h("div", { class: "card stack" }, h("h2", {}, "Briefing"), h("p", {}, "Read the case and your private card. When the case opens, the starting clues go on the board."), h("p", { class: "small muted" }, "On a phone, use the tabs at the bottom to move between your card, the case, the board and the chat."));
   if (G.phase === "discovery") return h("div", { class: "card stack" }, h("h2", {}, "Discovery"), h("p", {}, "Read the starting clues on the board, and anything other characters have said. Work out who needs an alibi for ", G.scenario.window.from, "–", G.scenario.window.to, "."), h("p", { class: "small muted" }, "Searching opens in the next phase."));
@@ -465,15 +488,21 @@ function actPanel() {
           onClick: async () => { const r = await act("search", { place: p.id, quiet: ui.quiet || undefined }); if (r?.ok) { ui.quiet = false; toast(m.role === "detective" ? "Found something. It's on the board, verified." : "Found something. It's in your hand on your card."); } } }, "Search")))),
       h("p", { class: "small muted" }, "Travel times matter: someone ten minutes away can't have been at the scene a minute later."));
   }
-  if (G.phase === "arguments") {
-    if (m.used.accused) return h("div", { class: "card" }, h("h2", {}, "Closing arguments"), h("p", {}, "You've made your accusation. Read the others on the board and get ready to vote."));
-    const submit = async (e) => {
-      e.preventDefault();
-      if (!ui.accuseTarget) return toast("Choose who you're accusing.");
-      const r = await act("accuse", { target: ui.accuseTarget, clueId: ui.accuseClue || null, reason: drafts["accuse-reason"] ?? "" });
-      if (r?.ok) drafts["accuse-reason"] = "";
-    };
-    return h("form", { class: "card stack", onSubmit: submit },
+  if (G.phase === "arguments") return accusationForm();
+  if (G.phase === "vote") return votePanel();
+  return h("div");
+}
+
+function accusationForm() {
+  const m = me();
+  if (m.used.accused) return h("div", { class: "card" }, h("h2", {}, "Closing arguments"), h("p", {}, "You've made your accusation. Read the others on the board and get ready to vote."));
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!ui.accuseTarget) return toast("Choose who you're accusing.");
+    const r = await act("accuse", { target: ui.accuseTarget, clueId: ui.accuseClue || null, reason: drafts["accuse-reason"] ?? "" });
+    if (r?.ok) drafts["accuse-reason"] = "";
+  };
+  return h("form", { class: "card stack", onSubmit: submit },
       h("h2", {}, "Make your accusation"),
       h("div", {}, h("label", { for: "accuse-target" }, "Who did it?"),
         h("select", { id: "accuse-target", onChange: (e) => { ui.accuseTarget = e.target.value; } },
@@ -482,22 +511,39 @@ function actPanel() {
       h("div", {}, h("label", { for: "accuse-clue" }, "The clue that proves it (optional)"), clueSelect("accuse-clue", ui.accuseClue, (v) => { ui.accuseClue = v; })),
       h("div", {}, h("label", { for: "accuse-reason" }, "Why? (280 characters)"), h("textarea", { maxlength: 280, ...draft("accuse-reason") })),
       h("button", { class: "btn primary", type: "submit" }, "Accuse"));
-  }
-  if (G.phase === "vote") {
-    const voted = G.seats.filter((s) => !s.left && s.voted).length;
-    const total = G.seats.filter((s) => !s.left).length;
-    return h("div", { class: "card stack" },
-      h("div", { class: "row" }, h("h2", { class: "grow" }, "Vote"), h("span", { class: "badge" }, `${voted}/${total} voted`)),
-      m.vote && h("p", { class: "guide" }, "Your vote: ", m.vote.target ? charName(m.vote.target) : "Abstain", ". You can change it until the timer ends."),
-      h("div", { class: "vote-grid", role: "group", "aria-label": "Suspects" }, seatedChars().filter((c) => c !== m.charId).map((c) =>
-        h("button", { class: "btn" + (ui.voteTarget === c ? " chosen" : ""), "aria-pressed": ui.voteTarget === c ? "true" : "false", onClick: () => { ui.voteTarget = c; render(); } },
-          h("b", {}, charName(c)), h("span", { class: "small muted" }, "played by ", nameOfPlayer(G.seats.find((s) => s.charId === c).playerId))))),
-      h("div", {}, h("label", { for: "vote-clue" }, "Key evidence (earns a bonus if it's decisive)"), clueSelect("vote-clue", ui.voteClue, (v) => { ui.voteClue = v; })),
-      h("div", { class: "row" },
-        h("button", { class: "btn primary", disabled: !ui.voteTarget, onClick: () => act("vote", { target: ui.voteTarget, clueId: ui.voteClue || null }) }, "Cast secret vote"),
-        h("button", { class: "btn", onClick: () => { ui.voteTarget = null; act("vote", { target: null }); } }, "Abstain")));
-  }
-  return h("div");
+}
+
+function votePanel() {
+  const G = g();
+  const m = me();
+  const voted = G.seats.filter((s) => !s.left && s.voted).length;
+  const total = G.seats.filter((s) => !s.left).length;
+  return h("div", { class: "card stack" },
+    h("div", { class: "row" }, h("h2", { class: "grow" }, "Vote"), h("span", { class: "badge" }, `${voted}/${total} voted`)),
+    m.vote && h("p", { class: "guide" }, "Your vote: ", m.vote.target ? charName(m.vote.target) : "Abstain", ". You can change it until the timer ends."),
+    h("div", { class: "vote-grid", role: "group", "aria-label": "Suspects" }, seatedChars().filter((c) => c !== m.charId).map((c) =>
+      h("button", { class: "btn" + (ui.voteTarget === c ? " chosen" : ""), "aria-pressed": ui.voteTarget === c ? "true" : "false", onClick: () => { ui.voteTarget = c; render(); } },
+        h("b", {}, charName(c)), h("span", { class: "small muted" }, "played by ", nameOfPlayer(G.seats.find((s) => s.charId === c).playerId))))),
+    h("div", {}, h("label", { for: "vote-clue" }, "Key evidence (earns a bonus if it's decisive)"), clueSelect("vote-clue", ui.voteClue, (v) => { ui.voteClue = v; })),
+    h("div", { class: "row" },
+      h("button", { class: "btn primary", disabled: !ui.voteTarget, onClick: () => act("vote", { target: ui.voteTarget, clueId: ui.voteClue || null }) }, "Cast secret vote"),
+      h("button", { class: "btn", onClick: () => { ui.voteTarget = null; act("vote", { target: null }); } }, "Abstain")));
+}
+
+function mapPanel() {
+  const G = g();
+  const m = me();
+  const inv = G.phase === "investigate1" || G.phase === "investigate2";
+  return h("div", { class: "stack" },
+    h("div", { class: "card stack" },
+      h("div", { class: "row" }, h("h2", { class: "grow" }, "The scene"),
+        m && inv && h("span", { class: "badge " + (m.searchesLeft ? "teal" : "") }, `${m.searchesLeft} search${m.searchesLeft === 1 ? "" : "es"} left`)),
+      mapView.el,
+      m?.canQuietSearch && inv && h("label", { class: "check" }, h("input", { type: "checkbox", id: "quiet-search", checked: ui.quiet, onChange: (e) => { ui.quiet = e.target.checked; } }), "Quiet search (culprit, once): don't announce the next one"),
+      h("p", { class: "small muted" }, inv
+        ? "Glinting spots hold clues: stand on one and press Search. Orange ! marks are errands. Finish two in a round for a bonus search. You can only see people near you, and they can only see you when you're close."
+        : G.phase === "arguments" ? "Searching is over, but you can still walk over to talk to someone." : "Walk around and get your bearings. Searching opens in the next phase.")),
+    G.phase === "arguments" && m && accusationForm());
 }
 
 function clueSelect(id, value, onChange) {

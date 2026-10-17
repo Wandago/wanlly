@@ -30,6 +30,14 @@ Every innocent character has a secret that makes them look suspicious. That is b
 
 \*Standard pace. The host can choose Quick (×0.75) or Relaxed (×1.5), and add one extra minute per phase. When every player presses Ready, the phase ends early.
 
+## Walking the scene
+
+By default each case is played on a **walkable map** of the scene, and the host can switch it off for the simpler list mode.
+- **Moving:** arrow keys or WASD, tap where you want to go, or pick a place from the *Walk to…* menu.
+- **Searching:** stand on a **glinting spot** to search it. Each spot hides one clue.
+- **Errands:** orange **!** marks are errands. Finish two in a round to earn a bonus search.
+- **Sight:** you only see players inside your **sight circle**, and they only see you when you're close. What you saw is evidence.
+
 ## Roles
 
 - **Culprit:** may lie. Has one *quiet search* that isn't announced.

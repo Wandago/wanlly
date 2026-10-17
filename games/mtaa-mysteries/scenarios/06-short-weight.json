@@ -626,5 +626,60 @@
         ]
       }
     }
-  ]
+  ],
+  "map": {
+    "vision": 7,
+    "spawn": "hall",
+    "legend": {
+      "H": "hall",
+      "O": "office",
+      "M": "market",
+      "S": "store",
+      "W": "weighbridge",
+      "K": "kiosk",
+      "T": "stage"
+    },
+    "errands": [
+      {
+        "label": "Hand out AGM aprons",
+        "seconds": 2
+      },
+      {
+        "label": "Sort a crate of avocados",
+        "seconds": 3
+      },
+      {
+        "label": "Fetch tea for the committee",
+        "seconds": 3
+      },
+      {
+        "label": "Load crates onto a lorry",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " ########################             ",
+      " #HHHHHHHHHH##MMMMMMMMMM#             ",
+      " #HHhHHHHHHH##MMMMMMMMMM#             ",
+      " #HHHHHHHHHH##MMMMMMmMMM#             ",
+      " #HHHHHHHHHH::MMMMMMMMMM#             ",
+      " #HHHHHH1HHH##MMM2MMMMMM#    ######## ",
+      " #HHHHHHHHHH##MMMMMMMMMM:....:TTTTTT# ",
+      " #HHHHHHHHHH##MMMMMMMMMM#    #TTTTTT# ",
+      " ###:#####:######:#######    #TTTtTT# ",
+      " #OOOOO#  .      .           #TTTTTT# ",
+      " #OOOOO#  .  ####:########## #TTTTTT# ",
+      " #OOoOO#  .  #SSSSSS##WWWWW# #TTTTTT# ",
+      " #OOOOO#  ...:SSSSSS::WwWWW:.:TTT4TT# ",
+      " #######     #SsSSSS##WWWWW# #TTTTTT# ",
+      "             #SSSSSS##WWWwW# ######## ",
+      "             ###:###########          ",
+      "                .                     ",
+      "             ###:####                 ",
+      "             #KkKKKK#                 ",
+      "             #KKKK3K#                 ",
+      "             ########                 "
+    ]
+  }
 }

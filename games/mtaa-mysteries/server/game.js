@@ -2,11 +2,14 @@
 // The server holds this state. Players only ever receive viewFor(game, playerId), which is
 // built from an explicit whitelist so hidden roles, secrets and the solution cannot leak.
 import { boardClues } from "./scenario.js";
+import { parseMap, canStand, clearLine, findPath, SPEED, REACH } from "../client/geom.js";
 
 export const PHASES = ["briefing", "discovery", "investigate1", "investigate2", "arguments", "vote", "resolution"];
 export const PHASE_SECONDS = { briefing: 90, discovery: 60, investigate1: 240, investigate2: 240, arguments: 120, vote: 60 };
 export const PACE = { quick: 0.75, standard: 1, relaxed: 1.5 };
 export const CHAT_MAX = 300;
+export const MOVABLE = ["discovery", "investigate1", "investigate2", "arguments"];
+export const ERRANDS_FOR_BONUS = 2;
 export const REASON_MAX = 280;
 
 export const ROLE_INFO = {
@@ -74,15 +77,154 @@ export function createGame({ scenario, players, seed = 1, settings = {}, now = 0
   for (const p of s.places) searchOrder[p.id] = shuffle(s.clues.filter((c) => c.where === p.id).map((c) => c.id), rand);
 
   const g = {
-    scenario: s, seed, settings: { pace: "standard", scoring: true, ...settings },
+    scenario: s, seed, settings: { pace: "standard", scoring: true, map: false, ...settings },
     phase: "briefing", endsAt: 0, extended: false, seq: 0,
     seats, npcs: s.characters.map((c) => c.id).filter((id) => !chars.includes(id)),
     searchOrder, found: {}, board: [], chat: [], searchesLeft: {}, used: {}, ready: [], votes: {},
     connected: Object.fromEntries(players.map((p) => [p.id, true])), muted: [], result: null, version: 0,
   };
   for (const x of seats) g.used[x.playerId] = { quiet: false, recall: false, confessed: false, accused: false, shared: [] };
+  if (g.settings.map && s.map) setupMap(g, rand, now);
+  else g.settings.map = false;
   enter(g, "briefing", now);
   return g;
+}
+
+// ---- The walkable map: positions, clue spots, errands. Positions are server-authoritative.
+function setupMap(g, rand, now) {
+  const m = parseMap(g.scenario.map);
+  g.map = m;
+  g.spotClue = {};
+  for (const p of g.scenario.places) {
+    const spotIdx = m.spots.map((sp, i) => (sp.place === p.id ? i : -1)).filter((i) => i >= 0);
+    shuffle(spotIdx, rand).forEach((i, n) => { if (g.searchOrder[p.id][n]) g.spotClue[i] = g.searchOrder[p.id][n]; });
+  }
+  const spawn = shuffle(m.floors[g.scenario.map.spawn].filter(([x, y]) => /[A-Z]/.test(m.rows[y][x])), rand);
+  g.pos = {};
+  g.seats.forEach((x, i) => { const [tx, ty] = spawn[i % spawn.length]; g.pos[x.playerId] = { x: tx + 0.5, y: ty + 0.5, t: now }; });
+  g.errand = {};
+  g.errandsDone = {};
+  g.botPlan = {};
+}
+
+const openSpot = (g, i) => g.spotClue[i] && !g.found[g.spotClue[i]];
+
+/** A position report from a player. Returns { ok } or { error, x, y } with the server's position to snap back to. */
+export function move(g, playerId, x, y, now) {
+  const seat = seatOf(g, playerId);
+  const cur = g.pos?.[playerId];
+  if (!seat || !cur) return { error: "Not on the map." };
+  const back = { error: "Move rejected.", x: cur.x, y: cur.y };
+  if (!MOVABLE.includes(g.phase)) return { ...back, error: "Wait for the case to open." };
+  if (!Number.isFinite(x) || !Number.isFinite(y)) return back;
+  const dist = Math.hypot(x - cur.x, y - cur.y);
+  const dt = Math.max(0.05, (now - cur.t) / 1000);
+  // At most 1.2 tiles per report (walls are a full tile thick, so a legal step can't skip one),
+  // and no faster than walking speed with some slack for network jitter.
+  if (dist > 1.2 || dist > SPEED * dt * 1.5 + 0.25) return { ...back, error: "Too fast." };
+  if (!canStand(g.map.rows, x, y) || !clearLine(g.map.rows, cur.x, cur.y, x, y)) return { ...back, error: "Blocked." };
+  g.pos[playerId] = { x, y, t: now };
+  const e = g.errand[playerId];
+  if (e && Math.hypot(x - e.x, y - e.y) > 0.4) delete g.errand[playerId];
+  return { ok: true };
+}
+
+/** Other walkers this player can see: within the scenario's sight radius, never further. */
+export function positionsFor(g, viewerId, now) {
+  if (!g.map || !MOVABLE.includes(g.phase) && g.phase !== "vote") return null;
+  const me = g.pos[viewerId];
+  const seated = seatOf(g, viewerId);
+  const vision = g.scenario.map.vision;
+  const others = [];
+  if (me && seated) {
+    for (const x of activeSeats(g)) {
+      if (x.playerId === viewerId) continue;
+      const p = g.pos[x.playerId];
+      if (p && Math.hypot(p.x - me.x, p.y - me.y) <= vision) {
+        const e = g.errand[x.playerId];
+        others.push({ id: x.playerId, charId: x.charId, x: round2(p.x), y: round2(p.y), busy: e ? { started: e.startedAt, seconds: e.seconds } : null });
+      }
+    }
+  }
+  return { me: me && seated ? { x: round2(me.x), y: round2(me.y) } : null, others, now };
+}
+const round2 = (n) => Math.round(n * 100) / 100;
+
+function nearestSpot(g, playerId, place) {
+  const p = g.pos[playerId];
+  let best = -1, bestD = Infinity;
+  g.map.spots.forEach((sp, i) => {
+    if (!openSpot(g, i) || (place && sp.place !== place)) return;
+    const d = Math.hypot(sp.x - p.x, sp.y - p.y);
+    if (d <= REACH && d < bestD) { best = i; bestD = d; }
+  });
+  return best;
+}
+
+function errandAct(g, seat, action, now) {
+  if (!g.map) return { error: "Errands need the map." };
+  if (!open(g, "investigate1", "investigate2")) return { error: "Errands happen in the investigation rounds." };
+  const pid = seat.playerId;
+  const done = ((g.errandsDone[pid] ??= {})[g.phase] ??= []);
+  if (action.type === "errandStart") {
+    const spot = g.map.errands.find((e) => e.index === action.index);
+    const def = g.scenario.map.errands[action.index];
+    if (!spot || !def) return { error: "Unknown errand." };
+    if (done.includes(action.index)) return { error: "You've already done that one this round." };
+    const p = g.pos[pid];
+    if (Math.hypot(spot.x - p.x, spot.y - p.y) > REACH) return { error: "Walk up to the errand first." };
+    g.errand[pid] = { index: action.index, startedAt: now, seconds: def.seconds, x: p.x, y: p.y };
+    return { ok: true };
+  }
+  const e = g.errand[pid];
+  if (!e) return { error: "You haven't started an errand, or you walked away." };
+  if (now - e.startedAt < e.seconds * 1000 - 250) return { error: "Not finished yet." };
+  delete g.errand[pid];
+  done.push(e.index);
+  if (done.length === ERRANDS_FOR_BONUS) {
+    g.searchesLeft[pid] = (g.searchesLeft[pid] ?? 0) + 1;
+    return { ok: true, bonus: true };
+  }
+  return { ok: true };
+}
+
+/** Practice bots walk to clue spots and search them. Returns true if anything visible changed. */
+export function stepBots(g, now) {
+  if (!g.map || !open(g, "investigate1", "investigate2")) return false;
+  let changed = false;
+  for (const x of activeSeats(g).filter((y) => y.bot)) {
+    const pid = x.playerId;
+    const pos = g.pos[pid];
+    let plan = g.botPlan[pid];
+    if (plan && !openSpot(g, plan.spot)) plan = g.botPlan[pid] = null;
+    if (!plan) {
+      if ((g.searchesLeft[pid] ?? 0) < 1) continue;
+      const choices = g.map.spots.map((sp, i) => ({ ...sp, i })).filter((sp) => openSpot(g, sp.i)
+        && !(g.scenario.places.find((p) => p.id === sp.place)?.restricted && g.phase === "investigate1" && x.role !== "insider"));
+      if (!choices.length) continue;
+      const target = choices[Math.floor(rng(g.seed + now)() * choices.length)];
+      const path = findPath(g.map.rows, pos.x, pos.y, target.x, target.y);
+      if (!path) continue;
+      plan = g.botPlan[pid] = { spot: target.i, path, last: now };
+    }
+    let budget = (SPEED * 0.8 * Math.min(1000, now - plan.last)) / 1000;
+    plan.last = now;
+    while (budget > 0 && plan.path.length) {
+      const [tx, ty] = plan.path[0];
+      const d = Math.hypot(tx - pos.x, ty - pos.y);
+      if (d <= budget) { pos.x = tx; pos.y = ty; budget -= d; plan.path.shift(); }
+      else { pos.x += ((tx - pos.x) / d) * budget; pos.y += ((ty - pos.y) / d) * budget; budget = 0; }
+      changed = true;
+    }
+    pos.t = now;
+    if (!plan.path.length) {
+      g.botPlan[pid] = null;
+      const r = act(g, pid, { type: "search", place: g.map.spots[plan.spot].place }, now);
+      if (r.clueId && !g.found[r.clueId].published) act(g, pid, { type: "publish", clueId: r.clueId }, now);
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 function phaseSeconds(g, phase) {
@@ -92,6 +234,7 @@ function phaseSeconds(g, phase) {
 function enter(g, phase, now) {
   g.phase = phase;
   g.ready = [];
+  if (g.map) { g.errand = {}; g.botPlan = {}; }
   g.extended = false;
   g.endsAt = phase === "resolution" ? 0 : now + phaseSeconds(g, phase) * 1000;
   g.version++;
@@ -175,6 +318,8 @@ export function act(g, playerId, action, now) {
         g.ready = g.ready.filter((p) => p !== playerId);
         return { ok: true };
       case "search": return search(g, seat, action, now);
+      case "errandStart":
+      case "errandFinish": return errandAct(g, seat, action, now);
       case "publish": {
         const f = g.found[action.clueId];
         if (!f || f.by !== playerId || f.published) return { error: "That clue isn't in your hand." };
@@ -244,11 +389,18 @@ export function act(g, playerId, action, now) {
 
 function search(g, seat, { place, quiet }, now) {
   if (!open(g, "investigate1", "investigate2")) return { error: "Searching happens in the investigation rounds." };
+  let spot = -1;
+  if (g.map) {
+    // On the map you search the clue spot you're standing at.
+    spot = nearestSpot(g, seat.playerId, place);
+    if (spot < 0) return { error: "Walk up to a glinting clue spot to search it." };
+    place = g.map.spots[spot].place;
+  }
   const p = g.scenario.places.find((x) => x.id === place);
   if (!p) return { error: "Unknown place." };
   if (p.restricted && g.phase === "investigate1" && seat.role !== "insider") return { error: `${p.name} is locked until round 2.` };
   if ((g.searchesLeft[seat.playerId] ?? 0) < 1) return { error: "No searches left this round." };
-  const next = g.searchOrder[place].find((id) => !g.found[id]);
+  const next = g.map ? g.spotClue[spot] : g.searchOrder[place].find((id) => !g.found[id]);
   if (!next) return { error: "Nothing left to find there." };
   const used = g.used[seat.playerId];
   const isQuiet = !!quiet && seat.role === "culprit" && !used.quiet;
@@ -341,7 +493,7 @@ function runBots(g, now) {
     if (g.phase === "discovery") {
       for (const k of cardKnowledge(g, x)) act(g, x.playerId, { type: "share", knowledgeId: k.id }, now);
     }
-    if (g.phase === "investigate1" || g.phase === "investigate2") {
+    if ((g.phase === "investigate1" || g.phase === "investigate2") && !g.map) {
       while ((g.searchesLeft[x.playerId] ?? 0) > 0) {
         const options = g.scenario.places.filter((p) => g.searchOrder[p.id].some((id) => !g.found[id]) && !(p.restricted && g.phase === "investigate1" && x.role !== "insider"));
         if (!options.length) break;
@@ -372,6 +524,11 @@ export function viewFor(g, viewerId, now) {
       victim: { name: s.victim.name, description: s.victim.description },
       window: { ...s.window, scene: placeName(g, s.scene) },
       places: s.places.map((p) => ({ id: p.id, name: p.name, restricted: !!p.restricted, remaining: placeRemaining(p.id) })),
+      map: g.map ? {
+        tiles: s.map.tiles, legend: s.map.legend, vision: s.map.vision,
+        spots: g.map.spots.map((sp, i) => ({ place: sp.place, x: sp.x, y: sp.y, open: !!openSpot(g, i) })),
+        errands: g.map.errands.map((e) => ({ index: e.index, place: e.place, x: e.x, y: e.y, ...s.map.errands[e.index] })),
+      } : null,
       characters: s.characters.map((c) => ({
         id: c.id, name: c.name, age: c.age, occupation: c.occupation, bio: c.bio, relation: c.relation,
         playedBy: activeSeats(g).find((x) => x.charId === c.id)?.playerId ?? null,
@@ -402,6 +559,10 @@ export function viewFor(g, viewerId, now) {
       used: { quiet: u.quiet, recall: u.recall, confessed: u.confessed, accused: u.accused },
       canQuietSearch: seat.role === "culprit" && !u.quiet,
       vote: g.votes[viewerId] ?? null,
+      errands: g.map ? {
+        done: g.errandsDone[viewerId]?.[g.phase] ?? [], active: g.errand[viewerId] ? { index: g.errand[viewerId].index, startedAt: g.errand[viewerId].startedAt } : null,
+        forBonus: ERRANDS_FOR_BONUS,
+      } : null,
       culprit: seat.role === "culprit" ? { truth: s.culprit.truth, danger: s.culprit.danger ?? "" } : null,
     };
   }

@@ -48,6 +48,54 @@ It's AGM day for the Tumaini Avocado Growers cooperative at Kianjogu Market, in 
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **7 tiles** · players start in **Market hall (the AGM)**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+
+ ########################
+ #HHHHHHHHHH##MMMMMMMMMM#
+ #HHhHHHHHHH##MMMMMMMMMM#
+ #HHHHHHHHHH##MMMMMMmMMM#
+ #HHHHHHHHHH::MMMMMMMMMM#
+ #HHHHHH1HHH##MMM2MMMMMM#    ########
+ #HHHHHHHHHH##MMMMMMMMMM:....:TTTTTT#
+ #HHHHHHHHHH##MMMMMMMMMM#    #TTTTTT#
+ ###:#####:######:#######    #TTTtTT#
+ #OOOOO#  .      .           #TTTTTT#
+ #OOOOO#  .  ####:########## #TTTTTT#
+ #OOoOO#  .  #SSSSSS##WWWWW# #TTTTTT#
+ #OOOOO#  ...:SSSSSS::WwWWW:.:TTT4TT#
+ #######     #SsSSSS##WWWWW# #TTTTTT#
+             #SSSSSS##WWWwW# ########
+             ###:###########
+                .
+             ###:####
+             #KkKKKK#
+             #KKKK3K#
+             ########
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| H | Market hall (the AGM) | 1 |
+| O | Cooperative office (restricted) | 1 |
+| M | Market stalls | 1 |
+| S | Produce store | 1 |
+| W | Weighing shed | 2 |
+| K | Tea kiosk across the lane | 1 |
+| T | Matatu stage | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Hand out AGM aprons | 2 |
+| 2. Sort a crate of avocados | 3 |
+| 3. Fetch tea for the committee | 3 |
+| 4. Load crates onto a lorry | 3 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

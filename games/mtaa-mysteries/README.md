@@ -1,6 +1,8 @@
 # Mtaa Mysteries
 
-A social deduction murder-mystery game for 4–6 players in the browser. Each case is set somewhere in Kenya. One player is the culprit, and only the culprit may lie. Search for clues, test alibis against the clock, and vote.
+A social deduction murder-mystery game for 4–6 players in the browser. Each case is set somewhere in Kenya. One player is the culprit, and only the culprit may lie. Walk around the scene, search for clues, test alibis against the clock, and vote.
+
+In map mode (on by default), you walk a top-down site plan of the scene. You search glinting spots, run errands for bonus searches, and only see players within your sight radius, so what you saw becomes evidence.
 
 ```
 npm start              # http://localhost:8080 (PORT to change)
@@ -35,6 +37,8 @@ server/game.js       the rules engine (pure; time is passed in) and per-player v
 server/scenario.js   scenario loading, variants, travel times, and the fair-play checker
 server/text.js       name/chat cleaning and blocklist
 client/              index.html, app.js, style.css: no build step
+client/map.js        the walkable map: canvas, movement, controls
+client/geom.js       map geometry shared by browser and server
 scenarios/*.json     the six cases (spoilers)
 scripts/             check-scenarios, render-scenarios, lint, e2e
 test/                node:test suites, including the leak test and the worked example
@@ -49,6 +53,7 @@ test/                node:test suites, including the leak test and the worked ex
 | Scenario docs match the game data | `npm run lint` fails on stale docs |
 | The worked example in the docs matches the engine | `test/example-round.test.js` |
 | Player text is never rendered as HTML | Client uses text nodes; lint rejects `innerHTML =` |
+| Nobody teleports, and hidden players stay hidden | Server checks every move and filters positions by sight radius (`test/map.test.js`) |
 
 ## Status
 

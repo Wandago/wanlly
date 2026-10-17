@@ -28,11 +28,11 @@ export function createApp({ dataDir = join(ROOT, "data"), scenarios = loadScenar
   });
   const buckets = new Map(); // token -> { n, reset }
 
-  const limited = (key) => {
+  const limited = (key, max = 30) => {
     const now = Date.now();
     const b = buckets.get(key);
     if (!b || now > b.reset) { buckets.set(key, { n: 1, reset: now + 5000 }); return false; }
-    return ++b.n > 30;
+    return ++b.n > max;
   };
 
   const send = (res, status, body, headers = {}) => {
@@ -68,7 +68,7 @@ export function createApp({ dataDir = join(ROOT, "data"), scenarios = loadScenar
         const r = rooms.create(body.name, { isPublic: body.isPublic });
         return send(res, r.error ? 400 : 200, r);
       }
-      let m = /^\/api\/rooms\/([A-Za-z]{4})\/(join|act|stream)$/.exec(path);
+      let m = /^\/api\/rooms\/([A-Za-z]{4})\/(join|act|stream|pos)$/.exec(path);
       if (m) {
         const [, code, what] = m;
         if (what === "join" && req.method === "POST") {
@@ -77,6 +77,13 @@ export function createApp({ dataDir = join(ROOT, "data"), scenarios = loadScenar
           if (!body || body === "too-large") return badBody(res, body);
           const r = rooms.join(code, body.name);
           return send(res, r.error ? 400 : 200, r);
+        }
+        if (what === "pos" && req.method === "POST") {
+          const body = await readBody(req);
+          if (!body || body === "too-large" || !body.token) return badBody(res, body);
+          if (limited("pos:" + body.token, 120)) return send(res, 429, { error: "Too many moves." });
+          const r = rooms.move(code, body.token, body.x, body.y);
+          return send(res, r.ok ? 200 : 409, r);
         }
         if (what === "act" && req.method === "POST") {
           const body = await readBody(req);
@@ -89,7 +96,7 @@ export function createApp({ dataDir = join(ROOT, "data"), scenarios = loadScenar
         if (what === "stream" && req.method === "GET") {
           res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-store", Connection: "keep-alive", ...SECURITY });
           res.write("retry: 2000\n\n");
-          const push = (body) => res.write(`data: ${body}\n\n`);
+          const push = (body, event) => res.write(`${event ? `event: ${event}\n` : ""}data: ${body}\n\n`);
           const off = rooms.connect(code, url.searchParams.get("token"), push);
           if (!off) { push(JSON.stringify({ removed: "unknown" })); return res.end(); }
           const ping = setInterval(() => res.write(": ping\n\n"), 20_000);
@@ -118,7 +125,8 @@ export function createApp({ dataDir = join(ROOT, "data"), scenarios = loadScenar
     rooms.tickAll(now);
     for (const [key, b] of buckets) if (now > b.reset) buckets.delete(key);
   }, 1000);
-  server.on("close", () => clearInterval(timer));
+  const fast = setInterval(() => rooms.fastTick(Date.now()), 100);
+  server.on("close", () => { clearInterval(timer); clearInterval(fast); });
   return { server, rooms };
 }
 

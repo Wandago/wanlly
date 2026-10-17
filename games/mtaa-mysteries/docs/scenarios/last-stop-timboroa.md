@@ -48,6 +48,54 @@ Kanjo Sound, a six-piece benga-fusion band, is driving overnight from Nairobi to
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **4 tiles** · players start in **Grill and dining hall**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+
+          ###################
+          #SSSSS##RRRRRRRRRR#
+          #SsSSS##RRR4RRRrRR#
+          #SSSsS##RRRRRRRRRR#
+          #SsSSS##RRRRRRRRRR#
+ ############:######:########
+ #DDDDDDDD#YYYYYYYYYYYY#
+ #DDDDDDDD#YYYYYYYYYYYY#######
+ #DDdDDDDD#YYYYYYY2YYYY##VVVV#
+ #DDDDDDDD:YYYYYYYYYYYY::VVvV#
+ #DDDDDDDD#YYYYYYYYYYYY##VVVV#
+ #DDDD1DDD#YYYYYYYYYYYY#######
+ #DDDDDDDD#YYYYYYYYYYYY#
+ ###############:#######
+                .              ######
+          ######:############# #PPPP#
+          #WW3WWWWWWWWWWWWWWW:.:PPPP#
+          #WWWWWWWWWWWwWWWWWW# #PPpP#
+          #################### #PPPP#
+                               ######
+
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| Y | Yard | 0 |
+| S | Equipment store room | 3 |
+| D | Grill and dining hall | 1 |
+| R | Lodge rooms | 1 |
+| V | The band van (restricted) | 1 |
+| W | Roadside wall by the highway | 1 |
+| P | Petrol station shop next door | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Turn the meat on the grill | 3 |
+| 2. Load a speaker case | 3 |
+| 3. Flag down the fuel truck | 2 |
+| 4. Hang up a wet towel | 2 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

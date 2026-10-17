@@ -16,6 +16,9 @@
 
 **Ranges per round:** innocents 0–7, culprit 0–8. The culprit can top a single round, but over a session (the culprit rotates) the group goal dominates: a table that keeps catching the culprit scores 5–7 each per round.
 
+### Errands (map mode)
+Errands earn **no points**. Finishing two in a round earns one extra search that round. They're a way to get more evidence and an excuse to be somewhere, not a way to farm score.
+
 ### What is deliberately *not* rewarded
 - **Chat volume or speed.** Spamming earns nothing, and chat is rate-limited.
 - **Accusations.** They cost nothing and score nothing. The vote is what counts, so throwing random accusations has no upside.
@@ -52,7 +55,7 @@ Points add up across rematches in the same room and are shown in the lobby and o
 | Safe to randomise | Not safe without re-checking |
 |---|---|
 | Who plays which character | Which character is the culprit (needs an authored, checked variant) |
-| Order of clues *within* a place | Moving a clue to another place (changes what the Insider can reach in round 1) |
+| Order of clues *within* a place, and which map spot holds which clue | Moving a clue to another place (changes what the Insider can reach in round 1) |
 | Which variant is used | Clue times or travel times (can break alibis) |
 | Pace and timers | Removing clues (can leave an innocent uncleared) |
 | NPC set (from player count) | Swapping a clue's wording or facts between variants |
@@ -100,6 +103,15 @@ Scenarios are JSON files in `scenarios/`. The checker is the specification. Each
                  "timeline": { "daniel": [] },                                   // replace per character
                  "clues": { "update": { "c-ledger": { "text": "…" } }, "add": [], "remove": [] } }]
 }
+```
+
+**Map block** (one per scenario, shared by its variants):
+
+```jsonc
+"map": { "vision": 6, "spawn": "rooftop",
+  "legend": { "R": "rooftop", "S": "stairwell" },          // one capital letter per place
+  "errands": [{ "label": "Stack the plastic chairs", "seconds": 3 }],   // digit 1 = first errand
+  "tiles": [" #######", " #RRrR1#", " ###:###"] }        // # wall . path : door A-Z floor a-z clue spot 1-9 errand
 ```
 
 **Fact types:** `{char, place, from, to}` (presence), `{char, place, from, to, absent: true}`, and `{nobody: true, except: [...], place, from, to}`. A fact with only `from` is a single minute.

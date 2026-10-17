@@ -47,6 +47,53 @@ Fifteen years after graduating from Winam University, the class of 2011 has take
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **5 tiles** · players start in **Main hall (dinner and DJ)**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+
+ ############ ##########  ###########
+ #HHHHHHHHHH# #GGGGGGGG#  #CCCCCCCCC#
+ #HHhHHHHHHH# #GGGGGG2G:..:CCCCCCCCC#
+ #HHHHHHHHHH:.:GGGGGGGG#  #CCCCCCcCC#
+ #HHHHHHHHHH# #GGgGGGGG#  #CCCCCCCCC#
+ #HHHHHHH1HH# #GGGGGGGG#  #CCCCCCCCC#
+ #HHHHHHHHHH# #GGGGGGGG#  ####:######
+ ####:####### #####:####      .
+     .             .          .
+ ####:#####        .          .
+ #PPPPPPPP#        .          .
+ #PPPPPPPP#        .          .
+ #PpPPPPPP#        .    ######:#
+ #PPPPPP4P#        .    #BBBbBB#
+ #PPPPPPPP#        .....:BbBBBB#
+ ##########        .    #BBBBBB#
+          #########.    #BBBBbB#
+          #EEEEEEE#.    ########
+          #EEeEEEE:.
+          #EEEE3EE#
+          #########
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| H | Main hall (dinner and DJ) | 1 |
+| P | Car park | 1 |
+| G | Fire-pit garden | 1 |
+| C | Block B cottages (restricted) | 1 |
+| B | Boat shed on the shore | 3 |
+| E | Fish banda on the beach | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Change the DJ's playlist | 2 |
+| 2. Add wood to the fire | 3 |
+| 3. Buy fried tilapia | 3 |
+| 4. Help push a stuck car | 3 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

@@ -2,7 +2,7 @@
 // A room owns at most one game at a time; scores carry across rematches.
 import { randomBytes, randomInt } from "node:crypto";
 import { materialize, variantIds, publicMeta } from "./scenario.js";
-import { createGame, act, tick, viewFor, leave, extend, PACE } from "./game.js";
+import { createGame, act, tick, viewFor, leave, extend, move, positionsFor, stepBots, PACE } from "./game.js";
 import { cleanName, cleanChat } from "./text.js";
 
 const CODE_CHARS = "BCDFGHJKLMNPQRSTVWXZ"; // no vowels, so codes can't spell words
@@ -40,7 +40,7 @@ export class Rooms {
     const room = {
       code, hostId: host.id, isPublic: !!isPublic, createdAt: now, lastActive: now,
       people: [host], scenarioId: [...this.scenarios.keys()][0], variant: "random",
-      settings: { pace: "standard", scoring: true }, game: null, scores: {}, lastCulprit: null, version: 0,
+      settings: { pace: "standard", scoring: true, map: true }, game: null, scores: {}, lastCulprit: null, version: 0,
     };
     this.rooms.set(code, room);
     return { code, token: host.token, playerId: host.id };
@@ -86,7 +86,7 @@ export class Rooms {
     const found = this.find(code, token);
     if (!found) return null;
     const { room, p } = found;
-    const l = { playerId: p.id, send, last: "" };
+    const l = { playerId: p.id, send, last: "", lastPos: "" };
     if (!this.listeners.has(room.code)) this.listeners.set(room.code, new Set());
     this.listeners.get(room.code).add(l);
     p.connected = true;
@@ -173,6 +173,7 @@ export class Rooms {
         if (r) break;
         if (a.pace && PACE[a.pace]) room.settings.pace = a.pace;
         if (typeof a.scoring === "boolean") room.settings.scoring = a.scoring;
+        if (typeof a.map === "boolean") room.settings.map = a.map;
         if (typeof a.isPublic === "boolean") room.isPublic = a.isPublic;
         r = { ok: true };
         break;
@@ -284,6 +285,31 @@ export class Rooms {
   passHost(room) {
     const next = room.people.find((x) => !x.bot && x.connected) ?? room.people.find((x) => !x.bot);
     if (next) room.hostId = next.id;
+  }
+
+  /** A position report. Cheap: no full view is rebuilt; the fast loop broadcasts positions. */
+  move(code, token, x, y, now = Date.now()) {
+    const found = this.find(code, token);
+    if (!found?.room.game) return { error: "No case is running." };
+    found.p.lastSeen = now;
+    const r = move(found.room.game, found.p.id, Number(x), Number(y), now);
+    return r;
+  }
+
+  /** Called about ten times a second: walking bots, and each player's view of nearby walkers. */
+  fastTick(now = Date.now()) {
+    for (const room of this.rooms.values()) {
+      const g = room.game;
+      if (!g?.map) continue;
+      if (stepBots(g, now)) g.version++;
+      if (g.version !== room.lastGameVersion) { room.lastGameVersion = g.version; this.bump(room, now); }
+      for (const l of this.listeners.get(room.code) ?? []) {
+        const pos = positionsFor(g, l.playerId, now);
+        const body = JSON.stringify(pos);
+        const comparable = JSON.stringify({ ...pos, now: 0 });
+        if (comparable !== l.lastPos) { l.lastPos = comparable; l.send(body, "pos"); }
+      }
+    }
   }
 
   /** Called every second: phase timers, host failover, dropping stale lobby players, idle rooms. */

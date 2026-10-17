@@ -27,6 +27,14 @@ Items marked **[auto]** are enforced on every run by `npm run check` (lint, scen
 - [ ] Names, ages and relationships are consistent across intro, bios, cards and clues.
 - [ ] Variant overrides don't leave stale references (a clue mentioning the old culprit's motive).
 
+## Map
+- [ ] **[auto]** Every map passes the checker: each place drawn, enough clue spots for every variant, each errand placed once, a spawn room big enough for the table, and everything reachable.
+- [ ] **[auto]** The server rejects teleporting, speeding and wall-crossing, and sends positions only inside each player's sight radius (tests).
+- [ ] **[e2e]** Keyboard walking, tap-to-move and Walk-to-then-search all work in a real browser.
+- [ ] The map reads as the place described in the intro (a reviewer from the region looks at the layout).
+- [ ] Sight radius feels right for the setting and the table size (track how often players meet in playtests).
+- [ ] Clue spots aren't so close together that one walk empties a room's evidence.
+
 ## Mobile usability
 - [ ] **[e2e]** No horizontal scroll at 390 px (`npm run e2e`, needs Playwright). Re-test at 320 px by hand.
 - [ ] A full case is playable one-handed on a mid-range Android phone over 3G-class mobile data.

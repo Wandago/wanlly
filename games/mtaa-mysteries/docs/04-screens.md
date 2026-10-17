@@ -47,6 +47,13 @@ Intro, victim, window and scene; every character with occupation, bio, relations
 - **Arguments:** suspect select, a "clue that proves it" select (board clues only), a 280-character reason, and **Accuse**. Once used, a confirmation message.
 - **Vote:** buttons for each other played character ("played by …"), an optional key-evidence select, **Cast secret vote**, **Abstain**, and a counter ("3/5 voted"). Your current vote is shown and can be changed.
 
+### The scene (map mode)
+During Discovery, the investigation rounds and Closing arguments, the Act panel shows **The scene**: a top-down site plan drawn on one canvas.
+- **What's drawn:** each place's floor in its own tint with its name (🔒 while it's restricted for you), walls, doors and paths; glinting gold clue spots (grey once searched); orange **!** errands (✓ once you've done them this round); players as coloured discs with initials and names, yours with a dark outline; and an orange progress ring around anyone doing an errand. Outside your sight circle, everything is dimmed.
+- **Controls:** arrow keys or WASD (whenever you're not typing), tap or click to walk there by the shortest path, or the **Walk to…** menu, which walks you to an open clue spot in that place. One context button changes with where you stand: **Search here (E)** or the errand's name. The culprit also gets a *Quiet search* checkbox.
+- **Status line** (read out politely to screen readers): "You're in: Back stairwell. 1 search left. Errands this round: 0/2 for a bonus search."
+- **Camera:** desktop shows about 20 tiles across; phones zoom in to about 12 so tapping is easy. The camera follows you.
+
 ### Evidence board
 Filters (All · Clues · Statements · Accusations), newest first. Entry styles: **Clue** (teal edge; place, finder, *Verified by the detective*, or *handed in anonymously*), **Statement** (gold edge; "a player's claim: innocent players can't lie, but the culprit can"; NPC statements marked as statements to the police), **Confession** (red edge), **Accusation** (orange edge; target, cited clue, reason), and system notes (dashed).
 
@@ -106,6 +113,7 @@ Hosting passes automatically if the host is gone for 30 seconds.
 - Colour is never the only signal: badges carry words ("Clue", "Statement", "Verified").
 - Light and dark themes (follows the device, or set manually), a larger-text option, and `prefers-reduced-motion` respected.
 - Glossary: Kiswahili and Sheng terms show their English meaning in brackets by default; players can switch to tap/hover or turn meanings off.
+- The map never requires precise pointing: the **Walk to…** menu and the context button cover everything, and the status line describes where you are. Hosts can also switch the map off for the list mode, which has no canvas at all.
 - Text-first: nothing requires audio or voice.
 
 ## 4.8 Playing with and without voice

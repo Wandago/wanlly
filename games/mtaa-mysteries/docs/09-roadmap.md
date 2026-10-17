@@ -10,7 +10,8 @@ Each stage has an exit test. Something is "done" when its check passes, not when
 - Host powers, mute, remove, report
 - 6 scenarios × 2 variants, the fair-play checker, generated scenario docs
 - Responsive, accessible client with light and dark themes and glossary settings
-- 55 automated tests, plus an end-to-end browser playthrough
+- Walkable maps for all six cases: movement checked by the server, sight radius, clue spots, errands, walking bots, keyboard, tap and menu controls
+- 70 automated tests, plus an end-to-end browser playthrough that walks and searches on desktop and phone
 
 **Exit test:** `npm run check` passes, and a full case is playable in the browser with 2 humans and 2 bots, including reconnect and rematch. *Met.*
 
@@ -48,6 +49,7 @@ Each stage has an exit test. Something is "done" when its check passes, not when
 **Later:**
 - A story editor: a form over the JSON, with live checker feedback
 - Partner mode for 7–8 players
+- Map polish: walls that block sight (not just distance), footstep sounds, and character art instead of initials
 - Optional two-culprit scenarios (needs a checker extension)
 
 ## Stage 4: Launch readiness (2 weeks)

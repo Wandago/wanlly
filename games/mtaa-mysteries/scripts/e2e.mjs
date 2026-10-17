@@ -17,7 +17,7 @@ if (!chromium) {
   process.exit(0);
 }
 
-const { server } = createApp({ dataDir: mkdtempSync(join(tmpdir(), "mtaa-e2e-")) });
+const { server, rooms } = createApp({ dataDir: mkdtempSync(join(tmpdir(), "mtaa-e2e-")) });
 await new Promise((r) => server.listen(0, "127.0.0.1", r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 const shots = process.env.E2E_SCREENSHOTS;
@@ -69,13 +69,54 @@ try {
   check(!(await guest.locator("#panel-card").isVisible()) && await guest.locator("#panel-board").isVisible(), "phone tabs show one panel at a time");
   check(await host.locator("#panel-card").isVisible() && await host.locator("#panel-board").isVisible(), "desktop shows all panels");
 
+  const game = () => rooms.rooms.get(code).game;
+  const ids = Object.fromEntries(game().seats.map((x) => [x.name, x.playerId]));
+  const posOf = (name) => ({ ...game().pos[ids[name]] });
+
+  // Walking: keyboard on desktop, tap on the phone. The server's copy of each position must move.
+  await host.locator(".map-canvas").waitFor();
+  await shot(host, "map-discovery-desktop");
+  const before = posOf("Amina");
+  await host.locator(".map-canvas").focus();
+  await host.keyboard.down("ArrowRight"); await host.waitForTimeout(500); await host.keyboard.up("ArrowRight");
+  await host.waitForTimeout(300);
+  const after = posOf("Amina");
+  check(Math.hypot(after.x - before.x, after.y - before.y) > 0.3, `keyboard walking moves you on the server (${before.x.toFixed(1)},${before.y.toFixed(1)} → ${after.x.toFixed(1)},${after.y.toFixed(1)})`);
+  await guest.getByRole("tab", { name: /Act/ }).click();
+  const gBefore = posOf("Otieno");
+  // Tap a floor tile two tiles to the guest's left, using the same camera maths as the client.
+  const box = await guest.locator(".map-canvas").boundingBox();
+  const m = game().map;
+  const [camX, camY, ts] = (await guest.locator(".map-canvas").getAttribute("data-camera")).split(",").map(Number);
+  const tx = Math.floor(gBefore.x) + (/[A-Z]/.test(m.rows[Math.floor(gBefore.y)][Math.floor(gBefore.x) - 2]) ? -2 : 2) + 0.5;
+  await guest.mouse.click(box.x + (tx - camX) * ts, box.y + (gBefore.y - camY) * ts);
+  await guest.waitForTimeout(1500);
+  const gAfter = posOf("Otieno");
+  check(Math.hypot(gAfter.x - gBefore.x, gAfter.y - gBefore.y) > 0.3, "tap-to-move works on the phone");
+  await shot(guest, "map-phone");
+
+  // Investigation: walk to a clue spot with the "Walk to" menu, then search it with the context button.
   for (const round of ["round 1", "round 2"]) {
     await readyBoth(round);
-    await guest.getByRole("tab", { name: /Act/ }).click();
-    for (const p of [host, guest]) {
-      const btn = p.locator(".place .btn:not([disabled])").first();
-      if (await btn.count()) await btn.click();
-      await p.waitForTimeout(200);
+    for (const [p, name] of [[host, "Amina"], [guest, "Otieno"]]) {
+      const me = game().seats.find((x) => x.name === name);
+      const mine = () => Object.values(game().found).filter((f) => f.by === me.playerId).length;
+      const openAt = (pl) => game().map.spots.some((sp, i) => sp.place === pl.id && game().spotClue[i] && !game().found[game().spotClue[i]]);
+      const foundBefore = mine();
+      let where = null;
+      // Bots search too, so a spot can be taken while we walk to it: then pick another.
+      for (let attempt = 0; attempt < 4 && mine() === foundBefore && game().searchesLeft[me.playerId] > 0; attempt++) {
+        const target = game().scenario.places.find((pl) => !(pl.restricted && round === "round 1" && me.role !== "insider") && openAt(pl));
+        if (!target) break;
+        where = target.name;
+        await p.locator(".mapwrap select").selectOption(target.id);
+        const btn = p.getByRole("button", { name: "Search here (E)" });
+        for (let t = 0; t < 100 && openAt(target); t++) {
+          if (await btn.isVisible()) { await btn.click(); await p.waitForTimeout(400); break; }
+          await p.waitForTimeout(200);
+        }
+      }
+      if (where) check(mine() === foundBefore + 1, `${name} walked to ${where} and searched it (${round})`);
     }
   }
   await shot(host, "investigate-desktop");

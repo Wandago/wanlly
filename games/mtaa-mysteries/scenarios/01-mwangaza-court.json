@@ -887,5 +887,59 @@
         }
       ]
     }
-  ]
+  ],
+  "map": {
+    "vision": 6,
+    "spawn": "rooftop",
+    "legend": {
+      "R": "rooftop",
+      "S": "stairwell",
+      "F": "flat4b",
+      "G": "gate",
+      "P": "parking",
+      "K": "kiosk"
+    },
+    "errands": [
+      {
+        "label": "Stack the plastic chairs",
+        "seconds": 3
+      },
+      {
+        "label": "Sweep the landing",
+        "seconds": 3
+      },
+      {
+        "label": "Sign the visitors' book",
+        "seconds": 2
+      },
+      {
+        "label": "Carry a crate of sodas",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " ################ #####               ",
+      " #RRRRRRRRRRRRRR# #SSS#               ",
+      " #RRRrRRRRRRRRRR:.:SSS#               ",
+      " #RRRRRRRRRR1RRR# #SSS#               ",
+      " #RRRRRRRRRRRRRR# #SSS#               ",
+      " ################ #SsS# ##########    ",
+      "                  #SSS# #FFFFFFFF#    ",
+      "                  #SSS:.:FFfFFFFF#    ",
+      "                  #SS2# #FFFFFFFF#    ",
+      "                  #SSS# #FFFFFFfF#    ",
+      "                  #sSS# ##########    ",
+      "                  #SSS#               ",
+      "                  ##:##               ",
+      "                    .                 ",
+      " ###########        .     ########    ",
+      " #PPPPPPPPP#  ######:##   #KKKKKK#    ",
+      " #PPpPPPPPP#  #GGGGGGG#   #KKKkKK#    ",
+      " #PPPPPPPPP:..:GgGGGGG:...:KKKKKK#    ",
+      " #PPPPPPPPP#  #GGGGGG3#   #KKKKK4#    ",
+      " ###########  #########   ########    ",
+      "                                      "
+    ]
+  }
 }

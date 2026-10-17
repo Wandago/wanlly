@@ -10,6 +10,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parseMap, isWalkTile } from "../client/geom.js";
 
 export const SCENARIO_DIR = join(dirname(fileURLToPath(import.meta.url)), "..", "scenarios");
 export const ROLES = ["culprit", "detective", "witness", "insider", "secret"];
@@ -276,6 +277,8 @@ export function validate(s) {
     need((r.clues ?? []).length > 0 && r.clues.every((id) => clueIds.has(id)), `red herring ${r.char}: clue ids must exist`);
   }
 
+  errs.push(...validateMap(s).map((m) => `${s.id}/${s.variantId}: map: ${m}`));
+
   // Glossary markup: [[term|gloss]]
   for (const [path, str] of everyString(s, "", [])) {
     const opens = (str.match(/\[\[/g) ?? []).length;
@@ -309,4 +312,64 @@ export function publicMeta(base) {
     players: base.players, contentNotes: base.contentNotes, teaser: base.teaser ?? "",
     variants: variantIds(base).length,
   };
+}
+
+/** The walkable site plan: every place drawn, enough clue spots, errands placed, everything reachable. */
+export function validateMap(s) {
+  const errs = [];
+  const m = s.map;
+  if (!m || !Array.isArray(m.tiles) || !m.tiles.length) return ["missing map.tiles"];
+  const bad = m.tiles.findIndex((r) => typeof r !== "string" || !/^[#\s.:A-Za-z1-9]*$/.test(r));
+  if (bad >= 0) return [`row ${bad} has characters outside # . : space A–Z a–z 1–9`];
+  if (!(m.vision >= 2 && m.vision <= 12)) errs.push("vision must be between 2 and 12 tiles");
+  const placeIds = s.places.map((p) => p.id);
+  const legend = m.legend ?? {};
+  for (const [letter, id] of Object.entries(legend)) {
+    if (!/^[A-Z]$/.test(letter)) errs.push(`legend key ${letter} must be one capital letter`);
+    if (!placeIds.includes(id)) errs.push(`legend ${letter} names unknown place ${id}`);
+  }
+  for (const id of placeIds) {
+    if (Object.values(legend).filter((v) => v === id).length !== 1) errs.push(`place ${id} needs exactly one legend letter`);
+  }
+  for (const ch of new Set(m.tiles.join("").match(/[A-Za-z]/g) ?? [])) {
+    if (!legend[ch.toUpperCase()]) errs.push(`tile ${ch} has no legend entry`);
+  }
+  if (errs.length) return errs;
+
+  const parsed = parseMap(m);
+  for (const id of placeIds) if (!parsed.floors[id]?.length) errs.push(`place ${id} has no floor on the map`);
+  for (const id of placeIds) {
+    const clues = s.clues.filter((c) => c.where === id).length;
+    const spots = parsed.spots.filter((x) => x.place === id).length;
+    if (spots < clues) errs.push(`${id} has ${clues} searchable clues but only ${spots} clue spots`);
+  }
+  const errands = m.errands ?? [];
+  for (const [i, e] of errands.entries()) {
+    if (!e.label || !(e.seconds >= 1 && e.seconds <= 10)) errs.push(`errand ${i + 1} needs a label and 1–10 seconds`);
+    const placed = parsed.errands.filter((x) => x.index === i);
+    if (placed.length !== 1) errs.push(`errand ${i + 1} must appear exactly once on the map`);
+    else if (!placed[0].place) errs.push(`errand ${i + 1} must sit next to a place's floor`);
+  }
+  for (const e of parsed.errands) if (e.index >= errands.length) errs.push(`map digit ${e.index + 1} has no errand`);
+  if (!placeIds.includes(m.spawn)) errs.push(`spawn ${m.spawn} is not a place`);
+  else if ((parsed.floors[m.spawn]?.length ?? 0) < s.players.max) errs.push(`spawn ${m.spawn} needs room for ${s.players.max} players`);
+
+  // Everything walkable must be reachable from the spawn.
+  const walk = [];
+  m.tiles.forEach((r, y) => [...r].forEach((ch, x) => { if (isWalkTile(ch)) walk.push(`${x},${y}`); }));
+  const start = parsed.floors[m.spawn]?.[0];
+  if (start) {
+    const seen = new Set([`${start[0]},${start[1]}`]);
+    const queue = [start];
+    while (queue.length) {
+      const [x, y] = queue.shift();
+      for (const [nx, ny] of [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]) {
+        const k = `${nx},${ny}`;
+        if (!seen.has(k) && isWalkTile(m.tiles[ny]?.[nx])) { seen.add(k); queue.push([nx, ny]); }
+      }
+    }
+    const lost = walk.filter((k) => !seen.has(k));
+    if (lost.length) errs.push(`${lost.length} walkable tiles can't be reached from the spawn (first at ${lost[0]})`);
+  }
+  return errs;
 }

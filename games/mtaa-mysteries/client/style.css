@@ -10,6 +10,10 @@
   --f-body: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", sans-serif;
   --f-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --f-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --map-void: #e9e1d2; --map-wall: #4a4036; --map-path: #d9ccb4; --map-label: #3a3128; --map-spot: #e0a100; --map-spent: #b9ae9c;
+  --map-errand: #c2410c; --map-dark: rgb(31 27 22 / 45%);
+  --map-floor-0: #f3e6c9; --map-floor-1: #dcebe3; --map-floor-2: #e9dcef; --map-floor-3: #f6dcd2;
+  --map-floor-4: #dde6f3; --map-floor-5: #eef0d4; --map-floor-6: #f2e0e6; --map-floor-7: #d9efef;
   --text: 16px;
   color-scheme: light;
 }
@@ -20,6 +24,10 @@
     --teal: #2fb3a1; --teal-soft: #12302d; --gold: #e8c15a; --gold-soft: #33290e;
     --bad: #ff7a6b; --bad-soft: #3d1a17; --good: #4ade80; --good-soft: #13301c;
     --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 35%);
+    --map-void: #0e0d16; --map-wall: #3b3752; --map-path: #2a2738; --map-label: #e9e3da; --map-spot: #f2c94c; --map-spent: #4b475d;
+    --map-errand: #f2a33a; --map-dark: rgb(5 4 10 / 62%);
+    --map-floor-0: #2b2638; --map-floor-1: #1f3130; --map-floor-2: #2e2539; --map-floor-3: #37262a;
+    --map-floor-4: #222b3b; --map-floor-5: #2e301f; --map-floor-6: #352730; --map-floor-7: #1e3236;
     color-scheme: dark;
   }
 }
@@ -29,6 +37,10 @@
   --teal: #2fb3a1; --teal-soft: #12302d; --gold: #e8c15a; --gold-soft: #33290e;
   --bad: #ff7a6b; --bad-soft: #3d1a17; --good: #4ade80; --good-soft: #13301c;
   --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 35%);
+  --map-void: #0e0d16; --map-wall: #3b3752; --map-path: #2a2738; --map-label: #e9e3da; --map-spot: #f2c94c; --map-spent: #4b475d;
+  --map-errand: #f2a33a; --map-dark: rgb(5 4 10 / 62%);
+  --map-floor-0: #2b2638; --map-floor-1: #1f3130; --map-floor-2: #2e2539; --map-floor-3: #37262a;
+  --map-floor-4: #222b3b; --map-floor-5: #2e301f; --map-floor-6: #352730; --map-floor-7: #1e3236;
   color-scheme: dark;
 }
 :root[data-size="large"] { --text: 18px; }
@@ -58,7 +70,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .muted { color: var(--muted); }
 .small { font-size: .875rem; }
 .mono { font-family: var(--f-mono); }
-.hidden { display: none !important; }
+.hidden, [hidden] { display: none !important; }
 
 .card { background: var(--paper); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 .card.flat { box-shadow: none; }
@@ -180,3 +192,13 @@ abbr.gloss { text-decoration: underline dotted var(--faint); text-underline-offs
 .conn { font-size: .8rem; }
 table.score { width: 100%; border-collapse: collapse; }
 table.score td, table.score th { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--line); }
+
+/* Walkable map */
+.mapwrap { display: flex; flex-direction: column; gap: 8px; }
+.map-canvas { width: 100%; height: clamp(260px, 52vh, 560px); border-radius: 12px; border: 1px solid var(--line); background: var(--map-void); touch-action: none; display: block; }
+.map-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.map-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.map-controls select { width: auto; flex: 1; min-width: 140px; }
+.map-help { flex-basis: 100%; }
+.map-status { margin: 0; font-size: .9rem; }
+@media (pointer: coarse) { .map-help { display: none; } }

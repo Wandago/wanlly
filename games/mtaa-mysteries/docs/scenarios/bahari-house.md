@@ -49,6 +49,55 @@ Bahari House is a restored Swahili merchant's house in Mombasa's Old Town: a cou
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **3.5 tiles** · players start in **Courtyard (dinner and taarab)**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+                               #######
+                               #TTTTT#
+                               #TTtTT#
+                               #TTTTT#
+ #################################:###
+ #OOOOOO#GGGGGGGGGGGGGGG4GGGGGG:MMMMM#
+ #OoOOOO:GGGGGGGGGGGGGGGGGGGGGG#MMMMM#
+ #OOOOOO####:###################MMMMM#
+ #OoOOoO#   .                  #MMMMM#
+ ########   .                  #######
+        ####:###################
+        #CCCCCCCCCCCCCCCCCCCCCC#
+        #CCCCCCCCCCCCCCCCCCCCCC# #####
+        #CCCCCCC1CCCCCCCCcCCCCC# #NNN#
+        #CCCCCCCCCCCCCCCCCCCCCC:.:NNN#
+        #CCCCCCCCCCCCCCCCCCCCCC# #NnN#
+        #CCCCCCCCCCCCCCCCCCCCCC# #NNN#
+        ####:#######:########### #####
+        #RRRRRRR#KKKKKKK#
+        #RrRRR3R#KKKKKkK#
+        #RRRRRRR#KK2KKKK#
+        #################
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| O | Manager's office | 3 |
+| G | First-floor gallery | 0 |
+| M | Guest rooms, second floor | 0 |
+| T | Roof terrace | 1 |
+| C | Courtyard (dinner and taarab) | 1 |
+| R | Reception | 1 |
+| K | Kitchen | 1 |
+| N | Generator shed, back lane (restricted) | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Light a lantern | 3 |
+| 2. Fetch ginger from the store | 3 |
+| 3. Check the guest register | 2 |
+| 4. Close the gallery shutters | 3 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

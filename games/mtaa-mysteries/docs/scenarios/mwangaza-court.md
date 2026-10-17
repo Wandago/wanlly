@@ -47,6 +47,53 @@ It's Saturday night on the rooftop of Mwangaza Court, a six-storey block in Sout
 
 Minutes on foot, shortest route. These figures drive both the alibi logic and the fairness check.
 
+## Walkable map
+
+Sight radius **6 tiles** · players start in **Rooftop (the harambee)**. The map isn't to scale: story times use the travel table above, while the map sets how long walking takes in real time.
+
+```
+
+ ################ #####
+ #RRRRRRRRRRRRRR# #SSS#
+ #RRRrRRRRRRRRRR:.:SSS#
+ #RRRRRRRRRR1RRR# #SSS#
+ #RRRRRRRRRRRRRR# #SSS#
+ ################ #SsS# ##########
+                  #SSS# #FFFFFFFF#
+                  #SSS:.:FFfFFFFF#
+                  #SS2# #FFFFFFFF#
+                  #SSS# #FFFFFFfF#
+                  #sSS# ##########
+                  #SSS#
+                  ##:##
+                    .
+ ###########        .     ########
+ #PPPPPPPPP#  ######:##   #KKKKKK#
+ #PPpPPPPPP#  #GGGGGGG#   #KKKkKK#
+ #PPPPPPPPP:..:GgGGGGG:...:KKKKKK#
+ #PPPPPPPPP#  #GGGGGG3#   #KKKKK4#
+ ###########  #########   ########
+
+```
+
+Key: `#` wall · `.` path · `:` door · capital letter = a place's floor · lowercase letter = a clue spot in that place · digit = errand.
+
+| Letter | Place | Clue spots |
+|---|---|---|
+| R | Rooftop (the harambee) | 1 |
+| S | Back stairwell, 4th–5th floor landing | 2 |
+| F | Flat 4B (Grace's flat) (restricted) | 2 |
+| G | Gate and askari booth | 1 |
+| P | Parking yard | 1 |
+| K | Mama Pendo's kiosk, across the road | 1 |
+
+| Errand | Seconds |
+|---|---|
+| 1. Stack the plastic chairs | 3 |
+| 2. Sweep the landing | 3 |
+| 3. Sign the visitors' book | 2 |
+| 4. Carry a crate of sodas | 3 |
+
 ## Clues
 
 **Starting clues** (on the board at Discovery)

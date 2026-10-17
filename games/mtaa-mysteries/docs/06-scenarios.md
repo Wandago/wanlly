@@ -13,6 +13,8 @@ Six launch scenarios, each with a second variant. Every variant passes the fair-
 | 5 | The Last Stop Before Timboroa | Highway stopover near Timboroa | A touring band, music royalties, truckers at night | Locked room: a padlocked store, explained by a spare key | A: song credits · **B: door money** (motive) | [last-stop-timboroa](scenarios/last-stop-timboroa.md) |
 | 6 | Short Weight at Kianjogu Market | Market town, Nyeri County | Farmers' cooperative AGM, a tampered scale | Morning, rural: meeting minutes and a weighing log against a market-stall alibi | A: short weight · **B: ghost members** (motive) | [short-weight](scenarios/short-weight.md) |
 
+Every case also has a **walkable map** (drawn in its JSON as ASCII tiles and shown in its doc), with its own sight radius: 7 tiles for the daytime wedding and the market, 6 for the apartment block, 5 for the lakeside night, 4 in the Timboroa mist, and 3.5 in the Mombasa blackout.
+
 **Variety check:**
 - **Victims:** a schoolteacher-treasurer, a hotel manager, a deputy principal, a land surveyor, a band manager, and a farmers' cooperative chairwoman. None is a celebrity or a politician.
 - **Settings:** five regions, from day and night, city to rural.

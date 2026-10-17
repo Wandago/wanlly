@@ -663,5 +663,60 @@
         ]
       }
     }
-  ]
+  ],
+  "map": {
+    "vision": 4,
+    "spawn": "dining",
+    "legend": {
+      "Y": "yard",
+      "S": "store",
+      "D": "dining",
+      "R": "rooms",
+      "V": "van",
+      "W": "roadside",
+      "P": "petrol"
+    },
+    "errands": [
+      {
+        "label": "Turn the meat on the grill",
+        "seconds": 3
+      },
+      {
+        "label": "Load a speaker case",
+        "seconds": 3
+      },
+      {
+        "label": "Flag down the fuel truck",
+        "seconds": 2
+      },
+      {
+        "label": "Hang up a wet towel",
+        "seconds": 2
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      "          ###################         ",
+      "          #SSSSS##RRRRRRRRRR#         ",
+      "          #SsSSS##RRR4RRRrRR#         ",
+      "          #SSSsS##RRRRRRRRRR#         ",
+      "          #SsSSS##RRRRRRRRRR#         ",
+      " ############:######:########         ",
+      " #DDDDDDDD#YYYYYYYYYYYY#              ",
+      " #DDDDDDDD#YYYYYYYYYYYY#######        ",
+      " #DDdDDDDD#YYYYYYY2YYYY##VVVV#        ",
+      " #DDDDDDDD:YYYYYYYYYYYY::VVvV#        ",
+      " #DDDDDDDD#YYYYYYYYYYYY##VVVV#        ",
+      " #DDDD1DDD#YYYYYYYYYYYY#######        ",
+      " #DDDDDDDD#YYYYYYYYYYYY#              ",
+      " ###############:#######              ",
+      "                .              ###### ",
+      "          ######:############# #PPPP# ",
+      "          #WW3WWWWWWWWWWWWWWW:.:PPPP# ",
+      "          #WWWWWWWWWWWwWWWWWW# #PPpP# ",
+      "          #################### #PPPP# ",
+      "                               ###### ",
+      "                                      "
+    ]
+  }
 }

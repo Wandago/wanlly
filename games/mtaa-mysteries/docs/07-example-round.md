@@ -3,7 +3,7 @@
 > **Spoilers for "The Treasurer of Mwangaza Court" (version A).**
 > This round is replayed against the real engine in `test/example-round.test.js`. Every search result, phase change and score below is asserted there, so the document can't drift from the rules.
 
-**Table:** five friends playing remotely, text chat only, standard pace, scoring on.
+**Table:** five friends playing remotely, text chat only, standard pace, scoring on, with the map switched off (list mode). With the map on, the same round plays out the same way, except that each search happens by walking to that place's clue spot, and players can also say who they saw where.
 
 | Player | Character | Role | Seat note |
 |---|---|---|---|

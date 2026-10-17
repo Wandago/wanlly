@@ -918,5 +918,59 @@
         }
       ]
     }
-  ]
+  ],
+  "map": {
+    "vision": 5,
+    "spawn": "hall",
+    "legend": {
+      "H": "hall",
+      "P": "parking",
+      "G": "garden",
+      "C": "cottages",
+      "B": "boathouse",
+      "E": "beach"
+    },
+    "errands": [
+      {
+        "label": "Change the DJ's playlist",
+        "seconds": 2
+      },
+      {
+        "label": "Add wood to the fire",
+        "seconds": 3
+      },
+      {
+        "label": "Buy fried tilapia",
+        "seconds": 3
+      },
+      {
+        "label": "Help push a stuck car",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " ############ ##########  ########### ",
+      " #HHHHHHHHHH# #GGGGGGGG#  #CCCCCCCCC# ",
+      " #HHhHHHHHHH# #GGGGGG2G:..:CCCCCCCCC# ",
+      " #HHHHHHHHHH:.:GGGGGGGG#  #CCCCCCcCC# ",
+      " #HHHHHHHHHH# #GGgGGGGG#  #CCCCCCCCC# ",
+      " #HHHHHHH1HH# #GGGGGGGG#  #CCCCCCCCC# ",
+      " #HHHHHHHHHH# #GGGGGGGG#  ####:###### ",
+      " ####:####### #####:####      .       ",
+      "     .             .          .       ",
+      " ####:#####        .          .       ",
+      " #PPPPPPPP#        .          .       ",
+      " #PPPPPPPP#        .          .       ",
+      " #PpPPPPPP#        .    ######:#      ",
+      " #PPPPPP4P#        .    #BBBbBB#      ",
+      " #PPPPPPPP#        .....:BbBBBB#      ",
+      " ##########        .    #BBBBBB#      ",
+      "          #########.    #BBBBbB#      ",
+      "          #EEEEEEE#.    ########      ",
+      "          #EEeEEEE:.                  ",
+      "          #EEEE3EE#                   ",
+      "          #########                   "
+    ]
+  }
 }

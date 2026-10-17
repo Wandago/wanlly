@@ -31,6 +31,13 @@ Browser ──POST /api/rooms/:code/act {token, type, …}──▶ Rooms.action
 - **`server/index.js`**: HTTP routing, static files (only from `client/`), SSE, request limits, rate limits and security headers.
 - **`server/text.js`**: name and chat cleaning, plus the blocklist.
 
+### Map mode
+- **Shared geometry:** `client/geom.js` (walkability, collision, sliding, breadth-first paths, map parsing) is loaded by the browser *and* imported by the server, so prediction and validation use the same rules.
+- **Movement:** the browser moves you immediately and sends `POST /api/rooms/:code/pos {x, y}` about 10 times a second while you move. The server accepts a report only if it is at most 1.2 tiles from the last accepted one, no faster than walking speed (with slack for lag), on a standable position, and along a wall-free line. Otherwise it replies `409` with your real position, and the browser snaps back. Before a search or errand, the browser sends its latest position and waits for it to be accepted.
+- **Sight, server-side:** a 100 ms loop sends each listener a `pos` event containing only the walkers inside that player's sight radius, and only when it changed. Hidden positions never reach the browser.
+- **Bots:** the same loop walks practice bots along breadth-first paths to open clue spots.
+- **Cost:** movement doesn't rebuild the full per-player views. Those are still sent only when game state changes.
+
 ## 8.3 Data model
 
 ```
@@ -42,7 +49,9 @@ Game {
   searchOrder{ placeId: [clueId] }, found{ clueId: { by, phase, quiet, published } },
   board[{ id, at, kind: clue|statement|confession|accusation|found|system, … }], chat[{ id, by, text, at }],
   searchesLeft{ playerId }, used{ playerId: { quiet, recall, confessed, accused, shared[] } },
-  ready[], votes{ playerId: { target, clueId } }, connected{}, muted[], result?
+  ready[], votes{ playerId: { target, clueId } }, connected{}, muted[], result?,
+  // map mode only:
+  map (parsed tiles), pos{ playerId: { x, y, t } }, spotClue{ spotIndex: clueId }, errand{ playerId: {…} }, errandsDone{ playerId: { phase: [index] } }, botPlan{}
 }
 ```
 

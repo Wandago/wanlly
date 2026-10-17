@@ -640,5 +640,59 @@
         }
       }
     }
-  ]
+  ],
+  "map": {
+    "vision": 7,
+    "spawn": "tent",
+    "legend": {
+      "T": "tent",
+      "D": "drinks",
+      "P": "photo",
+      "K": "kitchen",
+      "C": "changing",
+      "A": "carpark"
+    },
+    "errands": [
+      {
+        "label": "Hand out programmes",
+        "seconds": 2
+      },
+      {
+        "label": "Straighten the photo backdrop",
+        "seconds": 3
+      },
+      {
+        "label": "Carry a tray of chapati",
+        "seconds": 3
+      },
+      {
+        "label": "Guide a car into a space",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                                      ",
+      " #########################            ",
+      " #CCCCC##TTTTTTTTTTTTTTTT#            ",
+      " #CCcCC##TTTTTTTTTTTTTTTT#            ",
+      " #CCCCC::TTTtTTTTTTTTTTTT#            ",
+      " #CCCCC##TTTTTTTTT1TTTTTT#            ",
+      " #CCCCC##TTTTTTTTTTTTTTTT#            ",
+      " ########TTTTTTTTTTTTTtTT#            ",
+      "        #TTTTTTTTTTTTTTTT#            ",
+      "        #TTTTTTTTTTTTTTTT# #########  ",
+      " ###### ########:######### #KKkKKKK#  ",
+      " #AAAA# #DDDdDDDDDDDDDDDD# #KKKKKKK#  ",
+      " #AAAA:.:DDDDDDDDDDDDdDDD:.:KKKKKKK#  ",
+      " #AAAA# ########:######### #KKK3KkK#  ",
+      " #AaAA#         .          #########  ",
+      " #AAAA#         .                     ",
+      " #A4AA# ########:#########            ",
+      " ###### #PPPPPPPPPPPPPPPP#            ",
+      "        #PPPPPPPPPPPP2PPP#            ",
+      "        #PPPPPpPPPPPPPPPP#            ",
+      "        #PPPPPPPPPPPPPPPP#            ",
+      "        ##################            "
+    ]
+  }
 }

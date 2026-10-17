@@ -701,5 +701,61 @@
         ]
       }
     }
-  ]
+  ],
+  "map": {
+    "vision": 3.5,
+    "spawn": "courtyard",
+    "legend": {
+      "O": "office",
+      "G": "gallery",
+      "M": "room4",
+      "T": "roof",
+      "C": "courtyard",
+      "R": "reception",
+      "K": "kitchen",
+      "N": "generator"
+    },
+    "errands": [
+      {
+        "label": "Light a lantern",
+        "seconds": 3
+      },
+      {
+        "label": "Fetch ginger from the store",
+        "seconds": 3
+      },
+      {
+        "label": "Check the guest register",
+        "seconds": 2
+      },
+      {
+        "label": "Close the gallery shutters",
+        "seconds": 3
+      }
+    ],
+    "tiles": [
+      "                               #######",
+      "                               #TTTTT#",
+      "                               #TTtTT#",
+      "                               #TTTTT#",
+      " #################################:###",
+      " #OOOOOO#GGGGGGGGGGGGGGG4GGGGGG:MMMMM#",
+      " #OoOOOO:GGGGGGGGGGGGGGGGGGGGGG#MMMMM#",
+      " #OOOOOO####:###################MMMMM#",
+      " #OoOOoO#   .                  #MMMMM#",
+      " ########   .                  #######",
+      "        ####:###################      ",
+      "        #CCCCCCCCCCCCCCCCCCCCCC#      ",
+      "        #CCCCCCCCCCCCCCCCCCCCCC# #####",
+      "        #CCCCCCC1CCCCCCCCcCCCCC# #NNN#",
+      "        #CCCCCCCCCCCCCCCCCCCCCC:.:NNN#",
+      "        #CCCCCCCCCCCCCCCCCCCCCC# #NnN#",
+      "        #CCCCCCCCCCCCCCCCCCCCCC# #NNN#",
+      "        ####:#######:########### #####",
+      "        #RRRRRRR#KKKKKKK#             ",
+      "        #RrRRR3R#KKKKKkK#             ",
+      "        #RRRRRRR#KK2KKKK#             ",
+      "        #################             "
+    ]
+  }
 }

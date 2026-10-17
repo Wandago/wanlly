@@ -39,7 +39,8 @@ The host may add **+1 minute once per phase**. The host **cannot skip** a phase.
 | The culprit's true story, cover story and danger notes | The culprit only | Always |
 | A clue you found | You only, until you share it or the round ends | During investigation |
 | That someone searched a place | Everyone ("Kamau searched the Gate and found something") | Immediately, unless it was the culprit's quiet search |
-| How many clues remain at each place | Everyone | Always (a count dropping without an announcement hints at a quiet search) |
+| How many clues remain at each place, and which map spots still glint | Everyone | Always (a count dropping without an announcement hints at a quiet search) |
+| Other players' positions on the map | Only players within your sight radius | Live, during the movable phases |
 | Statements, confessions, accusations, shared clues | Everyone | When posted |
 | Who has voted | Everyone (yes/no) | During the vote |
 | How each person voted, everyone's role and secret, the full solution | Everyone | Resolution only |
@@ -121,7 +122,26 @@ Every scenario assigns each character one role per variant. Roles change **what 
 - **Witness** adds testimony that narrows the field. Recall details are written to fit several characters ("a green event lanyard; committee members and helpers all had one").
 - **Insider** creates an early information gap. The rest of the table has to trust or test the Insider's report until round 2.
 
-## 3.11 The fair-play guarantee
+## 3.11 The walkable map (map mode)
+
+Map mode is on by default, and the host can turn it off in the lobby. Everything above still applies. The map changes *how* you search, and adds what you saw as a new kind of evidence.
+
+| Rule | Detail |
+|---|---|
+| **When you can move** | Discovery, both investigation rounds, and closing arguments. Everyone is frozen during the briefing and the vote. |
+| **Start** | Everyone starts in the scenario's gathering place (for example the rooftop at Mwangaza Court), on separate tiles. |
+| **Speed** | Walking speed is 4 tiles a second for everyone. The server rejects any report that moves faster than walking speed (with a little slack for lag), more than 1.2 tiles at once, or through a wall, and snaps that player back. Nobody can teleport. |
+| **Searching** | Each searchable clue is hidden at its own **clue spot** in its place (which clue sits at which spot is shuffled every game). You must stand within reach (1.3 tiles) of a glinting spot. The search limits are unchanged: one per round, two for the Detective. |
+| **Restricted rooms** | Anyone can walk in, but only the Insider can search there in round 1, as before. |
+| **Errands** | Small timed jobs at **!** marks (2–3 s: "Stack the plastic chairs", "Turn the meat on the grill"). You must stand still at the mark; walking away cancels it. Each errand can be done once per round, and **finishing two in a round gives one extra search**. Errands earn no points. Anyone nearby sees an orange ring while you work. |
+| **Sight** | You see other players only within the scenario's **sight radius**: 7 tiles in daylight, 5–6 at night, 4 in highway mist, 3.5 in the Mombasa blackout. The server sends each player only the positions inside their own radius, so hidden players can't be revealed by inspecting the page. |
+| **What it adds** | Sightings are evidence. They follow the honesty rule like everything else: innocents must describe what they saw truthfully, while the culprit may lie about where they went. |
+| **Spectators** | See the map but no players, so a spectator can't relay positions to a friend. |
+| **Bots** | Practice bots walk to clue spots and search them, at a little under walking speed. |
+
+The map isn't to scale. The story's timeline still uses each scenario's travel table (minutes on foot in the fiction); the map only decides how long walking takes in real time. Every map is checked along with the scenario: every place is drawn, there are enough clue spots, each errand is placed once, the starting room has space for the table, and every walkable tile can be reached.
+
+## 3.12 The fair-play guarantee
 
 A case ships only if `npm run check:scenarios` passes for **every variant**. The checker (`server/scenario.js`, `validate`) proves:
 
