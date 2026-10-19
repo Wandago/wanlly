@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { AbuseTab, AdsTab, TrafficTab } from "./admin-insights";
 import { AdvertisersTab } from "./admin-advertisers";
 import { SupportTab } from "./admin-support";
@@ -533,12 +533,90 @@ function Messages() {
   );
 }
 
+/** Adds or removes one person's credits: amount, a reason they'll see, and an optional email. */
+function GrantCredits({ user, onDone, onClose }: { user: User; onDone: (credits: number, message: string) => void; onClose: () => void }) {
+  const [requestId] = useState(() => crypto.randomUUID());
+  const [mode, setMode] = useState<"add" | "remove">("add");
+  const [amount, setAmount] = useState("50");
+  const [reason, setReason] = useState("");
+  const [notify, setNotify] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const n = Math.floor(Number(amount));
+  const submit = async () => {
+    if (!(n > 0) || !reason.trim()) return setError("Enter an amount and a reason.");
+    setBusy(true);
+    setError("");
+    try {
+      const r = await api<{ delta?: number; credits: number; emailed?: boolean; duplicate?: boolean }>(`/api/admin/users/${encodeURIComponent(user.id)}/credits`, "POST", {
+        amount: mode === "add" ? n : -n,
+        reason: reason.trim(),
+        notify: mode === "add" && notify,
+        requestId,
+      });
+      const who = user.email ?? user.name ?? "them";
+      const d = r.delta ?? 0;
+      onDone(r.credits, r.duplicate ? "That was already done." : `${d > 0 ? `Added ${d} credits to` : `Removed ${-d} credits from`} ${who}. New balance ${num(r.credits)}.${r.emailed ? " They've been emailed." : ""}`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2 rounded-xl bg-code p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
+      <Pills<"add" | "remove"> label="Add or remove" value={mode} onChange={setMode} options={[["add", "Add"], ["remove", "Remove"]]} />
+      <label className="flex flex-col gap-1 text-xs text-muted">
+        Credits
+        <input type="number" min={1} max={5000} step={1} value={amount} onChange={(e) => setAmount(e.target.value)} className="w-24 rounded-lg border border-line bg-surface px-2 py-1 text-[13px] text-fg" />
+      </label>
+      <div className="flex gap-1">
+        {[20, 50, 100, 250].map((v) => (
+          <button key={v} type="button" className={btnGhost} onClick={() => setAmount(String(v))}>
+            {v}
+          </button>
+        ))}
+      </div>
+      <label className="flex min-w-[240px] flex-1 flex-col gap-1 text-xs text-muted">
+        Reason (they see this in their credit history{mode === "add" && notify ? " and the email" : ""})
+        <input
+          value={reason}
+          maxLength={300}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder={mode === "add" ? "Thanks for reporting a bug" : "Credits from a reversed survey"}
+          className="rounded-lg border border-line bg-surface px-2 py-1 text-[13px] text-fg"
+        />
+      </label>
+      {mode === "add" && (
+        <label className="flex items-center gap-1.5 pb-1 text-xs text-muted">
+          <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} /> Email them
+        </label>
+      )}
+      <button type="submit" disabled={busy} className={btnDark}>
+        {busy ? "Saving…" : `${mode === "add" ? "Add" : "Remove"} ${n > 0 ? `${n} ` : ""}credits`}
+      </button>
+      <button type="button" className={btnGhost} onClick={onClose}>
+        Cancel
+      </button>
+      {error && <p className="w-full text-[13px] text-bad">{error}</p>}
+    </form>
+  );
+}
+
 function Users({ initial = "" }: { initial?: string }) {
   const [term, setTerm] = useState(initial);
   const [query, setQuery] = useState(initial);
   const { items, setItems, extra, error } = useList<User>(`/api/admin/users${query ? `?q=${encodeURIComponent(query)}` : ""}`, "users");
   const [note, setNote] = useState("");
+  const [done, setDone] = useState("");
+  const [granting, setGranting] = useState<string | null>(null);
   const canEdit = extra.canEdit === true;
+  const canGrant = extra.canGrant === true;
 
   const setStatus = async (u: User, status: string) => {
     if (status === u.status) return;
@@ -556,7 +634,7 @@ function Users({ initial = "" }: { initial?: string }) {
   return (
     <Card
       title="People"
-      note="Frozen and banned accounts can't earn or spend credits. Every change needs a reason and is logged."
+      note="Frozen and banned accounts can't earn or spend credits. Use ± next to a balance to add or remove credits. Every change needs a reason and is logged."
       actions={
         <form
           className="flex gap-1.5"
@@ -579,6 +657,7 @@ function Users({ initial = "" }: { initial?: string }) {
       }
     >
       {note && <p className="text-[13px] text-bad">{note}</p>}
+      {done && <p className="text-[13px] text-good">{done}</p>}
       {error ? (
         <Empty>{error}</Empty>
       ) : !items ? (
@@ -599,7 +678,8 @@ function Users({ initial = "" }: { initial?: string }) {
             </thead>
             <tbody>
               {items.map((u) => (
-                <tr key={u.id} className="hover:bg-hover/60">
+                <Fragment key={u.id}>
+                <tr className="hover:bg-hover/60">
                   <td className="border-b border-line px-2 py-1.5">
                     <span className="block max-w-[260px] truncate font-medium">{u.name ?? "–"}</span>
                     <small className="block max-w-[260px] truncate text-xs text-muted">
@@ -610,7 +690,23 @@ function Users({ initial = "" }: { initial?: string }) {
                   <td className="border-b border-line px-2 py-1.5">{u.country ?? "–"}</td>
                   <td className="border-b border-line px-2 py-1.5 whitespace-nowrap text-muted">{new Date(u.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</td>
                   <td className="border-b border-line px-2 py-1.5 whitespace-nowrap text-muted">{u.lastActive ? when(u.lastActive) : "–"}</td>
-                  <td className="border-b border-line px-2 py-1.5 text-right font-mono tabular-nums">{num(u.credits)}</td>
+                  <td className="border-b border-line px-2 py-1.5 text-right font-mono whitespace-nowrap tabular-nums">
+                    {num(u.credits)}
+                    {canGrant && u.status !== "deleted" && (
+                      <button
+                        type="button"
+                        aria-label={`Add or remove credits for ${u.email ?? u.id}`}
+                        aria-expanded={granting === u.id}
+                        onClick={() => {
+                          setDone("");
+                          setGranting((g) => (g === u.id ? null : u.id));
+                        }}
+                        className="ml-1.5 rounded-md border border-line px-1.5 font-sans text-xs text-muted hover:border-faint hover:text-fg"
+                      >
+                        ±
+                      </button>
+                    )}
+                  </td>
                   <td className="border-b border-line px-2 py-1.5 text-right font-mono tabular-nums">{num(u.spentToday)}</td>
                   <td className="border-b border-line px-2 py-1.5">
                     {canEdit && u.id !== extra.me && u.role !== "owner" && u.status !== "deleted" ? (
@@ -631,6 +727,22 @@ function Users({ initial = "" }: { initial?: string }) {
                     )}
                   </td>
                 </tr>
+                {granting === u.id && (
+                  <tr>
+                    <td colSpan={7} className="border-b border-line px-2 py-2">
+                      <GrantCredits
+                        user={u}
+                        onClose={() => setGranting(null)}
+                        onDone={(credits, message) => {
+                          setItems((xs) => (xs ?? []).map((x) => (x.id === u.id ? { ...x, credits } : x)));
+                          setGranting(null);
+                          setDone(message);
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
             </tbody>
           </table>

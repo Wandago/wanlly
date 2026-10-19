@@ -12,6 +12,8 @@ export const CAN = {
   messages: ["owner", "admin", "support"],
   users: ["owner", "admin", "moderator"],
   switches: ["owner", "admin"],
+  /** Adding or removing someone's credits. */
+  credits: ["owner", "admin"],
   advertisers: ["owner", "admin"],
 } satisfies Record<string, Role[]>;
 

@@ -21,6 +21,7 @@ export async function GET(req: Request) {
       limit 100`;
     return Response.json({
       canEdit: (CAN.users as readonly string[]).includes(staff.role),
+      canGrant: (CAN.credits as readonly string[]).includes(staff.role),
       me: staff.id,
       users: (rows as Record<string, unknown>[]).map((r) => ({
         id: r.id,
