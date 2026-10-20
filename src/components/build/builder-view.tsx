@@ -66,7 +66,7 @@ export function BuilderView({ id }: { id: number }) {
   // Topping up before credits run out (a warning shows when only a few steps' worth are left).
   const [topUp, setTopUp] = useState(false);
   const [draft, setDraft] = useState("");
-  const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "gemini-flash");
+  const [modelId, setModelId] = useLocalSetting("wanlly-build-model", "kimi");
   const [smart, setSmart] = useLocalSetting("wanlly-build-smart", "on");
   const [pane, setPane] = useState<"chat" | "files" | "preview">("chat");
   // The code is the main view: it follows each file as the AI edits it. The preview is opt-in.
@@ -80,9 +80,9 @@ export function BuilderView({ id }: { id: number }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const started = useRef(false);
 
-  // The models the Builder can drive: Gemini Flash (free to run) and Claude.
-  const claude = useMemo(() => MODELS.filter((m) => (m.provider === "anthropic" || m.provider === "google") && isLive(m, providers)), [providers]);
-  const model = claude.find((m) => m.id === modelId) ?? claude.find((m) => m.id === "sonnet") ?? claude[0];
+  // The models the Builder can drive: Gemini Flash, Claude, and the open models on NVIDIA (Kimi, GLM, DeepSeek).
+  const claude = useMemo(() => MODELS.filter((m) => (m.provider === "anthropic" || m.provider === "google" || m.provider === "nvidia") && isLive(m, providers)), [providers]);
+  const model = claude.find((m) => m.id === modelId) ?? claude.find((m) => m.id === "sonnet") ?? claude.find((m) => m.id === "kimi") ?? claude[0];
 
   const loads = useRef(0);
   const load = useCallback(async () => {

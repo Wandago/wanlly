@@ -623,7 +623,14 @@ export async function geminiBuildStep(opts: { system: string; messages: Anthropi
  * with the same tools, for when Gemini's quota is used up. The conversation is kept in Anthropic's
  * shape and translated each way, so the next step can go back to Gemini or Claude.
  */
-async function openBuildStep(opts: { system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void }): Promise<{
+async function openBuildStep(opts: {
+  system: string;
+  messages: Anthropic.Beta.BetaMessageParam[];
+  signal: AbortSignal;
+  onText: (text: string) => void;
+  /** One chosen host and model (e.g. Kimi on NVIDIA) instead of the free pool. */
+  only?: { id: string; host: Host; label: string; model: string };
+}): Promise<{
   message: { content: Anthropic.Beta.BetaContentBlock[]; stop_reason: string };
   inputTokens: number;
   outputTokens: number;
@@ -649,7 +656,7 @@ async function openBuildStep(opts: { system: string; messages: Anthropic.Beta.Be
   }
   const tools = [EDIT_TOOL, { name: GITHUB_TOOL.name, description: GITHUB_TOOL.description, parameters: GITHUB_TOOL.input_schema }].map((f) => ({ type: "function", function: f }));
   const tried: string[] = [];
-  for (const c of (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
+  for (const c of opts.only ? [opts.only] : (await poolPlan()).filter((c) => !c.resting).slice(0, 4)) {
     const r = await fetch(`${c.host.base}/chat/completions`, {
       method: "POST",
       signal: opts.signal,
@@ -728,7 +735,14 @@ async function openBuildStep(opts: { system: string; messages: Anthropic.Beta.Be
     const stop_reason = finish === "content_filter" ? "refusal" : finish === "length" ? "max_tokens" : content.some((b) => b.type === "tool_use") ? "tool_use" : "end_turn";
     return { message: { content: content as unknown as Anthropic.Beta.BetaContentBlock[], stop_reason }, inputTokens, outputTokens };
   }
-  throw new ProviderError("busy", `Gemini's free quota is used up and every other free host was busy: ${tried.join(" · ") || "none set"}`);
+  throw new ProviderError("busy", opts.only ? `${opts.only.label} ${opts.only.model} didn't answer: ${tried.join(" · ")}` : `Gemini's free quota is used up and every other free host was busy: ${tried.join(" · ") || "none set"}`);
+}
+
+/** A Builder step on one of the open models hosted by NVIDIA (Kimi, GLM, DeepSeek), on Wanlly's NVIDIA key. */
+export async function nvidiaBuildStep(opts: { modelId: string; system: string; messages: Anthropic.Beta.BetaMessageParam[]; signal: AbortSignal; onText: (text: string) => void }) {
+  if (!process.env.NVIDIA_API_KEY) throw new ProviderError("unavailable");
+  const model = await nvidiaModel(opts.modelId);
+  return openBuildStep({ ...opts, only: { id: `nvidia:${model}`, host: nvidiaHost(), label: "NVIDIA", model } });
 }
 
 /**
