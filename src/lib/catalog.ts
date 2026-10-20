@@ -171,6 +171,10 @@ export type Usage = {
   /** ISO times when this person's session and week reset; null when none is running. */
   dayResetsAt: string | null;
   weekResetsAt: string | null;
+  /** Extra usage granted in Admin → People: no limits, free use, and when it ends. */
+  unlimited?: boolean;
+  free?: boolean;
+  accessUntil?: string;
 };
 /** Demo spots are short; real ones run 15 to 20 seconds. */
 export const SPOT_SECONDS = 5;

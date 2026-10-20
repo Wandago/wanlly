@@ -34,7 +34,7 @@ const STEP_LIMIT = 25;
 const VERB: Record<string, string> = { view: "Read", create: "Wrote", str_replace: "Edited", insert: "Edited", github: "Pushed to GitHub:" };
 
 export function BuilderView({ id }: { id: number }) {
-  const { providers, dispatch, credits } = useWorkspace();
+  const { providers, dispatch, credits, usage } = useWorkspace();
   const reward = useReward();
   // Panel widths, dragged by the handles between them and kept for next time.
   const [filesWidth, setFilesWidth] = useDragWidth("wanlly-build-files-w", 200, 140, 420);
@@ -381,7 +381,7 @@ export function BuilderView({ id }: { id: number }) {
   // Ideas for the next message: the AI's follow-ups from its last reply, then GitHub actions.
   const lastReply = [...steps].reverse().find((x) => x.role === "assistant" && x.text);
   const followups = lastReply ? replyParts(lastReply.text).next : [];
-  const lowCredits = !!model && credits <= model.credits * 3;
+  const lowCredits = !!model && !usage?.free && credits <= model.credits * 3;
   const runChecks = async () => {
     setChecking(true);
     setReport(null);

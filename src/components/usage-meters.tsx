@@ -35,6 +35,14 @@ export function UsageMeters({ usage, videos = false }: { usage: Usage | null; vi
     return () => window.clearInterval(t);
   }, []);
   if (!usage) return <div className="h-[58px]" aria-hidden="true" />;
+  const until = usage.accessUntil ? new Date(usage.accessUntil).toLocaleDateString(undefined, { month: "short", day: "numeric" }) : "";
+  if (usage.unlimited)
+    return (
+      <p className="flex flex-col gap-0.5 text-xs text-muted">
+        <b className="font-medium text-fg">Unlimited use{usage.free ? ", free" : ""}</b>
+        No session or weekly limits{usage.free ? ", and replies don't use your credits" : ""}, until {until}.
+      </p>
+    );
   return (
     <div className="flex flex-col gap-2.5">
       <Meter label="Current session" used={usage.dayUsed} limit={usage.dayLimit} resets={usage.dayResetsAt ? `Resets ${resetLabel(usage.dayResetsAt, "relative")}` : "Starts with your next request"} />

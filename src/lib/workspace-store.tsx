@@ -503,7 +503,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
       }
       const limit = limitReached(s.usage, cost);
       if (limit) return dispatch({ type: "toast", text: limit });
-      if (cost > s.credits) return dispatch({ type: "openGate", needed: cost });
+      if (cost > s.credits && !s.usage?.free) return dispatch({ type: "openGate", needed: cost });
       const id = `job-${crypto.randomUUID()}`;
       dispatch({
         type: "addJob",

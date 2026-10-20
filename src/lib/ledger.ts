@@ -2,6 +2,7 @@ import "server-only";
 import { eq, sql } from "drizzle-orm";
 import { db, rawSql, schema } from "@/db";
 import { DAILY_SPEND_LIMIT, DAILY_VIDEO_CAP, WEEKLY_SPEND_LIMIT, WEEKLY_SPEND_LIMIT_VERIFIED, type Usage } from "./catalog";
+import { NO_LIMIT, accessFor, limitsFor } from "./access";
 import { rewardNow } from "./reward";
 import { whatsappReady } from "./whatsapp";
 
@@ -72,16 +73,18 @@ export async function account(userId: string): Promise<Account> {
       from ledger_entries where user_id = ${userId}`) as Record<string, unknown>[];
   }
   const r = rows[0] ?? {};
-  const reward = await rewardNow().catch(() => null);
+  const [reward, access] = await Promise.all([rewardNow().catch(() => null), accessFor(userId)]);
+  const limits = limitsFor(access, Boolean(r.verified));
   const iso = (v: unknown) => (v ? new Date(String(v)).toISOString() : null);
   return {
     credits: Number(r.credits ?? 0),
     floorUnlocked: Boolean(r.floor),
     usage: {
       dayUsed: Number(r.day_used ?? 0),
-      dayLimit: DAILY_SPEND_LIMIT,
+      dayLimit: limits.day,
       weekUsed: Number(r.week_used ?? 0),
-      weekLimit: r.verified ? WEEKLY_SPEND_LIMIT_VERIFIED : WEEKLY_SPEND_LIMIT,
+      weekLimit: limits.week,
+      ...(access ? { unlimited: limits.day >= NO_LIMIT, free: access.free, accessUntil: access.expiresAt } : {}),
       verified: Boolean(r.verified),
       canVerify: whatsappReady(),
       reward: reward?.perAd,
@@ -102,6 +105,11 @@ export type SpendResult = { ok: true } | { ok: false; reason: "credits" | "day" 
  * spend the same credits, or the same limit, twice.
  */
 export async function spend(userId: string, amount: number, refId: string, note: string): Promise<SpendResult> {
+  // Extra usage from Admin → People: other limits, and with free use the balance is topped up first.
+  const access = await accessFor(userId);
+  const dayLimit = access?.unlimited ? NO_LIMIT : (access?.dayLimit ?? DAILY_SPEND_LIMIT);
+  const weekOverride = access?.unlimited ? NO_LIMIT : (access?.weekLimit ?? null);
+  if (access?.free) await topUp(userId, amount, refId);
   const q = rawSql();
   let rows: unknown;
   try {
@@ -112,7 +120,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
           select
             case when session_started_at is null or session_started_at + interval '6 hours' <= now() then now() else session_started_at end as ss,
             case when week_started_at is null or week_started_at + interval '7 days' <= now() then now() else week_started_at end as ws,
-            case when phone_verified then ${WEEKLY_SPEND_LIMIT_VERIFIED}::int else ${WEEKLY_SPEND_LIMIT}::int end as wl
+            coalesce(${weekOverride}::int, case when phone_verified then ${WEEKLY_SPEND_LIMIT_VERIFIED}::int else ${WEEKLY_SPEND_LIMIT}::int end) as wl
           from users where id = ${userId}
         ),
         cur as (
@@ -125,7 +133,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
         ins as (
           insert into ledger_entries (user_id, delta, reason, ref_id, note)
           select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
-          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= (select wl from u)
+          where cur.total >= ${amount} and cur.day + ${amount} <= ${dayLimit} and cur.week + ${amount} <= (select wl from u)
           on conflict (ref_id, reason) do nothing
           returning delta
         ),
@@ -150,7 +158,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
         ins as (
           insert into ledger_entries (user_id, delta, reason, ref_id, note)
           select ${userId}, ${-amount}, 'settle', ${refId}, ${note} from cur
-          where cur.total >= ${amount} and cur.day + ${amount} <= ${DAILY_SPEND_LIMIT} and cur.week + ${amount} <= ${WEEKLY_SPEND_LIMIT}
+          where cur.total >= ${amount} and cur.day + ${amount} <= ${dayLimit} and cur.week + ${amount} <= ${weekOverride ?? WEEKLY_SPEND_LIMIT}
           on conflict (ref_id, reason) do nothing
           returning delta
         )
@@ -160,8 +168,8 @@ export async function spend(userId: string, amount: number, refId: string, note:
   const r = (rows as Record<string, unknown>[])[0] ?? {};
   if (Number(r.charged) > 0) return { ok: true };
   if (Number(r.total) < amount) return { ok: false, reason: "credits" };
-  if (Number(r.day) + amount > DAILY_SPEND_LIMIT) return { ok: false, reason: "day" };
-  if (Number(r.week) + amount > Number(r.wl ?? WEEKLY_SPEND_LIMIT)) return { ok: false, reason: "week" };
+  if (Number(r.day) + amount > dayLimit) return { ok: false, reason: "day" };
+  if (Number(r.week) + amount > Number(r.wl ?? weekOverride ?? WEEKLY_SPEND_LIMIT)) return { ok: false, reason: "week" };
   return { ok: false, reason: "duplicate" };
 }
 
@@ -171,6 +179,7 @@ export async function spend(userId: string, amount: number, refId: string, note:
  */
 export async function chargeExtra(userId: string, amount: number, refId: string, note: string): Promise<number> {
   if (amount <= 0) return 0;
+  if ((await accessFor(userId))?.free) await topUp(userId, amount, refId);
   const q = rawSql();
   const [, rows] = await q.transaction([
     q`select pg_advisory_xact_lock(hashtext(${userId}))`,
@@ -184,6 +193,12 @@ export async function chargeExtra(userId: string, amount: number, refId: string,
       select coalesce(-(select sum(delta) from ins), 0)::int as taken`,
   ]);
   return Number((rows as Record<string, unknown>[])[0]?.taken ?? 0);
+}
+
+/** Free use: brings the balance up to `amount` so the charge goes through (logged as from Wanlly). */
+async function topUp(userId: string, amount: number, refId: string) {
+  const short = amount - (await balance(userId));
+  if (short > 0) await post(userId, short, "admin_grant", `free:${refId}`, "Free testing access");
 }
 
 /** Gives back the upfront price of a reply that failed before any of it arrived. */

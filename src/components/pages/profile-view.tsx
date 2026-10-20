@@ -474,7 +474,7 @@ export function ProfileView() {
             </div>
             <div className="rounded-xl border border-line p-3.5">
               <UsageMeters usage={usage} />
-              {usage && (
+              {usage && !usage.unlimited && (
                 <p className="mt-2.5 text-xs text-muted">
                   You can use up to {usage.dayLimit} credits in a 6-hour session and {usage.weekLimit} a week, however many you&apos;ve saved. Both start with your first request.
                 </p>

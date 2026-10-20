@@ -1,4 +1,5 @@
 import { rawSql } from "@/db";
+import { activeAccess } from "@/lib/access";
 import { CAN, requireStaff } from "@/lib/admin";
 
 /** Newest 100 accounts, or those whose email, name or id contains `q`. */
@@ -19,6 +20,7 @@ export async function GET(req: Request) {
       group by u.id
       order by u.created_at desc
       limit 100`;
+    const access = await activeAccess().catch(() => new Map());
     return Response.json({
       canEdit: (CAN.users as readonly string[]).includes(staff.role),
       canGrant: (CAN.credits as readonly string[]).includes(staff.role),
@@ -34,6 +36,7 @@ export async function GET(req: Request) {
         credits: Number(r.credits),
         spentToday: Number(r.spent_today),
         lastActive: r.last_active,
+        access: access.get(String(r.id)) ?? null,
       })),
     });
   } catch (e) {

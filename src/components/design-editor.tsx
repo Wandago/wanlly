@@ -190,7 +190,7 @@ export function DesignEditor({ id }: { id: number }) {
     const sending = files.items;
     const limit = limitReached(usage, price);
     if (limit) return dispatch({ type: "toast", text: limit });
-    if (price > credits) return dispatch({ type: "setEarnOpen", open: true });
+    if (price > credits && !usage?.free) return dispatch({ type: "setEarnOpen", open: true });
     setBusy(true);
     setAsked(text);
     setPrompt("");

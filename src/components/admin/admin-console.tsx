@@ -19,7 +19,8 @@ type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "ear
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
 type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string; channel?: string | null; firstTouch?: FirstTouch | null };
 type Message = { id: number; name: string; email: string; topic: string; message: string; networkCountry: string | null; handledAt: string | null; createdAt: string; autoReply: string | null; reply: string | null; repliedAt: string | null };
-type User = { id: string; email: string | null; name: string | null; country: string | null; role: string; status: string; createdAt: string; credits: number; spentToday: number; lastActive: string | null };
+type Access = { unlimited: boolean; dayLimit: number | null; weekLimit: number | null; free: boolean; expiresAt: string; note: string | null };
+type User = { id: string; email: string | null; name: string | null; country: string | null; role: string; status: string; createdAt: string; credits: number; spentToday: number; lastActive: string | null; access: Access | null };
 
 /** Hook for a list that reloads when its query changes and can be patched locally after an action. */
 function useList<T>(url: string, key: string) {
@@ -608,6 +609,102 @@ function GrantCredits({ user, onDone, onClose }: { user: User; onDone: (credits:
   );
 }
 
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+function accessLabel(a: Access | null) {
+  if (!a) return "Standard";
+  const limits = a.unlimited ? "Unlimited" : `${a.dayLimit ?? "std"} / session · ${a.weekLimit ?? "std"} / week`;
+  return `${limits}${a.free ? " · free" : ""} · to ${shortDate(a.expiresAt)}`;
+}
+
+/** Extra usage for one person until a date: no limits or their own, optionally free. */
+function GrantAccess({ user, onDone, onClose }: { user: User; onDone: (access: Access | null, message: string) => void; onClose: () => void }) {
+  const a = user.access;
+  const [mode, setMode] = useState<"unlimited" | "custom">(a && !a.unlimited ? "custom" : "unlimited");
+  const [dayLimit, setDayLimit] = useState(String(a?.dayLimit ?? 300));
+  const [weekLimit, setWeekLimit] = useState(String(a?.weekLimit ?? 3000));
+  const [days, setDays] = useState("30");
+  const [free, setFree] = useState(a?.free ?? true);
+  const [note, setNote] = useState(a?.note ?? "");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const who = user.email ?? user.name ?? "them";
+  const save = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const r = await api<{ access: Access }>(`/api/admin/users/${encodeURIComponent(user.id)}/access`, "PUT", { mode, dayLimit, weekLimit, days: Number(days), free, note: note.trim() });
+      onDone(r.access, `${who}: ${accessLabel(r.access)}.`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+  const clear = async () => {
+    setBusy(true);
+    try {
+      await api(`/api/admin/users/${encodeURIComponent(user.id)}/access`, "DELETE");
+      onDone(null, `${who} is back on standard limits.`);
+    } catch (e) {
+      setError((e as Error).message);
+      setBusy(false);
+    }
+  };
+  const input = "rounded-lg border border-line bg-surface px-2 py-1 text-[13px] text-fg";
+  return (
+    <form
+      className="flex flex-wrap items-end gap-2 rounded-xl bg-code p-3"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save();
+      }}
+    >
+      <Pills<"unlimited" | "custom"> label="Usage" value={mode} onChange={setMode} options={[["unlimited", "Unlimited"], ["custom", "Higher limits"]]} />
+      {mode === "custom" && (
+        <>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            Per 6-hour session
+            <input type="number" min={1} value={dayLimit} onChange={(e) => setDayLimit(e.target.value)} placeholder="100" className={`w-24 ${input}`} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            Per week
+            <input type="number" min={1} value={weekLimit} onChange={(e) => setWeekLimit(e.target.value)} placeholder="500" className={`w-24 ${input}`} />
+          </label>
+        </>
+      )}
+      <label className="flex flex-col gap-1 text-xs text-muted">
+        For
+        <select value={days} onChange={(e) => setDays(e.target.value)} className={input}>
+          {[["7", "1 week"], ["14", "2 weeks"], ["30", "1 month"], ["90", "3 months"], ["365", "1 year"]].map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="flex items-center gap-1.5 pb-1 text-xs text-muted" title="Replies are still recorded, but their credits are topped up as they go, so they never run out.">
+        <input type="checkbox" checked={free} onChange={(e) => setFree(e.target.checked)} /> Free (never runs out of credits)
+      </label>
+      <label className="flex min-w-[200px] flex-1 flex-col gap-1 text-xs text-muted">
+        Reason (for the log)
+        <input value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} placeholder="Beta tester" className={input} />
+      </label>
+      <button type="submit" disabled={busy} className={btnDark}>
+        {busy ? "Saving…" : "Save"}
+      </button>
+      {a && (
+        <button type="button" disabled={busy} className={btnGhost} onClick={() => void clear()}>
+          Back to standard
+        </button>
+      )}
+      <button type="button" className={btnGhost} onClick={onClose}>
+        Cancel
+      </button>
+      <p className="w-full text-xs text-faint">Standard is 100 credits a session and 500 a week (1,500 verified). Ends by itself on the date; they see it on their usage meters.</p>
+      {error && <p className="w-full text-[13px] text-bad">{error}</p>}
+    </form>
+  );
+}
+
 function Users({ initial = "" }: { initial?: string }) {
   const [term, setTerm] = useState(initial);
   const [query, setQuery] = useState(initial);
@@ -615,6 +712,7 @@ function Users({ initial = "" }: { initial?: string }) {
   const [note, setNote] = useState("");
   const [done, setDone] = useState("");
   const [granting, setGranting] = useState<string | null>(null);
+  const [editingAccess, setEditingAccess] = useState<string | null>(null);
   const canEdit = extra.canEdit === true;
   const canGrant = extra.canGrant === true;
 
@@ -634,7 +732,7 @@ function Users({ initial = "" }: { initial?: string }) {
   return (
     <Card
       title="People"
-      note="Frozen and banned accounts can't earn or spend credits. Use ± next to a balance to add or remove credits. Every change needs a reason and is logged."
+      note="Frozen and banned accounts can't earn or spend credits. Use ± next to a balance to add or remove credits, and Change under Usage for unlimited or higher limits. Every change needs a reason and is logged."
       actions={
         <form
           className="flex gap-1.5"
@@ -669,7 +767,7 @@ function Users({ initial = "" }: { initial?: string }) {
           <table className="w-full text-[13px]">
             <thead>
               <tr className="text-left text-muted">
-                {["Person", "Country", "Joined", "Last active", "Credits", "Used today", "Status"].map((h, i) => (
+                {["Person", "Country", "Joined", "Last active", "Credits", "Used today", "Usage", "Status"].map((h, i) => (
                   <th key={h} className={`border-b border-line px-2 py-2 font-medium whitespace-nowrap ${i === 4 || i === 5 ? "text-right" : ""}`}>
                     {h}
                   </th>
@@ -699,6 +797,7 @@ function Users({ initial = "" }: { initial?: string }) {
                         aria-expanded={granting === u.id}
                         onClick={() => {
                           setDone("");
+                          setEditingAccess(null);
                           setGranting((g) => (g === u.id ? null : u.id));
                         }}
                         className="ml-1.5 rounded-md border border-line px-1.5 font-sans text-xs text-muted hover:border-faint hover:text-fg"
@@ -708,6 +807,25 @@ function Users({ initial = "" }: { initial?: string }) {
                     )}
                   </td>
                   <td className="border-b border-line px-2 py-1.5 text-right font-mono tabular-nums">{num(u.spentToday)}</td>
+                  <td className="border-b border-line px-2 py-1.5 whitespace-nowrap">
+                    <span className={`text-xs ${u.access ? "font-medium text-fg" : "text-muted"}`} title={u.access?.note ?? undefined}>
+                      {accessLabel(u.access)}
+                    </span>
+                    {canGrant && u.status !== "deleted" && (
+                      <button
+                        type="button"
+                        aria-expanded={editingAccess === u.id}
+                        onClick={() => {
+                          setDone("");
+                          setGranting(null);
+                          setEditingAccess((g) => (g === u.id ? null : u.id));
+                        }}
+                        className="ml-1.5 rounded-md border border-line px-1.5 text-xs text-muted hover:border-faint hover:text-fg"
+                      >
+                        Change
+                      </button>
+                    )}
+                  </td>
                   <td className="border-b border-line px-2 py-1.5">
                     {canEdit && u.id !== extra.me && u.role !== "owner" && u.status !== "deleted" ? (
                       <select
@@ -729,13 +847,28 @@ function Users({ initial = "" }: { initial?: string }) {
                 </tr>
                 {granting === u.id && (
                   <tr>
-                    <td colSpan={7} className="border-b border-line px-2 py-2">
+                    <td colSpan={8} className="border-b border-line px-2 py-2">
                       <GrantCredits
                         user={u}
                         onClose={() => setGranting(null)}
                         onDone={(credits, message) => {
                           setItems((xs) => (xs ?? []).map((x) => (x.id === u.id ? { ...x, credits } : x)));
                           setGranting(null);
+                          setDone(message);
+                        }}
+                      />
+                    </td>
+                  </tr>
+                )}
+                {editingAccess === u.id && (
+                  <tr>
+                    <td colSpan={8} className="border-b border-line px-2 py-2">
+                      <GrantAccess
+                        user={u}
+                        onClose={() => setEditingAccess(null)}
+                        onDone={(access, message) => {
+                          setItems((xs) => (xs ?? []).map((x) => (x.id === u.id ? { ...x, access } : x)));
+                          setEditingAccess(null);
                           setDone(message);
                         }}
                       />
