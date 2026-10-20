@@ -25,7 +25,9 @@ export function ModelPicker() {
     );
   }
 
-  const groups = [...new Set(MODELS.map((m) => m.group))];
+  // Models people can use now come first (on a phone, nobody should scroll past "Soon" to find them).
+  const ordered = [...MODELS.filter((m) => isLive(m, providers)), ...MODELS.filter((m) => !isLive(m, providers))];
+  const groups = [...new Set(ordered.map((m) => m.group))];
   return (
     <Menu.Root>
       <Menu.Trigger className="flex items-center gap-2 rounded-[10px] px-2.5 py-[7px] text-sm font-semibold outline-none hover:bg-hover focus-visible:outline-2 data-[state=open]:bg-hover">
@@ -36,13 +38,14 @@ export function ModelPicker() {
         <Menu.Content
           align="start"
           sideOffset={6}
-          className="z-30 w-[330px] max-w-[calc(100vw-32px)] rounded-[14px] border border-line bg-surface p-1.5 text-fg shadow-soft"
+          collisionPadding={12}
+          className="z-30 max-h-[var(--radix-dropdown-menu-content-available-height)] w-[330px] max-w-[calc(100vw-32px)] overflow-y-auto overscroll-contain rounded-[14px] border border-line bg-surface p-1.5 text-fg shadow-soft"
         >
           <Menu.RadioGroup value={modelId} onValueChange={(v) => dispatch({ type: "setModel", modelId: v })}>
             {groups.map((g) => (
               <div key={g}>
                 <Menu.Label className="px-2.5 pt-2.5 pb-1 text-[11px] font-medium tracking-[0.08em] text-faint uppercase">{g}</Menu.Label>
-                {MODELS.filter((m) => m.group === g).map((m) => {
+                {ordered.filter((m) => m.group === g).map((m) => {
                   const on = isLive(m, providers);
                   return (
                   <Menu.RadioItem

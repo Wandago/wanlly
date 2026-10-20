@@ -69,7 +69,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
           align="end"
           sideOffset={10}
           collisionPadding={12}
-          className="z-40 flex w-[300px] max-w-[calc(100vw-24px)] flex-col gap-3.5 rounded-2xl border border-line bg-surface p-4 text-fg shadow-soft"
+          className="z-40 flex max-h-[var(--radix-popover-content-available-height)] w-[300px] max-w-[calc(100vw-24px)] flex-col gap-3.5 overflow-y-auto overscroll-contain rounded-2xl border border-line bg-surface p-4 text-fg shadow-soft"
         >
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex flex-col">
