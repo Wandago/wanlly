@@ -3,7 +3,7 @@ import { eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { blockedReason } from "@/lib/admin";
 import { claudeBuildStep, errorDetail, errorKind, geminiBuildStep, isClaudeModel, providers, replyCostUsd } from "@/lib/ai";
-import { BUILD_SYSTEM, MAX_HISTORY_CHARS, cleanPath, loadFiles, loadSteps, ownBuild, runEditor } from "@/lib/build";
+import { BUILD_SYSTEM, MAX_HISTORY_CHARS, cleanPath, loadFiles, loadStepsTrimmed, ownBuild, runEditor } from "@/lib/build";
 import { ESTIMATE, MODELS, isLive, taskCredits } from "@/lib/catalog";
 import { field, jsonUpTo } from "@/lib/forms";
 import { githubToken, parseRepo, pushToGithub } from "@/lib/github";
@@ -51,7 +51,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
   // The conversation so far. A step cut off between saving the AI's edits and their results
   // would leave edits with no results, which the model refuses to continue from, so those are
   // closed as interrupted first. Then the new message goes at the end.
-  let steps = await loadSteps(id);
+  let steps = await loadStepsTrimmed(id);
   const tail = steps[steps.length - 1];
   const orphans = tail?.role === "assistant" ? ((Array.isArray(tail.content) ? tail.content : []) as Block[]).filter((b) => b.type === "tool_use" && b.id) : [];
   if (orphans.length)
@@ -61,7 +61,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/build/[id]/step
       content: orphans.map((b) => ({ type: "tool_result", tool_use_id: b.id, is_error: true, content: "This edit was interrupted and may not have been applied. View the file to check." })),
     });
   if (message) await d.insert(schema.buildSteps).values({ projectId: id, role: "user", content: [{ type: "text", text: message }] });
-  if (orphans.length || message) steps = await loadSteps(id);
+  if (orphans.length || message) steps = await loadStepsTrimmed(id);
   const last = steps[steps.length - 1];
   if (!last || last.role !== "user") return Response.json({ done: true });
   const history = JSON.stringify(steps.map((s) => s.content));

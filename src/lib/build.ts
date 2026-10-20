@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
-import { db, schema } from "@/db";
+import { db, rawSql, schema } from "@/db";
 import { FOLLOWUP_INSTRUCTION } from "./followups";
 
 /*
@@ -12,8 +12,12 @@ import { FOLLOWUP_INSTRUCTION } from "./followups";
 
 export const MAX_FILES = 300;
 export const MAX_FILE_CHARS = 300_000;
-/** A conversation this long (in characters of stored messages) is too big to keep sending. */
-export const MAX_HISTORY_CHARS = 1_600_000;
+/** A conversation this long (in characters, after older steps are trimmed) is too big to keep sending. */
+export const MAX_HISTORY_CHARS = 700_000;
+/** The latest steps always go to the model in full; older file contents and outputs are trimmed. */
+const KEEP_FULL = 10;
+/** The trimmed part grows in blocks of this many steps, so the start of the conversation stays the same (and cached) between steps. */
+const TRIM_BLOCK = 20;
 
 export const BUILD_SYSTEM = `You are Wanlly's Builder: you build and change real multi-file software projects for students and creators, most of them in Africa, often on phones and slow connections.
 
@@ -143,6 +147,44 @@ export async function runEditor(projectId: number, files: Map<string, string>, i
 }
 
 export type StoredStep = { id: number; role: "user" | "assistant"; content: unknown; modelId: string | null; credits: number | null; createdAt: Date };
+
+/**
+ * The conversation with older steps trimmed in the database: long tool outputs (files the AI
+ * viewed) and long tool inputs (files it wrote) keep their first lines only, so a long project
+ * never loads megabytes into the Worker. Messages themselves are never trimmed. The AI can view a
+ * file again whenever it needs the full text. `all` trims every step (for showing the conversation,
+ * which only needs messages and which files changed).
+ */
+export async function loadStepsTrimmed(projectId: number, all = false): Promise<StoredStep[]> {
+  const rows = (await rawSql()`
+    with s as (
+      select id, role, content, model_id, credits, created_at,
+        row_number() over (order by id) - 1 as i, count(*) over () as n
+      from build_steps where project_id = ${projectId}
+    )
+    select id, role, model_id, credits, created_at,
+      case when not ${all} and i >= (greatest(n - ${KEEP_FULL}, 0) / ${TRIM_BLOCK}) * ${TRIM_BLOCK} then content
+      else coalesce((
+        select jsonb_agg(case
+          when b->>'type' = 'tool_result' and length(b->>'content') > 1500
+            then b || jsonb_build_object('content', left(b->>'content', 400) || E'\n… [older output trimmed; view the file again for the full text]')
+          when b->>'type' = 'tool_use' and jsonb_typeof(b->'input') = 'object'
+            then b || jsonb_build_object('input', coalesce((
+              select jsonb_object_agg(k, case when jsonb_typeof(v) = 'string' and length(v #>> '{}') > 1500 then to_jsonb(left(v #>> '{}', 400) || E'\n… [trimmed]') else v end)
+              from jsonb_each(b->'input') e(k, v)), '{}'::jsonb))
+          else b end order by o)
+        from jsonb_array_elements(content) with ordinality x(b, o)), '[]'::jsonb)
+      end as content
+    from s order by id`) as Record<string, unknown>[];
+  return rows.map((r) => ({
+    id: Number(r.id),
+    role: r.role as StoredStep["role"],
+    content: r.content,
+    modelId: (r.model_id as string) ?? null,
+    credits: r.credits == null ? null : Number(r.credits),
+    createdAt: new Date(String(r.created_at)),
+  }));
+}
 
 export async function loadSteps(projectId: number): Promise<StoredStep[]> {
   return (await db()

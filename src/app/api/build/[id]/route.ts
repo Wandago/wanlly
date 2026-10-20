@@ -1,6 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
-import { loadFiles, loadSteps, ownBuild } from "@/lib/build";
+import { loadFiles, loadStepsTrimmed, ownBuild } from "@/lib/build";
 import { field, smallJson } from "@/lib/forms";
 import { SAY } from "@/lib/messages";
 import { signedInUserId } from "@/lib/session";
@@ -19,7 +19,7 @@ export async function GET(req: Request, ctx: RouteContext<"/api/build/[id]">) {
   try {
     const project = await ownBuild(id, userId);
     if (!project) return Response.json({ error: SAY.notFound }, { status: 404 });
-    const [files, steps] = await Promise.all([loadFiles(id), loadSteps(id)]);
+    const [files, steps] = await Promise.all([loadFiles(id), loadStepsTrimmed(id, true)]);
     return Response.json({
       project: { id: project.id, name: project.name },
       // The last request stopped part-way (the tab closed, or the step limit): it can continue.
