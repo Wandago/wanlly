@@ -49,6 +49,13 @@ const clerkAppearance = {
   },
 };
 
+/**
+ * A page from before a deploy asks for script and style files the new deploy removed, and comes up
+ * broken (no styles, buttons that don't work). When one of the site's own files fails to load, the
+ * page reloads once to pick up the current version (at most once a minute, so it can never loop).
+ */
+const STALE_SCRIPT = `addEventListener("error",function(e){var t=e.target,u=t&&(t.src||t.href)||"";if(u.indexOf("/_next/static/")<0)return;try{var k="wanlly-stale-reload",l=+sessionStorage.getItem(k)||0;if(Date.now()-l<6e4)return;sessionStorage.setItem(k,Date.now())}catch(x){return}location.reload()},true);`;
+
 const THEME_SCRIPT = `try{var t=localStorage.getItem("wanlly-theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -56,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${bricolage.variable} h-full antialiased`} suppressHydrationWarning>
       <head>
         {/* Applies a chosen light or dark theme before first paint, so the page never flashes. */}
+        <script dangerouslySetInnerHTML={{ __html: STALE_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
         {/* Google AdSense, on every page as AdSense asks: verifies the site and serves the ad units. */}
         <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`} crossOrigin="anonymous" />

@@ -10,7 +10,8 @@ import { SITE_URL } from "./site";
  * Announcements, previewed, test-sent to yourself, then sent in batches (the Worker's hourly cron
  * sends BATCH at a time; "Send next batch now" sends one straight away). Each address gets it once
  * (logged in email_nudges as "ann:<id>"). Goes to accounts that haven't turned off Product news,
- * and/or beta applicants who haven't made an account; never to anyone who unsubscribed.
+ * and/or approved beta applicants who haven't made an account yet (pending ones can't use it, so
+ * they wait for their invite); never to anyone who unsubscribed.
  */
 
 export const AUDIENCES = ["users", "beta", "all"] as const;
@@ -90,7 +91,7 @@ async function recipients(audience: Audience, ref: string | null, limit: number)
         and coalesce(u.settings -> 'notify' ->> 'productNews', 'true') <> 'false'
       union
       select lower(b.email) from beta_applications b
-      where ${beta} and b.status <> 'declined'
+      where ${beta} and b.status = 'approved'
         and not exists (select 1 from users u where lower(u.email) = lower(b.email))
     ) r
     where not exists (select 1 from email_optouts o where o.email = r.email)

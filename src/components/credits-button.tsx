@@ -60,8 +60,8 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
         className="flex items-center gap-1.5 rounded-full px-2 py-1 font-mono text-xs text-muted tabular-nums outline-none hover:bg-hover hover:text-fg focus-visible:ring-2 focus-visible:ring-accent-line data-[state=open]:bg-hover data-[state=open]:text-fg"
       >
         <Ring used={dayUsed} />
-        {synced ? credits : "–"}
-        <span className="max-sm:hidden">{credits === 1 ? "credit" : "credits"}</span>
+        {!synced ? "–" : usage?.free ? "∞" : credits}
+        <span className="max-sm:hidden">{usage?.free ? "unlimited" : credits === 1 ? "credit" : "credits"}</span>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content
@@ -74,7 +74,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
           <div className="flex items-baseline justify-between gap-3">
             <div className="flex flex-col">
               <span className="text-xs text-muted">Credits</span>
-              <b className="font-display text-2xl leading-tight font-semibold">{synced ? credits : "–"}</b>
+              <b className="font-display text-2xl leading-tight font-semibold">{!synced ? "–" : usage?.free ? "Unlimited" : credits}</b>
             </div>
             <span className="text-right text-xs text-muted">
               This message
@@ -88,6 +88,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
             <span className="text-xs font-medium text-muted">Usage limits</span>
             <UsageMeters usage={usage} videos />
           </div>
+          {!usage?.free && (
           <Popover.Close
             onClick={() => dispatch({ type: "setEarnOpen", open: true })}
             className="flex items-center justify-center gap-2 rounded-[10px] border border-accent-line bg-accent-soft p-2 text-[13px] font-semibold text-accent"
@@ -95,6 +96,7 @@ export function CreditsButton({ price, from, rate }: { price: number; from: bool
             <Icon name="play" size={15} />
             {floorUnlocked ? `Watch an ad · +${SPOT_REWARD}` : `First ad today · +${FLOOR_CREDITS}`}
           </Popover.Close>
+          )}
           {from && <p className="text-xs text-faint">This is the starting price. Bigger tasks cost more, by how much the model writes and reads: about {rate ?? 1} more for every 1,500 words it writes, and never more than {(rate ?? 1) * 40} for one task.</p>}
         </Popover.Content>
       </Popover.Portal>

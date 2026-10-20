@@ -7,7 +7,7 @@ type Audience = "users" | "beta" | "all";
 type Ann = { id: number; subject: string; heading: string; audience: Audience; status: "draft" | "sending" | "paused" | "sent"; sent: number; createdAt: string; finishedAt: string | null };
 type Data = { announcements: Ann[]; counts: Record<Audience, number>; mailReady: boolean };
 
-const AUD: Record<Audience, string> = { users: "Accounts", beta: "Beta applicants without an account", all: "Everyone" };
+const AUD: Record<Audience, string> = { users: "Accounts", beta: "Approved beta applicants without an account", all: "Everyone" };
 const field = "w-full rounded-lg border border-line bg-bg px-3 py-2 text-[13px] outline-none focus:border-fg";
 const EMPTY = { subject: "", heading: "", body: "", buttonLabel: "Try it now", buttonUrl: "https://wanlly.africa/app", audience: "users" as Audience };
 
@@ -65,7 +65,7 @@ export function Announcements() {
     });
 
   return (
-    <Card title="Announcements" note="One email about a big launch or important update. Goes to accounts that haven't turned off Product news and/or beta applicants without an account; never to anyone who unsubscribed. Sent 40 at a time, every hour, once per person.">
+    <Card title="Announcements" note="One email about a big launch or important update. Goes to accounts that haven't turned off Product news and/or approved beta applicants who haven't made an account yet; never to anyone who unsubscribed. Sent 40 at a time, every hour, once per person.">
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="flex flex-col gap-2.5">
           <input className={field} placeholder="Subject, e.g. New: publish your app to the web in one click" value={form.subject} onChange={(e) => set("subject", e.target.value)} maxLength={140} />

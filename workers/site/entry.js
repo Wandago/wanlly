@@ -22,6 +22,28 @@ function metaTags(text) {
   return out.join("");
 }
 
+/**
+ * After a deploy, a page loaded (or restored) from before it still asks for the old build's
+ * stylesheets, which are gone, so it showed as plain unstyled HTML. Those requests get the current
+ * build's styles instead: read from the home page's <link>s, once per isolate.
+ */
+let currentCss = null;
+async function cssFallback(request, env, ctx) {
+  currentCss ??= (async () => {
+    const home = await site.fetch(new Request(new URL("/", request.url)), env, ctx);
+    const links = [...new Set([...(await home.text()).matchAll(/href="(\/_next\/static\/[^"]+\.css)"/g)].map((m) => m[1]))];
+    const parts = await Promise.all(links.map((href) => env.ASSETS.fetch(new URL(href, request.url)).then((r) => (r.ok ? r.text() : ""))));
+    const css = parts.join("\n");
+    if (!css) throw new Error("no stylesheets found");
+    return css;
+  })().catch((e) => {
+    currentCss = null;
+    throw e;
+  });
+  const css = await currentCss;
+  return new Response(css, { headers: { "content-type": "text/css; charset=utf-8", "cache-control": "no-store" } });
+}
+
 const worker = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -30,6 +52,7 @@ const worker = {
       return new Response(body, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "public, max-age=3600" } });
     }
     const res = await site.fetch(request, env, ctx);
+    if (res.status === 404 && /^\/_next\/static\/.+\.css$/.test(url.pathname)) return cssFallback(request, env, ctx).catch(() => res);
     const tags = env.SITE_TAGS ? metaTags(env.SITE_TAGS) : "";
     if (!tags || !(res.headers.get("content-type") || "").includes("text/html")) return res;
     return new HTMLRewriter().on("head", { element: (head) => head.append(tags, { html: true }) }).transform(res);

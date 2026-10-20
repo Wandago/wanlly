@@ -64,7 +64,7 @@ function useFolded(): [boolean, (v: boolean) => void] {
 
 /** The folded menu: the same places as icons, with their names on hover. */
 function IconRail({ onExpand }: { onExpand: () => void }) {
-  const { tool, me, credits, dispatch } = useWorkspace();
+  const { tool, me, credits, usage, dispatch } = useWorkspace();
   const { user } = useUser();
   const path = usePathname();
   const isOn = (id: ToolId) => toolActive(id, path, tool);
@@ -97,7 +97,7 @@ function IconRail({ onExpand }: { onExpand: () => void }) {
       )}
       <div className="mt-auto flex flex-col items-center gap-2">
         <button type="button" onClick={() => dispatch({ type: "setEarnOpen", open: true })} title="Credits · watch an ad to earn more" aria-label={`${credits} credits. Earn more`} className="grid min-w-10 place-items-center rounded-lg border border-accent-line bg-accent-soft px-1.5 py-1 font-mono text-[11px] font-semibold text-accent">
-          {credits}
+          {usage?.free ? "∞" : credits}
         </button>
         <Link href="/profile" aria-label="Your profile" title="Your profile" className="grid size-9 place-items-center overflow-hidden rounded-full bg-hover">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -124,12 +124,13 @@ function TodayCard() {
       >
         {folded && <Ring used={dayUsed} />}
         <span className="text-[13px] text-muted">Credits</span>
-        <b className="ml-auto font-mono text-[13px] font-medium tabular-nums">{synced ? credits : "–"}</b>
+        <b className="ml-auto font-mono text-[13px] font-medium tabular-nums">{!synced ? "–" : usage?.free ? "Unlimited" : credits}</b>
         <Icon name="down" size={14} className={`text-faint transition-transform ${folded ? "-rotate-90" : ""}`} />
       </button>
       {!folded && (
         <>
           <UsageMeters usage={usage} />
+          {!usage?.free && (
           <button
             type="button"
             onClick={() => dispatch({ type: "setEarnOpen", open: true })}
@@ -138,6 +139,7 @@ function TodayCard() {
             <Icon name={floorUnlocked ? "bolt" : "play"} size={15} />
             {floorUnlocked ? "Earn more credits" : `Watch an ad · +${FLOOR_CREDITS} today`}
           </button>
+          )}
         </>
       )}
     </div>
