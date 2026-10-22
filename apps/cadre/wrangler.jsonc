@@ -6,5 +6,8 @@
   // pg needs Node's net and crypto APIs, which nodejs_compat provides on Workers.
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // Needs wanlly.africa's DNS on Cloudflare (free plan). Cloudflare creates the DNS record
+  // and certificate on deploy. Remove this to deploy to workers.dev only.
+  "routes": [{ "pattern": "cadre.wanlly.africa", "custom_domain": true }],
   "observability": { "enabled": true }
 }

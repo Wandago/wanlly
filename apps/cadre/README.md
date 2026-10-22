@@ -58,7 +58,8 @@ With `TEST_DATABASE_ADMIN_URL` set (a superuser on a throwaway database; the tes
    npx wrangler secret put CLERK_SECRET_KEY
    ```
    `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` is read at build time, so set it in the shell (or `.env.production`) before building.
-3. `pnpm cf:deploy`. Your console is live on `cadre.<your-account>.workers.dev`.
-4. Add that URL to the allowed origins in Clerk.
+3. **Domain:** the console lives at **cadre.wanlly.africa**. Workers custom domains need the `wanlly.africa` zone on Cloudflare: add the domain to Cloudflare (free plan) and switch its nameservers at your registrar to the two Cloudflare gives you. Do this before the first deploy.
+4. `pnpm cf:deploy`. Cloudflare creates the `cadre` DNS record and its certificate from the `routes` entry in `wrangler.jsonc`.
+5. **Clerk production:** create a production instance with `cadre.wanlly.africa` as its domain, add the DNS records its dashboard lists (in Cloudflare, set them to "DNS only", not proxied), and use the production keys.
 
 `pnpm cf:preview` runs the Workers build locally first. Put local secrets in `.dev.vars`, which is ignored by git.

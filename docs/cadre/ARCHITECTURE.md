@@ -1,6 +1,6 @@
 # Cadre architecture
 
-Cadre is a Wanlly product: a team of AI agents that keeps a Kenyan shop running.
+Cadre is a Wanlly product, at **cadre.wanlly.africa**: a team of AI agents that keeps a Kenyan shop running.
 
 - **The web app is the control console.** The owner signs up, connects M-Pesa, the bank and email, chooses which agents are on and sets the approval rules. It also shows connection health and an activity log. It is not a dashboard anyone needs to check daily.
 - **WhatsApp is where everything else happens.** Cadre texts the owner their reports, payment and finance updates as soon as it gets hold of them, and every approval. The owner replies with a tap or a few words.
@@ -102,7 +102,7 @@ Each shop has a daily AI budget. When it runs out, Cadre falls back to the rules
 - **Data:** Neon Postgres + Drizzle, with row-level security (section 7).
 - **Auth:** Clerk with **Organizations** (a shop is an org; owner, manager and viewer roles).
 - **Files:** Cloudflare R2 for statements, invoices and contracts.
-- **Email in:** Cloudflare Email Routing to an Email Worker. Each shop gets its own address to forward bank alerts and invoices to.
+- **Email in:** Cloudflare Email Routing to an Email Worker. Each shop gets its own address to forward bank alerts and invoices to, such as `njeri-hardware@in.cadre.wanlly.africa`.
 - **Durable work:** Cloudflare Queues, Workflows and Cron.
 - **Models:** the router in section 2.
 
@@ -262,7 +262,7 @@ Emails, forwarded SMS, customer names and documents are **untrusted data**. They
 | WhatsApp | Meta Cloud API, free replies inside the window | Template messages outside the window |
 | Daraja | Free API; the shop pays its normal M-Pesa charges | Never for us |
 | Cadre's phone number | One Safaricom SIM | About KES 100, once |
-| Domain | `*.workers.dev` to start | About $10 a year when you launch |
+| Domain | `cadre.wanlly.africa`, a subdomain of the Wanlly domain you already own | Nothing extra |
 
 Charge shops a small monthly fee from the first paying customer. Ads don't fit a business tool that lives in WhatsApp, and a fee shows whether shops value Cadre.
 
