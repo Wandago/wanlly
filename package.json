@@ -1,0 +1,17 @@
+{
+  "name": "wanlly-workspace",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "cadre:dev": "pnpm --filter @wanlly/cadre dev",
+    "cadre:build": "pnpm --filter @wanlly/cadre build",
+    "cadre:test": "pnpm --filter @wanlly/cadre test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "workerd"
+    ]
+  }
+}

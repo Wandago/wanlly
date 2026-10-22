@@ -1,0 +1,74 @@
+/* Wanlly design tokens. Source of truth: the Wanlly design system (tokens.json).
+   Light is the default; dark follows the OS unless a page sets data-theme. */
+:root {
+  --paper: #fbfbfc;
+  --surface: #ffffff;
+  --sidebar: #f3f4f7;
+  --hover: #e9ebf0;
+  --line: #e3e5eb;
+  --code: #f4f5f8;
+  --ink: #15171c;
+  --muted: #636a78;
+  --faint: #9aa0ac;
+  --tangerine: #ff5a1f;
+  --tangerine-text: #c2410c;
+  --on-tangerine: #15171c;
+  --tangerine-soft: #ffeee6;
+  --tangerine-line: #ffd2bf;
+  --good: #11955a;
+  --bad: #e5484d;
+  --shadow-soft: 0 1px 2px rgba(20, 24, 35, 0.04), 0 8px 24px rgba(20, 24, 35, 0.06);
+
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Geist Variable", "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono Variable", "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #111216;
+    --surface: #17181d;
+    --sidebar: #0c0d10;
+    --hover: #1f2127;
+    --line: #272930;
+    --code: #0e0f13;
+    --ink: #ecedf1;
+    --muted: #979daa;
+    --faint: #686e7a;
+    --tangerine: #ff6a33;
+    --tangerine-text: #ff8a5c;
+    --on-tangerine: #140802;
+    --tangerine-soft: #2c160d;
+    --tangerine-line: #5a2a16;
+    --good: #3ccb85;
+    --bad: #ff6b6f;
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #111216;
+  --surface: #17181d;
+  --sidebar: #0c0d10;
+  --hover: #1f2127;
+  --line: #272930;
+  --code: #0e0f13;
+  --ink: #ecedf1;
+  --muted: #979daa;
+  --faint: #686e7a;
+  --tangerine: #ff6a33;
+  --tangerine-text: #ff8a5c;
+  --on-tangerine: #140802;
+  --tangerine-soft: #2c160d;
+  --tangerine-line: #5a2a16;
+  --good: #3ccb85;
+  --bad: #ff6b6f;
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}

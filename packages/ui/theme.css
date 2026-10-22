@@ -1,0 +1,30 @@
+/* Tailwind v4 theme built on the Wanlly tokens. Import after tailwindcss and tokens.css. */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-code: var(--code);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-tangerine: var(--tangerine);
+  --color-tangerine-text: var(--tangerine-text);
+  --color-on-tangerine: var(--on-tangerine);
+  --color-tangerine-soft: var(--tangerine-soft);
+  --color-tangerine-line: var(--tangerine-line);
+  --color-good: var(--good);
+  --color-bad: var(--bad);
+
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-pill: var(--radius-pill);
+
+  --shadow-soft: var(--shadow-soft);
+}
