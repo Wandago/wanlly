@@ -43,6 +43,10 @@ export const FLAGS = {
   nudgesAuto: "",
   /** On: questions from the contact page and new support tickets get an instant reply (lib/auto-reply.ts). */
   autoReply: "",
+  /** On: an article on the day's AI and tech news is written every morning for Learn (lib/articles.ts). */
+  articlesAuto: "",
+  /** On: those articles go live straight away; off, they wait in Admin → Learn for a person to publish. */
+  articlesAutoPublish: "",
 } as const;
 export type FlagKey = keyof typeof FLAGS;
 

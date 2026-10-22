@@ -17,12 +17,32 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
   const [busy, setBusy] = useState(false);
   const [live, setLive] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [showcase, setShowcase] = useState<{ on: boolean; title: string; blurb: string; approved: boolean } | null>(null);
   useEffect(() => {
     fetch(`/api/build/${id}/publish`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((b) => setLive(b.url ?? null))
+      .then((b) => {
+        setLive(b.url ?? null);
+        setShowcase(b.showcase ?? null);
+      })
       .catch(() => {});
   }, [id]);
+  // The public showcase: the owner asks, with a name and a line about the app; the team approves.
+  const toggleShowcase = async () => {
+    let body: { on: boolean; title?: string; blurb?: string } = { on: false };
+    if (!showcase?.on) {
+      const title = window.prompt("Show this app in the Wanlly showcase (wanlly.africa/showcase)? Give it a name:", showcase?.title || name)?.trim();
+      if (!title) return;
+      const blurb = window.prompt("One line about what it does (people see this, and the team checks it before it's listed):", showcase?.blurb || "")?.trim();
+      if (!blurb) return;
+      body = { on: true, title, blurb };
+    } else if (!window.confirm("Remove this app from the showcase?")) return;
+    const r = await fetch(`/api/build/${id}/publish`, { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => null);
+    const b = r ? await r.json().catch(() => ({})) : {};
+    if (!r?.ok) return dispatch({ type: "toast", text: b.error ?? SAY.offline });
+    setShowcase(b.showcase ?? null);
+    dispatch({ type: "toast", text: body.on ? "Sent for the showcase. It appears once the team has had a look." : "Removed from the showcase" });
+  };
   const publish = async () => {
     setPublishing(true);
     try {
@@ -144,6 +164,14 @@ export function BuildShip({ id, files, name }: { id: number; files: BuildFile[];
           </a>
           <button type="button" onClick={unpublish} className="text-faint hover:text-bad" title="Take the app offline">
             ×
+          </button>
+          <button
+            type="button"
+            onClick={toggleShowcase}
+            title={showcase?.on ? (showcase.approved ? "Listed in the Wanlly showcase. Click to remove it" : "Waiting for the team to approve it for the showcase. Click to remove it") : "Show this app in the Wanlly showcase"}
+            className={`ml-1 rounded-md border px-1.5 py-0.5 ${showcase?.on ? "border-accent-line text-accent" : "border-line text-muted hover:text-fg"}`}
+          >
+            {showcase?.on ? (showcase.approved ? "★ Showcased" : "★ Pending") : "☆ Showcase"}
           </button>
         </span>
       )}

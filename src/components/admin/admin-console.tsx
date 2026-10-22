@@ -8,13 +8,14 @@ import { AdvertisersTab } from "./admin-advertisers";
 import { SupportTab } from "./admin-support";
 import { ComeBackEmails } from "./admin-nudges";
 import { Announcements } from "./admin-announcements";
+import { LearnTab } from "./admin-learn";
 import { ApiError, Card, Chip, Empty, Kpi, Pills, api, btnDark, btnGhost, num, usd, when, Loading } from "./admin-ui";
 import type { FirstTouch } from "@/lib/first-touch";
 import { inviteMessage } from "@/lib/beta-invite";
 
 /* The real admin page. Every list and action goes through /api/admin, which checks the role. */
 
-type Tab = "overview" | "traffic" | "ads" | "advertisers" | "abuse" | "users" | "beta" | "messages" | "support";
+type Tab = "overview" | "traffic" | "ads" | "advertisers" | "abuse" | "users" | "beta" | "learn" | "messages" | "support";
 type Totals = Record<"users" | "newToday" | "activeToday" | "videosToday" | "earnedToday" | "spentToday" | "betaPending" | "betaTotal" | "messagesOpen" | "paused" | "visitorsToday" | "viewsToday" | "adViewsToday" | "revenueToday" | "costToday", number>;
 type Day = { day: string; signups: number; active: number; videos: number; spent: number; applications: number };
 type Application = { id: number; name: string; email: string; country: string | null; build: string; source: string | null; referralCode: string | null; inviteCode: string; networkCountry: string | null; status: "pending" | "approved" | "declined"; createdAt: string; channel?: string | null; firstTouch?: FirstTouch | null };
@@ -893,6 +894,7 @@ const TABS: [Tab, string][] = [
   ["abuse", "Abuse"],
   ["users", "People"],
   ["beta", "Beta"],
+  ["learn", "Learn"],
   ["support", "Support"],
   ["messages", "Messages"],
 ];
@@ -987,6 +989,7 @@ export function AdminConsole() {
         )}
         {tab === "users" && <Users key={person} initial={person} />}
         {tab === "beta" && <Beta />}
+        {tab === "learn" && <LearnTab />}
         {tab === "messages" && <Messages />}
         {tab === "support" && (
           <SupportTab

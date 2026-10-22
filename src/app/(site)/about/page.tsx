@@ -28,12 +28,12 @@ export default function AboutPage() {
       </p>
       <h2>What&apos;s next</h2>
       <ul>
-        <li><strong>Now (beta):</strong> Chat, Code and Design; earn credits with ads, surveys and sponsor offers; invite friends.</li>
+        <li><strong>Now:</strong> Chat, Code and Design; earn credits with ads, surveys and sponsor offers; invite friends.</li>
         <li><strong>Next:</strong> Images, mobile-first improvements, more surveys and offers that work in Africa, and a reviewed privacy policy and terms before opening to everyone.</li>
         <li><strong>Later:</strong> Coworkers (AI that works on longer tasks for you) and partnerships with universities and communities.</li>
       </ul>
       <p>
-        <Link href="/beta" className="mt-4 inline-flex rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg no-underline">Join the beta</Link>
+        <Link href="/sign-up" className="mt-4 inline-flex rounded-full bg-fg px-5 py-2.5 text-sm font-semibold text-bg no-underline">Start free</Link>
       </p>
     </ProsePage>
   );

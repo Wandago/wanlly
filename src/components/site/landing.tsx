@@ -10,12 +10,13 @@ import { SpinLoader } from "../spin-mark";
 
 /** The "Runs on" strip: each maker once, with its mark when Wanlly runs its models. */
 const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean }[] = [
-  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5"], live: true },
+  // Live = running on Wanlly today. Claude switches to live once ANTHROPIC_API_KEY is set.
   { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
-  // Open models via NVIDIA: switch to live once NVIDIA_API_KEY is set and Admin's model check passes.
-  { maker: "DeepSeek", models: ["V4 Flash", "V4 Pro"], live: false },
-  { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: false },
-  { maker: "Moonshot", models: ["Kimi K3"], live: false },
+  // Open models via NVIDIA.
+  { maker: "Moonshot", models: ["Kimi K3"], live: true },
+  { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: true },
+  { maker: "DeepSeek", models: ["V4.1 Flash"], live: true },
+  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5"], live: false },
   { maker: "OpenAI", models: ["GPT"], live: false },
   { maker: "xAI", models: ["Grok 4.3", "Grok 4.7"], live: false },
 ];
@@ -25,9 +26,9 @@ function Hero() {
     <section className="border-b border-line">
       <div className="mx-auto grid max-w-[1180px] items-center gap-12 px-4 pt-16 pb-16 sm:px-6 sm:pt-24 lg:grid-cols-[1fr_1.05fr] lg:pb-24">
         <div className="flex flex-col items-start gap-6">
-          <Link href="/beta" className="anim-rise inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted hover:border-faint hover:text-fg">
+          <Link href="/learn" className="anim-rise inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted hover:border-faint hover:text-fg">
             <span className="size-1.5 rounded-full bg-accent" />
-            Private beta, opening in weekly groups
+            New: Kimi K3, GLM and DeepSeek · read today&apos;s AI news
             <span aria-hidden="true">→</span>
           </Link>
           <h1 className="anim-rise font-display text-[clamp(40px,5.6vw,68px)] leading-[1] font-semibold tracking-[-0.045em] text-balance [animation-delay:60ms]">
@@ -37,8 +38,8 @@ function Hero() {
             Chat, code and design with the world&apos;s top AI models. No card and no subscription: watch sponsor ads, earn credits, and build.
           </p>
           <div className="anim-rise flex flex-wrap gap-3 [animation-delay:180ms]">
-            <Link href="/beta" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
-              Join the beta
+            <Link href="/sign-up" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
+              Start free
             </Link>
             <Link href="/#how" className="rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium hover:border-faint">
               How it&apos;s free
@@ -348,7 +349,7 @@ const FAQ = [
   ["Which AI models can I use?", "Claude (Haiku, Sonnet and Opus), Gemini, Grok, DeepSeek, and open models like GLM and Kimi. You choose for every message. Fable 5.1, GPT and image models are coming."],
   ["How do credits work?", "Every ad you watch adds credits to your balance. Each message or build uses some, and you always see how many before you send."],
   ["Who is it for?", "Students and creators with ideas and no budget for AI subscriptions: anyone who wants to build an app, a site, a shop page or a side project."],
-  ["When can I start?", "We're letting people in weekly. Join the beta and invite friends to move up the list."],
+  ["When can I start?", "Now. Sign up with your email or Google account and you can start building straight away. Invite friends and you both get bonus credits."],
 ];
 
 function Faq() {
@@ -380,11 +381,11 @@ function FinalCta() {
       <div className="mx-auto flex max-w-[1180px] flex-col items-start justify-between gap-6 px-4 py-20 sm:px-6 md:flex-row md:items-center">
         <h2 className="max-w-[20ch] font-display text-[clamp(28px,3.6vw,44px)] leading-[1.02] font-semibold tracking-[-0.035em] text-balance">Build the thing you keep thinking about.</h2>
         <div className="flex flex-wrap gap-3">
-          <Link href="/beta" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
-            Join the beta
+          <Link href="/sign-up" className="rounded-lg bg-fg px-4 py-2.5 text-sm font-semibold text-bg hover:opacity-90">
+            Start free
           </Link>
           <Link href="/sign-in" className="rounded-lg border border-line bg-surface px-4 py-2.5 text-sm font-medium hover:border-faint">
-            I have an invite
+            Sign in
           </Link>
         </div>
       </div>

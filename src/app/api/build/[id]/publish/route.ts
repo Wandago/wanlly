@@ -5,6 +5,8 @@ import { loadFiles, ownBuild } from "@/lib/build";
 import { buildPreview } from "@/lib/build-preview";
 import { dbErrorMessage } from "@/lib/migrations";
 import { SAY } from "@/lib/messages";
+import { setShowcase, showcaseFor } from "@/lib/showcase";
+import { field, smallJson } from "@/lib/forms";
 import { signedInUserId } from "@/lib/session";
 import { SITE_URL } from "@/lib/site";
 
@@ -26,7 +28,27 @@ export async function GET(req: Request, ctx: RouteContext<"/api/build/[id]/publi
   const o = await owned(req, ctx);
   if (o instanceof Response) return o;
   const [row] = await db().select({ slug: s.slug, disabled: s.disabled, updatedAt: s.updatedAt }).from(s).where(eq(s.projectId, o.id)).limit(1).catch(() => []);
-  return Response.json(row ? { url: `${SITE_URL}/s/${row.slug}`, disabled: row.disabled, updatedAt: row.updatedAt } : { url: null });
+  if (!row) return Response.json({ url: null });
+  const showcase = await showcaseFor(o.id).catch(() => null);
+  return Response.json({ url: `${SITE_URL}/s/${row.slug}`, disabled: row.disabled, updatedAt: row.updatedAt, showcase });
+}
+
+/** The owner's showcase choice: on (with a title and one-line description) or off. */
+export async function PATCH(req: Request, ctx: RouteContext<"/api/build/[id]/publish">) {
+  const o = await owned(req, ctx);
+  if (o instanceof Response) return o;
+  const data = await smallJson(req);
+  const on = data?.on === true;
+  const title = data ? field(data, "title", 80) : "";
+  const blurb = data ? field(data, "blurb", 200) : "";
+  if (on && (!title || !blurb)) return Response.json({ error: "Give your app a name and a one-line description." }, { status: 400 });
+  try {
+    await setShowcase(o.id, o.userId, on, title, blurb);
+    return Response.json({ showcase: await showcaseFor(o.id) });
+  } catch (e) {
+    console.error("showcase update failed", e);
+    return Response.json({ error: SAY.busy }, { status: 503 });
+  }
 }
 
 /** Publishes (or republishes) the app as it is now, at /s/<name>. Web apps only. */

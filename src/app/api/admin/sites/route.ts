@@ -3,6 +3,7 @@ import { db, schema } from "@/db";
 import { CAN, logAction, requireStaff } from "@/lib/admin";
 import { field, smallJson } from "@/lib/forms";
 import { dbErrorMessage } from "@/lib/migrations";
+import { approveShowcase, ensureShowcase } from "@/lib/showcase";
 
 const s = schema.publishedSites;
 
@@ -11,8 +12,19 @@ export async function GET(req: Request) {
   const staff = await requireStaff(req, CAN.users);
   if (staff instanceof Response) return staff;
   try {
+    await ensureShowcase();
     const rows = await db()
-      .select({ slug: s.slug, disabled: s.disabled, updatedAt: s.updatedAt, email: schema.users.email, size: sql<number>`length(${s.html})` })
+      .select({
+        slug: s.slug,
+        disabled: s.disabled,
+        updatedAt: s.updatedAt,
+        email: schema.users.email,
+        size: sql<number>`length(${s.html})`,
+        showcase: sql<boolean>`published_sites.showcase`,
+        showcaseTitle: sql<string | null>`published_sites.showcase_title`,
+        showcaseBlurb: sql<string | null>`published_sites.showcase_blurb`,
+        showcaseApproved: sql<boolean>`published_sites.showcase_approved`,
+      })
       .from(s)
       .leftJoin(schema.users, eq(schema.users.id, s.ownerId))
       .orderBy(desc(s.updatedAt))
@@ -30,6 +42,11 @@ export async function PATCH(req: Request) {
   const data = await smallJson(req);
   const slug = data ? field(data, "slug", 80) : "";
   const reason = data ? field(data, "reason", 300) : "";
+  if (slug && typeof data?.showcaseApproved === "boolean") {
+    await approveShowcase(slug, data.showcaseApproved);
+    await logAction(staff.id, data.showcaseApproved ? "site.showcase.approve" : "site.showcase.remove", `site:${slug}`);
+    return Response.json({ ok: true });
+  }
   if (!slug || typeof data?.disabled !== "boolean" || !reason) return Response.json({ error: "Pick an app and give a reason." }, { status: 400 });
   await db().update(s).set({ disabled: data.disabled }).where(eq(s.slug, slug));
   await logAction(staff.id, data.disabled ? "site.disabled" : "site.enabled", `site:${slug}`, { reason });

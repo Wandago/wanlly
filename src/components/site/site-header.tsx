@@ -9,6 +9,8 @@ import { Mark } from "./mark";
 const LINKS = [
   { href: "/#product", label: "Product" },
   { href: "/#how", label: "How it's free" },
+  { href: "/learn", label: "Learn" },
+  { href: "/showcase", label: "Showcase" },
   { href: "/about", label: "About" },
   { href: "/advertise", label: "Advertise" },
   { href: "/contact", label: "Contact" },
@@ -39,8 +41,8 @@ export function SiteHeader() {
           <Link href="/sign-in" className="hidden rounded-lg px-3 py-1.5 text-[13px] text-muted hover:bg-hover hover:text-fg sm:block">
             Sign in
           </Link>
-          <Link href="/beta" className="rounded-full bg-fg px-3.5 py-1.5 text-[13px] font-semibold text-bg hover:opacity-90">
-            Join the beta
+          <Link href="/sign-up" className="rounded-full bg-fg px-3.5 py-1.5 text-[13px] font-semibold text-bg hover:opacity-90">
+            Start free
           </Link>
           <button type="button" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)} className="grid rounded-lg p-1.5 hover:bg-hover md:hidden">
             <Icon name={open ? "x" : "menu"} />

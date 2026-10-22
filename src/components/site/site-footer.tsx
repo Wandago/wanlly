@@ -3,15 +3,16 @@ import { Mark } from "./mark";
 import { LaunchBadges } from "./product-hunt-badge";
 
 const COLUMNS = [
-  { title: "Product", links: [["Chat", "/#product"], ["Code", "/#product"], ["Design", "/#product"], ["How it's free", "/#how"]] },
-  { title: "Company", links: [["About", "/about"], ["Contact", "/contact"], ["Join the beta", "/beta"], ["Advertise", "/advertise"]] },
+  { title: "Product", links: [["Chat", "/#product"], ["Code", "/#product"], ["Design", "/#product"], ["How it's free", "/#how"], ["Showcase", "/showcase"]] },
+  { title: "Learn", links: [["AI news, explained", "/learn"]] },
+  { title: "Company", links: [["About", "/about"], ["Contact", "/contact"], ["Start free", "/sign-up"], ["Advertise", "/advertise"]] },
   { title: "Legal", links: [["Privacy", "/privacy"], ["Terms", "/terms"]] },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-line">
-      <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <div className="mx-auto grid max-w-[1180px] gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div className="flex flex-col gap-3">
           <Link href="/" className="flex items-center gap-2">
             <Mark size={22} id="ftr-mark" />

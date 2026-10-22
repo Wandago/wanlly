@@ -747,7 +747,7 @@ export function AbuseTab({ onOpenPerson }: { onOpenPerson: (q: string) => void }
   );
 }
 
-type Site = { slug: string; disabled: boolean; updatedAt: string; email: string | null; size: number };
+type Site = { slug: string; disabled: boolean; updatedAt: string; email: string | null; size: number; showcase: boolean; showcaseTitle: string | null; showcaseBlurb: string | null; showcaseApproved: boolean };
 
 /** Builder apps people have published at /s/…, newest first, with a way to take one down. */
 function PublishedSites() {
@@ -763,8 +763,16 @@ function PublishedSites() {
       setNote((e as Error).message);
     }
   };
+  const approve = async (s: Site, on: boolean) => {
+    try {
+      await api("/api/admin/sites", "PATCH", { slug: s.slug, showcaseApproved: on });
+      reload();
+    } catch (e) {
+      setNote((e as Error).message);
+    }
+  };
   return (
-    <Card title="Published apps" note="Apps people published from the Builder. Each page has a Report link that goes to Messages. Taking one down stops its link at once.">
+    <Card title="Published apps" note="Apps people published from the Builder. Each page has a Report link that goes to Messages. Taking one down stops its link at once. Owners can ask to be in the public showcase (wanlly.africa/showcase): open the app, check it's decent and safe, then approve it.">
       {note && <p className="text-[13px] text-bad">{note}</p>}
       {error ? (
         <Empty>{error}</Empty>
@@ -772,7 +780,7 @@ function PublishedSites() {
         <Loading />
       ) : data.sites.length ? (
         <Table
-          head={["App", "Owner", "Updated", "Size", ""]}
+          head={["App", "Owner", "Updated", "Size", "Showcase", ""]}
           rows={data.sites.map((s) => [
             <a key="a" href={`/s/${s.slug}`} target="_blank" rel="noopener noreferrer" className={`font-mono text-xs ${s.disabled ? "text-faint line-through" : "text-accent"}`}>
               {s.slug}
@@ -780,6 +788,18 @@ function PublishedSites() {
             <span key="o" className="block max-w-[200px] truncate">{s.email ?? "–"}</span>,
             when(s.updatedAt),
             `${Math.round(s.size / 1024)} KB`,
+            s.showcase ? (
+              <span key="sc" className="flex max-w-[260px] flex-col gap-1">
+                <span className="truncate text-xs" title={s.showcaseBlurb ?? ""}>
+                  <b className="font-medium">{s.showcaseTitle}</b> · {s.showcaseBlurb}
+                </span>
+                <button type="button" className={`${btnGhost} self-start`} onClick={() => approve(s, !s.showcaseApproved)}>
+                  {s.showcaseApproved ? "Remove from showcase" : "Approve for showcase"}
+                </button>
+              </span>
+            ) : (
+              <span key="sc" className="text-xs text-faint">–</span>
+            ),
             <button key="b" type="button" className={btnGhost} onClick={() => flip(s)}>
               {s.disabled ? "Put back" : "Take down"}
             </button>,
