@@ -71,7 +71,7 @@ export const MODELS: Model[] = [
   { id: "glm-flash", name: "GLM 5.3 Flash", group: "Open models", description: "Z.ai. Quick everyday answers", credits: 1, provider: "nvidia" },
   { id: "deepseek-flash", name: "DeepSeek V4.1 Flash", group: "Open models", description: "DeepSeek. Fast, sharp at code and maths", credits: 1, provider: "nvidia" },
   { id: "glm", name: "GLM 5.3", group: "Open models", description: "Z.ai. Strong at code and long tasks", credits: 2, provider: "nvidia" },
-  { id: "kimi", name: "Kimi K3", group: "Open models", description: "Moonshot. Long documents and big builds", credits: 2, provider: "nvidia" },
+  { id: "kimi", name: "Kimi K2.6", group: "Open models", description: "Moonshot. Long documents and big builds", credits: 2, provider: "nvidia" },
   { id: "deepseek", name: "DeepSeek V4 Flash", group: "DeepSeek", description: "Fast and very good value, strong at code", credits: 1, provider: "deepseek" },
   { id: "deepseek-pro", name: "DeepSeek V4 Pro", group: "DeepSeek", description: "Deeper reasoning for hard problems", credits: 2, provider: "deepseek" },
   { id: "gpt", name: "GPT", group: "Other providers", description: "OpenAI, chat and Codex", credits: 2, provider: null },

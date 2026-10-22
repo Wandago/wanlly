@@ -162,8 +162,8 @@ function keepKnownLinks(body: string, allowed: Set<string>) {
 export async function writeDailyArticle(opts: { publish: boolean }): Promise<Article> {
   await ensureArticles();
   const live = providers();
-  const writer = WRITERS.map((id) => MODELS.find((m) => m.id === id)).find((m) => m && isLive(m, live));
-  if (!writer) throw new Error("No writing model is connected.");
+  const writers = WRITERS.map((id) => MODELS.find((m) => m.id === id)).filter((m): m is (typeof MODELS)[number] => !!m && isLive(m, live));
+  if (!writers.length) throw new Error("No writing model is connected.");
   const news = await latestNews();
   if (news.length < 5) throw new Error(`Only ${news.length} news items came back from the feeds.`);
   const recent = ((await rawSql()`select title from articles order by created_at desc limit 20`) as { title: string }[]).map((r) => r.title);
@@ -179,30 +179,49 @@ Rules:
 Reply with JSON only, no code fence: {"title": "...", "description": "one sentence, under 160 characters", "tags": ["2 to 4 short tags"], "sources": [{"title": "...", "url": "..."}], "body": "the article in Markdown, without the title"}`;
   const items = news.map((n, i) => `${i + 1}. [${n.source}] ${n.title}\n${n.url}\n${n.summary}`).join("\n\n");
 
-  let text = "";
-  for await (const ev of streamReply({ modelId: writer.id, tool: "chat", system, turns: [{ role: "user", text: `Today's news items:\n\n${items}` }], signal: AbortSignal.timeout(240_000) })) {
-    if (ev.type === "text") text += ev.text;
-  }
-  const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
-  let out: { title?: unknown; description?: unknown; tags?: unknown; sources?: unknown; body?: unknown };
-  try {
-    out = JSON.parse(json);
-  } catch {
-    throw new Error("The model's reply wasn't valid JSON.");
-  }
   const allowed = new Set(news.map((n) => n.url));
-  const title = typeof out.title === "string" ? out.title.trim().slice(0, 140) : "";
-  const description = typeof out.description === "string" ? out.description.trim().slice(0, 200) : "";
-  const body = typeof out.body === "string" ? keepKnownLinks(out.body.replace(/^#\s+.*\n+/, "").trim(), allowed) : "";
-  const sources = (Array.isArray(out.sources) ? out.sources : [])
-    .filter((s): s is Source => !!s && typeof (s as Source).url === "string" && allowed.has((s as Source).url))
-    .map((s) => ({ title: String(s.title || news.find((n) => n.url === s.url)?.title || s.url).slice(0, 200), url: s.url }))
-    .slice(0, 8);
-  const tags = (Array.isArray(out.tags) ? out.tags : []).filter((t): t is string => typeof t === "string").map((t) => t.trim().slice(0, 30)).filter(Boolean).slice(0, 4);
-  const words = body.split(/\s+/).length;
-  if (!title || !description) throw new Error("The article came back without a title or description.");
-  if (words < 500) throw new Error(`The article was too short (${words} words).`);
-  if (!sources.length) throw new Error("The article didn't cite any of today's news items.");
+  /** One model's attempt: the article's parts, or an error saying what was wrong with it. */
+  const attempt = async (writerId: string) => {
+    let text = "";
+    for await (const ev of streamReply({ modelId: writerId, tool: "chat", system, turns: [{ role: "user", text: `Today's news items:\n\n${items}` }], signal: AbortSignal.timeout(150_000) })) {
+      if (ev.type === "text") text += ev.text;
+    }
+    const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
+    let out: { title?: unknown; description?: unknown; tags?: unknown; sources?: unknown; body?: unknown };
+    try {
+      out = JSON.parse(json);
+    } catch {
+      throw new Error("The model's reply wasn't valid JSON.");
+    }
+    const title = typeof out.title === "string" ? out.title.trim().slice(0, 140) : "";
+    const description = typeof out.description === "string" ? out.description.trim().slice(0, 200) : "";
+    const body = typeof out.body === "string" ? keepKnownLinks(out.body.replace(/^#\s+.*\n+/, "").trim(), allowed) : "";
+    const sources = (Array.isArray(out.sources) ? out.sources : [])
+      .filter((s): s is Source => !!s && typeof (s as Source).url === "string" && allowed.has((s as Source).url))
+      .map((s) => ({ title: String(s.title || news.find((n) => n.url === s.url)?.title || s.url).slice(0, 200), url: s.url }))
+      .slice(0, 8);
+    const tags = (Array.isArray(out.tags) ? out.tags : []).filter((t): t is string => typeof t === "string").map((t) => t.trim().slice(0, 30)).filter(Boolean).slice(0, 4);
+    const words = body.split(/\s+/).length;
+    if (!title || !description) throw new Error("The article came back without a title or description.");
+    if (words < 500) throw new Error(`The article was too short (${words} words).`);
+    if (!sources.length) throw new Error("The article didn't cite any of today's news items.");
+    return { title, description, body, sources, tags };
+  };
+  // Each connected writer in turn: a model that's down, retired or writes something unusable is skipped.
+  const failures: string[] = [];
+  let written: Awaited<ReturnType<typeof attempt>> | null = null;
+  let writer = writers[0];
+  for (const w of writers) {
+    try {
+      written = await attempt(w.id);
+      writer = w;
+      break;
+    } catch (e) {
+      failures.push(`${w.name}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  if (!written) throw new Error(failures.join(" · "));
+  const { title, description, body, sources, tags } = written;
 
   const slug = `${slugify(title) || "ai-news"}-${new Date().toISOString().slice(0, 10)}`;
   const [r] = (await rawSql()`insert into articles (slug, title, description, body, tags, sources, status, model, published_at)

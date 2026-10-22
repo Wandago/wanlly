@@ -821,7 +821,16 @@ const NVIDIA: Record<string, string[]> = {
   "deepseek-flash": ["deepseek-ai/deepseek-v4.1-flash", "deepseek-ai/deepseek-v4-1-flash", "deepseek-ai/deepseek-v4-flash"],
   glm: ["z-ai/glm-5.3", "z-ai/glm-5-3", "zai-org/glm-5.3"],
   "glm-flash": ["z-ai/glm-5.3-flash", "z-ai/glm-5-3-flash", "zai-org/glm-5.3-flash"],
-  kimi: ["moonshotai/kimi-k3", "moonshotai/kimi-k3-instruct"],
+  // NVIDIA retired Kimi K3 on 15 Oct 2026; K2.6 is what it serves now.
+  kimi: ["moonshotai/kimi-k2.6", "moonshotai/kimi-k3", "moonshotai/kimi-k3-instruct"],
+};
+
+/** When NVIDIA retires or renames a model, the newest one it serves from the same family stands in. */
+const NVIDIA_FAMILY: Record<string, RegExp> = {
+  "deepseek-flash": /^deepseek-ai\/deepseek-v[\d.-]+-flash$/,
+  glm: /^z-ai\/glm-[\d.-]+$/,
+  "glm-flash": /^z-ai\/glm-[\d.-]+-flash$/,
+  kimi: /^moonshotai\/kimi-k[\d.-]+$/,
 };
 
 const nvidiaBase = () => (process.env.NVIDIA_BASE_URL || "https://integrate.api.nvidia.com/v1").replace(/\/+$/, "");
@@ -839,7 +848,11 @@ export async function nvidiaModel(modelId: string): Promise<string> {
     } catch {}
     nvidiaList = { ids, at: Date.now() };
   }
-  return names.find((n) => nvidiaList!.ids.has(n)) ?? names[0];
+  const exact = names.find((n) => nvidiaList!.ids.has(n));
+  if (exact) return exact;
+  const family = NVIDIA_FAMILY[modelId];
+  const stand = family ? [...nvidiaList.ids].filter((id) => family.test(id)).sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0] : undefined;
+  return stand ?? names[0];
 }
 
 /** Removes <think>…</think> from a stream of text pieces, for models that think out loud in their answer. */

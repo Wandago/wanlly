@@ -13,7 +13,7 @@ const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean
   // Live = running on Wanlly today. Claude switches to live once ANTHROPIC_API_KEY is set.
   { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
   // Open models via NVIDIA.
-  { maker: "Moonshot", models: ["Kimi K3"], live: true },
+  { maker: "Moonshot", models: ["Kimi K2.6"], live: true },
   { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: true },
   { maker: "DeepSeek", models: ["V4.1 Flash"], live: true },
   { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5"], live: false },
@@ -28,7 +28,7 @@ function Hero() {
         <div className="flex flex-col items-start gap-6">
           <Link href="/learn" className="anim-rise inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3 py-1 text-xs text-muted hover:border-faint hover:text-fg">
             <span className="size-1.5 rounded-full bg-accent" />
-            New: Kimi K3, GLM and DeepSeek · read today&apos;s AI news
+            New: Kimi, GLM and DeepSeek · read today&apos;s AI news
             <span aria-hidden="true">→</span>
           </Link>
           <h1 className="anim-rise font-display text-[clamp(40px,5.6vw,68px)] leading-[1] font-semibold tracking-[-0.045em] text-balance [animation-delay:60ms]">
