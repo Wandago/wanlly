@@ -10,13 +10,13 @@ import { SpinLoader } from "../spin-mark";
 
 /** The "Runs on" strip: each maker once, with its mark when Wanlly runs its models. */
 const MAKERS: { maker: string; mark?: ReactNode; models: string[]; live: boolean }[] = [
-  // Live = running on Wanlly today. Claude switches to live once ANTHROPIC_API_KEY is set.
+  // Live = running on Wanlly today. Claude: Haiku (ANTHROPIC_MODELS adds Sonnet and Opus).
+  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5"], live: true },
   { maker: "Gemini", mark: <GeminiMark />, models: ["Flash"], live: true },
   // Open models via NVIDIA.
   { maker: "Moonshot", models: ["Kimi K2.6"], live: true },
   { maker: "Z.ai", models: ["GLM 5.3", "GLM 5.3 Flash"], live: true },
   { maker: "DeepSeek", models: ["V4.1 Flash"], live: true },
-  { maker: "Claude", mark: <ClaudeMark />, models: ["Haiku 5.5", "Sonnet 5.5", "Opus 5.5"], live: false },
   { maker: "OpenAI", models: ["GPT"], live: false },
   { maker: "xAI", models: ["Grok 4.3", "Grok 4.7"], live: false },
 ];

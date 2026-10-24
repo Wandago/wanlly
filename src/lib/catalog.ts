@@ -96,9 +96,20 @@ export function dataNote(m: Model): { text: string; private: boolean } {
 /** The model new accounts start on, and the one suggested when credits are short. Live on Google's free tier. */
 export const CHEAPEST_MODEL_ID = "gemini-flash";
 
-export type Providers = { anthropic: boolean; google: boolean; argo: boolean; nvidia: boolean; xai: boolean; deepseek: boolean; pool: boolean };
-/** Whether a model can run, given which providers have keys. */
-export const isLive = (m: Model, p: Providers | null) => !!m.provider && (p ? p[m.provider] : m.provider === "google");
+export type Providers = {
+  anthropic: boolean;
+  google: boolean;
+  argo: boolean;
+  nvidia: boolean;
+  xai: boolean;
+  deepseek: boolean;
+  pool: boolean;
+  /** The Claude models switched on (ANTHROPIC_MODELS), when the key is set. */
+  claude?: string[];
+};
+/** Whether a model can run, given which providers have keys (and, for Claude, which models are switched on). */
+export const isLive = (m: Model, p: Providers | null) =>
+  !!m.provider && (p ? p[m.provider] && (m.provider !== "anthropic" || !p.claude || p.claude.includes(m.id)) : m.provider === "google");
 /**
  * Models that read big files carefully, best first, with why. When someone attaches a large file on
  * a lighter model, the composer suggests the first of these that's connected (Claude once its key

@@ -32,6 +32,18 @@ export function billedInput(modelId: string, usage: { input_tokens: number; cach
   return Math.ceil(usage.input_tokens + (usage.cache_creation_input_tokens ?? 0) * CACHE_WRITE + (usage.cache_read_input_tokens ?? 0) * read);
 }
 
+/**
+ * The Claude models that may run: ANTHROPIC_MODELS, comma-separated catalog ids (haiku, sonnet,
+ * opus). Haiku only when it isn't set, so a small Anthropic balance isn't spent on the bigger models.
+ */
+export function claudeModels(): string[] {
+  const list = (process.env.ANTHROPIC_MODELS || "haiku")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter((id) => !!CLAUDE[id]);
+  return list.length ? list : ["haiku"];
+}
+
 export function providers(): Providers {
   const google = geminiKeys().length > 0;
   const nvidia = !!process.env.NVIDIA_API_KEY;
@@ -44,6 +56,7 @@ export function providers(): Providers {
     deepseek: !!process.env.DEEPSEEK_API_KEY,
     // Auto (free) runs when any free host has a key; Gemini is its last resort.
     pool: google || POOL_HOSTS.some((h) => !!process.env[h.env]),
+    claude: claudeModels(),
   };
 }
 
@@ -429,7 +442,7 @@ export async function claudeBuildStep(opts: {
   signal: AbortSignal;
   onText: (text: string) => void;
 }) {
-  if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
+  if (!process.env.ANTHROPIC_API_KEY || !claudeModels().includes(opts.modelId)) throw new ProviderError("unavailable");
   anthropic ??= new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, maxRetries: 1 });
   const m = CLAUDE[opts.modelId];
   if (!m) throw new ProviderError("unavailable");
@@ -1179,7 +1192,7 @@ export function streamReply(opts: { modelId: string; tool: ToolId; system: strin
     return gemini(opts.system, opts.turns, max, opts.signal, opts.tool === "chat");
   }
   if (CLAUDE[opts.modelId]) {
-    if (!process.env.ANTHROPIC_API_KEY) throw new ProviderError("unavailable");
+    if (!process.env.ANTHROPIC_API_KEY || !claudeModels().includes(opts.modelId)) throw new ProviderError("unavailable");
     return claude(opts.modelId, opts.tool, opts.system, opts.turns, max, opts.signal);
   }
   if (NVIDIA[opts.modelId]) {
