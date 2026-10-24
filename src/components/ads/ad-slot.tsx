@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { DISPLAY_SIZES, PLACEMENT_SIZES, pickSize, type VideoAspect } from "@/lib/ads";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { DISPLAY_SIZES, PLACEMENT_SIZES, VIDEO_ASPECTS, pickSize, type HouseVideo, type VideoAspect } from "@/lib/ads";
 import { SPOT_SECONDS, SPOT_SPONSOR, type Sponsor } from "@/lib/catalog";
 import { useReward, useWorkspace } from "@/lib/workspace-store";
-import { openSponsor, useNetwork } from "@/lib/ads-context";
+import { openSponsor, useHouseVideo, useNetwork, useSponsors } from "@/lib/ads-context";
 import { Icon } from "../icon";
 import { openPhoneVerify } from "../phone-verify";
 import { Cover } from "./cover";
@@ -91,7 +91,7 @@ export function VideoSpot({ aspect, sponsor, progress, maxHeight }: { aspect: Vi
     <div>
       <VideoFrame aspect={aspect} sponsor={sponsor} maxHeight={maxHeight} />
       <div className="flex items-center gap-2.5 px-3.5 py-2.5 font-mono text-[13px] text-muted">
-        <span className="tabular-nums">0:0{secs}</span>
+        <span className="tabular-nums">{clock(secs)}</span>
         <div
           className="h-1 flex-1 overflow-hidden rounded-full bg-hover"
           role="progressbar"
@@ -117,26 +117,56 @@ async function postJson(url: string, body: object) {
   return { ok: r.ok, body: await r.json().catch(() => ({})) };
 }
 
+const clock = (secs: number) => `${Math.floor(secs / 60)}:${String(Math.floor(secs % 60)).padStart(2, "0")}`;
+
+/** What a real video reports to the view while it plays. */
+type MediaHooks = { onTime: (seconds: number, total: number) => void; onEnded: () => void; onFail: () => void };
+
 /**
- * A spot that plays wherever it's mounted, then calls onDone once. The server opens the view
- * when it starts and pays for it when it ends, so credits can't be earned from the browser alone.
+ * A server-checked rewarded view: starts a view when shown, and once the ad has played in full asks
+ * the server to pay it. With one of Wanlly's own videos, progress follows the video itself (pausing
+ * pauses it) and the server waits that video's whole length; otherwise a plain timer runs for
+ * SPOT_SECONDS. `progress` runs from 0 to 1; `onDone` gets the result (null: not paid).
  */
-/**
- * A server-checked rewarded view: starts a view when shown, and after the ad's full length asks
- * the server to pay it. `progress` runs from 0 to 1; `onDone` gets the result (null: not paid).
- */
-function useRewardedView(placement: string, onDone: (result: ViewResult) => void) {
+function useRewardedView(placement: string, onDone: (result: ViewResult) => void, video: HouseVideo | null = null) {
   const { dispatch } = useWorkspace();
   const [progress, setProgress] = useState(0);
+  // A video that can't load falls back to the timer, for the video's own length.
+  const [timerMs, setTimerMs] = useState<number | null>(video ? null : SPOT_SECONDS * 1000);
   const done = useRef(onDone);
   const view = useRef<Promise<string | null> | null>(null);
+  const finished = useRef(false);
   useEffect(() => {
     done.current = onDone;
   }, [onDone]);
 
+  const finish = useCallback(() => {
+    if (finished.current || !view.current) return;
+    finished.current = true;
+    setProgress(1);
+    view.current
+      .then(async (viewId) => {
+        if (!viewId) return null;
+        const { ok, body } = await postJson("/api/earn/complete", { viewId });
+        if (!ok) {
+          dispatch({ type: "toast", text: body.error ?? "Couldn't add those credits" });
+          if (body.need === "phone") openPhoneVerify();
+          return null;
+        }
+        const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first ad today" : ""}` : undefined;
+        dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, usage: body.usage, toast: text });
+        return body.earned ? { earned: body.earned as number, credits: body.credits as number } : null;
+      })
+      .catch(() => {
+        dispatch({ type: "toast", text: "You're offline. Those credits weren't added" });
+        return null;
+      })
+      .then((r) => done.current(r));
+  }, [dispatch]);
+
   useEffect(() => {
     // Once per mount, even when React runs effects twice in development.
-    view.current ??= postJson("/api/earn/start", { placement })
+    view.current ??= postJson("/api/earn/start", { placement, ...(video ? { creative: `video:${video.id}` } : {}) })
       .then(({ ok, body }) => {
         if (ok) return body.viewId as string;
         dispatch({ type: "toast", text: body.error ?? "Couldn't start the ad" });
@@ -145,36 +175,124 @@ function useRewardedView(placement: string, onDone: (result: ViewResult) => void
         return null;
       })
       .catch(() => null);
-    const pending = view.current;
+  }, [placement, video, dispatch]);
+
+  useEffect(() => {
+    if (timerMs === null) return;
     const start = Date.now();
     const iv = window.setInterval(() => {
-      const f = Math.min(1, (Date.now() - start) / 1000 / SPOT_SECONDS);
+      const f = Math.min(1, (Date.now() - start) / timerMs);
       setProgress(f);
       if (f < 1) return;
       window.clearInterval(iv);
-      pending
-        .then(async (viewId) => {
-          if (!viewId) return null;
-          const { ok, body } = await postJson("/api/earn/complete", { viewId });
-          if (!ok) {
-            dispatch({ type: "toast", text: body.error ?? "Couldn't add those credits" });
-            if (body.need === "phone") openPhoneVerify();
-            return null;
-          }
-          const text = body.earned ? `+${body.earned} credits${body.bonus ? " · first ad today" : ""}` : undefined;
-          dispatch({ type: "account", credits: body.credits, floorUnlocked: body.floorUnlocked, usage: body.usage, toast: text });
-          return body.earned ? { earned: body.earned as number, credits: body.credits as number } : null;
-        })
-        .catch(() => {
-          dispatch({ type: "toast", text: "You're offline. Those credits weren't added" });
-          return null;
-        })
-        .then((r) => done.current(r));
+      finish();
     }, 100);
     return () => window.clearInterval(iv);
-  }, [placement, dispatch]);
-  return progress;
+  }, [timerMs, finish]);
+
+  const media: MediaHooks = {
+    onTime: (seconds, total) => {
+      if (total > 0 && !finished.current) setProgress(Math.min(0.999, seconds / total));
+    },
+    onEnded: finish,
+    onFail: () => {
+      if (video && timerMs === null && !finished.current) setTimerMs(video.durationMs);
+    },
+  };
+  return { progress, media, failed: !!video && timerMs !== null };
 }
+
+/**
+ * One of Wanlly's own MP4 ads, playing in a spot. It starts muted (browsers only autoplay muted
+ * video) with a sound button, can't be skipped or scrubbed, and its button opens the advertiser's
+ * link in a new tab.
+ */
+export function HouseVideoSpot({ video, progress, media, maxHeight }: { video: HouseVideo; progress: number; media: MediaHooks; maxHeight?: number }) {
+  const { perAd: SPOT_REWARD } = useReward();
+  const ref = useRef<HTMLVideoElement>(null);
+  const [muted, setMuted] = useState(true);
+  const [stuck, setStuck] = useState(false);
+  const a = VIDEO_ASPECTS[video.aspect];
+  const total = video.durationMs / 1000;
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = muted;
+  }, [muted]);
+  // Autoplay can be blocked (a phone's low-power mode): then a tap starts it.
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      if (ref.current && ref.current.paused && ref.current.currentTime === 0) setStuck(true);
+    }, 2500);
+    return () => window.clearTimeout(t);
+  }, []);
+  return (
+    <div>
+      <div className="relative w-full overflow-hidden bg-black" style={{ aspectRatio: a.ratio, maxHeight: maxHeight ?? a.maxHeight }}>
+        <video
+          ref={ref}
+          src={video.url}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          disablePictureInPicture
+          controlsList="nodownload noplaybackrate noremoteplayback"
+          onContextMenu={(e) => e.preventDefault()}
+          onPlaying={() => setStuck(false)}
+          onTimeUpdate={(e) => media.onTime(e.currentTarget.currentTime, e.currentTarget.duration || total)}
+          onEnded={media.onEnded}
+          onError={media.onFail}
+          className="absolute inset-0 h-full w-full object-contain"
+        />
+        <span className="absolute top-3 left-3 rounded-md bg-black/45 px-2 py-0.5 text-[11px] tracking-[0.08em] text-white uppercase">Sponsored · {video.brand}</span>
+        <button
+          type="button"
+          onClick={() => setMuted((m) => !m)}
+          aria-label={muted ? "Turn the sound on" : "Turn the sound off"}
+          className="absolute top-2.5 right-2.5 grid size-8 place-items-center rounded-full bg-black/45 text-[15px] text-white hover:bg-black/60"
+        >
+          {muted ? "🔇" : "🔊"}
+        </button>
+        {stuck && (
+          <button type="button" onClick={() => void ref.current?.play()} className="absolute inset-0 grid place-items-center bg-black/40 text-white" aria-label="Play the ad">
+            <span className="grid size-14 place-items-center rounded-full bg-white/90 text-black">
+              <Icon name="play" size={22} />
+            </span>
+          </button>
+        )}
+        {video.link && (
+          <a
+            href={video.link}
+            target="_blank"
+            rel="sponsored noopener noreferrer"
+            className="absolute right-3 bottom-3 rounded-lg bg-white px-3 py-1.5 text-[13px] font-semibold text-black shadow hover:bg-white/90"
+          >
+            {video.cta}
+          </a>
+        )}
+      </div>
+      <div className="flex items-center gap-2.5 px-3.5 py-2.5 font-mono text-[13px] text-muted">
+        <span className="tabular-nums">{progress < 1 ? clock(Math.max(0, total * (1 - progress))) : "Done"}</span>
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-hover" role="progressbar" aria-label="Ad progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
+          <i className="block h-full rounded-full bg-accent transition-[width] duration-300 ease-linear" style={{ width: `${progress * 100}%` }} />
+        </div>
+        <span>+{SPOT_REWARD}</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Which video a rewarded spot plays: one of Wanlly's own MP4s, unless a sold campaign has booked
+ * this place (paying advertisers come first) or none is running.
+ */
+function useSpotVideo(placement: string): HouseVideo | null {
+  const video = useHouseVideo();
+  const booked = useSponsors(placement, NO_SPONSORS).some((s) => s.campaignId && s.banners?.length);
+  return booked ? null : video;
+}
+const NO_SPONSORS: Sponsor[] = [];
 
 export function RewardedSpot({
   aspect,
@@ -189,8 +307,10 @@ export function RewardedSpot({
   onDone: (result: ViewResult) => void;
   maxHeight?: number;
 }) {
-  const progress = useRewardedView(placement, onDone);
-  return <NetworkSpot aspect={aspect} sponsor={sponsor} placement={placement} progress={progress} maxHeight={maxHeight} />;
+  const video = useSpotVideo(placement);
+  const { progress, media, failed } = useRewardedView(placement, onDone, video);
+  if (video && !failed) return <HouseVideoSpot video={video} progress={progress} media={media} maxHeight={maxHeight} />;
+  return <NetworkSpot aspect={aspect} sponsor={sponsor} placement={placement} progress={progress} maxHeight={maxHeight} seconds={video ? video.durationMs / 1000 : SPOT_SECONDS} />;
 }
 
 /**
@@ -198,9 +318,23 @@ export function RewardedSpot({
  * else Wanlly's own sponsor video. Never an ad network's banner: networks ban rewarding views of
  * their ordinary banners (see docs/AD-POLICY.md); their official rewarded units are the way in.
  */
-export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }: { aspect: VideoAspect; sponsor: Sponsor; placement: string; progress: number; maxHeight?: number }) {
+export function NetworkSpot({
+  aspect,
+  sponsor,
+  placement,
+  progress,
+  maxHeight,
+  seconds = SPOT_SECONDS,
+}: {
+  aspect: VideoAspect;
+  sponsor: Sponsor;
+  placement: string;
+  progress: number;
+  maxHeight?: number;
+  seconds?: number;
+}) {
   const [banner, setBanner] = useState(false);
-  const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
+  const left = Math.max(0, Math.ceil(seconds * (1 - progress)));
   return (
     <div className={banner ? "flex flex-col gap-2 p-3" : ""}>
       <DisplaySlot
@@ -233,8 +367,15 @@ export function NetworkSpot({ aspect, sponsor, placement, progress, maxHeight }:
  * paid like any rewarded view. No ad-network banners here, for the same policy reason as NetworkSpot.
  */
 export function RewardedBanner({ placement, sponsor, onDone }: { placement: string; sponsor: Sponsor; onDone: (result: ViewResult) => void }) {
-  const progress = useRewardedView(placement, onDone);
-  const left = Math.max(0, Math.ceil(SPOT_SECONDS * (1 - progress)));
+  const video = useSpotVideo(placement);
+  const { progress, media, failed } = useRewardedView(placement, onDone, video);
+  const left = Math.max(0, Math.ceil((video ? video.durationMs / 1000 : SPOT_SECONDS) * (1 - progress)));
+  if (video && !failed)
+    return (
+      <div className="overflow-hidden rounded-xl border border-line">
+        <HouseVideoSpot video={video} progress={progress} media={media} maxHeight={260} />
+      </div>
+    );
   return (
     <div className="flex flex-col gap-2">
       <DisplaySlot placement={placement} sizes={["336x280", "300x250", "320x100", "320x50"]} label="" networks={false} fallback={<div className="w-full"><VideoSpot aspect="16:9" sponsor={sponsor} progress={progress} /></div>} />

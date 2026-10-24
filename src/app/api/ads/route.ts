@@ -5,6 +5,7 @@ import { loadNetworks } from "@/lib/ad-network-server";
 import { rankNetworks, slotOrder } from "@/lib/ad-rank";
 import { affiliateSponsor } from "@/lib/affiliates";
 import { loadAffiliates } from "@/lib/affiliates-server";
+import { activeVideos } from "@/lib/video-ads";
 
 /**
  * Directly sold ads that may show right now to someone in this country, with where they may show.
@@ -32,7 +33,7 @@ export async function GET(req: Request) {
       [country],
     )) as Record<string, unknown>[];
     // Which network sizes are set up, and for whom. The codes themselves stay in /api/ads/unit.
-    const [networks, affiliates] = await Promise.all([loadNetworks(), loadAffiliates()]);
+    const [networks, affiliates, videos] = await Promise.all([loadNetworks(), loadAffiliates(), activeVideos().catch(() => [])]);
     const ranks = await rankNetworks(networks.list).catch(() => []);
     return Response.json(
       {
@@ -40,6 +41,8 @@ export async function GET(req: Request) {
         country,
         // Wanlly's affiliate offers, for places no sold campaign has booked.
         house: affiliates.filter((a) => a.active).map(affiliateSponsor),
+        // Wanlly's own MP4 ads, for the rewarded spots.
+        videos,
         // Iframe-only banners (A-ADS…) run on the network's own site and need nothing more. Script
         // banners (Adsterra…) need the banner host: inside Wanlly's sandbox they load blank.
         // Every network that's on, best-paying first. Iframe-only banners (A-ADS…) run on the

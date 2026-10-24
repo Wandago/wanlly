@@ -9,6 +9,7 @@ import { Cover } from "../ads/cover";
 import { resetSeen, seenToday } from "@/lib/ad-track";
 import { CountryPicker } from "./country-picker";
 import { AffiliatesCard } from "./admin-affiliates";
+import { VideoAdsCard } from "./admin-video-ads";
 import { Icon } from "../icon";
 import { Card, Chip, Empty, Pills, Table, api, btnDark, btnGhost, num, pct, usd, when, Loading } from "./admin-ui";
 
@@ -638,6 +639,7 @@ export function AdvertisersTab() {
           reload();
         }}
       />
+      <VideoAdsCard />
       <AffiliatesCard />
       <Card
         title="Campaigns"

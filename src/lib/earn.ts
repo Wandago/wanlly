@@ -2,6 +2,7 @@ import "server-only";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { db, schema } from "@/db";
 import { DAILY_VIDEO_CAP, SPOT_SECONDS } from "./catalog";
+import { videoLength } from "./video-ads";
 import { rewardNow } from "./reward";
 import { whatsappReady } from "./whatsapp";
 import { post } from "./ledger";
@@ -45,8 +46,14 @@ async function phoneVerified(userId: string): Promise<boolean> {
   return ok;
 }
 
-export async function startView(userId: string, placement: string, country: string | null) {
+/**
+ * `creative` is "video:<id>" when one of Wanlly's own MP4s plays: the view is then paid only after
+ * that video's full length (see completeView).
+ */
+export async function startView(userId: string, placement: string, country: string | null, creative = "") {
   if (!PLACEMENTS.has(placement)) return { error: "Unknown placement", status: 400 } as const;
+  const video = /^video:\d+$/.test(creative) ? creative : null;
+  if (video && (await videoLength(Number(video.slice(6)))) === null) return { error: "That ad isn't running any more. Try again.", status: 409 } as const;
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
   // One phone, one earner: past the first video of the day, a script would need a real phone
@@ -61,18 +68,21 @@ export async function startView(userId: string, placement: string, country: stri
   if ((recent?.n ?? 0) >= 4) return { error: "One ad at a time, please. Finish this one first.", status: 429 } as const;
 
   const viewId = crypto.randomUUID();
-  await db().insert(schema.adEvents).values({ userId, partner: PARTNER, format: "video", placement, country, kind: "reward_started", transactionId: viewId });
+  await db().insert(schema.adEvents).values({ userId, partner: PARTNER, format: "video", placement, country, kind: "reward_started", transactionId: viewId, creative: video });
   return { viewId } as const;
 }
 
 export async function completeView(userId: string, viewId: string, country: string | null) {
   const [started] = await db()
-    .select({ placement: schema.adEvents.placement, ms: sql<number>`(extract(epoch from now() - ${schema.adEvents.createdAt}) * 1000)::int` })
+    .select({ placement: schema.adEvents.placement, creative: schema.adEvents.creative, ms: sql<number>`(extract(epoch from now() - ${schema.adEvents.createdAt}) * 1000)::int` })
     .from(schema.adEvents)
     .where(and(eq(schema.adEvents.partner, PARTNER), eq(schema.adEvents.transactionId, viewId), eq(schema.adEvents.userId, userId), eq(schema.adEvents.kind, "reward_started")))
     .limit(1);
   if (!started) return { error: "That ad has ended. Start a new one to earn.", status: 404 } as const;
-  if (started.ms < MIN_VIEW_MS) return { error: "The ad didn't play to the end, so no credits this time. Try another one.", status: 409 } as const;
+  // One of Wanlly's own videos: its whole length (less a moment for network delay).
+  const length = started.creative?.startsWith("video:") ? await videoLength(Number(started.creative.slice(6))) : null;
+  const minMs = length ? Math.max(MIN_VIEW_MS, length - 1500) : MIN_VIEW_MS;
+  if (started.ms < minMs) return { error: "The ad didn't play to the end, so no credits this time. Try another one.", status: 409 } as const;
   if (started.ms > MAX_VIEW_MS) return { error: "That ad has ended. Start a new one to earn.", status: 410 } as const;
   const today = await completedToday(userId);
   if (today >= DAILY_VIDEO_CAP) return { error: "You've watched today's limit of ads. More tomorrow.", status: 429 } as const;
@@ -82,7 +92,7 @@ export async function completeView(userId: string, viewId: string, country: stri
   // One completion per view, enforced by the unique (partner, transaction_id) index.
   const done = await db()
     .insert(schema.adEvents)
-    .values({ userId, partner: PARTNER, format: "video", placement: started.placement, country, kind: "reward_completed", transactionId: `${viewId}:done` })
+    .values({ userId, partner: PARTNER, format: "video", placement: started.placement, country, kind: "reward_completed", transactionId: `${viewId}:done`, creative: started.creative })
     .onConflictDoNothing()
     .returning({ id: schema.adEvents.id });
   if (done.length === 0) return { earned: 0, bonus: false } as const;

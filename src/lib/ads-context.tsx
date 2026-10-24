@@ -6,6 +6,7 @@ import type { NetworkSize } from "./ad-network";
 import { useWorkspace } from "./workspace-store";
 import { matchScore } from "./affiliates";
 import type { Sponsor } from "./catalog";
+import type { HouseVideo } from "./ads";
 
 /*
  * Directly sold ads, fetched once per visit from /api/ads. Each slot shows the campaigns booked
@@ -18,11 +19,12 @@ const STAFF = new Set(["owner", "admin", "support", "moderator", "analyst"]);
 /** One ad network as /api/ads sends it; the list comes best-paying first. */
 type Google = { client: string; slot: string };
 type NetInfo = { name: string; audience: "staff" | "everyone"; sizes: NetworkSize[]; direct: Record<string, string>; codes: Record<string, string>; google?: Record<string, Google>; native?: Native };
-const AdsContext = createContext<{ ads: Served[]; seen: number; networks: NetInfo[]; host: string; house: Sponsor[] }>({ ads: [], seen: 0, networks: [], host: "", house: [] });
+const AdsContext = createContext<{ ads: Served[]; seen: number; networks: NetInfo[]; host: string; house: Sponsor[]; videos: HouseVideo[] }>({ ads: [], seen: 0, networks: [], host: "", house: [], videos: [] });
 
 export function AdsProvider({ children }: { children: ReactNode }) {
   const [ads, setAds] = useState<Served[]>([]);
   const [house, setHouse] = useState<Sponsor[]>([]);
+  const [videos, setVideos] = useState<HouseVideo[]>([]);
   const [nets, setNets] = useState<{ list: NetInfo[]; host: string }>({ list: [], host: "" });
   const { me } = useWorkspace();
   // Bumped after each counted view, so campaigns that reach their daily cap drop out.
@@ -40,6 +42,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
         if (!live) return;
         if (Array.isArray(b.ads)) setAds(b.ads);
         if (Array.isArray(b.house)) setHouse(b.house);
+        if (Array.isArray(b.videos)) setVideos(b.videos);
         if (Array.isArray(b.networks) && b.networks.length) setNets({ list: b.networks, host: b.host ?? "" });
       })
       .catch(() => {});
@@ -50,7 +53,7 @@ export function AdsProvider({ children }: { children: ReactNode }) {
   // "staff" networks are being checked by the team; everyone else keeps seeing sponsors.
   const staff = STAFF.has(me?.role ?? "");
   const networks = useMemo(() => nets.list.filter((n) => n.audience === "everyone" || staff), [nets, staff]);
-  const value = useMemo(() => ({ ads, seen, networks, host: nets.host, house }), [ads, seen, networks, nets.host, house]);
+  const value = useMemo(() => ({ ads, seen, networks, host: nets.host, house, videos }), [ads, seen, networks, nets.host, house, videos]);
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
@@ -76,6 +79,25 @@ export function useSponsors(placement: string, fallback: Sponsor[], context = ""
     }
     return fallback;
   }, [ads, seen, house, placement, fallback, context, interests]);
+}
+
+/**
+ * One of Wanlly's own MP4 ads for a rewarded spot, or null when none is running. They take turns
+ * (the next one each time, remembered for the visit). Chosen once, when the spot first renders,
+ * so a spot never switches between a video and the plain timer part-way.
+ */
+export function useHouseVideo(): HouseVideo | null {
+  const { videos } = useContext(AdsContext);
+  const [pick] = useState<HouseVideo | null>(() => {
+    if (!videos.length) return null;
+    let n = 0;
+    try {
+      n = Number(sessionStorage.getItem("wanlly-video-turn")) || 0;
+      sessionStorage.setItem("wanlly-video-turn", String(n + 1));
+    } catch {}
+    return videos[n % videos.length];
+  });
+  return pick;
 }
 
 /** Conversations about these get no suggested ad (health, mental health, politics, money trouble). */

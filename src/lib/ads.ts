@@ -9,6 +9,15 @@ export const VIDEO_ASPECTS: Record<VideoAspect, { ratio: string; maxHeight: numb
   "1:1": { ratio: "1 / 1", maxHeight: 400, label: "Square" },
 };
 
+/**
+ * One of Wanlly's own MP4 ads (Admin → Advertisers → Video ads), played in the rewarded spots.
+ * `url` is a file in public/ads (served by the site itself) or any direct https MP4 link.
+ */
+export type HouseVideo = { id: number; title: string; brand: string; url: string; aspect: VideoAspect; durationMs: number; cta: string; link: string };
+/** Video ads may run this long; credits are paid only after the whole video has played. */
+export const VIDEO_MIN_MS = 5_000;
+export const VIDEO_MAX_MS = 60_000;
+
 /** Standard (IAB) display sizes. Networks require the exact pixel size, so slots pick one that fits rather than scaling it. */
 export type DisplaySize = "336x280" | "300x250" | "320x50" | "300x600" | "160x600" | "728x90" | "970x250";
 
