@@ -1,11 +1,11 @@
 /*
  * Pictures for ads, made in the browser: sized, compressed to WebP under 200 KB, as data URLs.
  * Animated GIFs are kept exactly as they are (resizing them in the browser would freeze them),
- * up to 1 MB, wherever their shape matches the space.
+ * up to 1.2 MB, wherever their shape matches the space.
  */
 
 /** The most an animated GIF may weigh. */
-export const GIF_MAX_BYTES = 1_000_000;
+export const GIF_MAX_BYTES = 1_200_000;
 
 const isGif = (file: File) => file.type === "image/gif";
 
@@ -20,7 +20,7 @@ function asDataUrl(file: File): Promise<string> {
 
 /** A GIF unchanged, if it's light enough. */
 async function gifAsIs(file: File): Promise<string> {
-  if (file.size > GIF_MAX_BYTES) throw new Error(`GIFs can be up to 1 MB; this one is ${(file.size / 1_000_000).toFixed(1)} MB. Fewer frames, fewer colours or a smaller size will bring it down.`);
+  if (file.size > GIF_MAX_BYTES) throw new Error(`GIFs can be up to 1.2 MB; this one is ${(file.size / 1_000_000).toFixed(1)} MB. Fewer frames, fewer colours or a smaller size will bring it down.`);
   return asDataUrl(file);
 }
 

@@ -13,7 +13,7 @@ const cents = (v: unknown, max: number) => Math.max(0, Math.min(max, Math.round(
  * waits for the team; the advertiser gets a private link to follow it. Public, no account needed.
  */
 export async function POST(req: Request) {
-  const data = await jsonUpTo(req, 13_000_000);
+  const data = await jsonUpTo(req, 16_000_000);
   if (!data) return Response.json({ error: "That's too big. Keep each picture under 200 KB." }, { status: 413 });
   if (field(data, "website2", 200)) return Response.json({ ok: true });
   const company = field(data, "company", 80);

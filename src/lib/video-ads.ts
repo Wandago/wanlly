@@ -18,7 +18,27 @@ export async function ensureVideoAds() {
     id bigserial primary key, title text not null, brand text not null, url text not null, aspect text not null,
     duration_ms int not null, cta text not null default 'Learn more', link text not null default '',
     active boolean not null default true, created_at timestamptz not null default now())`;
+  await seedVideos();
   ready = true;
+}
+
+/**
+ * Video ads shipped with the site (files in public/ads), added to the list once so they join the
+ * rotation without anyone typing them in. A marker in app_flags means each seed runs only once:
+ * deleting or editing them in Admin sticks.
+ */
+async function seedVideos() {
+  await rawSql()`with mark as (
+      insert into app_flags (key, value) values ('videoSeed:tumacv', 'true'::jsonb) on conflict do nothing returning key
+    )
+    insert into video_ads (title, brand, url, aspect, duration_ms, cta, link)
+    select v.title, v.brand, v.url, v.aspect, v.duration_ms, v.cta, v.link
+    from (values
+      ('Wanlly promo', 'Wanlly', '/ads/wanlly-promo-16x9.mp4', '16:9', 20000, '', ''),
+      ('TumaCV · square', 'TumaCV', '/ads/tumacv-336x280.mp4', '1:1', 10000, 'Try it free', ''),
+      ('TumaCV · vertical', 'TumaCV', '/ads/tumacv-300x600.mp4', '9:16', 10000, 'Try it free', '')
+    ) as v(title, brand, url, aspect, duration_ms, cta, link)
+    where exists (select 1 from mark)`;
 }
 
 const row = (r: Record<string, unknown>): HouseVideo => ({

@@ -14,7 +14,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/admin/campaign
   if (staff instanceof Response) return staff;
   await ensureCampaignColumns().catch(() => {});
   const id = Number((await ctx.params).id);
-  const data = await jsonUpTo(req, 13_000_000);
+  const data = await jsonUpTo(req, 16_000_000);
   if (!Number.isSafeInteger(id) || id <= 0 || !data) return Response.json({ error: "Bad request" }, { status: 400 });
   const r = campaignFields(data);
   if ("error" in r) return Response.json({ error: r.error }, { status: 422 });
