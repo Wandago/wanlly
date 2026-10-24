@@ -280,7 +280,7 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
                     Upload
                     <input
                       type="file"
-                      accept="image/png,image/jpeg,image/webp"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
                       hidden
                       onChange={async (e) => {
                         const f = e.target.files?.[0];
@@ -358,14 +358,14 @@ function CampaignDialog({ start, onClose, onSaved }: { start: Partial<Campaign> 
                               {pic ? "Replace" : "Upload"}
                               <input
                                 type="file"
-                                accept="image/png,image/jpeg,image/webp"
+                                accept="image/png,image/jpeg,image/webp,image/gif"
                                 hidden
                                 onChange={async (e) => {
                                   const f = e.target.files?.[0];
                                   e.target.value = "";
                                   if (!f) return;
                                   try {
-                                    const url = await bannerFrom(f, size);
+                                    const url = await bannerFrom(f, size, true);
                                     set({ banners: { ...(c.banners ?? {}), [size]: url } });
                                   } catch (err) {
                                     setError((err as Error).message);

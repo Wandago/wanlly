@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   const staff = await requireStaff(req, CAN.advertisers);
   if (staff instanceof Response) return staff;
   await ensureCampaignColumns().catch(() => {});
-  const data = await jsonUpTo(req, 2_600_000);
+  const data = await jsonUpTo(req, 13_000_000);
   if (!data) return Response.json({ error: "Bad request" }, { status: 400 });
   const r = campaignFields(data);
   if ("error" in r) return Response.json({ error: r.error }, { status: 422 });

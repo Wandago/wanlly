@@ -226,9 +226,9 @@ export function CampaignBuilder() {
             </div>
             <label className={label}>
               <span className="flex items-baseline justify-between gap-2">
-                Picture <span className="font-normal text-faint">{f.format === "visual" ? "we make the banner sizes from it" : "optional, square works best"}</span>
+                Picture <span className="font-normal text-faint">{f.format === "visual" ? "we make the banner sizes from it; an animated GIF stays animated in sizes of its shape" : "optional, square works best"}</span>
               </span>
-              <input id="ad-picture" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => void onPicture(e.target.files?.[0])} className="text-[13px] file:mr-2 file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-[13px]" />
+              <input id="ad-picture" type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={(e) => void onPicture(e.target.files?.[0])} className="text-[13px] file:mr-2 file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-[13px]" />
             </label>
           </div>
           {f.format === "suggested" && (

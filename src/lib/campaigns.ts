@@ -49,6 +49,9 @@ export type CampaignInput = Partial<{
 }>;
 
 /** The valid fields present in a request; an error message for the first invalid one. */
+/** A picture as the browser sends it: PNG, JPEG or WebP under 200 KB, or an animated GIF under 1 MB. */
+const okPicture = (v: string) => (/^data:image\/(png|jpeg|webp);base64,/.test(v) && v.length < 280_000) || (/^data:image\/gif;base64,/.test(v) && v.length < 1_400_000);
+
 export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput } | { error: string } {
   const out: CampaignInput = {};
   for (const [k, max] of [["advertiser", 80], ["name", 80], ["headline", 90], ["body", 160], ["cta", 24]] as const) if (k in d) out[k] = field(d, k, max);
@@ -68,15 +71,15 @@ export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput 
   if ("cover" in d) out.cover = COVERS.includes(d.cover as (typeof COVERS)[number]) ? (d.cover as string) : null;
   if ("image" in d) {
     if (d.image === null || d.image === "") out.image = null;
-    else if (typeof d.image === "string" && /^data:image\/(png|jpeg|webp);base64,/.test(d.image) && d.image.length < 280_000) out.image = d.image;
-    else return { error: "The picture must be a PNG, JPEG or WebP under 200 KB." };
+    else if (typeof d.image === "string" && okPicture(d.image)) out.image = d.image;
+    else return { error: "The picture must be a PNG, JPEG or WebP under 200 KB, or a GIF under 1 MB." };
   }
   if ("banners" in d) {
     if (!d.banners || typeof d.banners !== "object" || Array.isArray(d.banners)) return { error: "Bad banners." };
     const out2: Record<string, string> = {};
     for (const [size, v] of Object.entries(d.banners as Record<string, unknown>)) {
       if (!BANNER_SIZES.includes(size as (typeof BANNER_SIZES)[number]) || v === null || v === "") continue;
-      if (typeof v !== "string" || !/^data:image\/(png|jpeg|webp);base64,/.test(v) || v.length > 280_000) return { error: `The ${size} banner must be a PNG, JPEG or WebP under 200 KB.` };
+      if (typeof v !== "string" || !okPicture(v)) return { error: `The ${size} banner must be a PNG, JPEG or WebP under 200 KB, or a GIF under 1 MB.` };
       out2[size] = v;
     }
     out.banners = out2;
