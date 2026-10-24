@@ -76,6 +76,26 @@ async function seedHouseCampaigns() {
     where exists (select 1 from mark)`;
   await seedTumaCv().catch((e) => console.error("TumaCV seed failed", e instanceof Error ? e.message : e));
   await tumaCvInRotation().catch((e) => console.error("TumaCV rotation failed", e instanceof Error ? e.message : e));
+  await onlyTumaCvAndSign().catch((e) => console.error("ads narrowing failed", e instanceof Error ? e.message : e));
+}
+
+/**
+ * Once: the ads are TumaCV and Wanlly Sign only. The Wanlly AI campaign is paused, Wanlly's own
+ * promo videos are switched off, and every Wanlly offer other than TumaCV (e.g. Nivea) is switched
+ * off. Nothing is deleted: each can be switched back on in Admin → Advertisers.
+ */
+async function onlyTumaCvAndSign() {
+  const q = rawSql();
+  const [mark] = (await q`insert into app_flags (key, value) values ('campaignSeed:only-tumacv-sign', 'true'::jsonb) on conflict do nothing returning key`) as { key: string }[];
+  if (!mark) return;
+  await q`update campaigns set status = 'paused', updated_at = now() where advertiser = 'Wanlly' and name like 'Wanlly AI%' and status = 'active'`;
+  await ensureVideoAds();
+  await q`update video_ads set active = false where brand = 'Wanlly'`;
+  await q`update app_flags set value = (
+      select coalesce(jsonb_agg(case when a->>'name' ilike 'tuma%' then a else jsonb_set(a, '{active}', 'false'::jsonb) end order by i), '[]'::jsonb)
+      from jsonb_array_elements(value) with ordinality as x(a, i)
+    ), updated_at = now()
+    where key = 'affiliates' and jsonb_typeof(value) = 'array'`;
 }
 
 /** TumaCV's own site, for when no campaign gives its link. */
