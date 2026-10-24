@@ -1,6 +1,6 @@
 import "server-only";
 import { rawSql } from "@/db";
-import { VIDEO_MAX_MS, VIDEO_MIN_MS, type HouseVideo, type VideoAspect } from "./ads";
+import { BUILTIN_VIDEO, VIDEO_MAX_MS, VIDEO_MIN_MS, type HouseVideo, type VideoAspect } from "./ads";
 
 /*
  * Wanlly's own video ads: MP4s the team adds in Admin → Advertisers → Video ads. Active ones play
@@ -50,6 +50,7 @@ export async function allVideos(): Promise<VideoAdRow[]> {
 
 /** How long an active video runs, or null when it isn't one. */
 export async function videoLength(id: number): Promise<number | null> {
+  if (id === BUILTIN_VIDEO.id) return BUILTIN_VIDEO.durationMs;
   await ensureVideoAds();
   const [r] = (await rawSql()`select duration_ms from video_ads where id = ${id} and active`) as { duration_ms: number }[];
   return r ? Number(r.duration_ms) : null;

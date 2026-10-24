@@ -52,6 +52,10 @@ export function Interstitial() {
   useEffect(() => {
     blocked.current = earnOpen;
   }, [earnOpen]);
+  const any = useRef(false);
+  useEffect(() => {
+    any.current = sponsors.length > 0;
+  }, [sponsors]);
 
   useEffect(() => {
     let timer: number | null = null;
@@ -63,7 +67,7 @@ export function Interstitial() {
       if (timer) window.clearTimeout(timer);
       // A moment later, so the finished result is seen first.
       timer = window.setTimeout(() => {
-        if (document.visibilityState !== "visible" || blocked.current || typing() || document.querySelector("[role=dialog]")) return;
+        if (!any.current || document.visibilityState !== "visible" || blocked.current || typing() || document.querySelector("[role=dialog]")) return;
         try {
           localStorage.setItem(KEY, JSON.stringify({ day: log.day, count: log.count + 1, last: Date.now() }));
         } catch {}
@@ -85,8 +89,10 @@ export function Interstitial() {
     return () => window.clearTimeout(t);
   }, [open, left]);
 
-  const sponsor = sponsors[pick % sponsors.length];
+  const sponsor = sponsors.length ? sponsors[pick % sponsors.length] : undefined;
   const canClose = left <= 0;
+  // No advertiser to show: no pop-up.
+  if (!sponsor) return null;
 
   return (
     <Dialog.Root open={open} onOpenChange={(o) => (o || canClose) && setOpen(o)}>

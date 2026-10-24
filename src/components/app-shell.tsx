@@ -99,7 +99,7 @@ function PhoneBanner() {
   const networkTest = useNetworkTest();
   const network = useNetwork();
   // A sold campaign keeps the phone bar; otherwise the network's banner, then house sponsors.
-  if (network?.sizes.includes("320x50") && !sponsor.campaignId && !networkTest)
+  if (network?.sizes.includes("320x50") && !sponsor?.campaignId && !networkTest)
     return (
       <div className="flex justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Advertisement">
         <NetworkUnit size="320x50" network={network.name} placement="phone_banner" />
@@ -111,6 +111,8 @@ function PhoneBanner() {
         <NetworkSlot w={320} h={50} label="Phone banner" />
       </div>
     );
+  // Nothing to show: no strip at all.
+  if (!sponsor) return null;
   return (
     <div className="flex items-center justify-center border-t border-line bg-side px-4 pt-2 pb-[calc(8px+env(safe-area-inset-bottom,0px))] md:hidden" aria-label="Sponsored">
       <Tracked key={creativeOf(sponsor)} placement="phone_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">
@@ -142,6 +144,7 @@ function TabletBanner({ roomy, always }: { roomy: boolean; always?: boolean }) {
         sizes={always ? ["468x60", "320x50"] : ["728x90", "468x60", "320x100", "320x50"]}
         label=""
         fallback={
+          sponsor && (
           <Tracked key={creativeOf(sponsor)} placement="tablet_banner" format="display" creative={creativeOf(sponsor)} className="overflow-hidden rounded-xl">
             <button
               type="button"
@@ -152,6 +155,7 @@ function TabletBanner({ roomy, always }: { roomy: boolean; always?: boolean }) {
               <DisplayCreative size="320x50" sponsor={sponsor} />
             </button>
           </Tracked>
+          )
         }
       />
     </div>

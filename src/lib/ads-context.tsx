@@ -6,7 +6,7 @@ import type { NetworkSize } from "./ad-network";
 import { useWorkspace } from "./workspace-store";
 import { matchScore } from "./affiliates";
 import type { Sponsor } from "./catalog";
-import type { HouseVideo } from "./ads";
+import { BUILTIN_VIDEO, type HouseVideo } from "./ads";
 
 /*
  * Directly sold ads, fetched once per visit from /api/ads. Each slot shows the campaigns booked
@@ -82,14 +82,14 @@ export function useSponsors(placement: string, fallback: Sponsor[], context = ""
 }
 
 /**
- * One of Wanlly's own MP4 ads for a rewarded spot, or null when none is running. They take turns
+ * One of Wanlly's own MP4 ads for a rewarded spot (Wanlly's promo film when none is on). They take turns
  * (the next one each time, remembered for the visit). Chosen once, when the spot first renders,
  * so a spot never switches between a video and the plain timer part-way.
  */
-export function useHouseVideo(): HouseVideo | null {
+export function useHouseVideo(): HouseVideo {
   const { videos } = useContext(AdsContext);
-  const [pick] = useState<HouseVideo | null>(() => {
-    if (!videos.length) return null;
+  const [pick] = useState<HouseVideo>(() => {
+    if (!videos.length) return BUILTIN_VIDEO;
     let n = 0;
     try {
       n = Number(sessionStorage.getItem("wanlly-video-turn")) || 0;

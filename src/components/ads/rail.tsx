@@ -17,7 +17,7 @@ import { useLocalSetting } from "@/lib/use-local-setting";
 const eyebrow = "text-[11px] uppercase tracking-[0.07em] text-faint";
 
 /** Rotates through sponsors, the way a slot refreshes every 30–60 seconds while it's on screen. */
-function useRotation(list: Sponsor[], ms: number, offset = 0) {
+function useRotation(list: Sponsor[], ms: number, offset = 0): Sponsor | undefined {
   const [i, setI] = useState(offset);
   useEffect(() => {
     const iv = window.setInterval(() => {
@@ -25,7 +25,7 @@ function useRotation(list: Sponsor[], ms: number, offset = 0) {
     }, ms);
     return () => window.clearInterval(iv);
   }, [ms]);
-  return list[i % list.length];
+  return list.length ? list[i % list.length] : undefined;
 }
 
 function SponsoredLabel({ sponsor }: { sponsor: Sponsor }) {
@@ -190,6 +190,7 @@ function SlimRail({ wideOnly, onExpand }: { wideOnly: boolean; onExpand: () => v
           sizes={["160x600"]}
           label="Ad"
           fallback={
+            sponsor && (
             <Tracked key={creativeOf(sponsor)} placement="rail_banner" format="native" creative={creativeOf(sponsor)} className="w-full">
               <button type="button" onClick={() => openSponsor(sponsor, "rail_banner") || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })} className="flex w-full flex-col gap-2 overflow-hidden rounded-xl border border-line bg-surface text-left">
                 <div className="h-[90px] overflow-hidden">
@@ -202,6 +203,7 @@ function SlimRail({ wideOnly, onExpand }: { wideOnly: boolean; onExpand: () => v
                 </div>
               </button>
             </Tracked>
+            )
           }
         />
         <button type="button" onClick={() => dispatch({ type: "setEarnOpen", open: true })} className="mt-auto flex w-full items-center justify-center gap-1.5 rounded-xl border border-accent-line bg-accent-soft px-2 py-2 text-xs font-semibold text-accent">
@@ -228,17 +230,21 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
         <button type="button" onClick={onSlim} title="Make the side panel narrower" aria-label="Make the side panel narrower" className="-mb-1.5 self-end rounded-md px-1.5 py-0.5 text-xs text-faint hover:bg-hover hover:text-fg">
           »
         </button>
-        {network && has("300x250") && !top.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" fallback={<CoverCard sponsor={top} />} /> : <CoverCard sponsor={top} />}
+        {network && has("300x250") && !top?.campaignId ? <NetworkFrame size="300x250" network={network.name} placement="rail_cover" fallback={top ? <CoverCard sponsor={top} /> : null} /> : top ? <CoverCard sponsor={top} /> : null}
         {/* Laptop screens fit two units over the earn button; tall ones a third. */}
         <div className="hidden [@media(min-height:740px)]:block">
-          {network && bannerSize && !banner.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" fallback={<DisplayFrame sponsor={banner} />} /> : <DisplayFrame sponsor={banner} />}
+          {network && bannerSize && !banner?.campaignId ? <NetworkFrame size={bannerSize} network={network.name} placement="rail_banner" fallback={banner ? <DisplayFrame sponsor={banner} /> : null} /> : banner ? <DisplayFrame sponsor={banner} /> : null}
         </div>
         {/* Mid-height screens: a compact card fills the space a full third unit wouldn't fit. */}
         <div className="hidden [@media(min-height:880px)]:block [@media(min-height:1150px)]:hidden">
-          <CompactCard sponsor={extra} placement="rail_extra" />
+          {extra && <CompactCard sponsor={extra} placement="rail_extra" />}
         </div>
         <div className="hidden [@media(min-height:1150px)]:block">
-          {network && has("300x250") && !extra.campaignId && bannerSize !== "300x600" ? <NetworkFrame size="300x250" network={network.name} placement="rail_extra" fallback={<CoverCard sponsor={extra} placement="rail_extra" />} /> : <CoverCard sponsor={extra} placement="rail_extra" />}
+          {network && has("300x250") && !extra?.campaignId && bannerSize !== "300x600" ? (
+            <NetworkFrame size="300x250" network={network.name} placement="rail_extra" fallback={extra ? <CoverCard sponsor={extra} placement="rail_extra" /> : null} />
+          ) : extra ? (
+            <CoverCard sponsor={extra} placement="rail_extra" />
+          ) : null}
         </div>
         <div className="mt-auto">
           <EarnMini />
@@ -277,6 +283,7 @@ function CompactCard({ sponsor, placement }: { sponsor: Sponsor; placement: stri
 /** Compact sponsor card that lives in the left sidebar on every page. */
 export function SidebarAd() {
   const sponsor = useRotation(useSponsors("sidebar_card", RAIL_SPONSORS), 50000, 1);
+  if (!sponsor) return null;
   return (
     <Tracked key={creativeOf(sponsor)} placement="sidebar_card" format="native" creative={creativeOf(sponsor)} className="hidden [@media(min-height:700px)]:block">
       <article className="animate-rise overflow-hidden rounded-[14px] border border-line bg-surface">

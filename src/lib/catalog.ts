@@ -190,15 +190,19 @@ export type Usage = {
 /** Demo spots are short; real ones run 15 to 20 seconds. */
 export const SPOT_SECONDS = 5;
 
-/** House sponsor for spots started outside a job (the earn sheet and the out-of-credits gate). */
+/**
+ * The frame a rewarded spot shows if its video can't load: Wanlly's own brand (never a made-up
+ * advertiser). Normally the spot plays one of the video ads, or Wanlly's promo film.
+ */
 export const SPOT_SPONSOR: Sponsor = {
-  name: "Fieldnote",
-  initial: "F",
-  color: "#1e7a55",
-  cover: "notes",
-  headline: "Notes that organize themselves.",
-  text: "Free for students.",
-  cta: "Try it",
+  name: "Wanlly",
+  initial: "W",
+  color: "#c2410c",
+  cover: "course",
+  headline: "Frontier AI for everyone with an idea.",
+  text: "Chat, code and design, paid for by sponsors.",
+  cta: "Invite a friend",
+  url: "https://wanlly.africa",
 };
 
 export const TOOL_ORDER: ToolId[] = ["chat", "code", "design", "images"];
@@ -291,37 +295,11 @@ export const TOOLS: Record<ToolId, Tool> = {
   },
 };
 
-/** Student-friendly sponsors that rotate through the side panels. */
-export const RAIL_SPONSORS: Sponsor[] = [
-  {
-    name: "Lumen Laptops",
-    cover: "laptop",
-    initial: "L",
-    color: "#4f46e5",
-    headline: "Student pricing on every laptop.",
-    text: "Verify your student email and save up to 20% on the machine you'll build on.",
-    cta: "See student prices",
-  },
-  {
-    name: "Courseway",
-    cover: "course",
-    initial: "C",
-    color: "#c2410c",
-    headline: "Ship your first app in 30 days.",
-    text: "A free, project-based course. Build along with Wanlly and get a certificate.",
-    cta: "Start free",
-  },
-  {
-    name: "Internly",
-    cover: "jobs",
-    initial: "I",
-    color: "#0f766e",
-    headline: "Paid internships, remote-first.",
-    text: "Companies hiring students who build. Your Wanlly projects count as a portfolio.",
-    cta: "Browse roles",
-  },
-  SPOT_SPONSOR,
-];
+/**
+ * What the side panels and banners fall back to when no campaign, Wanlly offer or ad network fills
+ * them: nothing. Only real advertisers' ads show; an empty slot stays empty.
+ */
+export const RAIL_SPONSORS: Sponsor[] = [];
 
 export function getModel(id: string): Model {
   return MODELS.find((m) => m.id === id) ?? MODELS[0];

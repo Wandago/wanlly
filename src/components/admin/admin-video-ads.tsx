@@ -156,7 +156,7 @@ export function VideoAdsCard() {
       ) : !videos ? (
         <Loading />
       ) : videos.length === 0 ? (
-        <Empty>No video ads yet. Until you add one, the rewarded spots show Wanlly&apos;s animated placeholder.</Empty>
+        <Empty>No video ads yet. Until you add one, the rewarded spots play Wanlly&apos;s own 20-second promo.</Empty>
       ) : (
         <ul className="flex flex-col divide-y divide-line">
           {videos.map((v) => (

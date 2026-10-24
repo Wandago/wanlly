@@ -25,6 +25,7 @@ const PHASES: Record<string, string[]> = {
   images: ["Reading the prompt", "Imagining the scene", "Drawing", "Adding detail"],
 };
 const PHASE_MS = 3500;
+const NO_FALLBACK: never[] = [];
 
 /** Real replies: a spinner, what's happening and a timer until the first words arrive, with Stop. */
 function Waiting({ job }: { job: Job }) {
@@ -105,9 +106,15 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
   // streaming reply must not swap it for another sponsor's (that cut people's ads short).
   const settled = job.status !== "working" && job.spot !== "playing";
   const context = settled ? `${job.prompt} ${(job.text ?? "").slice(0, 2000)}` : job.prompt;
-  const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", [TOOLS[job.tool].sponsor], context);
-  const sponsor = options[(job.id.length + job.prompt.length) % options.length];
+  // A booked campaign, else one of Wanlly's offers; none means no sponsor card (only real ads show).
+  const options = useSponsors(adFormat === "native" ? "job_card" : "job_line", NO_FALLBACK, context);
+  const sponsor = options.length ? options[(job.id.length + job.prompt.length) % options.length] : undefined;
   const showCard = job.status === "working" || job.spot === "playing";
+  const line = sponsor ? (
+    <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
+      <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
+    </Tracked>
+  ) : null;
 
   return (
     <div className="flex flex-col gap-3.5">
@@ -136,54 +143,38 @@ export function JobView({ job, index = 0 }: { job: Job; index?: number }) {
         )}
       </div>
       {showCard ? (
-        <Tracked key="card" placement="job_card" format={adFormat} creative={creativeOf(sponsor)}>
+        sponsor ? (
+          <Tracked key="card" placement="job_card" format={adFormat} creative={creativeOf(sponsor)}>
+            <SponsorCard
+              sponsor={sponsor}
+              format={adFormat}
+              spotAspect={spotAspect}
+              spot={job.spot}
+              onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
+              onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
+            />
+          </Tracked>
+        ) : (
+          // No advertiser for this card: an ad network's banner if one fills it, and Watch.
           <SponsorCard
-            sponsor={sponsor}
             format={adFormat}
             spotAspect={spotAspect}
             spot={job.spot}
             onWatch={() => dispatch({ type: "setSpot", id: job.id, spot: "playing" })}
             onSpotDone={(r) => dispatch({ type: "setSpot", id: job.id, spot: r ? "earned" : "idle" })}
           />
-        </Tracked>
+        )
       ) : index % 2 === 1 && !job.sample ? (
         // After every second reply, a banner sits between it and the next prompt.
-        <DisplaySlot
-          placement="between_turns"
-          sizes={["728x90", "468x60", "320x100", "320x50"]}
-          className="border-y border-line py-3"
-          fallback={
-            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
-              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
-            </Tracked>
-          }
-        />
+        <DisplaySlot placement="between_turns" sizes={["728x90", "468x60", "320x100", "320x50"]} className="border-y border-line py-3" fallback={line} />
       ) : index % 4 === 2 && !job.sample ? (
         // Every fourth reply (offset from the banners), the ad network's native row, if set up.
-        <NativeSlot
-          placement="native_row"
-          fallback={
-            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
-              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
-            </Tracked>
-          }
-        />
-      ) : sponsor.campaignId || job.sample ? (
-        <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
-          <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
-        </Tracked>
-      ) : (
-        // No sold campaign on this line: the ad network's banner first, the house sponsor if none.
-        <DisplaySlot
-          placement="job_line"
-          sizes={["728x90", "468x60", "320x100", "320x50"]}
-          className="py-1"
-          fallback={
-            <Tracked key="line" placement="job_line" format={adFormat} creative={creativeOf(sponsor)}>
-              <SponsorLine sponsor={sponsor} format={adFormat} earned={job.spot === "earned"} />
-            </Tracked>
-          }
-        />
+        <NativeSlot placement="native_row" fallback={line} />
+      ) : sponsor?.campaignId ? (
+        line
+      ) : job.sample ? null : (
+        // No sold campaign on this line: the ad network's banner first, then a Wanlly offer, else nothing.
+        <DisplaySlot placement="job_line" sizes={["728x90", "468x60", "320x100", "320x50"]} className="py-1" fallback={line} />
       )}
     </div>
   );

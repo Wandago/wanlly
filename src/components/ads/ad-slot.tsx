@@ -447,7 +447,8 @@ export function SponsorCard({
   onSpotDone,
   progress,
 }: {
-  sponsor: Sponsor;
+  /** None when no advertiser has this card: then only an ad network's banner (if any) and Watch. */
+  sponsor?: Sponsor;
   format: CardFormat;
   spot: SpotState;
   spotAspect: VideoAspect;
@@ -457,11 +458,11 @@ export function SponsorCard({
 }) {
   // Sold campaigns bring a picture, not a video: their card shows the picture, and Watch plays
   // one of Wanlly's own videos so it never looks like the advertiser's.
-  const sold = !!sponsor.campaignId;
+  const sold = !!sponsor?.campaignId;
   // A banner (ad network or a campaign's) took the card: the house sponsor's button goes.
   const [banner, setBanner] = useState(false);
   if (spot === "playing") {
-    const video = sold ? SPOT_SPONSOR : sponsor;
+    const video = sold || !sponsor ? SPOT_SPONSOR : sponsor;
     return (
       <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface">
         {progress !== undefined ? (
@@ -475,7 +476,7 @@ export function SponsorCard({
 
   return (
     <div className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface">
-      {sold ? (
+      {sold && sponsor ? (
         <div className="flex flex-col sm:flex-row">
           <CoverLink sponsor={sponsor} />
           <div className="flex min-w-0 flex-col gap-1 p-3.5">
@@ -497,7 +498,7 @@ export function SponsorCard({
           className="p-3.5"
           onBanner={setBanner}
           fallback={
-            format === "native" ? (
+            !sponsor ? null : format === "native" ? (
               <div className="flex items-start gap-3 p-3.5">
                 <Logo sponsor={sponsor} />
                 <div className="flex min-w-0 flex-col gap-0.5">
@@ -518,7 +519,7 @@ export function SponsorCard({
         />
       )}
       <div className="flex flex-wrap items-center gap-2 border-t border-line px-3.5 py-2.5">
-        {(format === "native" || sold) && !banner && (
+        {sponsor && (format === "native" || sold) && !banner && (
           <SponsorLink
             sponsor={sponsor}
             className="rounded-[9px] border border-line bg-surface px-[11px] py-[7px] text-[13px] font-medium hover:border-faint"
