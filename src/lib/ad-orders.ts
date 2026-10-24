@@ -41,12 +41,31 @@ export function ensureCampaignColumns(): Promise<void> {
     const have = new Set(((await q`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'campaigns'`) as { column_name: string }[]).map((r) => r.column_name));
     for (const [name, type] of COLUMNS) if (!have.has(name)) await q.query(`ALTER TABLE "campaigns" ADD COLUMN IF NOT EXISTS "${name}" ${type}`);
     if (!have.has("offer_status")) await q.query(`CREATE INDEX IF NOT EXISTS "campaigns_offer_status" ON "campaigns" ("offer_status")`);
+    await seedHouseCampaigns();
   })().catch((e) => {
     ready = null;
     throw e;
   });
   return ready;
 }
+
+/**
+ * Wanlly's own campaigns shipped with the site, added once (an app_flags marker), live, at no
+ * charge: their banners are animated GIFs in public/ads, so nothing big sits in the database.
+ * After that they're ordinary campaigns: pause, edit or delete them in Admin and it sticks.
+ */
+async function seedHouseCampaigns() {
+  await rawSql()`with mark as (
+      insert into app_flags (key, value) values ('campaignSeed:sign', 'true'::jsonb) on conflict do nothing returning key
+    )
+    insert into campaigns (advertiser, name, status, headline, body, cta, url, color, image, banners, placements, countries, cpm_cents)
+    select 'Wanlly Sign', 'Wanlly Sign · launch', 'active', 'Get it signed today.',
+      'Electronic signatures made for Africa. People sign from any phone, no account needed.', 'Start free',
+      'https://sign.wanlly.africa/sign-up', '#ff5a1f', '/ads/sign/wanlly-sign-300x250.gif',
+      ${BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0
+    where exists (select 1 from mark)`;
+}
+const BANNERS = JSON.stringify({"300x600": "/ads/sign/wanlly-sign-300x600.gif", "160x600": "/ads/sign/wanlly-sign-160x600.gif", "336x280": "/ads/sign/wanlly-sign-336x280.gif", "300x250": "/ads/sign/wanlly-sign-300x250.gif", "728x90": "/ads/sign/wanlly-sign-728x90.gif", "468x60": "/ads/sign/wanlly-sign-468x60.gif", "320x100": "/ads/sign/wanlly-sign-320x100.gif", "320x50": "/ads/sign/wanlly-sign-320x50.gif"});
 
 /** SQL for what a campaign has spent so far, in cents: clicks × CPC when sold by the click, else views × CPM ÷ 1,000. */
 export const SPEND_SQL = `(case when coalesce(c.cpc_cents, 0) > 0

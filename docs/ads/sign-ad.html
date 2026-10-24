@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<!--
+  Wanlly Sign banner ad, 10 seconds, in every IAB size: open with ?size=300x600 (or 160x600, 336x280,
+  300x250, 728x90, 468x60, 320x100, 320x50). window.seek(seconds) draws one frame, so a renderer can
+  capture it frame by frame (docs/ads/render-sign.mjs). Scenes: headline, a document being signed,
+  why it's easy, then the logo and "Start free".
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Geist:wght@400..600&family=Dancing+Script:wght@500;600&display=block" rel="stylesheet" />
+<style>
+  :root { --accent: #ff5a1f; --fg: #16181d; --muted: #5d6270; --bg: #f4f5f7; --line: #e3e5ea; --tag: #fcd34d; --field: #fff7cf; --good: #15803d; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; background: var(--bg); color: var(--fg); font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .ad { position: relative; width: var(--w); height: var(--h); overflow: hidden; background: radial-gradient(120% 80% at 100% 0%, #ffe9df 0%, rgba(255, 233, 223, 0) 60%), var(--bg); border: 1px solid var(--line); }
+  .s { position: absolute; will-change: opacity, transform; opacity: 0; }
+  .h { font-family: "Bricolage Grotesque", sans-serif; font-weight: 680; letter-spacing: -0.04em; line-height: 0.98; }
+  .h em { font-style: normal; color: var(--accent); position: relative; }
+  .h em::after { content: ""; position: absolute; left: 2%; right: 2%; bottom: -0.04em; height: 0.12em; border-radius: 99px; background: #ffd5c4; z-index: -1; transform-origin: left; transform: scaleX(var(--u, 0)); }
+  .logo { display: flex; align-items: center; gap: 0.32em; font-family: "Bricolage Grotesque", sans-serif; font-weight: 650; letter-spacing: -0.02em; white-space: nowrap; }
+  .logo svg { width: 1.25em; height: 1.25em; flex: none; }
+  .btn { display: inline-flex; align-items: center; gap: 0.35em; background: var(--accent); color: #fff; font-weight: 600; border-radius: 0.55em; padding: 0.55em 0.95em; white-space: nowrap; box-shadow: 0 6px 16px -6px rgba(255, 90, 31, 0.6); }
+  .url { color: var(--muted); font-family: Geist, sans-serif; white-space: nowrap; }
+  /* The document */
+  .doc { background: #fff; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 18px 36px -18px rgba(22, 24, 29, 0.35); overflow: hidden; }
+  .doc .bar { display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-bottom: 1px solid var(--line); font-size: 9px; color: var(--muted); background: #fafafb; white-space: nowrap; }
+  .doc .bar i { width: 5px; height: 5px; border-radius: 50%; background: #d7d9df; display: block; }
+  .doc .bar span { margin-left: 4px; overflow: hidden; text-overflow: ellipsis; }
+  .doc .body { padding: 10px 12px 12px; }
+  .doc .t { height: 7px; width: 55%; background: var(--fg); border-radius: 3px; margin-bottom: 8px; }
+  .doc .l { height: 4px; background: #e9eaee; border-radius: 3px; margin-bottom: 5px; }
+  .sigrow { position: relative; margin-top: 12px; display: flex; align-items: center; gap: 6px; }
+  .tag { background: var(--tag); color: #4a3a00; font-weight: 600; font-size: 10px; padding: 3px 6px; border-radius: 4px; white-space: nowrap; }
+  .field { position: relative; flex: 1; min-width: 0; height: 32px; background: var(--field); border: 1px solid #f0d77c; border-bottom: 2px solid #2d2a1f; border-radius: 4px; overflow: hidden; }
+  .sig { position: absolute; left: 8px; top: 50%; transform: translateY(-52%); font-family: "Dancing Script", cursive; font-weight: 600; font-size: 22px; color: #1d2a6b; white-space: nowrap; clip-path: inset(0 calc(100% - var(--r, 0%)) 0 0); }
+  .cap { font-size: 8px; color: var(--muted); margin-top: 3px; display: flex; justify-content: space-between; }
+  .stamp { display: inline-flex; align-items: center; gap: 4px; background: #e8f6ee; color: var(--good); font-weight: 600; border-radius: 99px; padding: 3px 8px; font-size: 10px; white-space: nowrap; }
+  .checks { list-style: none; display: flex; flex-direction: column; gap: 0.55em; }
+  .checks li { display: flex; align-items: center; gap: 0.5em; font-weight: 500; }
+  .checks li b { display: grid; place-items: center; width: 1.25em; height: 1.25em; border-radius: 50%; background: #e8f6ee; color: var(--good); font-size: 0.85em; flex: none; }
+  .center { left: 0; right: 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+<div class="ad" id="ad"></div>
+<script>
+  const SIZE = (new URLSearchParams(location.search).get("size") || "300x600").split("x").map(Number);
+  const [W, H] = SIZE;
+  document.documentElement.style.setProperty("--w", W + "px");
+  document.documentElement.style.setProperty("--h", H + "px");
+  const LOGO = '<svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#16181d"/><path d="M7 20.5c2.2 0 3.1-9.5 5.6-9.5 2.3 0-.6 10 1.9 10 2.2 0 2.7-6.5 4.8-6.5 1.8 0 1.4 4 3.2 4 1 0 1.7-.9 2.5-1.8" fill="none" stroke="#ff5a1f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 24.5h18" stroke="#f4f5f7" stroke-opacity=".35" stroke-width="1.4" stroke-linecap="round"/></svg>';
+  const logo = (size, name = true) => `<div class="logo" style="font-size:${size}px">${LOGO}${name ? "<span>Wanlly Sign</span>" : ""}</div>`;
+  const doc = (w, sig = 22) => `<div class="doc" style="width:${w}px"><div class="bar"><i></i><i></i><i></i><span>Service agreement.pdf</span></div><div class="body"><div class="t"></div><div class="l"></div><div class="l" style="width:85%"></div><div class="l" style="width:70%"></div><div class="sigrow"><span class="tag" data-in="2.9" data-dy="0" data-dx="-6">Sign</span><div class="field"><span class="sig" data-sig style="font-size:${sig}px">Amina Otieno</span></div></div><div class="cap"><span>Signature</span><span data-in="4.4" data-dy="3">Oct 24, 2026</span></div></div></div>`;
+  const checks = (fs) => `<ul class="checks" style="font-size:${fs}px"><li><b>✓</b>No signer accounts</li><li><b>✓</b>Signs on any phone</li><li><b>✓</b>Priced in shillings</li></ul>`;
+  const headline = (fs, br = true) => `<div class="h" style="font-size:${fs}px">Get it <em data-u>signed</em>${br ? "<br>" : " "}today.</div>`;
+
+  // Each layout: absolutely placed pieces with data-in / data-out times (seconds).
+  const ad = document.getElementById("ad");
+  const kind = H >= 400 ? "tall" : H >= 200 ? "rect" : W >= 460 ? "wide" : H >= 90 ? "mob2" : "mob1";
+  const narrow = W < 200;
+  let html = "";
+  if (kind === "tall") {
+    const pad = narrow ? 12 : 22;
+    const dw = W - pad * 2;
+    html = `
+      <div class="s" data-in="0" data-out="7.6" style="left:${pad}px;top:${pad}px">${logo(narrow ? 13 : 16, true)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${pad}px;right:${pad}px;top:${H * 0.3}px">${headline(narrow ? 34 : 50)}<p style="margin-top:${narrow ? 10 : 16}px;font-size:${narrow ? 12 : 15}px;color:var(--muted);line-height:1.35">Electronic signatures, made for Africa.</p></div>
+      <div class="s" data-in="2.6" data-out="6.5" style="left:${pad}px;top:${H * (narrow ? 0.22 : 0.2)}px">${doc(dw, narrow ? 12 : 22)}</div>
+      <div class="s center" data-in="4.9" data-out="6.5" style="top:${H * (narrow ? 0.6 : 0.62)}px;gap:8px"><span class="stamp" style="font-size:${narrow ? 10 : 12}px">✓ Signed &amp; sealed</span><span style="font-size:${narrow ? 11 : 13}px;color:var(--muted);padding:0 ${pad}px;line-height:1.3">Sealed PDF with a full audit trail</span></div>
+      <div class="s" data-in="6.5" data-out="8.1" style="left:${pad}px;right:${pad}px;top:${H * 0.32}px"><div class="h" style="font-size:${narrow ? 22 : 30}px;margin-bottom:${narrow ? 14 : 20}px">Signed in a minute.</div>${checks(narrow ? 12 : 15)}</div>
+      <div class="s center" data-in="7.9" style="top:${H * 0.27}px;gap:${narrow ? 12 : 16}px">${logo(narrow ? 17 : 26, true)}<div class="h" style="font-size:${narrow ? 20 : 30}px;padding:0 ${pad}px">Your next contract, signed by lunch.</div></div>
+      <div class="s center" data-in="8.3" data-dy="14" style="bottom:${H * 0.13}px;gap:10px"><span class="btn" style="font-size:${narrow ? 13 : 17}px">Start free →</span><span class="url" style="font-size:${narrow ? 10 : 12}px">sign.wanlly.africa</span><span style="font-size:${narrow ? 9 : 11}px;color:var(--muted)">5 envelopes a month free</span></div>`;
+  } else if (kind === "rect") {
+    const pad = 16;
+    html = `
+      <div class="s" data-in="0" data-out="7.6" style="left:${pad}px;top:${pad - 2}px">${logo(13, true)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${pad}px;right:${pad}px;top:${H * 0.32}px">${headline(W > 320 ? 46 : 42)}</div>
+      <div class="s" data-in="2.6" data-out="6.5" style="left:${pad + 14}px;top:${H * 0.17}px">${doc(W - pad * 2 - 28, 20)}</div>
+      <div class="s center" data-in="4.9" data-out="6.5" style="bottom:${H * 0.08}px"><span class="stamp" style="font-size:11px">✓ Signed &amp; sealed · audit trail</span></div>
+      <div class="s" data-in="6.5" data-out="8.1" style="left:${pad + 6}px;right:${pad}px;top:${H * 0.3}px"><div class="h" style="font-size:24px;margin-bottom:14px">Signed in a minute.</div>${checks(14)}</div>
+      <div class="s center" data-in="7.9" style="top:${H * 0.17}px;gap:10px">${logo(22, true)}<div class="h" style="font-size:24px;padding:0 20px">Get it signed today.</div></div>
+      <div class="s center" data-in="8.3" data-dy="12" style="bottom:${H * 0.1}px;gap:6px"><span class="btn" style="font-size:15px">Start free →</span><span class="url" style="font-size:11px">sign.wanlly.africa · 5 envelopes free</span></div>`;
+  } else if (kind === "wide") {
+    const big = W >= 700;
+    const fs = big ? 26 : 19;
+    const left = big ? 168 : 52;
+    const right = big ? 150 : 108;
+    html = `
+      <div class="s" data-in="0" style="left:${big ? 16 : 12}px;top:50%;margin-top:-${big ? 12 : 11}px">${logo(big ? 17 : 17, big)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${left}px;top:50%;transform:translateY(-50%)">${headline(fs, false)}</div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:${left}px;right:${right}px;top:50%;margin-top:-${big ? 18 : 15}px;display:flex;align-items:center;gap:8px"><span class="tag" style="font-size:${big ? 12 : 10}px">Sign</span><div class="field" style="height:${big ? 36 : 30}px;max-width:${big ? 260 : 170}px"><span class="sig" data-sig style="font-size:${big ? 24 : 19}px">Amina Otieno</span></div><span class="stamp" data-in="4.7" data-dy="0" style="font-size:${big ? 12 : 10}px">✓ Sealed</span></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:${left}px;right:${right}px;top:50%;transform:translateY(-50%);font-weight:600;font-size:${big ? 16 : 13}px;line-height:1.25;white-space:${big ? "nowrap" : "normal"}">${big ? "No signer accounts · Any phone · Priced in KES" : "No signer accounts.<br>Signs on any phone."}</div>
+      <div class="s" data-in="7.9" style="left:${left}px;right:${right}px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:${big ? 22 : 16}px">Signed by lunch.</div><div class="url" style="font-size:${big ? 12 : 10}px;margin-top:3px">sign.wanlly.africa · 5 free a month</div></div>
+      <div class="s" data-in="0.3" style="right:${big ? 16 : 10}px;top:50%;margin-top:-${big ? 18 : 15}px"><span class="btn" style="font-size:${big ? 15 : 12}px">Start free →</span></div>`;
+  } else if (kind === "mob2") {
+    html = `
+      <div class="s" data-in="0" style="left:12px;top:12px">${logo(13, true)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:12px;right:12px;bottom:12px">${headline(30, false)}</div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:7px"><span class="tag" style="font-size:10px">Sign</span><div class="field" style="height:32px"><span class="sig" data-sig style="font-size:21px">Amina Otieno</span></div><span class="stamp" data-in="4.7" data-dy="0" style="font-size:10px">✓ Sealed</span></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:12px;right:12px;bottom:14px;font-weight:600;font-size:15px;line-height:1.25">No signer accounts.<br>Signs on any phone.</div>
+      <div class="s" data-in="7.9" style="left:12px;bottom:14px"><div class="h" style="font-size:20px">Signed by lunch.</div><div class="url" style="font-size:10px;margin-top:3px">sign.wanlly.africa</div></div>
+      <div class="s" data-in="7.9" data-dy="0" style="right:12px;bottom:14px"><span class="btn" style="font-size:13px">Start free →</span></div>`;
+  } else {
+    html = `
+      <div class="s" data-in="0" style="left:9px;top:50%;margin-top:-10px">${logo(16, false)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:38px;top:50%;transform:translateY(-50%)">${headline(19, false)}</div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:38px;right:96px;top:50%;margin-top:-13px;display:flex;align-items:center;gap:5px"><div class="field" style="height:26px"><span class="sig" data-sig style="font-size:17px;left:5px">Amina Otieno</span></div><span class="stamp" data-in="4.7" data-dy="0" style="font-size:9px;padding:2px 5px">✓</span></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:38px;right:94px;top:50%;transform:translateY(-50%);font-weight:600;font-size:11.5px;line-height:1.2">E-signatures for Africa.<br><span style="color:var(--muted);font-weight:500">No signer accounts.</span></div>
+      <div class="s" data-in="7.9" style="left:38px;right:94px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:15px">Wanlly Sign</div><div class="url" style="font-size:9px;margin-top:2px">sign.wanlly.africa</div></div>
+      <div class="s" data-in="0.3" style="right:8px;top:50%;margin-top:-14px"><span class="btn" style="font-size:11px;padding:7px 9px">Start free</span></div>`;
+  }
+  ad.innerHTML = html;
+
+  const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+  const els = [...ad.querySelectorAll("[data-in]")];
+  window.seek = (t) => {
+    for (const el of els) {
+      const a = ease((t - Number(el.dataset.in)) / 0.45);
+      const out = el.dataset.out ? Number(el.dataset.out) : 99;
+      const b = ease((out - t) / 0.35);
+      const dy = el.dataset.dy !== undefined ? Number(el.dataset.dy) : 10;
+      const dx = Number(el.dataset.dx || 0);
+      el.style.opacity = String(Math.min(a, b));
+      const base = el.style.transform.includes("translateY(-50%)") || el.dataset.mid ? "translateY(-50%) " : "";
+      if (!el.dataset.base) el.dataset.base = base;
+      el.style.transform = `${el.dataset.base}translate(${dx * (1 - a)}px, ${dy * (1 - a) - (1 - b) * 6}px)`;
+    }
+    // The signature writes itself in, then the date and seal appear.
+    for (const s of ad.querySelectorAll("[data-sig]")) s.style.setProperty("--r", `${ease((t - 3.2) / 1.25) * 100}%`);
+    for (const u of ad.querySelectorAll("[data-u]")) u.style.setProperty("--u", String(ease((t - 0.8) / 0.6)));
+  };
+  window.ready = document.fonts.ready.then(() => window.seek(0));
+</script>
+</body>
+</html>

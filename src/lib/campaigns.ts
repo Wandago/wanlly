@@ -50,7 +50,8 @@ export type CampaignInput = Partial<{
 
 /** The valid fields present in a request; an error message for the first invalid one. */
 /** A picture as the browser sends it: PNG, JPEG or WebP under 200 KB, or an animated GIF under 1.2 MB. */
-const okPicture = (v: string) => (/^data:image\/(png|jpeg|webp);base64,/.test(v) && v.length < 280_000) || (/^data:image\/gif;base64,/.test(v) && v.length < 1_650_000);
+const okPicture = (v: string) =>
+  /^\/ads\/[\w./-]+\.(gif|png|webp|jpe?g)$/.test(v) || (/^data:image\/(png|jpeg|webp);base64,/.test(v) && v.length < 280_000) || (/^data:image\/gif;base64,/.test(v) && v.length < 1_650_000);
 
 export function campaignFields(d: Record<string, unknown>): { ok: CampaignInput } | { error: string } {
   const out: CampaignInput = {};

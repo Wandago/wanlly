@@ -6,7 +6,10 @@ export async function servePicture(req: Request, load: () => Promise<string | nu
   const key = new Request(req.url, { method: "GET" });
   const hit = cache ? await cache.match(key).catch(() => undefined) : undefined;
   if (hit) return hit;
-  const m = (await load())?.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/);
+  const value = await load();
+  // A picture shipped with the site (public/ads): the browser fetches it from there.
+  if (value?.startsWith("/ads/") && !value.includes("..")) return Response.redirect(new URL(value, req.url).toString(), 302);
+  const m = value?.match(/^data:(image\/(?:png|jpeg|webp|gif));base64,(.+)$/);
   if (!m) return new Response(null, { status: 404 });
   const res = new Response(Buffer.from(m[2], "base64"), {
     headers: { "content-type": m[1], "cache-control": "public, max-age=3600, s-maxage=600", "x-content-type-options": "nosniff" },
