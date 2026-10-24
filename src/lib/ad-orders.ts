@@ -4,6 +4,7 @@ import { alertTeam } from "./alerts";
 import { emailHtml, emailText } from "./email-layout";
 import { mailReady, sendMail } from "./mail";
 import { SITE_URL } from "./site";
+import { ensureVideoAds } from "./video-ads";
 
 /*
  * Self-serve advertising: an advertiser builds a campaign, sets a budget and offers a price; the
@@ -64,7 +65,46 @@ async function seedHouseCampaigns() {
       'https://sign.wanlly.africa/sign-up', '#ff5a1f', '/ads/sign/wanlly-sign-300x250.gif',
       ${BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0
     where exists (select 1 from mark)`;
+  await rawSql()`with mark as (
+      insert into app_flags (key, value) values ('campaignSeed:wanlly', 'true'::jsonb) on conflict do nothing returning key
+    )
+    insert into campaigns (advertiser, name, status, headline, body, cta, url, color, image, banners, placements, countries, cpm_cents)
+    select 'Wanlly', 'Wanlly AI · invite', 'active', 'Top AI models. Free.',
+      'Chat, code and design with the world''s top AI models, paid for by sponsors. Tell a friend.', 'Start free',
+      'https://wanlly.africa', '#ff5a1f', '/ads/wanlly/wanlly-ai-300x250.gif',
+      ${WANLLY_BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0
+    where exists (select 1 from mark)`;
+  await seedTumaCv().catch((e) => console.error("TumaCV seed failed", e instanceof Error ? e.message : e));
 }
+
+/**
+ * TumaCV's banners (GIFs in public/ads/tumacv) go on its existing campaign, keeping any size it
+ * already has; with no campaign yet, one is made from the TumaCV offer's link. Its video ads get
+ * the same link. Once only.
+ */
+async function seedTumaCv() {
+  const q = rawSql();
+  const [mark] = (await q`insert into app_flags (key, value) values ('campaignSeed:tumacv', 'true'::jsonb) on conflict do nothing returning key`) as { key: string }[];
+  if (!mark) return;
+  const [c] = (await q`select id, url from campaigns where advertiser ilike 'tuma%' and status <> 'ended' order by id desc limit 1`) as { id: number; url: string }[];
+  let url = c?.url ?? "";
+  if (!url) {
+    const [f] = (await q`select value from app_flags where key = 'affiliates'`) as { value: unknown }[];
+    const offers = Array.isArray(f?.value) ? (f.value as { name?: string; url?: string }[]) : [];
+    url = offers.find((o) => /tuma/i.test(o.name ?? "") && /^https:\/\//.test(o.url ?? ""))?.url ?? "";
+  }
+  if (c) await q`update campaigns set banners = ${TUMA_BANNERS}::jsonb || coalesce(banners, '{}'::jsonb), updated_at = now() where id = ${c.id}`;
+  else if (url)
+    await q`insert into campaigns (advertiser, name, status, headline, body, cta, url, color, image, banners, placements, countries, cpm_cents)
+      values ('Tuma CV', 'Tuma CV · tailored CVs', 'active', 'Same CV for every job?', 'A tailored CV and cover letter for each job, in minutes. 5 free applications.',
+        'Try it free', ${url}, '#16a34a', '/ads/tumacv/tumacv-300x250.gif', ${TUMA_BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0)`;
+  if (url) {
+    await ensureVideoAds();
+    await q`update video_ads set link = ${url} where url like '/ads/tumacv-%' and link = ''`;
+  }
+}
+const WANLLY_BANNERS = JSON.stringify({"300x600": "/ads/wanlly/wanlly-ai-300x600.gif", "160x600": "/ads/wanlly/wanlly-ai-160x600.gif", "336x280": "/ads/wanlly/wanlly-ai-336x280.gif", "300x250": "/ads/wanlly/wanlly-ai-300x250.gif", "728x90": "/ads/wanlly/wanlly-ai-728x90.gif", "468x60": "/ads/wanlly/wanlly-ai-468x60.gif", "320x100": "/ads/wanlly/wanlly-ai-320x100.gif", "320x50": "/ads/wanlly/wanlly-ai-320x50.gif"});
+const TUMA_BANNERS = JSON.stringify({"300x600": "/ads/tumacv/tumacv-300x600.gif", "160x600": "/ads/tumacv/tumacv-160x600.gif", "336x280": "/ads/tumacv/tumacv-336x280.gif", "300x250": "/ads/tumacv/tumacv-300x250.gif", "728x90": "/ads/tumacv/tumacv-728x90.gif", "468x60": "/ads/tumacv/tumacv-468x60.gif", "320x100": "/ads/tumacv/tumacv-320x100.gif", "320x50": "/ads/tumacv/tumacv-320x50.gif"});
 const BANNERS = JSON.stringify({"300x600": "/ads/sign/wanlly-sign-300x600.gif", "160x600": "/ads/sign/wanlly-sign-160x600.gif", "336x280": "/ads/sign/wanlly-sign-336x280.gif", "300x250": "/ads/sign/wanlly-sign-300x250.gif", "728x90": "/ads/sign/wanlly-sign-728x90.gif", "468x60": "/ads/sign/wanlly-sign-468x60.gif", "320x100": "/ads/sign/wanlly-sign-320x100.gif", "320x50": "/ads/sign/wanlly-sign-320x50.gif"});
 
 /** SQL for what a campaign has spent so far, in cents: clicks × CPC when sold by the click, else views × CPM ÷ 1,000. */

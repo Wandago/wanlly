@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { sizeOf, type NetworkSize } from "@/lib/ad-network";
 import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
 import { useWorkspace } from "@/lib/workspace-store";
@@ -14,6 +14,26 @@ import { Tracked } from "./tracked";
  * `fallback` (or nothing). Sizes are tried in the order given, largest first, against the width
  * available, so the same slot serves 728×90 on a laptop and 320×50 on a phone.
  */
+/** This slot's place in the rotation: a new start for each slot shown, then one step every 45 s while visible. */
+function useTurn() {
+  const [turn, setTurn] = useState(() => {
+    try {
+      const n = Number(sessionStorage.getItem("wanlly-slot-turn")) || 0;
+      sessionStorage.setItem("wanlly-slot-turn", String(n + 1));
+      return n;
+    } catch {
+      return 0;
+    }
+  });
+  useEffect(() => {
+    const iv = window.setInterval(() => {
+      if (document.visibilityState === "visible") setTurn((n) => n + 1);
+    }, 45_000);
+    return () => window.clearInterval(iv);
+  }, []);
+  return turn;
+}
+
 export function DisplaySlot({
   placement,
   sizes,
@@ -44,7 +64,11 @@ export function DisplaySlot({
   const network = networks ? anyNetwork : null;
   const booked = useSponsors(placement, []);
   const fits = (s: NetworkSize) => width > 0 && sizeOf(s).w <= width;
-  const campaign = booked.map((sp) => ({ sp, size: sizes.find((s) => fits(s) && sp.banners?.includes(s)) })).find((x) => x.size);
+  // Every booked campaign with a banner that fits takes a turn: a different one each time a slot
+  // appears, and the next every 45 seconds while it stays on screen.
+  const turn = useTurn();
+  const fitting = booked.map((sp) => ({ sp, size: sizes.find((s) => fits(s) && sp.banners?.includes(s)) })).filter((x) => x.size);
+  const campaign = fitting.length ? fitting[turn % fitting.length] : undefined;
   const netSize = network ? sizes.find((s) => fits(s) && network.sizes.includes(s)) : undefined;
 
   let body: ReactNode = fallback;
@@ -52,7 +76,7 @@ export function DisplaySlot({
     const { sp, size } = campaign;
     const { w, h } = sizeOf(size);
     body = (
-      <Tracked placement={placement} format="display" creative={creativeOf(sp)} className="shrink-0">
+      <Tracked key={creativeOf(sp)} placement={placement} format="display" creative={creativeOf(sp)} className="shrink-0">
         <button type="button" aria-label={`${sp.name}: ${sp.cta}`} onClick={() => openSponsor(sp, placement) || dispatch({ type: "toast", text: `Opens ${sp.name} in a new tab` })} className="block overflow-hidden rounded-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={`/api/ads/banner/${sp.campaignId}/${size}`} alt={`${sp.name}: ${sp.headline}`} width={w} height={h} style={{ width: w, height: h }} className="block" />

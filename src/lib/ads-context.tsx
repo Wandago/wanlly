@@ -95,7 +95,11 @@ export function useHouseVideo(): HouseVideo {
       n = Number(sessionStorage.getItem("wanlly-video-turn")) || 0;
       sessionStorage.setItem("wanlly-video-turn", String(n + 1));
     } catch {}
-    return videos[n % videos.length];
+    // Brands take turns (TumaCV, Wanlly Sign, Wanlly…), then that brand's videos take turns, so a
+    // brand with more videos doesn't get more plays.
+    const brands = [...new Set(videos.map((v) => v.brand))];
+    const own = videos.filter((v) => v.brand === brands[n % brands.length]);
+    return own[Math.floor(n / brands.length) % own.length];
   });
   return pick;
 }

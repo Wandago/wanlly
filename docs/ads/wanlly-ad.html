@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<!--
+  Wanlly AI banner ad, 10 seconds, every IAB size: open with ?size=300x600 (or 160x600, 336x280,
+  300x250, 728x90, 468x60, 320x100, 320x50). window.seek(seconds) draws one frame; render with
+  docs/ads/render-sign.mjs (pass this file). Scenes: free top models, a request being built, how
+  it's free, then the logo and "Start free".
+-->
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Geist:wght@400..600&family=Geist+Mono:wght@500&display=block" rel="stylesheet" />
+<style>
+  :root { --accent: #ff5a1f; --ink: #0b0b0d; --fg: #f3f3f5; --muted: #a2a6b2; --card: #17181d; --line: #2a2c33; --good: #34d399; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: var(--w); height: var(--h); overflow: hidden; background: var(--ink); color: var(--fg); font-family: Geist, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .ad { position: relative; width: var(--w); height: var(--h); overflow: hidden; background: radial-gradient(90% 70% at 100% 0%, rgba(255, 90, 31, 0.32) 0%, rgba(255, 90, 31, 0) 65%), radial-gradient(70% 60% at 0% 100%, rgba(59, 91, 219, 0.22) 0%, rgba(59, 91, 219, 0) 70%), var(--ink); }
+  .s { position: absolute; will-change: opacity, transform; opacity: 0; }
+  .h { font-family: "Bricolage Grotesque", sans-serif; font-weight: 680; letter-spacing: -0.04em; line-height: 0.98; }
+  .h em { font-style: normal; color: var(--accent); }
+  .logo { display: flex; align-items: center; gap: 0.35em; font-family: "Bricolage Grotesque", sans-serif; font-weight: 650; letter-spacing: -0.02em; white-space: nowrap; }
+  .logo img { width: 1.3em; height: 1.3em; flex: none; }
+  .btn { display: inline-flex; align-items: center; gap: 0.35em; background: var(--accent); color: #fff; font-weight: 600; border-radius: 0.55em; padding: 0.55em 0.95em; white-space: nowrap; box-shadow: 0 8px 20px -8px rgba(255, 90, 31, 0.7); }
+  .url { color: var(--muted); white-space: nowrap; }
+  .chat { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.8); }
+  .ask { align-self: flex-end; background: #26282f; border-radius: 12px 12px 4px 12px; padding: 7px 10px; font-size: 11px; line-height: 1.3; max-width: 92%; }
+  .step { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--muted); }
+  .step b { display: grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: rgba(52, 211, 153, 0.15); color: var(--good); font-size: 9px; flex: none; }
+  .live { display: inline-flex; align-items: center; gap: 5px; background: rgba(52, 211, 153, 0.14); color: var(--good); font-weight: 600; border-radius: 99px; padding: 3px 9px; font-size: 11px; white-space: nowrap; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip { border: 1px solid var(--line); background: #15161b; border-radius: 99px; padding: 3px 8px; font-size: 11px; white-space: nowrap; }
+  .typed { overflow: hidden; white-space: nowrap; clip-path: inset(0 calc(100% - var(--r, 0%)) 0 0); }
+  .center { left: 0; right: 0; text-align: center; display: flex; flex-direction: column; align-items: center; }
+</style>
+</head>
+<body>
+<div class="ad" id="ad"></div>
+<script>
+  const SIZE = (new URLSearchParams(location.search).get("size") || "300x600").split("x").map(Number);
+  const [W, H] = SIZE;
+  document.documentElement.style.setProperty("--w", W + "px");
+  document.documentElement.style.setProperty("--h", H + "px");
+  const ICON = "../../public/brand/wanlly-app-icon.svg";
+  const logo = (size, name = true) => `<div class="logo" style="font-size:${size}px"><img src="${ICON}" alt="">${name ? "<span>Wanlly</span>" : ""}</div>`;
+  const chat = (w, fs = 11) => `<div class="chat" style="width:${w}px;font-size:${fs}px"><div class="ask" style="font-size:${fs}px"><span data-type>Build a booking page for my cousin's salon</span></div><div class="step" data-in="4.0" data-dy="4" style="font-size:${fs}px"><b>✓</b>Read the project</div><div class="step" data-in="4.5" data-dy="4" style="font-size:${fs}px"><b>✓</b>Wrote the booking form</div><div class="step" data-in="5.0" data-dy="4" style="font-size:${fs}px"><b>✓</b>Published it</div><span class="live" data-in="5.4" data-dy="0" style="align-self:flex-start;font-size:${fs}px">● Live in 30 seconds</span></div>`;
+  const chips = (fs) => `<div class="chips" style="font-size:${fs}px"><span class="chip" style="font-size:${fs}px">Gemini</span><span class="chip" style="font-size:${fs}px">Kimi</span><span class="chip" style="font-size:${fs}px">GLM</span><span class="chip" style="font-size:${fs}px">DeepSeek</span><span class="chip" style="font-size:${fs}px;color:var(--muted)">+ more</span></div>`;
+  const ad = document.getElementById("ad");
+  const kind = H >= 400 ? "tall" : H >= 200 ? "rect" : W >= 460 ? "wide" : H >= 90 ? "mob2" : "mob1";
+  const narrow = W < 200;
+  let html = "";
+  if (kind === "tall") {
+    const pad = narrow ? 12 : 22;
+    html = `
+      <div class="s" data-in="0" data-out="7.6" style="left:${pad}px;top:${pad}px">${logo(narrow ? 15 : 18)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${pad}px;right:${pad}px;top:${H * 0.28}px"><div class="h" style="font-size:${narrow ? 32 : 48}px">Top AI models.<br><em>Free.</em></div><p style="margin-top:${narrow ? 12 : 18}px;font-size:${narrow ? 12 : 15}px;color:var(--muted);line-height:1.35">No card. No subscription.</p><div style="margin-top:${narrow ? 12 : 16}px">${chips(narrow ? 10 : 12)}</div></div>
+      <div class="s" data-in="2.6" data-out="6.5" style="left:${pad}px;top:${H * 0.24}px"><div class="h" style="font-size:${narrow ? 18 : 24}px;margin-bottom:${narrow ? 10 : 14}px">Ask. It builds.</div>${chat(W - pad * 2, narrow ? 9.5 : 11.5)}</div>
+      <div class="s" data-in="6.5" data-out="8.1" style="left:${pad}px;right:${pad}px;top:${H * 0.3}px"><div class="h" style="font-size:${narrow ? 22 : 30}px">Watch a short ad.<br><em>Earn credits.</em></div><p style="margin-top:${narrow ? 12 : 16}px;font-size:${narrow ? 12 : 15}px;color:var(--muted);line-height:1.4">Sponsors pay for your AI. Chat, code and design for free.</p></div>
+      <div class="s center" data-in="7.9" style="top:${H * 0.24}px;gap:${narrow ? 12 : 16}px">${logo(narrow ? 22 : 30)}<div class="h" style="font-size:${narrow ? 19 : 28}px;padding:0 ${pad}px">Frontier AI for everyone with an idea.</div></div>
+      <div class="s center" data-in="8.3" data-dy="14" style="bottom:${H * 0.13}px;gap:10px"><span class="btn" style="font-size:${narrow ? 13 : 17}px">Start free →</span><span class="url" style="font-size:${narrow ? 10 : 12}px">wanlly.africa</span></div>`;
+  } else if (kind === "rect") {
+    const pad = 16;
+    html = `
+      <div class="s" data-in="0" data-out="7.6" style="left:${pad}px;top:${pad - 2}px">${logo(14)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${pad}px;right:${pad}px;top:${H * 0.27}px"><div class="h" style="font-size:${W > 320 ? 40 : 37}px">Top AI models. <em>Free.</em></div><div style="margin-top:14px">${chips(11)}</div></div>
+      <div class="s" data-in="2.6" data-out="6.5" style="left:${pad + 10}px;top:${H * 0.19}px">${chat(W - pad * 2 - 20, 11)}</div>
+      <div class="s" data-in="6.5" data-out="8.1" style="left:${pad}px;right:${pad}px;top:${H * 0.3}px"><div class="h" style="font-size:30px">Watch a short ad. <em>Earn credits.</em></div><p style="margin-top:10px;font-size:13px;color:var(--muted)">No card. No subscription.</p></div>
+      <div class="s center" data-in="7.9" style="top:${H * 0.16}px;gap:10px">${logo(24)}<div class="h" style="font-size:22px;padding:0 18px">Frontier AI for everyone with an idea.</div></div>
+      <div class="s center" data-in="8.3" data-dy="12" style="bottom:${H * 0.1}px;gap:6px"><span class="btn" style="font-size:15px">Start free →</span><span class="url" style="font-size:11px">wanlly.africa</span></div>`;
+  } else if (kind === "wide") {
+    const big = W >= 700;
+    const fs = big ? 26 : 19;
+    const left = big ? 150 : 52;
+    const right = big ? 150 : 108;
+    html = `
+      <div class="s" data-in="0" style="left:${big ? 18 : 12}px;top:50%;margin-top:-${big ? 13 : 12}px">${logo(big ? 20 : 19, big)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:${left}px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:${fs}px">Top AI models. <em>Free.</em></div></div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:${left}px;right:${right}px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:8px"><div class="ask" style="font-size:${big ? 13 : 10.5}px;align-self:center;max-width:none"><span data-type>Build a booking page for my cousin's salon</span></div><span class="live" data-in="5.0" data-dy="0" style="font-size:${big ? 12 : 10}px">● Live</span></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:${left}px;right:${right}px;top:50%;transform:translateY(-50%);font-weight:600;font-size:${big ? 17 : 13}px;line-height:1.25;white-space:${big ? "nowrap" : "normal"}">${big ? "Watch a short ad, earn credits. No card." : "Watch a short ad,<br>earn credits."}</div>
+      <div class="s" data-in="7.9" style="left:${left}px;right:${right}px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:${big ? 21 : 15}px">Frontier AI for everyone.</div><div class="url" style="font-size:${big ? 12 : 10}px;margin-top:3px">wanlly.africa · chat, code, design</div></div>
+      <div class="s" data-in="0.3" style="right:${big ? 16 : 10}px;top:50%;margin-top:-${big ? 18 : 15}px"><span class="btn" style="font-size:${big ? 15 : 12}px">Start free →</span></div>`;
+  } else if (kind === "mob2") {
+    html = `
+      <div class="s" data-in="0" style="left:12px;top:12px">${logo(15)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:12px;right:12px;bottom:12px"><div class="h" style="font-size:28px">Top AI models. <em>Free.</em></div></div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:12px;right:12px;bottom:12px;display:flex;align-items:center;gap:7px"><div class="ask" style="font-size:11px;max-width:none;align-self:center"><span data-type>Build a booking page for my salon</span></div><span class="live" data-in="5.0" data-dy="0" style="font-size:10px">● Live</span></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:12px;right:12px;bottom:14px;font-weight:600;font-size:15px;line-height:1.25">Watch a short ad.<br><span style="color:var(--accent)">Earn credits.</span></div>
+      <div class="s" data-in="7.9" style="left:12px;bottom:14px"><div class="h" style="font-size:19px">AI for everyone.</div><div class="url" style="font-size:10px;margin-top:3px">wanlly.africa</div></div>
+      <div class="s" data-in="7.9" data-dy="0" style="right:12px;bottom:14px"><span class="btn" style="font-size:13px">Start free →</span></div>`;
+  } else {
+    html = `
+      <div class="s" data-in="0" style="left:9px;top:50%;margin-top:-11px">${logo(17, false)}</div>
+      <div class="s" data-in="0.15" data-out="2.75" style="left:38px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:18px">Top AI. <em>Free.</em></div></div>
+      <div class="s" data-in="2.6" data-out="6.4" style="left:38px;right:96px;top:50%;transform:translateY(-50%)"><div class="ask" style="font-size:10px;max-width:none;padding:5px 8px"><span data-type>Build a booking page</span></div></div>
+      <div class="s" data-in="6.4" data-out="8.1" style="left:38px;right:94px;top:50%;transform:translateY(-50%);font-weight:600;font-size:11.5px;line-height:1.2">Watch an ad,<br><span style="color:var(--accent)">earn credits.</span></div>
+      <div class="s" data-in="7.9" style="left:38px;right:94px;top:50%;transform:translateY(-50%)"><div class="h" style="font-size:15px">Wanlly</div><div class="url" style="font-size:9px;margin-top:2px">wanlly.africa</div></div>
+      <div class="s" data-in="0.3" style="right:8px;top:50%;margin-top:-14px"><span class="btn" style="font-size:11px;padding:7px 9px">Start free</span></div>`;
+  }
+  ad.innerHTML = html;
+
+  const ease = (x) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+  const els = [...ad.querySelectorAll("[data-in]")];
+  window.seek = (t) => {
+    for (const el of els) {
+      const a = ease((t - Number(el.dataset.in)) / 0.45);
+      const out = el.dataset.out ? Number(el.dataset.out) : 99;
+      const b = ease((out - t) / 0.35);
+      const dy = el.dataset.dy !== undefined ? Number(el.dataset.dy) : 10;
+      const dx = Number(el.dataset.dx || 0);
+      el.style.opacity = String(Math.min(a, b));
+      const base = el.style.transform.includes("translateY(-50%)") || el.dataset.mid ? "translateY(-50%) " : "";
+      if (!el.dataset.base) el.dataset.base = base;
+      el.style.transform = `${el.dataset.base}translate(${dx * (1 - a)}px, ${dy * (1 - a) - (1 - b) * 6}px)`;
+    }
+    // The signature writes itself in, then the date and seal appear.
+    // The request types itself in, letter by letter (so it wraps like real text).
+    for (const el of ad.querySelectorAll("[data-type]")) {
+      el.dataset.full ??= el.textContent;
+      const full = el.dataset.full;
+      const k = Math.round(Math.min(1, Math.max(0, (t - 2.9) / 1.1)) * full.length);
+      el.textContent = full.slice(0, k) || "\u200b";
+    }
+    for (const u of ad.querySelectorAll("[data-u]")) u.style.setProperty("--u", String(ease((t - 0.8) / 0.6)));
+  };
+  window.ready = Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => window.seek(0));
+</script>
+</body>
+</html>

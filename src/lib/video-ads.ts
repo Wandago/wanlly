@@ -49,6 +49,16 @@ async function seedVideos() {
       ('Wanlly Sign · vertical', 'Wanlly Sign', '/ads/sign/wanlly-sign-300x600.mp4', '9:16', 10000, 'Start free', 'https://sign.wanlly.africa/sign-up')
     ) as v(title, brand, url, aspect, duration_ms, cta, link)
     where exists (select 1 from mark)`;
+  await rawSql()`with mark as (
+      insert into app_flags (key, value) values ('videoSeed:wanlly-ai', 'true'::jsonb) on conflict do nothing returning key
+    )
+    insert into video_ads (title, brand, url, aspect, duration_ms, cta, link)
+    select v.title, v.brand, v.url, v.aspect, v.duration_ms, v.cta, v.link
+    from (values
+      ('Wanlly promo · square', 'Wanlly', '/ads/wanlly-promo-1x1.mp4', '1:1', 20000, '', ''),
+      ('Wanlly promo · vertical', 'Wanlly', '/ads/wanlly-promo-9x16.mp4', '9:16', 20000, '', '')
+    ) as v(title, brand, url, aspect, duration_ms, cta, link)
+    where exists (select 1 from mark)`;
 }
 
 const row = (r: Record<string, unknown>): HouseVideo => ({
