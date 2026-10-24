@@ -75,6 +75,35 @@ async function seedHouseCampaigns() {
       ${WANLLY_BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0
     where exists (select 1 from mark)`;
   await seedTumaCv().catch((e) => console.error("TumaCV seed failed", e instanceof Error ? e.message : e));
+  await tumaCvInRotation().catch((e) => console.error("TumaCV rotation failed", e instanceof Error ? e.message : e));
+}
+
+/** TumaCV's own site, for when no campaign gives its link. */
+const TUMACV_URL = "https://tumacv.co.ke";
+
+/**
+ * Puts TumaCV in the rotation with Wanlly and Wanlly Sign, once: its latest campaign is switched
+ * on (any past end date cleared), shows in every banner and card space and has all eight GIF
+ * banners, keeping its own link, countries and other settings. With no campaign, one is made.
+ */
+async function tumaCvInRotation() {
+  const q = rawSql();
+  const [mark] = (await q`insert into app_flags (key, value) values ('campaignSeed:tumacv-rotation', 'true'::jsonb) on conflict do nothing returning key`) as { key: string }[];
+  if (!mark) return;
+  const [c] = (await q`select id, url from campaigns where advertiser ilike 'tuma%' order by id desc limit 1`) as { id: number; url: string }[];
+  if (c)
+    await q`update campaigns set status = 'active',
+        ends_at = case when ends_at is not null and ends_at <= now() then null else ends_at end,
+        starts_at = case when starts_at is not null and starts_at > now() then null else starts_at end,
+        placements = (select coalesce(jsonb_agg(distinct p), '[]'::jsonb) from jsonb_array_elements_text(coalesce(placements, '[]'::jsonb) || ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb) p),
+        banners = ${TUMA_BANNERS}::jsonb || coalesce(banners, '{}'::jsonb), updated_at = now()
+      where id = ${c.id}`;
+  else
+    await q`insert into campaigns (advertiser, name, status, headline, body, cta, url, color, image, banners, placements, countries, cpm_cents)
+      values ('Tuma CV', 'Tuma CV · tailored CVs', 'active', 'Same CV for every job?', 'A tailored CV and cover letter for each job, in minutes. 5 free applications.',
+        'Try it free', ${TUMACV_URL}, '#16a34a', '/ads/tumacv/tumacv-300x250.gif', ${TUMA_BANNERS}::jsonb, ${JSON.stringify(VISUAL_PLACEMENTS)}::jsonb, '[]'::jsonb, 0)`;
+  await ensureVideoAds();
+  await q`update video_ads set link = ${c?.url || TUMACV_URL}, cta = 'Try it free' where url like '/ads/tumacv-%' and link = ''`;
 }
 
 /**

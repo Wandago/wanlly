@@ -6,7 +6,7 @@ import { RAIL_SPONSORS, type Sponsor } from "@/lib/catalog";
 import { useReward, useWorkspace } from "@/lib/workspace-store";
 import { Icon } from "../icon";
 import { Cover } from "./cover";
-import { DisplayCreative } from "./creatives";
+import { DisplayCreative, campaignBanner } from "./creatives";
 import { Tracked } from "./tracked";
 import { NetworkSlot, useNetworkTest } from "./network-slot";
 import { creativeOf, openSponsor, useNetwork, useSponsors } from "@/lib/ads-context";
@@ -57,7 +57,37 @@ function Cta({ sponsor, placement, className = "" }: { sponsor: Sponsor; placeme
 }
 
 /** Native sponsor card with a cover image. The main side-panel unit. */
+/**
+ * A campaign's own banner at its true shape, in the panel's rounded frame (scaled down, never
+ * stretched, where the space is narrower than the banner).
+ */
+function OwnBanner({ sponsor, size, placement }: { sponsor: Sponsor; size: string; placement: string }) {
+  const { dispatch } = useWorkspace();
+  const [w, h] = size.split("x").map(Number);
+  return (
+    <Tracked key={`${creativeOf(sponsor)}:${size}`} placement={placement} format="display" creative={creativeOf(sponsor)}>
+      <div className="flex animate-rise flex-col gap-2 rounded-2xl border border-line bg-surface p-2 shadow-soft">
+        <div className="px-1">
+          <SponsoredLabel sponsor={sponsor} />
+        </div>
+        <button
+          type="button"
+          aria-label={`${sponsor.name}: ${sponsor.cta}`}
+          onClick={() => openSponsor(sponsor, placement) || dispatch({ type: "toast", text: `Opens ${sponsor.name} in a new tab` })}
+          className="mx-auto block w-full overflow-hidden rounded-xl"
+          style={{ maxWidth: w }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={campaignBanner(sponsor, size) ?? ""} alt={`${sponsor.name}: ${sponsor.headline}`} width={w} height={h} className="block h-auto w-full" style={{ aspectRatio: `${w} / ${h}` }} />
+        </button>
+      </div>
+    </Tracked>
+  );
+}
+
 export function CoverCard({ sponsor, placement = "rail_cover" }: { sponsor: Sponsor; placement?: string }) {
+  // A campaign that brought a 300×250 banner shows it as made, not cropped into a card.
+  if (campaignBanner(sponsor, "300x250")) return <OwnBanner sponsor={sponsor} size="300x250" placement={placement} />;
   return (
     <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
       <article className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
@@ -257,6 +287,7 @@ function FullRail({ wideOnly, onSlim }: { wideOnly: boolean; onSlim: () => void 
 /** A short sponsor card: picture strip, name and headline. */
 function CompactCard({ sponsor, placement }: { sponsor: Sponsor; placement: string }) {
   const { dispatch } = useWorkspace();
+  if (campaignBanner(sponsor, "320x100")) return <OwnBanner sponsor={sponsor} size="320x100" placement={placement} />;
   return (
     <Tracked key={creativeOf(sponsor)} placement={placement} format="native" creative={creativeOf(sponsor)}>
       <article className="animate-rise overflow-hidden rounded-2xl border border-line bg-surface shadow-soft">
@@ -284,6 +315,12 @@ function CompactCard({ sponsor, placement }: { sponsor: Sponsor; placement: stri
 export function SidebarAd() {
   const sponsor = useRotation(useSponsors("sidebar_card", RAIL_SPONSORS), 50000, 1);
   if (!sponsor) return null;
+  if (campaignBanner(sponsor, "320x100"))
+    return (
+      <div className="hidden [@media(min-height:700px)]:block">
+        <OwnBanner sponsor={sponsor} size="320x100" placement="sidebar_card" />
+      </div>
+    );
   return (
     <Tracked key={creativeOf(sponsor)} placement="sidebar_card" format="native" creative={creativeOf(sponsor)} className="hidden [@media(min-height:700px)]:block">
       <article className="animate-rise overflow-hidden rounded-[14px] border border-line bg-surface">
