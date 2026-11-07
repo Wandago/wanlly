@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ratecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=Geist:wght@400..600&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Ratecard prototype. Flow: setup → scan → report (services), competitors, alerts. All data is sample data. */
+:root{
+  --bg:#FAFAF8; --surface:#FFFFFF; --side:#F2F3EF; --line:#E2E4DE; --hover:#E9EBE5;
+  --fg:#16181A; --muted:#5F6670; --faint:#979DA6;
+  --accent:#0E7C61; --accent-ink:#FFFFFF; --accent-soft:#E3F3EE; --accent-line:#B9E0D4;
+  --under:#C2570C; --under-soft:#FDF0E6; --above:#6D4ADB; --above-soft:#EFEAFD; --ok:#0E7C61; --ok-soft:#E3F3EE;
+  --band:#D9DED6; --track:#EEF0EB;
+  --shadow:0 1px 2px rgba(20,24,20,.04),0 10px 30px rgba(20,24,20,.08);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101211; --surface:#171A18; --side:#0B0D0C; --line:#262A27; --hover:#1E2220;
+  --fg:#ECEEEB; --muted:#9AA19C; --faint:#69706B;
+  --accent:#34C59B; --accent-ink:#04140F; --accent-soft:#0F2A22; --accent-line:#1D5444;
+  --under:#F59A4E; --under-soft:#2E1C0E; --above:#A68BFF; --above-soft:#221A3D; --ok:#34C59B; --ok-soft:#0F2A22;
+  --band:#39403B; --track:#222724; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101211; --surface:#171A18; --side:#0B0D0C; --line:#262A27; --hover:#1E2220;
+  --fg:#ECEEEB; --muted:#9AA19C; --faint:#69706B;
+  --accent:#34C59B; --accent-ink:#04140F; --accent-soft:#0F2A22; --accent-line:#1D5444;
+  --under:#F59A4E; --under-soft:#2E1C0E; --above:#A68BFF; --above-soft:#221A3D; --ok:#34C59B; --ok-soft:#0F2A22;
+  --band:#39403B; --track:#222724; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.4); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);letter-spacing:-.02em;margin:0;font-weight:650}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border-radius:11px;font-weight:550;border:1px solid var(--line);background:var(--surface)}
+.btn:hover{border-color:var(--faint)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.ghost{border-color:transparent;background:none;color:var(--muted)}
+.btn.ghost:hover{background:var(--hover);color:var(--fg)}
+.brand{display:flex;align-items:center;gap:10px}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--fg);display:grid;place-items:center}
+.mark i{display:block;width:14px;height:3px;border-radius:2px;background:var(--accent);box-shadow:0 -5px 0 var(--bg),0 5px 0 var(--bg)}
+.brand b{font-family:var(--f-display);font-size:20px;font-weight:650;letter-spacing:-.02em}
+.seg{display:inline-flex;padding:3px;border-radius:11px;background:var(--hover);gap:2px;flex-wrap:wrap}
+.seg button{padding:6px 12px;border-radius:8px;font-size:14px;color:var(--muted);font-weight:500}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:550;padding:3px 9px;border-radius:99px;white-space:nowrap}
+.chip.under{background:var(--under-soft);color:var(--under)}
+.chip.above{background:var(--above-soft);color:var(--above)}
+.chip.ok{background:var(--ok-soft);color:var(--ok)}
+.chip.mute{background:var(--hover);color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px}
+
+/* ---------- Setup ---------- */
+.screen{display:none} .screen.on{display:block}
+.setup{max-width:760px;margin:0 auto;padding:28px 16px 64px}
+.setup header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
+.setup .lead h1{font-size:clamp(28px,5vw,40px);line-height:1.1}
+.setup .lead p{color:var(--muted);margin:10px 0 28px;font-size:17px;max-width:560px}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.field label,.flabel{font-size:13px;font-weight:550;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 160px;gap:12px}
+input[type=text],input[type=number],select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--surface);min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.note{font-size:13px;color:var(--under);background:var(--under-soft);padding:8px 12px;border-radius:10px;margin-top:8px;display:none}
+.svc-table{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.svc-head,.svc-row{display:grid;grid-template-columns:minmax(0,1fr) 110px 110px 36px;gap:8px;align-items:center;padding:8px 10px}
+.svc-head{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;background:var(--side);padding:8px 14px}
+.svc-row{border-top:1px solid var(--line)}
+.svc-row input{border-color:transparent;background:transparent;padding:8px}
+.svc-row input:hover{border-color:var(--line)}
+.money{position:relative}
+.money::before{content:"$";position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:14px;pointer-events:none}
+.money input{padding-left:20px}
+.svc-row .del{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;color:var(--faint)}
+.svc-row .del:hover{background:var(--hover);color:var(--fg)}
+.add-row{display:flex;align-items:center;gap:8px;padding:12px 14px;border-top:1px solid var(--line);width:100%;color:var(--accent);font-weight:550;font-size:14px}
+.setup-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:28px;flex-wrap:wrap}
+.setup-foot p{margin:0;font-size:13px;color:var(--faint);max-width:380px}
+.hint{font-size:13px;color:var(--faint);margin:6px 0 0}
+
+/* ---------- Scan ---------- */
+.scan{min-height:100%;display:grid;place-items:center;padding:24px 16px}
+.scan .card{width:100%;max-width:480px;padding:28px;box-shadow:var(--shadow)}
+.scan h2{font-size:24px;margin-bottom:4px}
+.steps{list-style:none;padding:0;margin:24px 0 8px;display:flex;flex-direction:column;gap:14px}
+.steps li{display:flex;gap:12px;align-items:flex-start;color:var(--faint);transition:color .3s}
+.steps li .dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);flex:none;display:grid;place-items:center;margin-top:1px}
+.steps li.doing{color:var(--fg)}
+.steps li.doing .dot{border-color:var(--accent);border-top-color:transparent;animation:spin .8s linear infinite}
+.steps li.done{color:var(--fg)}
+.steps li.done .dot{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.steps li small{display:block;color:var(--muted);font-size:13px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.steps li.doing .dot{animation:none}}
+
+/* ---------- App shell ---------- */
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh;background:linear-gradient(to right,var(--side) 239px,var(--line) 239px 240px,var(--bg) 240px)}
+.side{background:var(--side);border-right:1px solid var(--line);padding:16px 12px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.side .brand{padding:4px 8px 18px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:9px;color:var(--muted);font-weight:500;text-align:left}
+.nav button:hover{background:var(--hover);color:var(--fg)}
+.nav button[aria-current="page"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.nav .badge{margin-left:auto;font-size:11px;font-family:var(--f-mono);background:var(--accent);color:var(--accent-ink);border-radius:99px;padding:1px 7px}
+.biz{margin-top:auto;padding:12px;border-radius:14px;background:var(--surface);border:1px solid var(--line);font-size:14px}
+.biz b{display:block}
+.biz small{color:var(--faint);display:block;font-size:12.5px}
+.biz button{margin-top:10px;font-size:13px;color:var(--accent);font-weight:550}
+.topnav{display:none}
+.main{padding:28px clamp(16px,4vw,44px) 64px;max-width:1100px;width:100%}
+.page{display:none}.page.on{display:block}
+.pghead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.pghead h1{font-size:28px}
+.pghead p{margin:4px 0 0;color:var(--muted)}
+.pos{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.pos .flabel{font-size:12px}
+
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.tile{padding:16px}
+.tile span{font-size:13px;color:var(--muted)}
+.tile b{display:block;font-family:var(--f-display);font-size:28px;font-weight:650;letter-spacing:-.02em;line-height:1.2;margin-top:4px}
+.tile small{color:var(--faint);font-size:12.5px}
+.tile.hl{background:var(--accent-soft);border-color:var(--accent-line)}
+.tile.hl b{color:var(--accent)}
+.summary{padding:16px 18px;display:flex;gap:12px;margin-bottom:24px}
+.summary .spark{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.summary p{margin:0}
+.summary small{display:block;color:var(--faint);font-size:12.5px;margin-top:6px}
+
+.list{overflow:hidden}
+.lhead,.lrow{display:grid;grid-template-columns:minmax(150px,1.3fr) 70px minmax(180px,2fr) 120px 120px;gap:16px;align-items:center;padding:12px 18px}
+.lhead{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line);padding-top:10px;padding-bottom:10px}
+.lrow{border-top:1px solid var(--line);width:100%;text-align:left}
+.lrow:first-of-type{border-top:0}
+.lrow:hover{background:var(--hover)}
+.lrow .nm b{font-weight:550;display:block}
+.lrow .nm small{color:var(--faint);font-size:12.5px}
+.lrow .act{text-align:right}
+.lrow .act b{display:block;font-family:var(--f-mono);font-weight:500}
+.lrow .act small{font-size:12.5px;color:var(--ok)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--faint);margin:12px 4px 0}
+.legend i{display:inline-block;vertical-align:middle;margin-right:6px}
+.foot{font-size:13px;color:var(--faint);margin-top:18px;max-width:720px}
+
+/* range strip */
+.rng{position:relative;height:26px}
+.rng .tr{position:absolute;left:0;right:0;top:11px;height:4px;border-radius:4px;background:var(--track)}
+.rng .bd{position:absolute;top:8px;height:10px;border-radius:5px;background:var(--band)}
+.rng .md{position:absolute;top:5px;width:2px;height:16px;background:var(--muted);border-radius:1px;margin-left:-1px}
+.rng .you{position:absolute;top:6px;width:14px;height:14px;border-radius:50%;margin-left:-7px;border:2.5px solid var(--surface);box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.rng .sug{position:absolute;top:6px;width:14px;height:14px;border-radius:50%;margin-left:-7px;border:2px dashed var(--accent);background:var(--surface)}
+.rng .cp{position:absolute;top:9px;width:8px;height:8px;border-radius:50%;margin-left:-4px;background:var(--faint);opacity:.7}
+.you.under{background:var(--under)} .you.above{background:var(--above)} .you.ok{background:var(--ok)}
+
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,12,10,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:30}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(520px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--shadow);transform:translateX(100%);transition:transform .25s cubic-bezier(.2,.8,.2,1);z-index:31;overflow:auto;padding:22px 22px 40px}
+.drawer.on{transform:none}
+.drawer .x{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;color:var(--muted)}
+.drawer .x:hover{background:var(--hover)}
+.drawer h2{font-size:24px;padding-right:40px}
+.drawer .big{margin:22px 0 6px}
+.drawer .big .rng{height:44px}
+.drawer .big .rng .tr{top:20px} .drawer .big .rng .bd{top:16px;height:12px}.drawer .big .rng .md{top:12px;height:20px}
+.drawer .big .rng .you,.drawer .big .rng .sug{top:15px}.drawer .big .rng .cp{top:18px}
+.axis{display:flex;justify-content:space-between;font-family:var(--f-mono);font-size:12px;color:var(--faint)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0}
+.stats div{background:var(--side);border-radius:12px;padding:10px 12px}
+.stats span{font-size:12px;color:var(--faint);display:block}
+.stats b{font-family:var(--f-mono);font-weight:500}
+.rec{border-radius:14px;padding:16px;margin-bottom:22px}
+.rec.under{background:var(--under-soft)} .rec.above{background:var(--above-soft)} .rec.ok{background:var(--ok-soft)}
+.rec h3{font-size:18px;margin-bottom:6px}
+.rec p{margin:0 0 12px;font-size:14.5px}
+.rec .acts{display:flex;gap:8px;flex-wrap:wrap}
+.drawer h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);margin:0 0 8px;font-weight:500}
+.cplist{list-style:none;margin:0;padding:0}
+.cplist li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid var(--line)}
+.cplist li.me{background:var(--accent-soft);margin:0 -10px;padding:10px;border-radius:10px;border-top-color:transparent}
+.cplist li b{font-weight:550}
+.cplist li small{grid-column:1/-1;color:var(--faint);font-size:12.5px;display:flex;gap:10px;flex-wrap:wrap}
+.cplist .p{font-family:var(--f-mono);text-align:right}
+.cplist a{color:var(--muted)}
+
+/* competitors page */
+.ctable{overflow:hidden}
+.chead,.crow{display:grid;grid-template-columns:minmax(150px,1.6fr) 80px 110px 120px minmax(130px,1fr) 70px;gap:14px;align-items:center;padding:12px 18px}
+.chead{font-size:12px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--line)}
+.crow{border-top:1px solid var(--line)}
+.crow:first-of-type{border-top:0}
+.crow.off{opacity:.55}
+.crow b{font-weight:550}
+.crow .mm{display:none}
+.crow small{display:block;color:var(--faint);font-size:12.5px}
+.tgl{width:40px;height:24px;border-radius:99px;background:var(--line);position:relative;transition:background .2s;justify-self:end}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .2s}
+.tgl[aria-checked="true"]{background:var(--accent)}
+.tgl[aria-checked="true"]::after{transform:translateX(16px)}
+.tgl:disabled{opacity:.4;cursor:default}
+
+/* alerts */
+.alerts{display:flex;flex-direction:column;gap:10px;max-width:720px}
+.al{display:flex;gap:14px;padding:16px}
+.al .ic{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none}
+.al .ic.up{background:var(--under-soft);color:var(--under)}
+.al .ic.down{background:var(--above-soft);color:var(--above)}
+.al .ic.new{background:var(--accent-soft);color:var(--accent)}
+.al .ic.warn{background:var(--hover);color:var(--muted)}
+.al p{margin:0}
+.al small{color:var(--faint);font-size:12.5px}
+.al.unread{border-color:var(--accent-line)}
+.prefs{margin-top:24px;max-width:720px;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:980px){
+  .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lhead{display:none}
+  .lrow{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
+  .lrow .yp{grid-column:2;grid-row:1;text-align:right}
+  .lrow .rcell{grid-column:1/-1}
+  .lrow .st{grid-column:1}
+  .lrow .act{grid-column:2}
+  .chead{display:none}
+  .crow{grid-template-columns:minmax(0,1fr) auto;gap:4px 12px}
+  .crow > :nth-child(n+2):nth-child(-n+5){display:none}
+  .crow .mm{display:block}
+}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr;background:var(--bg)}
+  .side{display:none}
+  .topnav{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--side);position:sticky;top:0;z-index:10;overflow-x:auto}
+  .topnav .brand{margin-right:auto}
+  .topnav .brand b{font-size:18px}
+  .topnav .nav{display:flex;gap:2px}
+  .topnav .nav button{padding:7px 10px;font-size:14px;width:auto}
+  .pos{align-items:flex-start}
+  .main{padding-top:20px}
+}
+@media (max-width:560px){
+  .row2{grid-template-columns:1fr}
+  .svc-head{display:none}
+  .svc-row{grid-template-columns:1fr 1fr 36px;padding:10px}
+  .svc-row .nm-in{grid-column:1/-1}
+  .tile b{font-size:23px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .topnav .brand b{display:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.1 7-12a7 7 0 1 0-14 0c0 5.9 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="m7 14 5-5 5 5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  <symbol id="i-store" viewBox="0 0 24 24"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+</svg>
+
+<!-- ============ SETUP ============ -->
+<section class="screen on" id="s-setup">
+  <div class="setup">
+    <header>
+      <div class="brand"><div class="mark"><i></i></div><b>Ratecard</b></div>
+      <span class="chip mute">Prototype · sample data</span>
+    </header>
+    <div class="lead">
+      <h1>See how your prices compare, in 60 seconds.</h1>
+      <p>We read the public price lists of businesses near you, line them up against yours, and tell you where you're leaving money on the table.</p>
+    </div>
+
+    <div class="field">
+      <span class="flabel">Type of business</span>
+      <div class="seg" id="bizType" role="group" aria-label="Type of business">
+        <button aria-pressed="true" data-v="salon">Hair salon</button>
+        <button aria-pressed="false" data-v="barber">Barber</button>
+        <button aria-pressed="false" data-v="gym">Gym / studio</button>
+        <button aria-pressed="false" data-v="trades">Trades</button>
+      </div>
+      <div class="note" id="typeNote">The prototype only has sample data for a hair salon, so the report will still show salon results.</div>
+    </div>
+
+    <div class="field">
+      <label for="bizName">Business name</label>
+      <input type="text" id="bizName" value="Lumen Hair Studio">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label for="addr">Address</label>
+        <input type="text" id="addr" value="18 Market St, Riverside">
+      </div>
+      <div class="field">
+        <label for="radius">Compare within</label>
+        <select id="radius"><option value="1">1 km</option><option value="3" selected>3 km</option><option value="5">5 km</option></select>
+      </div>
+    </div>
+
+    <div class="field">
+      <span class="flabel">Your services</span>
+      <div class="svc-table">
+        <div class="svc-head"><span>Service</span><span>Your price</span><span>Bookings / wk</span><span></span></div>
+        <div id="svcRows"></div>
+        <button class="add-row" id="addRow"><svg class="ico"><use href="#i-plus"/></svg>Add a service</button>
+      </div>
+      <p class="hint">Bookings per week are optional. They're only used to estimate the monthly difference a price change makes.</p>
+    </div>
+
+    <div class="setup-foot">
+      <p>We only read prices businesses publish themselves. Your prices are never shown to anyone else.</p>
+      <button class="btn primary" id="go">Check my prices</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCAN ============ -->
+<section class="screen" id="s-scan">
+  <div class="scan">
+    <div class="card" role="status" aria-live="polite">
+      <h2>Checking the market</h2>
+      <p class="muted" style="margin:0" id="scanSub">Salons within 3 km of 18 Market St</p>
+      <ol class="steps" id="steps">
+        <li><span class="dot"></span><div>Finding salons nearby<small>14 found</small></div></li>
+        <li><span class="dot"></span><div>Reading their price lists<small>11 publish prices · 3 don't</small></div></li>
+        <li><span class="dot"></span><div>Matching services to yours<small>79 prices matched</small></div></li>
+        <li><span class="dot"></span><div>Working out suggestions<small>Ready</small></div></li>
+      </ol>
+      <div style="text-align:right"><button class="btn ghost" id="skip">Skip</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<section class="screen" id="s-app">
+  <div class="topnav">
+    <div class="brand"><div class="mark"><i></i></div><b>Ratecard</b></div>
+    <nav class="nav" aria-label="Sections">
+      <button data-page="report" aria-current="page">Prices</button>
+      <button data-page="comp">Competitors</button>
+      <button data-page="alerts">Alerts</button>
+    </nav>
+  </div>
+  <div class="app">
+    <aside class="side">
+      <div class="brand"><div class="mark"><i></i></div><b>Ratecard</b></div>
+      <nav class="nav" aria-label="Sections">
+        <button data-page="report" aria-current="page"><svg class="ico"><use href="#i-list"/></svg>Your prices</button>
+        <button data-page="comp"><svg class="ico"><use href="#i-pin"/></svg>Competitors</button>
+        <button data-page="alerts"><svg class="ico"><use href="#i-bell"/></svg>Alerts<span class="badge" id="alertBadge">3</span></button>
+      </nav>
+      <div class="biz">
+        <b id="bizLabel">Lumen Hair Studio</b>
+        <small id="bizAddr">18 Market St, Riverside</small>
+        <small>4.8★ · 172 reviews</small>
+        <button id="editSetup">Edit services</button>
+      </div>
+    </aside>
+
+    <div class="main">
+      <!-- Report -->
+      <div class="page on" id="p-report">
+        <div class="pghead">
+          <div>
+            <h1>Your prices</h1>
+            <p id="repSub">Compared with 11 salons within 3 km · checked today</p>
+          </div>
+          <div class="pos">
+            <span class="flabel">How you want to be positioned</span>
+            <div class="seg" id="posSeg" role="group" aria-label="Positioning">
+              <button aria-pressed="false" data-v="budget">Budget</button>
+              <button aria-pressed="true" data-v="mid">Mid-market</button>
+              <button aria-pressed="false" data-v="premium">Premium</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="tiles" id="tiles"></div>
+        <div class="card summary"><div class="spark"><svg class="ico"><use href="#i-spark"/></svg></div><div><p id="summary"></p><small>Written from the numbers below. Suggestions are estimates and you always decide.</small></div></div>
+
+        <div class="card list">
+          <div class="lhead"><span>Service</span><span>Yours</span><span>Local market</span><span>Status</span><span style="text-align:right">Suggestion</span></div>
+          <div id="rows"></div>
+        </div>
+        <div class="legend">
+          <span><i style="width:18px;height:8px;border-radius:4px;background:var(--band)"></i>Middle half of local prices</span>
+          <span><i style="width:2px;height:12px;background:var(--muted)"></i>Median</span>
+          <span><i style="width:10px;height:10px;border-radius:50%;background:var(--under)"></i>Your price</span>
+          <span><i style="width:10px;height:10px;border-radius:50%;border:2px dashed var(--accent)"></i>Suggested</span>
+        </div>
+        <p class="foot">Monthly figures assume your bookings stay the same after a change, which may not hold. Try one service at a time and watch your bookings for a few weeks.</p>
+      </div>
+
+      <!-- Competitors -->
+      <div class="page" id="p-comp">
+        <div class="pghead">
+          <div><h1>Competitors</h1><p id="compSub">14 salons within 3 km. Switch off any that aren't really your competition.</p></div>
+          <button class="btn" id="addComp"><svg class="ico"><use href="#i-plus"/></svg>Add a competitor</button>
+        </div>
+        <div class="card ctable">
+          <div class="chead"><span>Business</span><span>Distance</span><span>Rating</span><span>Prices found</span><span>Source</span><span style="text-align:right">Compare</span></div>
+          <div id="crows"></div>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      <div class="page" id="p-alerts">
+        <div class="pghead"><div><h1>Alerts</h1><p>We re-check every price list once a week.</p></div></div>
+        <div class="alerts" id="alerts"></div>
+        <div class="card prefs">
+          <div><b style="font-weight:550">Weekly email</b><div class="muted" style="font-size:14px">Every Monday, only when something changed.</div></div>
+          <button class="tgl" role="switch" aria-checked="true" aria-label="Weekly email" id="emailTgl"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+  <button class="x" id="dClose" aria-label="Close"><svg class="ico"><use href="#i-x"/></svg></button>
+  <div id="dBody"></div>
+</aside>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------------- Sample data ---------------- */
+const SERVICES = [
+  {k:'cut',     name:"Women's cut & blow-dry", price:55,  vol:18},
+  {k:'mens',    name:"Men's cut",              price:30,  vol:14},
+  {k:'blow',    name:"Blow-dry",               price:40,  vol:10},
+  {k:'colour',  name:"Full head colour",       price:100, vol:6},
+  {k:'foils',   name:"Half-head foils",        price:120, vol:7},
+  {k:'balayage',name:"Balayage",               price:195, vol:4},
+  {k:'keratin', name:"Keratin smoothing",      price:260, vol:1},
+  {k:'kids',    name:"Kids' cut (under 12)",   price:22,  vol:5},
+];
+const ME = {rating:4.8, reviews:172};
+const COMP = [
+  {n:'Glow Studio',      d:.4, r:4.6, rv:212, src:'glowstudio.example', p:{cut:65,mens:32,blow:45,colour:105,foils:140,balayage:200,keratin:230,kids:22}},
+  {n:'Hair by Priya',    d:1.0,r:4.9, rv:58,  src:null, why:'Says "prices on request"', p:{}},
+  {n:'The Cutting Room', d:.7, r:4.4, rv:98,  src:'thecuttingroom.example', p:{cut:60,mens:28,blow:42,colour:95,foils:130,balayage:180,kids:20}},
+  {n:'Maison Blanc',     d:1.1,r:4.9, rv:341, src:'maisonblanc.example', from:['balayage','keratin'], p:{cut:95,mens:45,blow:60,colour:140,foils:185,balayage:280,keratin:320}},
+  {n:'Shear Joy',        d:1.3,r:4.2, rv:64,  src:'shearjoy.example', p:{cut:48,mens:25,blow:35,colour:85,foils:110,kids:18}},
+  {n:'Fringe & Co',      d:1.6,r:4.7, rv:156, src:'fringeandco.example', p:{cut:72,mens:35,blow:48,colour:110,foils:150,balayage:210,keratin:240,kids:25}},
+  {n:'Halo Hair Bar',    d:1.8,r:4.5, rv:120, src:'halohairbar.example', p:{cut:68,blow:45,colour:100,foils:145,balayage:195,keratin:220}},
+  {n:'Riverside Barbers',d:1.9,r:4.6, rv:410, src:'riversidebarbers.example', p:{mens:30,kids:20}},
+  {n:'Studio Nine',      d:2.2,r:4.3, rv:77,  src:'studionine.example', p:{cut:58,mens:30,blow:40,colour:92,foils:125,balayage:175,keratin:199,kids:22}},
+  {n:'TopKnot',          d:2.3,r:4.1, rv:39,  src:null, why:'No website listed', p:{}},
+  {n:'Velvet Room',      d:2.5,r:4.8, rv:189, src:'velvetroom.example', from:['balayage'], p:{cut:78,mens:38,blow:50,colour:120,foils:160,balayage:230,keratin:260}},
+  {n:'Copper & Comb',    d:2.7,r:4.4, rv:54,  src:'copperandcomb.example', p:{cut:66,mens:33,blow:44,colour:98,foils:138,balayage:190,keratin:210,kids:24}},
+  {n:'Oak & Ash',        d:2.8,r:4.7, rv:88,  src:null, why:'Prices only on a booking platform we don’t read', p:{}},
+  {n:'Bloom Salon',      d:2.9,r:4.6, rv:133, src:'bloomsalon.example', p:{cut:70,mens:34,blow:46,colour:108,foils:142,balayage:205,keratin:225,kids:25}},
+].map(c=>({...c, on: Object.keys(c.p).length>0}));
+const ALERTS = [
+  {t:'up',   unread:true, h:'<b>Glow Studio</b> raised Women’s cut & blow-dry from <span class="num">$60</span> to <span class="num">$65</span>', s:'2 days ago · 0.4 km away · now $10 more than you'},
+  {t:'warn', unread:true, h:'<b>Studio Nine</b>’s price page couldn’t be read this week', s:'3 days ago · Their site was down. We’ll try again tomorrow and keep using last week’s prices.'},
+  {t:'new',  unread:true, h:'<b>Velvet Room</b> added Balayage, from <span class="num">$230</span>', s:'5 days ago · 2.5 km away'},
+  {t:'down', unread:false,h:'<b>Shear Joy</b> lowered Men’s cut from <span class="num">$28</span> to <span class="num">$25</span>', s:'1 week ago · 1.3 km away'},
+  {t:'new',  unread:false,h:'New salon nearby: <b>Oak & Ash</b>, 2.8 km away', s:'2 weeks ago · Added to your competitors automatically'},
+];
+
+/* ---------------- Helpers ---------------- */
+const $ = s=>document.querySelector(s), $$ = s=>[...document.querySelectorAll(s)];
+const money = v=>'$'+Math.round(v).toLocaleString('en-US');
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pct(sorted,q){ const i=(sorted.length-1)*q, lo=Math.floor(i), hi=Math.ceil(i); return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo); }
+const round5 = v=>Math.round(v/5)*5;
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('on'),2600); }
+const MIN_N = 4;
+let positioning='mid';
+
+/* ---------------- Setup ---------------- */
+function rowHTML(s,i){
+  return `<div class="svc-row" data-i="${i}">
+    <input class="nm-in" type="text" value="${esc(s.name)}" aria-label="Service name" data-f="name">
+    <div class="money"><input type="number" min="0" value="${s.price}" aria-label="Your price" data-f="price"></div>
+    <input type="number" min="0" value="${s.vol}" aria-label="Bookings per week" data-f="vol">
+    <button class="del" aria-label="Remove ${esc(s.name)}" data-del="${i}"><svg class="ico"><use href="#i-x"/></svg></button>
+  </div>`;
+}
+function renderSetup(){ $('#svcRows').innerHTML = SERVICES.map(rowHTML).join(''); }
+$('#svcRows').addEventListener('input',e=>{
+  const row=e.target.closest('.svc-row'); if(!row) return;
+  const s=SERVICES[+row.dataset.i], f=e.target.dataset.f;
+  s[f] = f==='name' ? e.target.value : Math.max(0, +e.target.value||0);
+});
+$('#svcRows').addEventListener('click',e=>{
+  const b=e.target.closest('[data-del]'); if(!b) return;
+  SERVICES.splice(+b.dataset.del,1); renderSetup();
+});
+$('#addRow').onclick=()=>{ SERVICES.push({k:null,name:'',price:0,vol:0}); renderSetup(); $$('.svc-row .nm-in').pop().focus(); };
+$('#bizType').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  $$('#bizType button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('#typeNote').style.display = b.dataset.v==='salon' ? 'none':'block';
+});
+
+/* ---------------- Scan ---------------- */
+let scanTimers=[];
+function show(id){ $$('.screen').forEach(s=>s.classList.toggle('on',s.id===id)); window.scrollTo(0,0); }
+$('#go').onclick=()=>{
+  $('#bizLabel').textContent = $('#bizName').value || 'Your business';
+  $('#bizAddr').textContent = $('#addr').value;
+  const r=$('#radius').value;
+  $('#scanSub').textContent = `Salons within ${r} km of ${$('#addr').value.split(',')[0]}`;
+  $('#repSub').textContent = `Compared with ${COMP.filter(c=>c.on).length} salons within ${r} km · checked today`;
+  show('s-scan');
+  const lis=$$('#steps li'); lis.forEach(l=>l.className='');
+  scanTimers.forEach(clearTimeout); scanTimers=[];
+  lis.forEach((li,i)=>{
+    scanTimers.push(setTimeout(()=>{ li.className='doing'; if(i) { lis[i-1].className='done'; lis[i-1].querySelector('.dot').innerHTML='<svg class="ico" style="width:13px;height:13px;stroke-width:3"><use href="#i-check"/></svg>'; } }, i*900));
+  });
+  scanTimers.push(setTimeout(finishScan, lis.length*900+300));
+};
+$('#skip').onclick=finishScan;
+function finishScan(){ scanTimers.forEach(clearTimeout); render(); show('s-app'); }
+$('#editSetup').onclick=()=>{ renderSetup(); show('s-setup'); };
+
+/* ---------------- Analysis ---------------- */
+function analyse(s){
+  const rows = COMP.filter(c=>c.on && s.k && c.p[s.k]!=null).map(c=>({c, price:c.p[s.k], from:(c.from||[]).includes(s.k)}));
+  const ps = rows.map(r=>r.price).sort((a,b)=>a-b);
+  const n = ps.length;
+  if(n<MIN_N) return {s, n, rows, status:'thin'};
+  const st = {lo:ps[0], p25:pct(ps,.25), med:pct(ps,.5), p75:pct(ps,.75), hi:ps[n-1]};
+  const target = positioning==='budget'?st.p25 : positioning==='premium'?st.p75 : st.med;
+  let status='ok', sug=null;
+  if(s.price < target*0.92){ status='under'; sug=Math.max(round5(target), s.price+5); }
+  else if(s.price > Math.max(target,st.p75)*1.05){ status='above'; }
+  const impact = sug ? (sug-s.price)*(s.vol||0)*4.33 : 0;
+  const more = ps.filter(p=>p>s.price).length;
+  const ratings = rows.map(r=>r.c.r).sort((a,b)=>a-b);
+  return {s, n, rows, ...st, target, status, sug, impact, more, rMed:pct(ratings,.5)};
+}
+function reason(a){
+  const {s,n}=a;
+  if(a.status==='thin') return `Only ${n} nearby ${n===1?'salon publishes':'salons publish'} a price for this, which isn't enough to compare fairly. We need at least ${MIN_N}.`;
+  const band=`The middle half of local salons charge ${money(a.p25)}–${money(a.p75)}.`;
+  const rate = ME.rating>=a.rMed ? ` Your ${ME.rating}★ rating is above the local median of ${a.rMed.toFixed(1)}★, which supports charging at least the middle of the market.` : '';
+  if(a.status==='under') return `${a.more} of ${n} salons nearby charge more than you. ${band}${rate}`;
+  if(a.status==='above'){
+    const higher=a.rows.filter(r=>r.price>=s.price).map(r=>r.c.n);
+    return `Only ${higher.length} of ${n} charge as much or more${higher.length?` (${higher.join(', ')})`:''}. ${band} Your rating helps justify a higher price, so there's no need to cut it if bookings are steady. If they've slowed, this is the first price to look at.`;
+  }
+  return `You're within the normal range for your area. ${band}`;
+}
+const LBL={under:'Underpriced',above:'Above market',ok:'In line',thin:'Not enough data'};
+const CHIP={under:'under',above:'above',ok:'ok',thin:'mute'};
+
+function strip(a, withComps){
+  if(a.status==='thin') return `<div class="faint" style="font-size:13px">${a.n} price${a.n===1?'':'s'} found</div>`;
+  const vals=[a.lo,a.hi,a.s.price, a.sug||a.s.price];
+  const min=Math.min(...vals)*0.92, max=Math.max(...vals)*1.05, x=v=>((v-min)/(max-min)*100).toFixed(2)+'%';
+  let h=`<div class="rng" aria-hidden="true"><div class="tr" style="left:${x(a.lo)};right:calc(100% - ${x(a.hi)})"></div>`;
+  if(withComps) h+=a.rows.map(r=>`<div class="cp" style="left:${x(r.price)}"></div>`).join('');
+  h+=`<div class="bd" style="left:${x(a.p25)};width:calc(${x(a.p75)} - ${x(a.p25)})"></div><div class="md" style="left:${x(a.med)}"></div>`;
+  if(a.sug) h+=`<div class="sug" style="left:${x(a.sug)}"></div>`;
+  h+=`<div class="you ${a.status}" style="left:${x(a.s.price)}"></div></div>`;
+  if(withComps) h+=`<div class="axis"><span>${money(min)}</span><span>${money(max)}</span></div>`;
+  return h;
+}
+
+/* ---------------- Render report ---------------- */
+let results=[];
+function render(){
+  results = SERVICES.filter(s=>s.name.trim()).map(analyse);
+  const comp = results.filter(a=>a.status!=='thin');
+  const under=comp.filter(a=>a.status==='under'), above=comp.filter(a=>a.status==='above');
+  const upside = under.reduce((t,a)=>t+a.impact,0);
+  const avg = comp.length ? comp.reduce((t,a)=>t+(a.s.price/a.med-1),0)/comp.length*100 : 0;
+  const posTxt = Math.abs(avg)<2 ? 'At market' : `${Math.abs(avg).toFixed(0)}% ${avg<0?'below':'above'}`;
+  $('#tiles').innerHTML=`
+    <div class="card tile"><span>Overall</span><b>${posTxt}</b><small>vs local median, on average</small></div>
+    <div class="card tile"><span>Underpriced</span><b style="color:var(--under)">${under.length}</b><small>of ${comp.length} services compared</small></div>
+    <div class="card tile"><span>Above market</span><b style="color:var(--above)">${above.length}</b><small>no action needed if busy</small></div>
+    <div class="card tile hl"><span>Possible extra</span><b>${money(upside)}<span style="font-size:15px;font-weight:500">/mo</span></b><small>if bookings hold</small></div>`;
+
+  const top=[...under].sort((a,b)=>b.impact-a.impact)[0];
+  let sum = comp.length ? `Your prices sit ${avg<0?'a little below':'a little above'} the local market overall. ` : '';
+  if(top) sum += `The biggest gap is <b>${esc(top.s.name)}</b>: ${top.more} of ${top.n} salons charge more than your ${money(top.s.price)}, and moving to ${money(top.sug)} would add about ${money(top.impact)} a month at your current bookings. `;
+  if(under.length>1) sum += `${under.filter(a=>a!==top).map(a=>esc(a.s.name)).join(' and ')} ${under.length>2?'are':'is'} also below the market. `;
+  if(above.length) sum += `${above.map(a=>esc(a.s.name)).join(', ')} ${above.length>1?'are':'is'} priced above most competitors; your ${ME.rating}★ rating helps justify that.`;
+  if(!under.length && !above.length) sum += 'Every service is within the normal range for your positioning.';
+  $('#summary').innerHTML=sum;
+
+  $('#rows').innerHTML = results.map((a,i)=>`
+    <button class="lrow" data-i="${i}" aria-label="${esc(a.s.name)}: ${LBL[a.status]}. Open details">
+      <span class="nm"><b>${esc(a.s.name)}</b><small>${a.status==='thin'?'Compared with '+a.n:a.n+' salons'} · median ${a.med?money(a.med):'–'}</small></span>
+      <span class="yp num">${money(a.s.price)}</span>
+      <span class="rcell">${strip(a,false)}</span>
+      <span class="st"><span class="chip ${CHIP[a.status]}">${LBL[a.status]}</span></span>
+      <span class="act">${a.sug?`<b>→ ${money(a.sug)}</b><small>+${money(a.impact)}/mo</small>`:'<span class="faint">—</span>'}</span>
+    </button>`).join('');
+  renderComp(); renderAlerts();
+}
+$('#posSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  positioning=b.dataset.v; $$('#posSeg button').forEach(x=>x.setAttribute('aria-pressed',x===b)); render();
+});
+$('#rows').addEventListener('click',e=>{ const r=e.target.closest('.lrow'); if(r) openDrawer(+r.dataset.i); });
+
+/* ---------------- Drawer ---------------- */
+let lastFocus=null;
+function openDrawer(i){
+  const a=results[i]; lastFocus=document.activeElement;
+  const list=[...a.rows.map(r=>({...r,me:false})), {c:{n:$('#bizLabel').textContent+' (you)', d:0, r:ME.rating, rv:ME.reviews}, price:a.s.price, me:true}].sort((x,y)=>y.price-x.price);
+  let rec='';
+  if(a.status==='under') rec=`<div class="rec under"><h3>Try ${money(a.sug)} <span class="muted" style="font-weight:500;font-size:15px">from ${money(a.s.price)}</span></h3><p>${reason(a)}</p><p class="num" style="font-size:13.5px">≈ +${money(a.impact)}/month at ${a.s.vol} bookings a week</p><div class="acts"><button class="btn primary" data-plan>Plan this change</button><button class="btn" data-dismiss>Keep my price</button></div></div>`;
+  else if(a.status==='above') rec=`<div class="rec above"><h3>Above most of the market</h3><p>${reason(a)}</p></div>`;
+  else rec=`<div class="rec ${a.status==='thin'?'ok':'ok'}"><h3>${a.status==='thin'?'Not enough data yet':'Priced in line'}</h3><p>${reason(a)}</p></div>`;
+  $('#dBody').innerHTML=`
+    <span class="chip ${CHIP[a.status]}">${LBL[a.status]}</span>
+    <h2 id="dTitle" style="margin-top:10px">${esc(a.s.name)}</h2>
+    ${a.status!=='thin'?`<div class="big">${strip(a,true)}</div>
+    <div class="stats"><div><span>Lowest</span><b>${money(a.lo)}</b></div><div><span>Median</span><b>${money(a.med)}</b></div><div><span>Highest</span><b>${money(a.hi)}</b></div><div><span>Compared</span><b>${a.n}</b></div></div>`:'<div style="height:16px"></div>'}
+    ${rec}
+    <h4>Prices found</h4>
+    <ul class="cplist">${list.map(r=>`<li class="${r.me?'me':''}"><b>${esc(r.c.n)}</b><span class="p">${r.from?'<span class="faint" style="font-size:12px">from </span>':''}${money(r.price)}</span>
+      <small>${r.me?`${r.c.r}★ · ${r.c.rv} reviews · your price`:`${r.c.d} km · ${r.c.r}★ (${r.c.rv}) · <a href="#" data-src>${esc(r.c.src)} <svg class="ico" style="width:12px;height:12px;vertical-align:-1px"><use href="#i-ext"/></svg></a> · checked 3 Nov`}</small></li>`).join('')}</ul>
+    <p class="foot" style="margin-top:14px">“From” prices are starting prices and may be higher for long hair. Spotted a wrong price? <a href="#" data-flag style="color:var(--accent)">Report it</a>.</p>`;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); $('#drawer').setAttribute('aria-hidden','false');
+  $('#dClose').focus();
+}
+function closeDrawer(){ $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); $('#drawer').setAttribute('aria-hidden','true'); lastFocus&&lastFocus.focus(); }
+$('#dClose').onclick=closeDrawer; $('#scrim').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape' && $('#drawer').classList.contains('on')) closeDrawer(); });
+$('#dBody').addEventListener('click',e=>{
+  if(e.target.closest('[data-plan]')){ toast('Added to your plan. We’ll remind you to check bookings in 3 weeks.'); closeDrawer(); }
+  else if(e.target.closest('[data-dismiss]')){ toast('Got it. We won’t suggest this again unless the market moves.'); closeDrawer(); }
+  else if(e.target.closest('[data-src]')){ e.preventDefault(); toast('In the real app this opens the saved copy of their price page.'); }
+  else if(e.target.closest('[data-flag]')){ e.preventDefault(); toast('Thanks. We’ll re-check that price.'); }
+});
+
+/* ---------------- Competitors ---------------- */
+function renderComp(){
+  const svcCount = SERVICES.filter(s=>s.k).length;
+  $('#compSub').textContent = `${COMP.length} salons within ${$('#radius').value} km. Switch off any that aren't really your competition.`;
+  $('#crows').innerHTML = COMP.map((c,i)=>{
+    const found=Object.keys(c.p).length, has=found>0;
+    return `<div class="crow ${c.on?'':'off'}">
+      <span><b>${esc(c.n)}</b>${has?'':`<small>${esc(c.why)}</small>`}<small class="mm">${c.d} km · ${c.r}\u2605 (${c.rv})${has?` · ${found} of ${svcCount} prices`:''}</small></span>
+      <span class="num">${c.d} km</span>
+      <span>${c.r}★ <span class="faint">(${c.rv})</span></span>
+      <span>${has?`${found} of ${svcCount}`:'<span class="faint">None</span>'}</span>
+      <span class="faint" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${has?esc(c.src):'—'}</span>
+      <button class="tgl" role="switch" aria-checked="${c.on}" aria-label="Compare with ${esc(c.n)}" data-c="${i}" ${has?'':'disabled'}></button>
+    </div>`;}).join('');
+}
+$('#crows').addEventListener('click',e=>{
+  const t=e.target.closest('[data-c]'); if(!t||t.disabled) return;
+  const c=COMP[+t.dataset.c]; c.on=!c.on;
+  $('#repSub').textContent = `Compared with ${COMP.filter(c=>c.on).length} salons within ${$('#radius').value} km · checked today`;
+  render(); toast(c.on?`${c.n} is back in your comparison.`:`${c.n} removed. Your report has been updated.`);
+});
+$('#addComp').onclick=()=>toast('In the real app you paste a website or search by name.');
+
+/* ---------------- Alerts ---------------- */
+const AIC={up:'i-up',down:'i-down',new:'i-store',warn:'i-warn'};
+function renderAlerts(){
+  $('#alerts').innerHTML = ALERTS.map(a=>`<div class="card al ${a.unread?'unread':''}"><div class="ic ${a.t}"><svg class="ico"><use href="#${AIC[a.t]}"/></svg></div><div><p>${a.h}</p><small>${a.s}</small></div></div>`).join('');
+  const n=ALERTS.filter(a=>a.unread).length, b=$('#alertBadge'); b.textContent=n; b.style.display=n?'':'none';
+}
+$('#emailTgl').onclick=e=>{ const t=e.currentTarget, on=t.getAttribute('aria-checked')!=='true'; t.setAttribute('aria-checked',on); toast(on?'Weekly email on.':'Weekly email off.'); };
+
+/* ---------------- Nav ---------------- */
+function go(page){
+  $$('.page').forEach(p=>p.classList.toggle('on',p.id==='p-'+page));
+  $$('.nav button').forEach(b=>b.toggleAttribute('aria-current',false));
+  $$(`.nav button[data-page="${page}"]`).forEach(b=>b.setAttribute('aria-current','page'));
+  if(page==='alerts'){ setTimeout(()=>{ ALERTS.forEach(a=>a.unread=false); const b=$('#alertBadge'); b.style.display='none'; },1500); }
+  window.scrollTo(0,0);
+}
+$$('.nav').forEach(n=>n.addEventListener('click',e=>{ const b=e.target.closest('[data-page]'); if(b) go(b.dataset.page); }));
+
+renderSetup();
+</script>
+</body>
+</html>
