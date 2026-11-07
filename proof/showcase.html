@@ -1,0 +1,1079 @@
+<title>Proof of Work</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one sticky header (screens + industry scenarios), then four screens that all redraw from the chosen industry.
+   Forest green + electric lime, cream cards, chunky grotesk with italic serif accents, bento tiles, sticker seal. */
+:root{
+  --page:#F4F2EA; --surface:#FFFFFF; --sunk:#ECEADF; --line:#E0DDD0; --line-2:#CDC9B8;
+  --ink:#0C2418; --muted:#4D5E54; --faint:#7F8A82;
+  --forest:#0A2B1C; --forest-2:#11392A; --forest-3:#1A4A35; --on-forest:#F1F5EC; --on-forest-2:#A8BFAF;
+  --lime:#D6F53F; --lime-ink:#0A2B1C; --lime-soft:#F0FAC6;
+  --green:#4FC864; --green-soft:#DCF3E0; --seal:#1B8F45;
+  --warn:#C2410C; --warn-soft:#FCEBDD; --del:#FBE4E0; --add:#E0F4E4; --me:#0A2B1C;
+  --shadow:0 1px 2px rgba(10,43,28,.06),0 18px 50px rgba(10,43,28,.14);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-serif:"Instrument Serif",ui-serif,Georgia,serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#06150E; --surface:#0E2419; --sunk:#0A1C13; --line:#1D3828; --line-2:#2A4A37;
+  --ink:#EAF2E6; --muted:#A3B8A9; --faint:#7A9183;
+  --forest:#0C3121; --forest-2:#123E2B; --forest-3:#1B4D37;
+  --lime-soft:#25300A; --green-soft:#0F3320; --seal:#5BD978; --warn:#F2A36B; --warn-soft:#2E1C10; --del:#3A1712; --add:#0F3320; --me:#1F6B45;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 18px 50px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#06150E; --surface:#0E2419; --sunk:#0A1C13; --line:#1D3828; --line-2:#2A4A37;
+  --ink:#EAF2E6; --muted:#A3B8A9; --faint:#7A9183;
+  --forest:#0C3121; --forest-2:#123E2B; --forest-3:#1B4D37;
+  --lime-soft:#25300A; --green-soft:#0F3320; --seal:#5BD978; --warn:#F2A36B; --warn-soft:#2E1C10; --del:#3A1712; --add:#0F3320; --me:#1F6B45;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 18px 50px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--forest)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.03em;margin:0;text-wrap:balance}
+em.it{font-family:var(--f-serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.dark{background:var(--forest);color:var(--on-forest)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:999px;font-weight:600;font-size:15px;border:1.5px solid var(--line-2);background:var(--surface);white-space:nowrap;transition:transform .15s;text-decoration:none}
+.btn:hover{transform:translateY(-1px)}
+.btn.lime{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
+.btn.forest{background:var(--forest);color:var(--on-forest);border-color:var(--forest)}
+.btn.ghost-d{background:transparent;color:var(--on-forest);border-color:rgba(241,245,236,.35)}
+.btn.sm{padding:8px 14px;font-size:14px}
+.btn .arr{width:24px;height:24px;border-radius:50%;background:var(--forest);color:var(--lime);display:grid;place-items:center;margin-right:-10px}
+.btn.forest .arr{background:var(--lime);color:var(--forest)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--green-soft);color:var(--seal)}
+.pill.lime{background:var(--lime);color:var(--lime-ink)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.dk{background:rgba(214,245,63,.14);color:var(--lime)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--seal)}
+.dark .eyebrow{color:var(--lime)}
+.spark{fill:var(--lime);stroke:var(--forest);stroke-width:1.4}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.04em;white-space:nowrap;flex:none}
+.logo .lm{width:24px;height:24px;border-radius:8px;background:var(--lime);display:grid;place-items:center}
+.logo .lm svg{width:15px;height:15px;stroke:var(--forest);stroke-width:3}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:15px;font-family:var(--f-display)}
+
+/* ---------- Header ---------- */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--on-forest);border-bottom:1px solid rgba(255,255,255,.08)}
+.hdr .r1{display:flex;align-items:center;gap:12px;height:58px}
+.screens{display:flex;gap:2px;margin-left:auto;padding:4px;border-radius:999px;background:rgba(255,255,255,.07);overflow-x:auto;scrollbar-width:none}
+.screens button{padding:7px 14px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--on-forest-2);white-space:nowrap}
+.screens button[aria-current="page"]{background:var(--lime);color:var(--lime-ink)}
+.theme{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--on-forest-2);flex:none;border:1px solid rgba(255,255,255,.15)}
+.theme:hover{color:var(--lime)}
+.r2{display:flex;align-items:center;gap:8px;padding-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.r2 .lbl{font-size:12px;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--on-forest-2);white-space:nowrap;margin-right:4px}
+.r2 button{display:inline-flex;align-items:center;gap:7px;padding:6px 13px;border-radius:999px;border:1px solid rgba(255,255,255,.16);font-size:13.5px;font-weight:500;color:var(--on-forest);white-space:nowrap}
+.r2 button i{width:8px;height:8px;border-radius:50%;background:var(--on-forest-2)}
+.r2 button[aria-pressed="true"]{border-color:var(--lime);color:var(--lime)}
+.r2 button[aria-pressed="true"] i{background:var(--lime)}
+.view{display:none}.view.on{display:block}
+
+.sealsvg{display:block;filter:drop-shadow(4px 4px 0 var(--forest))}
+.spin{animation:rot 36s linear infinite;transform-origin:60px 60px}
+@keyframes rot{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}.btn{transition:none}}
+
+.sk{display:grid;grid-template-columns:110px 1fr 30px;gap:10px;align-items:center;font-size:13.5px}
+.sk .b{height:8px;border-radius:8px;background:var(--sunk);overflow:hidden}
+.sk .b i{display:block;height:100%;border-radius:8px;background:var(--forest)}
+:root[data-theme="dark"] .sk .b i{background:var(--green)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sk .b i{background:var(--green)}}
+.sk b{font-family:var(--f-mono);font-weight:500;font-size:12.5px;text-align:right;font-variant-numeric:tabular-nums}
+
+/* ---------- Landing ---------- */
+.hero{position:relative;overflow:hidden;background:
+  radial-gradient(60% 55% at 50% 75%,rgba(79,200,100,.38),transparent 70%),
+  linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/72px 72px,
+  linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/72px 72px,
+  var(--forest);color:var(--on-forest)}
+.h-copy{text-align:center;padding-block:64px 0;max-width:900px;margin:0 auto}
+.h-copy h1{font-size:clamp(44px,7.4vw,94px);line-height:.98;letter-spacing:-.045em;margin:20px 0 22px}
+.h-copy h1 em.it{color:var(--lime);font-size:1.08em}
+.h-copy p{font-size:19px;color:var(--on-forest-2);max-width:600px;margin:0 auto 30px}
+.ctas{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.stage{position:relative;height:430px;max-width:980px;margin:64px auto 0}
+.window{position:absolute;left:50%;transform:translateX(-50%);top:0;width:min(560px,92%);height:500px;background:var(--surface);color:var(--ink);border-radius:26px 26px 0 0;padding:20px;box-shadow:0 -20px 80px rgba(0,0,0,.35);border:6px solid var(--forest-3);border-bottom:0}
+.window .wh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:10px}
+.window .wh b{font-family:var(--f-display);font-size:18px;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:16px}
+.wrow + .wrow{margin-top:4px}
+.wrow.top{background:var(--lime-soft)}
+.wrow .av{width:36px;height:36px;font-size:13px}
+.wrow .nm{flex:1;min-width:0}
+.wrow .nm b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wrow .nm small{color:var(--faint);font-size:12.5px}
+.wrow .sc{font-family:var(--f-display);font-weight:700;font-size:26px;letter-spacing:-.03em}
+.float{position:absolute;background:var(--surface);color:var(--ink);border-radius:20px;padding:14px 16px;box-shadow:var(--shadow);z-index:2}
+.f-proof{left:0;top:70px;width:250px;transform:rotate(-4deg)}
+.f-proof .hd{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.f-proof .hd .av{width:34px;height:34px;font-size:12px}
+.f-proof .hd b{font-size:14px;display:block;line-height:1.2}
+.f-proof .hd small{font-size:12px;color:var(--faint)}
+.f-proof .sk{grid-template-columns:72px 1fr 22px;font-size:12px}
+.f-stat{right:20px;top:40px;width:200px;transform:rotate(3deg)}
+.f-stat span{font-size:12.5px;color:var(--faint)}
+.f-stat b{display:block;font-family:var(--f-display);font-size:34px;letter-spacing:-.04em;line-height:1.1}
+.f-chat{right:-10px;top:200px;width:260px;transform:rotate(-2deg);padding:12px 14px}
+.f-chat .who{font-size:11.5px;color:var(--faint);display:flex;justify-content:space-between}
+.f-chat .bub{background:var(--sunk);border-radius:14px 14px 14px 4px;padding:8px 11px;font-size:13px;margin:6px 0}
+.f-chat .bub.me{background:var(--forest);color:var(--on-forest);border-radius:14px 14px 4px 14px;margin-left:26px}
+.f-avs{left:-10px;top:360px;display:flex;align-items:center;gap:10px;border-radius:999px;padding:8px 16px 8px 8px;transform:rotate(2deg)}
+.f-avs .stack{display:flex}
+.f-avs .stack .av{width:30px;height:30px;font-size:11px;border:2px solid var(--surface);margin-left:-8px}
+.f-avs .stack .av:first-child{margin-left:0}
+.f-avs b{font-size:13.5px}
+.f-seal{position:absolute;left:calc(50% + 230px);top:-78px;z-index:3}
+.h-spark{position:absolute;z-index:1}
+
+.sec{padding-block:96px}
+.sec h2{font-size:clamp(34px,5vw,60px);line-height:1;letter-spacing:-.045em;margin:14px 0 16px;max-width:780px}
+.sec h2 em.it{font-size:1.08em}
+.sec p.lede{color:var(--muted);font-size:18px;max-width:600px;margin:0 0 44px}
+.dark.sec p.lede{color:var(--on-forest-2)}
+.center{text-align:center}.center h2,.center p.lede{margin-left:auto;margin-right:auto}
+.steps3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;text-align:left}
+.step{padding:28px;border-radius:28px;min-height:290px;display:flex;flex-direction:column}
+.step .n{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:20px}
+.step h3{font-size:26px;margin:22px 0 8px}
+.step p{margin:0;font-size:15px;opacity:.85}
+.step .mini{margin-top:auto;padding-top:20px}
+.step.s1{background:var(--forest);color:var(--on-forest)} .step.s1 .n{background:var(--lime);color:var(--forest)}
+.step.s2{background:var(--lime);color:var(--lime-ink)} .step.s2 .n{background:var(--forest);color:var(--lime)}
+.step.s3{background:var(--green);color:var(--forest)} .step.s3 .n{background:var(--surface);color:var(--forest)}
+.chipbox{background:rgba(255,255,255,.12);border-radius:14px;padding:10px 12px;font-size:13.5px;display:flex;gap:8px;align-items:center;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.step.s2 .chipbox,.step.s3 .chipbox{background:rgba(10,43,28,.1)}
+
+.trust{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.tlist2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ti{background:var(--forest-2);border-radius:22px;padding:22px}
+.ti .ic{width:42px;height:42px;border-radius:14px;background:var(--lime);color:var(--forest);display:grid;place-items:center;margin-bottom:16px}
+.ti b{display:block;font-family:var(--f-display);font-size:18px;letter-spacing:-.02em;margin-bottom:4px}
+.ti span{color:var(--on-forest-2);font-size:14.5px}
+.cmp{background:var(--surface);color:var(--ink);border-radius:28px;padding:28px;min-width:0}
+.cmp h3{font-size:22px;margin-bottom:12px}
+.cmp table{width:100%;border-collapse:collapse;font-size:14.5px}
+.cmp th{text-align:left;font-weight:600;padding:10px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--faint)}
+.cmp td{padding:12px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.cmp td:first-child{font-weight:600;width:28%;padding-right:10px}
+.cmp .x{color:var(--faint);text-decoration:line-through;padding-right:12px}
+
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:minmax(180px,auto);gap:14px}
+.tile{border-radius:28px;padding:24px;position:relative;overflow:hidden;display:flex;flex-direction:column;gap:6px;text-align:left}
+button.tile{transition:transform .15s}
+button.tile:hover{transform:translateY(-3px)}
+.tile.big{grid-column:span 2;grid-row:span 2;background:var(--lime);color:var(--lime-ink);justify-content:flex-end}
+.tile.big h3{font-size:clamp(38px,5vw,62px);line-height:.92;text-transform:uppercase;letter-spacing:-.04em;font-weight:800}
+.tile.fo{background:var(--forest);color:var(--on-forest)}
+.tile.gr{background:var(--green);color:var(--forest)}
+.tile.wh{background:var(--surface);border:1px solid var(--line)}
+.tile.li{background:var(--lime-soft);border:1px solid var(--line)}
+.tile.wide{grid-column:span 2}
+.tile .tt{font-family:var(--f-display);font-weight:700;font-size:22px;letter-spacing:-.03em;line-height:1.1;padding-right:56px}
+.tile .ts{font-size:14px;opacity:.82}
+.tile .go{margin-top:auto;padding-top:14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+.tile .badge{position:absolute;top:20px;right:20px}
+.tile .num{font-family:var(--f-display);font-weight:800;font-size:54px;letter-spacing:-.05em;line-height:1}
+.tile .big-spark{position:absolute;right:-20px;top:-20px;width:160px;height:160px}
+.tile.big .spark,.cta .spark,.ai-note .spark{fill:var(--forest);stroke:none}
+.cta{background:var(--lime);color:var(--lime-ink);border-radius:36px;padding:64px;display:grid;grid-template-columns:1fr auto;gap:30px;align-items:center;margin:0 auto 96px;position:relative;overflow:hidden}
+.cta h2{font-size:clamp(34px,4.8vw,60px);line-height:1;letter-spacing:-.045em;margin:0;max-width:700px}
+.cta .cs{position:absolute;width:90px;height:90px;right:30%;top:-30px}
+.foot{background:var(--forest);color:var(--on-forest-2);padding-block:44px}
+.foot .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;font-size:14px}
+.foot .logo{color:var(--on-forest)}
+
+/* ---------- Challenge ---------- */
+.ch-bar{background:var(--forest-2);color:var(--on-forest)}
+.ch-bar .wrap{display:flex;align-items:center;gap:14px;padding-block:16px;flex-wrap:wrap}
+.co{display:flex;align-items:center;gap:12px;min-width:0}
+.co-logo{width:40px;height:40px;border-radius:12px;background:var(--lime);color:var(--forest);display:grid;place-items:center;font-family:var(--f-display);font-weight:800;font-size:20px;flex:none}
+.ch-bar b{display:block;font-family:var(--f-display);font-size:18px;letter-spacing:-.02em;line-height:1.2}
+.ch-bar small{color:var(--on-forest-2);font-size:13px}
+.timer{margin-left:auto;display:flex;align-items:center;gap:8px;font-family:var(--f-mono);font-size:15px;padding:8px 16px;border-radius:999px;background:var(--lime);color:var(--forest);font-weight:500;font-variant-numeric:tabular-nums}
+.timer i{width:8px;height:8px;border-radius:50%;background:var(--forest);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.ch{display:grid;grid-template-columns:260px minmax(0,1fr);gap:24px;padding-block:28px 64px}
+.ch > *{min-width:0}
+.tasks{display:flex;flex-direction:column;gap:8px}
+.task{display:flex;gap:12px;padding:14px;border-radius:18px;text-align:left;border:1.5px solid transparent}
+.task:hover{background:var(--surface)}
+.task[aria-current="step"]{background:var(--surface);border-color:var(--forest)}
+.task .tn{width:28px;height:28px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;font-size:13px;font-weight:700;flex:none;color:var(--muted)}
+.task.done .tn{background:var(--green);color:var(--forest)}
+.task[aria-current="step"] .tn{background:var(--forest);color:var(--lime)}
+.task b{display:block;font-size:15px;line-height:1.3}
+.task small{color:var(--faint);font-size:12.5px}
+.ai-note{margin-top:14px;padding:18px 44px 18px 18px;border-radius:22px;background:var(--lime);color:var(--lime-ink);font-size:14px;position:relative}
+.ai-note b{display:block;font-family:var(--f-display);font-size:18px;letter-spacing:-.02em;margin-bottom:4px}
+.ai-note svg.s{position:absolute;right:14px;top:16px;width:24px;height:24px}
+.panel{display:none}.panel.on{display:block}
+.panel h2{font-size:38px;letter-spacing:-.04em;margin:0 0 6px}
+.panel > p{color:var(--muted);margin:0 0 20px;max-width:68ch}
+.work{padding:22px;display:flex;flex-direction:column;gap:16px}
+.queue{display:flex;gap:8px;flex-wrap:wrap}
+.queue span{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:12px;background:var(--sunk);font-size:13.5px;font-weight:500;color:var(--muted)}
+.queue span.now{background:var(--lime-soft);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--forest)}
+.queue span.done{color:var(--seal)}
+.msg{background:var(--sunk);border-radius:18px;padding:16px 18px;font-size:15px}
+.msg header{display:flex;justify-content:space-between;font-size:13px;color:var(--faint);margin-bottom:6px;gap:8px;flex-wrap:wrap}
+.msg header b{color:var(--ink)}
+.blk{overflow-x:auto;border:1px solid var(--line);border-radius:18px}
+.blk table{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+.blk th{text-align:left;font-weight:600;font-size:12.5px;color:var(--faint);padding:10px 14px;background:var(--sunk)}
+.blk td{padding:10px 14px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+.blk tr.hl td{background:var(--lime-soft);font-weight:600}
+.blk .note{padding:10px 14px;font-size:13px;color:var(--muted);border-top:1px solid var(--line)}
+.diff{font-family:var(--f-mono);font-size:13px;line-height:1.7;min-width:520px}
+.diff .ln{display:block;padding:0 14px;white-space:pre}
+.diff .ln.d{background:var(--del)} .diff .ln.a{background:var(--add)}
+.diff .fh{padding:8px 14px;background:var(--sunk);font-size:12px;color:var(--faint)}
+.ctx{display:flex;gap:8px;flex-wrap:wrap}
+.editor{border:1.5px solid var(--line-2);border-radius:18px;background:var(--surface);overflow:hidden}
+.editor:focus-within{border-color:var(--forest)}
+.editor textarea{display:block;width:100%;min-height:170px;border:0;background:transparent;padding:16px 18px;resize:vertical;font-size:15px;line-height:1.55}
+.editor textarea:focus{outline:none}
+.editor footer{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--line);font-size:13px;color:var(--faint);flex-wrap:wrap}
+.editor footer .btn{margin-left:auto}
+.chatbox{display:flex;flex-direction:column;height:540px;overflow:hidden}
+.chatbox .ch-h{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.meter{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.meter .m{width:90px;height:8px;border-radius:8px;background:var(--sunk);overflow:hidden}
+.meter .m i{display:block;height:100%;transition:width .6s,background .6s}
+.log{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:10px}
+.bb{max-width:78%;padding:11px 15px;border-radius:20px 20px 20px 6px;background:var(--sunk);font-size:15px}
+.bb.me{align-self:flex-end;background:var(--me);color:var(--on-forest);border-radius:20px 20px 6px 20px}
+.bb small{display:block;font-size:11.5px;opacity:.65;margin-top:3px}
+.typing{color:var(--faint);font-size:13px;padding-left:4px}
+.compose{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+.compose input{flex:1;border:1.5px solid var(--line-2);border-radius:999px;padding:11px 18px;background:var(--page);min-width:0}
+.compose input:focus{outline:none;border-color:var(--forest)}
+.compose .btn{width:46px;padding:0;height:46px}
+.hints{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 12px}
+.hints button{font-size:12.5px;padding:5px 10px;border-radius:999px;background:var(--sunk);color:var(--muted)}
+.hints button:hover{color:var(--ink)}
+.fq{padding:26px}
+.fq .q{font-family:var(--f-display);font-weight:700;font-size:28px;letter-spacing:-.03em;line-height:1.15;margin:10px 0 16px;text-wrap:balance}
+.fq .ref{background:var(--lime-soft);border-radius:16px;padding:14px 16px;font-size:14.5px;margin-bottom:16px}
+.done-card{padding:44px 28px;text-align:center;background:var(--forest);color:var(--on-forest);border:0}
+.done-card h3{font-size:clamp(32px,4vw,44px);letter-spacing:-.04em;margin:20px 0 8px}
+.done-card h3 em.it{color:var(--lime)}
+.done-card p{color:var(--on-forest-2);max-width:460px;margin:0 auto 24px}
+.done-card .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* ---------- Employer ---------- */
+.em-band{background:var(--forest);color:var(--on-forest);padding-block:36px 120px}
+.em-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.em-head h1{font-size:clamp(34px,5vw,56px);letter-spacing:-.045em;line-height:1;margin-top:10px}
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:-88px;margin-bottom:22px}
+.funnel .card{padding:18px 20px;box-shadow:var(--shadow);border:0}
+.funnel span{font-size:13.5px;color:var(--muted)}
+.funnel b{display:block;font-family:var(--f-display);font-weight:800;font-size:44px;letter-spacing:-.05em;line-height:1.1;font-variant-numeric:tabular-nums}
+.funnel .hl{background:var(--lime);color:var(--lime-ink)}
+.funnel .hl span{color:var(--lime-ink);opacity:.75}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.filters button{padding:8px 16px;border-radius:999px;border:1.5px solid var(--line-2);font-size:14px;font-weight:600;color:var(--muted);background:var(--surface)}
+.filters button[aria-pressed="true"]{background:var(--forest);color:var(--lime);border-color:var(--forest)}
+.em{display:grid;grid-template-columns:minmax(0,1fr) 420px;gap:18px;align-items:start;padding-bottom:64px}
+.em > *{min-width:0}
+.cands{padding:8px}
+.cand{display:grid;grid-template-columns:28px minmax(0,1.3fr) 64px 90px 84px;gap:16px;align-items:center;padding:12px 14px;border-radius:18px;width:100%;text-align:left}
+.cand + .cand{margin-top:2px}
+.cand:hover{background:var(--sunk)}
+.cand[aria-selected="true"]{background:var(--lime-soft)}
+.cand .rk{font-family:var(--f-mono);font-size:13px;color:var(--faint)}
+.cand .who{display:flex;gap:12px;align-items:center;min-width:0}
+.cand .who .av{width:40px;height:40px;font-size:14px}
+.cand .who b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cand .who small{color:var(--faint);font-size:12.5px}
+.cand .st{justify-self:end}
+.score{font-family:var(--f-display);font-weight:800;font-size:32px;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+.minibars{display:flex;gap:5px;align-items:flex-end;height:28px}
+.minibars i{width:12px;background:var(--forest);border-radius:4px}
+.minibars i.lo{background:var(--warn)}
+:root[data-theme="dark"] .minibars i:not(.lo){background:var(--green)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .minibars i:not(.lo){background:var(--green)}}
+.detail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 130px);padding:24px;max-height:calc(100vh - 150px);overflow:auto}
+.detail .dh{display:flex;gap:14px;align-items:center}
+.detail .dh .av{width:54px;height:54px;font-size:19px}
+.detail h3{font-size:24px}
+.detail .big{display:flex;align-items:baseline;gap:10px;margin:22px 0 10px;padding:16px 18px;border-radius:20px;background:var(--forest);color:var(--on-forest)}
+.detail .big .score{font-size:60px;color:var(--lime)}
+.detail .big span.m{color:var(--on-forest-2);font-size:14px}
+.ev{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+.ev .e{background:var(--sunk);border-radius:18px;padding:14px 16px}
+.ev .e header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ev .e header b{font-size:14px}
+.ev blockquote{margin:0;font-family:var(--f-serif);font-size:19px;line-height:1.3}
+.ev .why{font-size:13.5px;color:var(--muted);margin-top:6px}
+.flag{display:flex;gap:10px;padding:12px 14px;border-radius:16px;background:var(--warn-soft);color:var(--warn);font-size:14px;margin-top:16px}
+.checked{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--green-soft);color:var(--seal);font-size:14px;margin-top:16px}
+.dact{display:flex;gap:8px;margin-top:20px;flex-wrap:wrap}
+
+/* ---------- Proof ---------- */
+.p-band{background:var(--forest);padding-block:56px 180px;position:relative;overflow:hidden}
+.p-band .ps{position:absolute}
+.proof{max-width:920px;margin:-160px auto 0;padding-bottom:80px;position:relative}
+.cert{padding:44px;border-radius:32px;border:0;box-shadow:var(--shadow)}
+.cert-top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}
+.cert h1{font-size:clamp(44px,7vw,78px);line-height:.95;letter-spacing:-.05em;margin:14px 0 12px}
+.lvl{display:flex;gap:8px;flex-wrap:wrap}
+.cert-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:30px 0}
+.cert-meta div{background:var(--sunk);border-radius:18px;padding:14px 16px;min-width:0}
+.cert-meta span{display:block;font-size:12.5px;color:var(--faint)}
+.cert-meta b{font-weight:600}
+.cert-body{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.h4{font-size:13px;font-weight:600;color:var(--seal);margin:0 0 14px;display:flex;align-items:center;gap:8px}
+.sks{display:flex;flex-direction:column;gap:12px}
+.cert-body .sk{grid-template-columns:150px 1fr 34px}
+.overall{display:flex;align-items:center;gap:14px;margin-top:20px;padding:14px 16px;border-radius:18px;background:var(--lime);color:var(--lime-ink)}
+.overall b{font-family:var(--f-display);font-weight:800;font-size:40px;letter-spacing:-.05em;line-height:1}
+.overall span{font-size:14px}
+.short{background:var(--forest);color:var(--on-forest);border-radius:24px;padding:22px}
+.short .h4{color:var(--lime)}
+.short p{margin:0;font-family:var(--f-serif);font-size:23px;line-height:1.3}
+.short small{display:block;color:var(--on-forest-2);font-size:12.5px;margin-top:12px}
+.psec{margin-top:18px;padding:28px}
+.samples{display:flex;flex-direction:column;gap:12px}
+.sample{display:grid;grid-template-columns:170px 1fr;gap:20px;background:var(--sunk);border-radius:20px;padding:18px 20px}
+.sample .lab{font-size:13.5px;color:var(--muted)}
+.sample .lab b{display:block;color:var(--ink);font-size:15px}
+.sample blockquote{margin:0;font-family:var(--f-serif);font-size:20px;line-height:1.32}
+.tl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tl li{border-radius:20px;padding:18px;font-size:14px;background:var(--green-soft);color:var(--muted)}
+.tl li .n{width:28px;height:28px;border-radius:50%;background:var(--forest);color:var(--lime);display:grid;place-items:center;font-weight:700;font-size:13px;margin-bottom:12px}
+.tl li b{display:block;color:var(--ink);font-size:15px;margin-bottom:2px}
+.share{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:start}
+.badge-card{aspect-ratio:1/1;max-width:100%;border-radius:28px;background:var(--forest);color:var(--on-forest);padding:24px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.badge-card .bs{position:absolute}
+.badge-card .top{display:flex;justify-content:space-between;align-items:center}
+.badge-card .logo{font-size:16px;color:var(--on-forest)}
+.badge-card .logo .lm{width:20px;height:20px}
+.badge-card .mid{margin-top:auto}
+.badge-card .mid b{display:block;font-family:var(--f-display);font-weight:800;font-size:30px;letter-spacing:-.04em;line-height:1}
+.badge-card .mid span{color:var(--lime);font-family:var(--f-serif);font-style:italic;font-size:26px}
+.badge-card .bot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;font-size:12.5px;color:var(--on-forest-2)}
+.share h3{font-size:24px;margin-bottom:6px}
+.share p{margin:0 0 16px;color:var(--muted)}
+.share .acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.li-entry{border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+.li-entry .lg{width:48px;height:48px;border-radius:10px;background:var(--lime);display:grid;place-items:center;flex:none}
+.li-entry .lg svg{width:26px;height:26px;stroke:var(--forest);stroke-width:3}
+.li-entry b{display:block}
+.li-entry small{display:block;color:var(--faint);font-size:13px}
+.li-entry .sc{display:inline-block;margin-top:8px;font-size:13px;font-weight:600;border:1.5px solid var(--line-2);border-radius:999px;padding:4px 12px}
+.urlbox{background:var(--sunk);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.urlbox code{font-family:var(--f-mono);font-size:12px;word-break:break-all;flex:1;min-width:0;color:var(--muted)}
+.urlbox button{font-size:13px;font-weight:600;color:var(--seal);white-space:nowrap}
+.verify{display:flex;align-items:center;gap:16px;padding:20px 22px;margin-top:18px;flex-wrap:wrap;background:var(--forest);color:var(--on-forest);border:0}
+.verify .ok{width:44px;height:44px;border-radius:50%;background:var(--lime);color:var(--forest);display:grid;place-items:center;flex:none}
+.verify .r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.owner{margin-top:14px;font-size:13.5px;color:var(--faint);text-align:center}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--forest);color:var(--on-forest);padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center;border:1.5px solid var(--lime)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (max-width:1000px){
+  .steps3,.trust{grid-template-columns:1fr}
+  .step{min-height:0}
+  .bento{grid-template-columns:repeat(2,1fr)}
+  .tile.big{grid-row:auto;min-height:280px}
+  .em{grid-template-columns:1fr}
+  .detail{position:static;max-height:none}
+  .ch{grid-template-columns:1fr}
+  .tasks{flex-direction:row;overflow-x:auto}
+  .task{min-width:200px}
+  .ai-note{display:none}
+  .cta{grid-template-columns:1fr;padding:40px}
+  .f-chat{right:0}
+  .f-seal{left:auto;right:30px}
+  .share{grid-template-columns:1fr}
+  .badge-card{width:300px}
+}
+@media (max-width:720px){
+  .hdr .logo span.w,.screens .w{display:none}
+  .screens button{padding:7px 11px}
+  .stage{height:420px}
+  .f-proof{left:-10px;top:250px;width:210px}
+  .f-stat{right:-6px;top:-24px;width:160px}
+  .f-stat b{font-size:26px}
+  .f-chat,.f-seal,.f-avs,.h-spark,.wrow .pill{display:none}
+  .window{width:94%}
+  .tlist2{grid-template-columns:1fr}
+  .bento{grid-template-columns:1fr}
+  .tile.big,.tile.wide{grid-column:auto}
+  .funnel{grid-template-columns:repeat(2,1fr)}
+  .cand{grid-template-columns:minmax(0,1fr) auto;gap:8px 12px}
+  .cand .rk{display:none}
+  .cand .minibars{grid-column:1;height:22px}
+  .cand .st{grid-column:2}
+  .cert{padding:28px 22px}
+  .cert-top{flex-direction:column-reverse}
+  .cert-meta{grid-template-columns:1fr 1fr}
+  .cert-body{grid-template-columns:1fr}
+  .cert-body .sk{grid-template-columns:120px 1fr 30px}
+  .sample{grid-template-columns:1fr;gap:6px}
+  .tl{grid-template-columns:1fr 1fr}
+  .panel h2{font-size:30px}
+  .sec{padding-block:72px}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/><path d="M4 19.5V21h16"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></symbol>
+  <symbol id="i-dot" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="spark" viewBox="0 0 48 48"><path d="M24 2c1.6 12.3 9.7 20.4 22 22-12.3 1.6-20.4 9.7-22 22-1.6-12.3-9.7-20.4-22-22C14.3 22.4 22.4 14.3 24 2z"/></symbol>
+  <symbol id="seal" viewBox="0 0 120 120">
+    <defs><path id="sealpath" d="M60,60 m-43,0 a43,43 0 1,1 86,0 a43,43 0 1,1 -86,0"/></defs>
+    <circle cx="60" cy="60" r="56" style="fill:#D6F53F;stroke:#0A2B1C;stroke-width:2.5"/>
+    <g class="spin"><text style="font-family:'JetBrains Mono',monospace;font-size:8px;fill:#0A2B1C;font-weight:500"><textPath href="#sealpath" textLength="268" lengthAdjust="spacing">VERIFIED ✦ PROOF OF WORK ✦ VERIFIED ✦ PROOF OF WORK ✦</textPath></text></g>
+    <circle cx="60" cy="60" r="31" style="fill:#0A2B1C"/>
+    <path d="m47 60 9 9 17-17" style="fill:none;stroke:#D6F53F;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round"/>
+  </symbol>
+</svg>
+
+<header class="hdr">
+  <div class="wrap">
+    <div class="r1">
+      <span class="logo"><span class="lm"><svg class="ico"><use href="#i-check"/></svg></span><span class="w">proofofwork</span></span>
+      <nav class="screens" id="screens" aria-label="Screens">
+        <button data-v="landing">Landing</button>
+        <button data-v="challenge">Challenge</button>
+        <button data-v="employer">Employer</button>
+        <button data-v="proof">Proof<span class="w"> page</span></button>
+      </nav>
+      <button class="theme" id="theme" aria-label="Switch light or dark"><svg class="ico"><use href="#i-moon"/></svg></button>
+    </div>
+    <div class="r2" id="inds" role="group" aria-label="Industry scenario"><span class="lbl">Scenario</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="view" id="v-landing"></section>
+  <section class="view" id="v-challenge"></section>
+  <section class="view" id="v-employer"></section>
+  <section class="view" id="v-proof"></section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ======================================================================
+   Scenario data. Every person and company is fictional.
+   ====================================================================== */
+const IND = {
+support:{
+  label:'Customer support', short:'Support', company:'Northwind Outdoor', logo:'N', role:'Customer Support Specialist',
+  badge:'Customer Support', level:'Advanced', id:'7F3A-21C9', variant:'customers and orders', reviewer:'a support team lead',
+  heroStat:['Time to shortlist','2 days','↓ from 3 weeks'],
+  tasks:[['Reply to 3 tickets','about 20 min'],['Live chat','about 10 min'],['About your work','3 questions · 5 min']],
+  work:{title:'Reply to 3 tickets', intro:'You work at Northwind, an outdoor gear shop. Read the policy if you need it, then reply as you would at work.',
+    queue:[['#1 Returns','done'],['#2 Billing','now'],['#3 Product','']],
+    from:'Dana Whitfield', meta:'Order NW-40912 · 40 min ago',
+    body:"Hi, I've just checked my bank and you've taken $189 twice for the same jacket. I only ordered ONE. I need this money back before rent goes out on Monday. Please sort this out.",
+    pills:[['Order shows 1 jacket',''],['2 card payments · same minute',''],['Rent due Monday','warn']],
+    tool:['Refund policy','Policy: agents can refund clear duplicate charges up to $250 without approval.'],
+    answer:"Hi Dana,\n\nI'm sorry. That's a stressful thing to find, especially with rent coming up. I've checked your order and you're right: you ordered one jacket but the payment went through twice.\n\nI've refunded the duplicate $189 now, so you won't need to wait for the billing team. You'll see it in 1–3 working days.",
+    send:'Send reply', sent:'Reply sent. 2 of 3 tickets done.'},
+  live:{title:'Live chat', intro:'Jordan is an AI playing a customer. They react to what you say, just like a real person would.',
+    name:'Jordan', sub:"Delivery hasn't arrived · order NW-41377", color:'#6B5B95', meter:'Mood', start:85, goodHigh:false,
+    open:["Hi. My order was meant to arrive on Tuesday. It's Thursday. Tracking hasn't moved in 3 days.","This is the THIRD time I'm asking. Nobody tells me anything."],
+    hints:["You shouldn't have had to ask three times.","Give me two minutes to call the courier.","I'll send a replacement today by express."],
+    replies:[["Two minutes. Fine. But I've heard that before.",70],["OK… that's actually the first real answer I've had. Thank you.",40],["Friday works. Can you email me the new tracking number?",18]],
+    heroMe:"You shouldn't have had to. I've got your order open now.", done:'Chat resolved. On to the last step.'},
+  follow:{q:'In ticket #2 you refunded the duplicate charge yourself instead of passing it to billing. Why?',
+    ref:"I've refunded the duplicate $189 now, so you won't need to wait for the billing team.",
+    answer:"The policy lets agents refund clear duplicates up to $250. Both payments were the same amount in the same minute, so it wasn't a judgement call, and she'd mentioned rent on Monday. Sending it to billing adds 2–3 days she doesn't have."},
+  skills:['Empathy','Accuracy','Policy','Writing'], stats:[48,31,6,2],
+  cands:[
+    {n:'Amara Okafor',c:'#B4532A',loc:'Remote · 3 yrs support',s:89,k:[92,88,84,90],t:'41 min',strong:true,ev:[
+      ['Empathy',92,"“I'm sorry. That's a stressful thing to find, especially with rent coming up.”","Named the customer's real worry before fixing anything."],
+      ['Policy',84,"“I've refunded the duplicate $189 now, so you won't need to wait for the billing team.”",'Used refund authority correctly: a clear duplicate under the $250 limit.'],
+      ['De-escalation',86,"“I'm not going to guess, so give me two minutes to call the courier.”","The AI customer's mood went from angry to calm in 4 messages."]]},
+    {n:'Daniel Mensah',c:'#2E6B8A',loc:'Leeds · 5 yrs retail',s:85,k:[88,84,86,82],t:'44 min',strong:true,ev:[
+      ['Accuracy',84,'“Your order shows one jacket, and I can see two payments at 14:02.”','Checked the facts before replying.'],
+      ['Policy',86,"“The Ridge 3 is rated to 0°C, so for −5°C I'd go with the Summit.”","Correct product advice and didn't over-sell."]]},
+    {n:'Sofia Ruiz',c:'#7A4E9E',loc:'Remote · 2 yrs support',s:82,k:[90,78,76,86],t:'38 min',strong:true,ev:[
+      ['Empathy',90,"“A broken pole two days before a trip is the worst timing. Let's get you sorted today.”",'Warm and specific.'],
+      ['Policy',76,'Offered a full refund and a replacement for ticket #1.','More generous than the policy allows. Worth asking about in interview.']]},
+    {n:'Liam Chen',c:'#3E7D5A',loc:'Manchester · 1 yr support',s:77,k:[72,86,80,68],t:'45 min',ev:[
+      ['Accuracy',86,'Found the duplicate payment and the correct order number.','Strong on facts.'],
+      ['Writing',68,'Replies were correct but brief and formal.','Could come across as cold to upset customers.']]},
+    {n:'Tom Becker',c:'#8A6B2E',loc:'Bristol · 4 yrs support',s:71,k:[70,80,74,64],t:'29 min',flag:"Follow-up answers didn't match the submission. He couldn't explain the refund choice he'd made.",ev:[
+      ['Writing',64,'Replies were polished but generic, and very similar in style across all three tickets.','Combined with the follow-up, worth a closer look.']]}],
+  proof:{skills:[['Empathy',92],['Accuracy',88],['Policy judgement',84],['Writing',90],['De-escalation',86]],overall:89,pct:91,
+    summary:"Fixes the problem first, then explains it. Spotted a duplicate charge and refunded it within policy. Calmed an angry customer in four messages without promising anything that couldn't be delivered.",
+    samples:[['Ticket #2','Billing · duplicate charge',"“I've refunded the duplicate $189 now, so you won't need to wait for the billing team.”"],
+      ['Live chat','Late delivery, angry customer',"“You shouldn't have had to ask three times. I'm not going to guess, so give me two minutes to call the courier.”"],
+      ['Follow-up','Why that choice',"“Both payments were the same amount in the same minute, so it wasn't a judgement call.”"]]}
+},
+sales:{
+  label:'Sales', short:'Sales', company:'Kestrel', logo:'K', role:'Sales Development Rep',
+  badge:'Sales Development', level:'Advanced', id:'2B81-90DE', variant:'the account and the buyer', reviewer:'a sales manager',
+  heroStat:['Meetings booked','3 of 5','in the role-play stage'],
+  tasks:[['Write a cold email','about 20 min'],['Discovery call','about 10 min'],['About your work','3 questions · 5 min']],
+  work:{title:'Write a cold email', intro:'Kestrel sells booking software to dental clinics. Read the account notes, then write the first email to the owner.',
+    from:'Account notes · Brightsmile Dental', meta:'3 clinics · 22 staff · Leeds',
+    body:'Opened a third clinic (Headingley) in August. Posted a job ad for a receptionist two weeks ago. Google reviews mention “couldn’t get through on the phone” 4 times this year. Booking is by phone and a paper diary. Owner: Dr Priya Patel.',
+    pills:[['Third clinic opened in Aug',''],['Hiring a receptionist',''],['4 reviews: “couldn’t get through”','warn']],
+    tool:['Product one-pager','Kestrel: online booking, text reminders, about 30% fewer no-shows on average.'],
+    answer:"Subject: Phones at the new Headingley clinic\n\nHi Dr Patel,\n\nCongratulations on opening Headingley. I noticed you're hiring another receptionist, and a few recent reviews mention patients not getting through on the phone.\n\nKestrel lets patients book and reschedule online, so fewer calls reach the front desk. Clinics your size usually see about 30% fewer no-shows from the text reminders alone.\n\nWorth 15 minutes next week? If it's not a fit, I'll say so.\n\nKofi",
+    send:'Send email', sent:'Email sent. Dr Patel replied, on to the call.'},
+  live:{title:'Discovery call', intro:'Dr Patel is an AI playing a busy, sceptical buyer. Your job is to book a next step without overselling.',
+    name:'Dr Patel', sub:'Brightsmile Dental · replied to your email', color:'#2F5E9E', meter:'Interest', start:20, goodHigh:true,
+    open:["I've got five minutes between patients.","Honestly, we tried an online booking thing in 2022. Patients hated it."],
+    hints:["That's fair. What went wrong last time?","Patients can still phone. This just takes the easy calls off the desk.","Could we try it at Headingley only for a month?"],
+    replies:[["Clunky, mostly. Older patients kept phoning anyway.",38],["Hm. If they can still phone, that's different. What would a trial look like?",66],["Thursday at 1 works. Send me something short beforehand.",90]],
+    heroMe:"That's fair. What went wrong last time?", done:'Meeting booked. On to the last step.'},
+  follow:{q:'You opened with the new clinic and the reviews, not the product. Why?',
+    ref:"Congratulations on opening Headingley. I noticed you're hiring another receptionist…",
+    answer:"A new site plus a receptionist job ad usually means the phones are already a problem. The reviews confirm it in their patients' own words. Leading with that shows I did the work, and the product only matters once they agree the problem exists."},
+  skills:['Research','Messaging','Objections','Next step'], stats:[64,40,7,3],
+  cands:[
+    {n:'Kofi Asante',c:'#2E6B8A',loc:'Remote · 2 yrs SDR',s:88,k:[90,86,84,92],t:'39 min',strong:true,ev:[
+      ['Research',90,"“I noticed you're hiring another receptionist, and a few recent reviews mention patients not getting through.”",'Found two buying signals in the notes and used both.'],
+      ['Objections',84,'“That’s fair. What went wrong last time: the patients, or the setup?”',"Asked before answering. The AI buyer's interest rose from 20 to 90."]]},
+    {n:'Hannah Brooks',c:'#A23E5C',loc:'Bristol · 1 yr retail sales',s:84,k:[82,88,80,86],t:'35 min',strong:true,ev:[
+      ['Messaging',88,'Subject line: “Your Headingley phones”','Short, specific and easy to reply to.']]},
+    {n:'Marcus Webb',c:'#3E7D5A',loc:'Remote · 3 yrs SDR',s:81,k:[78,84,82,80],t:'42 min',strong:true,ev:[
+      ['Next step',80,'“Can I send a 2-minute video before we talk?”','A good, low-pressure ask.']]},
+    {n:'Ines Ferreira',c:'#7A4E9E',loc:'Lisbon · career changer',s:73,k:[70,78,64,76],t:'44 min',ev:[
+      ['Objections',64,'Answered “patients hated it” with a list of features.','Missed the chance to ask what went wrong.']]},
+    {n:'Ryan Cole',c:'#8A6B2E',loc:'Manchester · 4 yrs sales',s:69,k:[60,74,70,72],t:'21 min',flag:"The follow-up couldn't explain why the email was written the way it was, and the email didn't use the account notes.",ev:[
+      ['Research',60,'No mention of the new clinic or the reviews.','A generic opening that could go to any clinic.']]}],
+  proof:{skills:[['Account research',90],['Messaging',86],['Objection handling',84],['Booking next steps',92],['Tone',88]],overall:88,pct:90,
+    summary:'Does the homework before writing. Found two buying signals and built the email around them. On the call, asked what went wrong last time before pitching, and booked a meeting without overselling.',
+    samples:[['Cold email','Opening line',"“Congratulations on opening Headingley. I noticed you're hiring another receptionist…”"],
+      ['Discovery call','Handling “patients hated it”','“That’s fair. What went wrong last time: the patients, or the setup?”'],
+      ['Follow-up','Why that opening','“A new site plus a receptionist job ad usually means the phones are already a problem.”']]}
+},
+data:{
+  label:'Data analysis', short:'Data', company:'Tidepool', logo:'T', role:'Data Analyst',
+  badge:'Data Analysis', level:'Advanced', id:'5C04-7A1F', variant:'the dataset', reviewer:'a senior analyst',
+  heroStat:['Right answer found by','26%','of people who applied'],
+  tasks:[['Find out why churn rose','about 25 min'],['Stakeholder chat','about 10 min'],['About your work','3 questions · 5 min']],
+  work:{title:'Find out why churn rose', intro:'Tidepool sells meal-kit subscriptions. Churn jumped in March. Use the data to find out why, then write a short answer for the Head of Growth.',
+    from:'Elena Ruiz, Head of Growth', meta:'Question · this morning',
+    body:'Churn went from 6% to 9% in March. The board meets on Friday. What happened?',
+    block:{type:'table',head:['Monthly churn','Jan','Feb','Mar'],rows:[
+      ['All customers','6.1%','5.9%','9.0%'],
+      [{t:'Joined on the 50%-off promo',hl:1},{t:'7.0%',hl:1},{t:'6.8%',hl:1},{t:'21.4%',hl:1}],
+      ['Everyone else','5.8%','5.6%','5.9%']],
+      note:'Box price rose by $4 on 1 March for everyone. The promo cohort (2,300 customers, joined Dec–Jan) lost its discount after 2 boxes.'},
+    pills:[['Price +$4 on 1 Mar',''],['Promo ended for Dec–Jan joiners',''],['Board meets Friday','warn']],
+    tool:['SQL notebook','In the real challenge this opens a notebook with the orders, subscriptions and promo tables loaded.'],
+    answer:"Short version: it's mostly the promo cohort, not the price rise.\n\nChurn among customers who joined on the 50%-off promo went from 6.8% to 21.4% in March, when their discount ran out. Everyone else stayed flat at 5.9%, even though the $4 price rise hit them too.\n\nWithout the promo cohort, March churn is 5.9%, about the same as January. I'd look at how the promo ends before reversing the price change.",
+    send:'Send to Elena', sent:'Sent. Elena has a follow-up question.'},
+  live:{title:'Stakeholder chat', intro:'Elena is an AI playing a busy stakeholder who wants a simple answer. Keep it accurate under pressure.',
+    name:'Elena', sub:'Head of Growth · needs a slide for Friday', color:'#A23E5C', meter:'Confidence', start:30, goodHigh:true,
+    open:["Thanks. So it was the price rise, right? That's what the CEO thinks.","I just need one line for the slide."],
+    hints:["I can see why it looks that way, but customers without the promo barely changed.","One line: churn rose because the promo discount ended.","Can I show you one chart split by promo vs everyone else?"],
+    replies:[["Wait, so if we reverse the price change, churn doesn't come back down?",50],["OK. Can you split it by promo vs everyone else on one chart?",72],["Perfect, that's the slide. Thanks for not just telling me what I wanted to hear.",92]],
+    heroMe:'I can see why it looks that way. Can I show you one split?', done:'Elena has the slide. On to the last step.'},
+  follow:{q:'You split churn by signup channel before looking at the price. Why?',
+    ref:"It's mostly the promo cohort, not the price rise.",
+    answer:"A jump that big in one month usually comes from one group, so I segment first. The promo ended for the Dec–Jan joiners at the same time as the price change, and I needed to separate the two before telling the board anything."},
+  skills:['Accuracy','Insight','Rigour','Communication'], stats:[37,26,5,1],
+  cands:[
+    {n:'Mei Tanaka',c:'#3E7D5A',loc:'Remote · 2 yrs analyst',s:91,k:[94,90,88,90],t:'44 min',strong:true,ev:[
+      ['Insight',90,'“Without the promo cohort, March churn is 5.9%, about the same as January.”','Separated two causes that happened in the same month.'],
+      ['Communication',90,"“Short version: it's mostly the promo cohort, not the price rise.”",'Answer first, detail after. Ready for a board slide.']]},
+    {n:'Oliver Grant',c:'#2E6B8A',loc:'Edinburgh · 3 yrs BI',s:84,k:[88,82,86,76],t:'47 min',strong:true,ev:[
+      ['Rigour',86,'Checked the promo cohort size before drawing conclusions.','Careful and thorough.'],
+      ['Communication',76,'Wrote 400 words and put the answer in paragraph 3.','Right answer, hard to find.']]},
+    {n:'Aisha Bello',c:'#7A4E9E',loc:'Remote · bootcamp grad',s:80,k:[84,78,80,78],t:'45 min',strong:true,ev:[
+      ['Accuracy',84,'All figures matched the source tables.','No calculation errors.']]},
+    {n:'Ben Walsh',c:'#8A6B2E',loc:'Leeds · 1 yr analyst',s:71,k:[76,62,72,74],t:'40 min',ev:[
+      ['Insight',62,'Concluded that the price rise caused the churn.','Did not segment, so missed the promo effect.']]},
+    {n:'Chloe Martin',c:'#B4532A',loc:'Remote · 2 yrs marketing',s:66,k:[70,64,60,70],t:'38 min',flag:'Agreed with the stakeholder that it was the price rise, then gave a different answer in the follow-up.',ev:[
+      ['Rigour',60,'Changed the conclusion under pressure in the chat.','Worth discussing in interview.']]}],
+  proof:{skills:[['Accuracy',94],['Finding the cause',90],['Rigour',88],['Explaining results',90],['Holding a position',92]],overall:91,pct:94,
+    summary:'Finds the real cause before answering. Separated a promo ending from a price rise in the same month. Gave a one-line answer a board can use, and held to it when the stakeholder pushed for a different one.',
+    samples:[['Written answer','Opening line',"“Short version: it's mostly the promo cohort, not the price rise.”"],
+      ['Stakeholder chat','When pushed','“I can see why it looks that way, but customers without the promo barely changed.”'],
+      ['Follow-up','Why segment first','“A jump that big in one month usually comes from one group, so I segment first.”']]}
+},
+books:{
+  label:'Bookkeeping', short:'Bookkeeping', company:'Brightdesk Accounting', logo:'B', role:'Bookkeeper',
+  badge:'Bookkeeping', level:'Advanced', id:'9E62-3B70', variant:"the café's transactions", reviewer:'a chartered accountant',
+  heroStat:['Fully reconciled','4 of 22','finished candidates'],
+  tasks:[['Reconcile October','about 25 min'],['Client chat','about 10 min'],['About your work','3 questions · 5 min']],
+  work:{title:'Reconcile October', intro:'You keep the books for Corner Café, a Brightdesk client. Match the bank statement to the ledger and note anything that doesn’t add up.',
+    from:'Brightdesk task', meta:'Corner Café · October · due today',
+    body:'The bank and the ledger are out by $112.50. Find out why and fix what you can.',
+    block:{type:'table',head:['Date','Bank','Ledger','Status'],rows:[
+      ['3 Oct','Fresh Farms −$286.40','−$286.40',{t:'Matched',p:'ok'}],
+      ['9 Oct','Card fees −$62.50','—',{t:'Missing in ledger',p:'warn'}],
+      ['14 Oct','Oatly Wholesale −$350.00','−$350.00 (twice)',{t:'Entered twice',p:'warn'}],
+      ['21 Oct','Square payout +$1,904.10','+$1,904.10',{t:'Matched',p:'ok'}],
+      ['28 Oct','Transfer to J. Okoye −$400.00','—',{t:'Unclear',p:'warn'}]]},
+    pills:[['Supplier bill entered twice?',''],['Card fees not recorded',''],['$400 transfer to the owner','warn']],
+    tool:['Chart of accounts','Owner drawings: 3100 · Bank fees: 6200 · Cost of goods: 5000.'],
+    answer:"Three things explain the $112.50:\n\n1. Oatly Wholesale $350 was entered twice on 14 Oct. Deleted the duplicate.\n2. Card processing fees of $62.50 were missing. Added to Bank fees (6200).\n3. The $400 transfer to J. Okoye on 28 Oct isn't in the ledger. It looks like an owner drawing, but I've asked the client before recording it.\n\nThe bank and ledger will agree once item 3 is confirmed.",
+    send:'Submit reconciliation', sent:'Submitted. The client has a question.'},
+  live:{title:'Client chat', intro:'Joy runs Corner Café. She’s an AI playing a stressed client who doesn’t speak accounting.',
+    name:'Joy Okoye', sub:'Owner, Corner Café', color:'#8A6B2E', meter:'Stress', start:80, goodHigh:false,
+    open:["Got your message about the $400. Is that a problem??","Also the tax estimate says I owe $1,800 but there's no money in the account. How??"],
+    hints:["Not a problem. Was that you paying yourself?","Profit is what the café earned on paper. Cash is what's left after you pay yourself.","Putting aside $150 a week would cover it by the deadline."],
+    replies:[["Oh. Yes, that was me paying myself. I didn't know that mattered.",62],["So profit isn't the same as money in the bank? Nobody ever explained that.",40],["OK, putting aside $150 a week makes sense. Thank you, I feel a lot better.",15]],
+    heroMe:'Not a problem at all. Was that you paying yourself?', done:'Joy is reassured. On to the last step.'},
+  follow:{q:"You didn't record the $400 transfer yourself. Why ask first?",
+    ref:"It looks like an owner drawing, but I've asked the client before recording it.",
+    answer:"Owner drawings aren't an expense, so recording it wrongly changes the profit and the tax bill. It was probably a drawing, but it could have been a loan or a supplier paid from the wrong account. One message to Joy is cheaper than fixing it at year end."},
+  skills:['Accuracy','Categorising','Compliance','Client care'], stats:[29,22,4,1],
+  cands:[
+    {n:'Rosa Delgado',c:'#7A4E9E',loc:'Remote · 4 yrs bookkeeping',s:90,k:[94,90,88,86],t:'36 min',strong:true,ev:[
+      ['Accuracy',94,'Found all three differences and showed they add up to $112.50.','Fully reconciled.'],
+      ['Client care',86,"“Profit is what the café earned on paper. Cash is what's left after you pay yourself.”",'Explained it without jargon.']]},
+    {n:'Peter Nowak',c:'#2E6B8A',loc:'Remote · 6 yrs accounts',s:85,k:[90,84,86,78],t:'33 min',strong:true,ev:[
+      ['Compliance',86,'Flagged the transfer as needing confirmation.','The right call.'],
+      ['Client care',78,'Used terms like “accrual basis” with a worried client.','Accurate but hard to follow.']]},
+    {n:'Fatima Khan',c:'#3E7D5A',loc:'Birmingham · AAT student',s:80,k:[82,80,76,80],t:'40 min',strong:true,ev:[
+      ['Categorising',80,'Put card fees in the right account.','Solid fundamentals.']]},
+    {n:'James Ito',c:'#B4532A',loc:'Remote · 2 yrs admin',s:72,k:[80,70,58,78],t:'38 min',ev:[
+      ['Compliance',58,'Recorded the $400 as a business expense.','Would have understated profit and tax.']]},
+    {n:'Lucy Hart',c:'#8A6B2E',loc:'Remote · 3 yrs bookkeeping',s:64,k:[66,68,62,60],t:'12 min',flag:"Finished every task in 12 minutes, and the follow-up answers didn't match the reconciliation.",ev:[
+      ['Accuracy',66,'Found the duplicate but not the missing card fees.','Partly reconciled.']]}],
+  proof:{skills:[['Accuracy',94],['Categorising',90],['Compliance',88],['Client communication',86],['Organisation',90]],overall:90,pct:92,
+    summary:"Accurate and careful. Found all three reasons the books didn't match and showed they added up. Asked the client about an unclear transfer instead of guessing, and explained profit versus cash in plain words.",
+    samples:[['Reconciliation','The fix','“Oatly Wholesale $350 was entered twice on 14 Oct. Deleted the duplicate.”'],
+      ['Client chat','Explaining tax',"“Profit is what the café earned on paper. Cash is what's left after you pay yourself.”"],
+      ['Follow-up','Why ask first','“One message to Joy is cheaper than fixing it at year end.”']]}
+},
+dev:{
+  label:'Software development', short:'Developer', company:'Fernway', logo:'F', role:'Software Developer',
+  badge:'Software Development', level:'Skilled', id:'4D19-C5A8', variant:'the codebase and the bug', reviewer:'a senior engineer',
+  heroStat:['Caught the hidden bug','6 of 34','finished candidates'],
+  tasks:[['Review a pull request','about 25 min'],['Chat with the PM','about 10 min'],['About your work','3 questions · 5 min']],
+  work:{title:'Review a pull request', intro:'Fernway’s checkout has a bug report. A teammate opened a fix. Review it as you would at work.',
+    from:'Pull request #482 · Leo', meta:'Fix: discount applied twice at checkout',
+    body:'Customers with a promo code were getting the discount twice. This should fix it. Can you review before I merge?',
+    block:{type:'diff',file:'src/checkout/total.js',lines:[
+      [' ','export function checkoutTotal(cart, promo) {'],
+      ['-','  let total = applyPromo(cart.subtotal, promo);'],
+      ['-','  total = applyPromo(total, promo);'],
+      ['+','  let total = cart.subtotal;'],
+      ['+','  if (promo) total = applyPromo(total, promo);'],
+      [' ','  return Math.round(total * 100) / 100 + cart.shipping;'],
+      [' ','}']]},
+    pills:[['Bug: discount applied twice',''],['No tests in this PR','warn'],['Promo launches Friday','']],
+    tool:['applyPromo()','applyPromo(amount, promo) subtracts a fixed amount or a percentage. It does not stop at zero.'],
+    answer:"Thanks, this fixes the double discount. Two things before merging:\n\n1. applyPromo doesn't stop at zero. A $20 code on a $15 cart gives a total of −$5 plus shipping. Can we clamp it with Math.max(0, …)?\n\n2. Could you add tests for \"promo applied once\" and \"promo bigger than subtotal\"? Then this can't quietly come back.\n\nHappy to pair on the tests if that helps.",
+    send:'Submit review', sent:'Review submitted. The PM wants to talk.'},
+  live:{title:'Chat with the PM', intro:'Sam is an AI playing a product manager who wants the fix shipped today.',
+    name:'Sam', sub:'Product manager · promo launches Friday', color:'#3E7D5A', meter:'Pressure', start:80, goodHigh:false,
+    open:['Is the discount fix good to go? Marketing launches the promo on Friday.','Can we just merge it and add tests next sprint?'],
+    hints:["Nearly. One edge case could make totals negative.","It's about an hour with tests. Worth it before a campaign.","Tell marketing it's on track for Friday."],
+    replies:[["Negative totals? Would that charge people nothing, or break checkout?",60],["OK, if it's an hour, do it today. What do I tell marketing?",35],["Great, I'll tell them it's on track. Thanks for catching that.",12]],
+    heroMe:"Nearly. One edge case first, about an hour with tests.", done:'Sam is happy. On to the last step.'},
+  follow:{q:'You asked for tests instead of approving with a note. Why?',
+    ref:'Could you add tests for "promo applied once" and "promo bigger than subtotal"?',
+    answer:'This bug already shipped once without anyone noticing, and the promo launch will send a lot of traffic through this exact function. Two small tests take less time than another incident during a campaign.'},
+  skills:['Correctness','Code quality','Communication','Judgement'], stats:[52,34,6,2],
+  cands:[
+    {n:'Arjun Mehta',c:'#B4532A',loc:'Remote · 1 yr developer',s:87,k:[92,84,86,88],t:'42 min',strong:true,ev:[
+      ['Correctness',92,'“A $20 code on a $15 cart gives a total of −$5 plus shipping.”','Found the hidden edge case with a concrete example.'],
+      ['Communication',86,'“Happy to pair on the tests if that helps.”','Firm on quality, kind in tone.']]},
+    {n:'Nora Lindqvist',c:'#2F5E9E',loc:'Stockholm · 2 yrs frontend',s:84,k:[86,88,80,82],t:'39 min',strong:true,ev:[
+      ['Code quality',88,'Suggested moving the rounding into one helper.','Good eye for structure.']]},
+    {n:'Tunde Bakare',c:'#3E7D5A',loc:'Lagos · bootcamp grad',s:80,k:[84,78,76,82],t:'44 min',strong:true,ev:[
+      ['Judgement',82,'Proposed shipping the fix behind a flag on Friday.','Practical under pressure.']]},
+    {n:'Will Turner',c:'#8A6B2E',loc:'Remote · 3 yrs developer',s:70,k:[62,80,72,66],t:'31 min',ev:[
+      ['Correctness',62,'Approved without spotting the negative total.','Comments were mostly about naming.']]},
+    {n:'Zoe Adams',c:'#7A4E9E',loc:'Remote · career changer',s:63,k:[70,66,58,58],t:'27 min',flag:"Suggested a fix in the review but couldn't explain how it worked in the follow-up.",ev:[
+      ['Communication',58,'Review text was long and repeated itself.','Worth a closer look alongside the follow-up.']]}],
+  proof:{skills:[['Correctness',92],['Code quality',84],['Testing',88],['Communication',86],['Judgement under pressure',88]],overall:87,pct:89,
+    summary:"Reads code for what can go wrong, not just what changed. Found an edge case the fix missed and asked for tests before merging. Held that line with a product manager under deadline pressure, with a plan that still made Friday.",
+    samples:[['Code review','The catch','“A $20 code on a $15 cart gives a total of −$5 plus shipping.”'],
+      ['PM chat','Under pressure',"“It's about an hour with tests. Worth it before a campaign.”"],
+      ['Follow-up','Why tests','“Two small tests take less time than another incident during a campaign.”']]}
+}};
+const ORDER=['support','sales','data','books','dev'];
+const VIEWS=['landing','challenge','employer','proof'];
+
+/* ======================================================================
+   Helpers and state
+   ====================================================================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ini=n=>n.split(' ').map(w=>w[0]).join('');
+const first=n=>n.split(' ')[0];
+const svg=(id,cls='ico',st='')=>`<svg class="${cls}" ${st?`style="${st}"`:''}><use href="#${id}"/></svg>`;
+const arr=`<span class="arr">${svg('i-arrow','ico','width:14px;height:14px')}</span>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
+const S={ind:'support',view:'landing',sel:0,filt:'all',task:1,jt:0,done:{},finished:false,secs:38*60+12};
+const D=()=>IND[S.ind];
+
+/* ======================================================================
+   Header
+   ====================================================================== */
+function renderHeader(){
+  $$('#screens button').forEach(b=>b.toggleAttribute('aria-current',false));
+  $(`#screens button[data-v="${S.view}"]`).setAttribute('aria-current','page');
+  const box=$('#inds'); box.querySelectorAll('button').forEach(b=>b.remove());
+  box.insertAdjacentHTML('beforeend',ORDER.map(k=>`<button data-i="${k}" aria-pressed="${k===S.ind}"><i></i>${IND[k].label}</button>`).join(''));
+}
+
+/* ======================================================================
+   Landing
+   ====================================================================== */
+function renderLanding(){
+  const d=D(), c=d.cands, top=c[0];
+  $('#v-landing').innerHTML=`
+  <div class="hero"><div class="wrap">
+    <div class="h-copy">
+      <span class="pill dk">${svg('i-dot','ico','width:12px;height:12px')}Showing: ${esc(d.label)} at ${esc(d.company)}</span>
+      <h1>Show the work.<br>Skip the <em class="it">CV.</em></h1>
+      <p>Candidates do a short challenge from the real job. You see what they did, how they think, and a score you can check.</p>
+      <div class="ctas"><button class="btn lime" data-go="employer">I'm hiring ${arr}</button><button class="btn ghost-d" data-go="challenge">Prove my skills</button></div>
+    </div>
+    <div class="stage" aria-hidden="true">
+      <svg class="h-spark spark" style="left:6%;top:-30px;width:42px;height:42px"><use href="#spark"/></svg>
+      <svg class="h-spark spark" style="right:14%;top:150px;width:26px;height:26px"><use href="#spark"/></svg>
+      <div class="window">
+        <div class="wh"><b>${esc(d.role)} · Shortlist</b><span class="pill ok">${d.stats[2]} strong</span></div>
+        ${c.map((x,i)=>`<div class="wrow ${i?'':'top'}"><div class="av" style="background:${x.c}">${ini(x.n)}</div><div class="nm"><b>${esc(x.n)}</b><small>${esc(x.loc.split(' · ')[0])} · ${x.t}</small></div>${i?'':'<span class="pill lime">Verified</span>'}<span class="sc">${x.s}</span></div>`).join('')}
+      </div>
+      <div class="float f-proof">
+        <div class="hd"><div class="av" style="background:${top.c}">${ini(top.n)}</div><div><b>${esc(top.n)}</b><small>${esc(d.short)} · ${d.level}</small></div></div>
+        <div style="display:flex;flex-direction:column;gap:7px">${d.proof.skills.slice(0,3).map(([n,v])=>`<div class="sk"><span>${esc(n.split(' ')[0])}</span><span class="b"><i style="width:${v}%"></i></span><b>${v}</b></div>`).join('')}</div>
+      </div>
+      <div class="float f-stat"><span>${d.heroStat[0]}</span><b>${d.heroStat[1]}</b><span class="pill ok" style="margin-top:6px">${d.heroStat[2]}</span></div>
+      <div class="float f-chat"><div class="who"><span>${esc(d.live.name)} · AI role-play</span><span>live</span></div><div class="bub">${esc(d.live.open[0])}</div><div class="bub me">${esc(d.live.heroMe)}</div></div>
+      <div class="float f-avs"><div class="stack">${c.slice(1,4).map(x=>`<div class="av" style="background:${x.c}">${x.n[0]}</div>`).join('')}<div class="av" style="background:var(--forest-3)">+</div></div><b>${d.stats[1]} finished this week</b></div>
+      <div class="f-seal"><svg class="sealsvg" width="118" height="118"><use href="#seal"/></svg></div>
+    </div>
+  </div></div>
+
+  <div class="sec center"><div class="wrap">
+    <span class="eyebrow">${svg('spark','spark','width:14px;height:14px')}How it works</span>
+    <h2>One link. A shortlist with the <em class="it">work</em> attached.</h2>
+    <p class="lede">No quizzes, no personality tests. Each challenge is a small slice of the real job.</p>
+    <div class="steps3">
+      <div class="step s1"><div class="n">1</div><h3>Pick a challenge</h3><p>Choose the role and level. Add your own policies, products or data if you like.</p><div class="mini"><div class="chipbox">${svg('i-check','ico','width:16px')}${esc(d.role)} · 45 min</div></div></div>
+      <div class="step s2"><div class="n">2</div><h3>Share one link</h3><p>Put it in your job ad. Candidates do it when it suits them, on any device.</p><div class="mini"><div class="chipbox mono">${svg('i-link','ico','width:16px')}proofofwork.app/c/${d.company.split(' ')[0].toLowerCase()}</div></div></div>
+      <div class="step s3"><div class="n">3</div><h3>Read the shortlist</h3><p>Scores by skill, with quotes from their actual work so you can see why.</p><div class="mini"><div class="chipbox">${d.stats[1]} finished · ${d.stats[2]} strong · ${d.stats[3]} flagged</div></div></div>
+    </div>
+  </div></div>
+
+  <div class="sec dark"><div class="wrap">
+    <span class="eyebrow">${svg('spark','spark','width:14px;height:14px')}Why it's trusted</span>
+    <h2>Hard to fake. <em class="it" style="color:var(--lime)">Easy</em> to check.</h2>
+    <p class="lede">A score only means something if copying, outsourcing or guessing can't produce it.</p>
+    <div class="trust">
+      <div class="tlist2">
+        <div class="ti"><div class="ic">${svg('i-shuffle')}</div><b>Unique versions</b><span>Names, numbers and details change for every candidate.</span></div>
+        <div class="ti"><div class="ic">${svg('i-chat')}</div><b>Questions about their work</b><span>A short follow-up asks why they made each choice.</span></div>
+        <div class="ti"><div class="ic">${svg('i-eye')}</div><b>Evidence for every score</b><span>Scores quote the exact lines that earned them.</span></div>
+        <div class="ti"><div class="ic">${svg('i-user')}</div><b>Checked by experts</b><span>People who do the job spot-check scores every week.</span></div>
+      </div>
+      <div class="cmp"><h3>A CV says. A proof shows.</h3><table>
+        <thead><tr><th></th><th>CV</th><th>Proof</th></tr></thead>
+        <tbody>
+          <tr><td>Skill</td><td class="x">“Excellent ${esc(d.skills[1].toLowerCase())}”</td><td>${esc(d.proof.samples[0][2])}</td></tr>
+          <tr><td>Pressure</td><td class="x">“Works well under pressure”</td><td>${esc(d.proof.samples[1][2])}</td></tr>
+          <tr><td>Judgement</td><td class="x">“Detail-oriented”</td><td>${esc(d.proof.samples[2][2])}</td></tr>
+        </tbody></table></div>
+    </div>
+  </div></div>
+
+  <div class="sec"><div class="wrap">
+    <span class="eyebrow">${svg('spark','spark','width:14px;height:14px')}Industries</span>
+    <h2>Five jobs. Five <em class="it">real</em> challenges.</h2>
+    <p class="lede">Pick one to see the challenge, the shortlist and the proof for that job.</p>
+    <div class="bento">
+      <div class="tile big"><svg class="big-spark spark"><use href="#spark"/></svg><h3>Built for people who do the work</h3></div>
+      ${['fo','gr','wh','li','fo'].map((cls,i)=>{const k=ORDER[i],x=IND[k];return `<button class="tile ${cls}" data-ind="${k}">${k===S.ind?'<span class="pill lime badge">Showing</span>':''}<span class="tt">${esc(x.label)}</span><span class="ts">${esc(x.tasks[0][0])} · ${esc(x.tasks[1][0])}</span><span class="go">Try it ${svg('i-arrow','ico','width:15px;height:15px')}</span></button>`}).join('')}
+      <div class="tile gr"><span class="num">45 min</span><span class="ts">instead of a CV screen, a phone screen and a take-home nobody reads.</span></div>
+      <div class="tile wh wide"><span class="tt">Free for professionals. Always.</span><span class="ts">Your proof belongs to you. Add it to LinkedIn and reuse it for every job you apply to.</span></div>
+    </div>
+  </div></div>
+
+  <div class="wrap"><div class="cta"><svg class="cs spark"><use href="#spark"/></svg>
+    <h2>Your next hire has already done the <em class="it">work.</em></h2>
+    <button class="btn forest" data-go="employer">See the ${esc(d.short.toLowerCase())} shortlist ${arr}</button></div></div>
+  <div class="foot"><div class="wrap"><span class="logo"><span class="lm">${svg('i-check')}</span>proofofwork</span><span>People decide. Scores explain. Candidates own their proof.</span></div></div>`;
+}
+
+/* ======================================================================
+   Challenge
+   ====================================================================== */
+function blockHTML(b){
+  if(!b) return '';
+  if(b.type==='table'){
+    const cell=c=>{ if(typeof c==='string') return `<td>${esc(c)}</td>`; return `<td>${c.p?`<span class="pill ${c.p}">${esc(c.t)}</span>`:esc(c.t)}</td>`; };
+    return `<div class="blk"><table><thead><tr>${b.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${b.rows.map(r=>`<tr class="${r.some(c=>c&&c.hl)?'hl':''}">${r.map(cell).join('')}</tr>`).join('')}</tbody></table>${b.note?`<div class="note">${esc(b.note)}</div>`:''}</div>`;
+  }
+  return `<div class="blk"><div class="diff"><div class="fh">${esc(b.file)}</div>${b.lines.map(([m,t])=>`<span class="ln ${m==='-'?'d':m==='+'?'a':''}">${m} ${esc(t)}</span>`).join('')}</div></div>`;
+}
+function meterColor(v){const L=D().live; return (L.goodHigh?v>=60:v<=45)?'var(--green)':'var(--warn)';}
+function renderChallenge(){
+  const d=D(), w=d.work, L=d.live, f=d.follow, top=d.cands[0];
+  $('#v-challenge').innerHTML=`
+  <div class="ch-bar"><div class="wrap">
+    <div class="co"><div class="co-logo">${d.logo}</div><div><b>${esc(d.role)}</b><small>${esc(d.company)} · Challenge for ${first(top.n)}</small></div></div>
+    <span class="pill dk">Your version #A7</span>
+    <div class="timer" role="timer" aria-label="Time left"><i></i><span id="clock"></span></div>
+  </div></div>
+  <div class="wrap"><div class="ch">
+    <aside>
+      <div class="tasks">${d.tasks.map(([t,s],i)=>`<button class="task ${S.done[i+1]?'done':''}" data-t="${i+1}" ${S.task===i+1?'aria-current="step"':''}><span class="tn">${S.done[i+1]?'✓':i+1}</span><span><b>${esc(t)}</b><small>${s}</small></span></button>`).join('')}</div>
+      <div class="ai-note"><b>AI tools are allowed</b>Use whatever you'd use at work. We're looking at your judgement: what you choose to do, and why.${svg('spark','s spark')}</div>
+    </aside>
+    <div>
+      <div class="panel ${S.task===1?'on':''}" id="t1">
+        <h2>${esc(w.title)}</h2><p>${esc(w.intro)}</p>
+        <div class="card work">
+          ${w.queue?`<div class="queue">${w.queue.map(([t,st])=>`<span class="${st}">${st==='done'?'✓ ':''}${esc(t)}</span>`).join('')}</div>`:''}
+          <div class="msg"><header><b>${esc(w.from)}</b><span>${esc(w.meta)}</span></header>${esc(w.body)}</div>
+          ${blockHTML(w.block)}
+          <div class="ctx">${w.pills.map(([t,c])=>`<span class="pill ${c}">${esc(t)}</span>`).join('')}<button class="pill lime" id="toolBtn">${svg('i-book','ico','width:13px;height:13px')}${esc(w.tool[0])}</button></div>
+          <div class="editor"><textarea id="answer" aria-label="Your answer">${esc(w.answer)}</textarea>
+            <footer><span id="wc"></span><span>· Saved</span><button class="btn sm forest" id="sendWork">${esc(w.send)}</button></footer></div>
+        </div>
+      </div>
+      <div class="panel ${S.task===2?'on':''}" id="t2">
+        <h2>${esc(L.title)}</h2><p>${esc(L.intro)}</p>
+        <div class="card chatbox">
+          <div class="ch-h"><div class="av" style="background:${L.color};width:38px;height:38px;font-size:14px">${L.name[0]}</div><div><b style="font-size:15px">${esc(L.name)}</b><div class="faint" style="font-size:12.5px">${esc(L.sub)}</div></div>
+            <div class="meter"><span>${L.meter}</span><span class="m"><i id="meterBar" style="width:${L.start}%;background:${meterColor(L.start)}"></i></span></div></div>
+          <div class="log" id="log" aria-live="polite">${L.open.map(m=>`<div class="bb">${esc(m)}<small>${esc(L.name)}</small></div>`).join('')}</div>
+          <div class="hints" id="hints">${L.hints.map(h=>`<button>${esc(h)}</button>`).join('')}</div>
+          <form class="compose" id="compose"><input id="chatIn" placeholder="Type your reply, or tap a suggestion…" aria-label="Your reply" autocomplete="off"><button class="btn lime" aria-label="Send">${svg('i-send')}</button></form>
+        </div>
+      </div>
+      <div class="panel ${S.task===3?'on':''}" id="t3">
+        <h2>About your work</h2><p>Three quick questions about the choices you made. No trick questions: just tell us your thinking.</p>
+        ${S.finished?doneCard():`<div class="card fq"><span class="pill">Question 1 of 3</span><div class="q">${esc(f.q)}</div><div class="ref"><b>You wrote:</b> “${esc(f.ref)}”</div>
+          <div class="editor"><textarea id="fqA" aria-label="Your answer">${esc(f.answer)}</textarea><footer><span>2:00 per question</span><button class="btn sm forest" id="finish">Finish challenge</button></footer></div></div>`}
+      </div>
+    </div>
+  </div></div>`;
+  tick(); wc();
+}
+function doneCard(){
+  const d=D(), top=d.cands[0];
+  return `<div class="card done-card"><svg class="sealsvg" width="130" height="130" style="margin:0 auto"><use href="#seal"/></svg>
+    <h3>You earned <em class="it">${esc(d.badge)} · ${d.level}</em></h3>
+    <p>${esc(d.company)} will see your results within 48 hours. Your proof is saved to your profile, so you can reuse it for other ${esc(d.short.toLowerCase())} roles.</p>
+    <div class="acts"><button class="btn lime" data-go="proof">See my proof ${arr}</button><button class="btn ghost-d" data-go="proof" data-li="1">Add to LinkedIn</button></div></div>`;
+}
+function tick(){const c=$('#clock'); if(c) c.textContent=`${String(Math.floor(S.secs/60)).padStart(2,'0')}:${String(S.secs%60).padStart(2,'0')}`;}
+setInterval(()=>{ if(S.secs>0) S.secs--; tick(); },1000);
+function wc(){const a=$('#answer'); if(a) $('#wc').textContent=a.value.trim().split(/\s+/).filter(Boolean).length+' words';}
+function setTask(n){ S.task=n; $$('.task').forEach(t=>t.toggleAttribute('aria-current',+t.dataset.t===n)); $$('.panel').forEach(p=>p.classList.toggle('on',p.id==='t'+n)); }
+function markDone(n){ S.done[n]=true; const t=$(`.task[data-t="${n}"]`); if(t){t.classList.add('done'); t.querySelector('.tn').textContent='✓';} }
+function sendChat(v){
+  const L=D().live, log=$('#log'); if(!v) return;
+  const me=document.createElement('div'); me.className='bb me'; me.textContent=v; me.insertAdjacentHTML('beforeend','<small>You</small>'); log.appendChild(me);
+  $('#chatIn').value=''; log.insertAdjacentHTML('beforeend',`<div class="typing" id="typing">${esc(L.name)} is typing…</div>`); log.scrollTop=log.scrollHeight;
+  const [m,v2]=L.replies[Math.min(S.jt++,L.replies.length-1)];
+  setTimeout(()=>{ $('#typing')?.remove(); log.insertAdjacentHTML('beforeend',`<div class="bb">${esc(m)}<small>${esc(L.name)}</small></div>`); log.scrollTop=log.scrollHeight;
+    const bar=$('#meterBar'); bar.style.width=v2+'%'; bar.style.background=meterColor(v2);
+    if(S.jt===L.replies.length){ markDone(2); toast(L.done); }
+  },1000);
+}
+
+/* ======================================================================
+   Employer
+   ====================================================================== */
+function bars(k){return `<div class="minibars" aria-hidden="true">${k.map(v=>`<i class="${v<70?'lo':''}" style="height:${Math.max(20,(v-40)/60*100)}%"></i>`).join('')}</div>`;}
+function renderEmployer(){
+  const d=D();
+  $('#v-employer').innerHTML=`
+  <div class="em-band"><div class="wrap"><div class="em-head">
+    <div><span class="eyebrow">${svg('spark','spark','width:14px;height:14px')}${esc(d.company)} · Hiring</span><h1>${esc(d.role)}</h1></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm ghost-d" id="copyLink">${svg('i-link')}Copy challenge link</button><button class="btn sm lime" id="exportBtn">Export shortlist</button></div>
+  </div></div></div>
+  <div class="wrap">
+    <div class="funnel">
+      <div class="card"><span>Applied</span><b>${d.stats[0]}</b></div>
+      <div class="card"><span>Finished the challenge</span><b>${d.stats[1]}</b></div>
+      <div class="card hl"><span>Strong (80+)</span><b>${d.stats[2]}</b></div>
+      <div class="card"><span>Flagged for a look</span><b>${d.stats[3]}</b></div>
+    </div>
+    <div class="filters" id="filters" role="group" aria-label="Filter candidates">
+      ${[['all',`Top ${d.cands.length}`],['strong','Strong'],['flag','Flagged']].map(([k,t])=>`<button data-f="${k}" aria-pressed="${S.filt===k}">${t}</button>`).join('')}
+    </div>
+    <div class="em"><div class="card cands" id="cands" role="listbox" aria-label="Candidates"></div><aside class="card detail" id="detail" aria-live="polite"></aside></div>
+  </div>`;
+  renderCands(); renderDetail();
+}
+function renderCands(){
+  const d=D(); const list=d.cands.map((c,i)=>({c,i})).filter(({c})=>S.filt==='all'||(S.filt==='strong'&&c.strong)||(S.filt==='flag'&&c.flag));
+  $('#cands').innerHTML=list.map(({c,i})=>`
+    <button class="cand" role="option" aria-selected="${i===S.sel}" data-i="${i}">
+      <span class="rk">${String(i+1).padStart(2,'0')}</span>
+      <span class="who"><span class="av" style="background:${c.c}">${ini(c.n)}</span><span style="min-width:0"><b>${esc(c.n)}</b><small>${esc(c.loc)} · ${c.t}</small></span></span>
+      <span class="score">${c.s}</span>${bars(c.k)}
+      <span class="st">${c.flag?'<span class="pill warn">Flagged</span>':c.strong?'<span class="pill lime">Strong</span>':'<span class="pill">Review</span>'}</span>
+    </button>`).join('');
+}
+function renderDetail(){
+  const d=D(), c=d.cands[S.sel];
+  $('#detail').innerHTML=`
+    <div class="dh"><div class="av" style="background:${c.c}">${ini(c.n)}</div><div><h3>${esc(c.n)}</h3><span class="muted" style="font-size:14px">${esc(c.loc)}</span></div></div>
+    <div class="big"><span class="score">${c.s}</span><span class="m">overall · finished in ${c.t}</span></div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">${c.k.map((v,i)=>`<div class="sk"><span>${esc(d.skills[i])}</span><span class="b"><i style="width:${v}%;${v<70?'background:var(--warn)':''}"></i></span><b>${v}</b></div>`).join('')}</div>
+    ${c.flag?`<div class="flag">${svg('i-flag')}<span>${esc(c.flag)}</span></div>`:''}
+    <div class="ev">${c.ev.map(e=>`<div class="e"><header><b>${esc(e[0])}</b><span class="mono faint">${e[1]}</span></header><blockquote>${esc(e[2])}</blockquote><div class="why">${esc(e[3])}</div></div>`).join('')}</div>
+    ${c.flag?'':`<div class="checked">${svg('i-check')}Follow-up matched their work · spot-checked by ${esc(d.reviewer)}</div>`}
+    <div class="dact"><button class="btn sm lime" data-act="invite">Invite to interview</button><button class="btn sm" data-act="read">Read full submission</button>${S.sel===0?'<button class="btn sm" data-go="proof">View proof</button>':'<button class="btn sm" data-act="pass">Not this time</button>'}</div>`;
+}
+
+/* ======================================================================
+   Proof page (with LinkedIn badge)
+   ====================================================================== */
+function liUrl(d){
+  const p=new URLSearchParams({startTask:'CERTIFICATION_NAME',name:`${d.badge} – ${d.level}`,organizationName:'Proof of Work',issueYear:'2026',issueMonth:'11',expirationYear:'2028',expirationMonth:'11',certUrl:`https://proofofwork.app/p/${d.id}`,certId:`POW-${d.id}`});
+  return 'https://www.linkedin.com/profile/add?'+p.toString();
+}
+function renderProof(){
+  const d=D(), top=d.cands[0], p=d.proof, fn=first(top.n);
+  const ver=[['Unique version',`Generated for ${fn} only: ${d.variant}.`],['One sitting',`${top.t}, with work recorded as it happened.`],['Follow-up passed','Answers about the work matched the submission.'],['Expert checked',`Scores reviewed by ${d.reviewer}.`]];
+  $('#v-proof').innerHTML=`
+  <div class="p-band" aria-hidden="true">
+    <svg class="ps spark" style="left:12%;top:40px;width:40px;height:40px"><use href="#spark"/></svg>
+    <svg class="ps spark" style="right:16%;top:80px;width:24px;height:24px"><use href="#spark"/></svg>
+    <svg class="ps spark" style="right:8%;top:20px;width:56px;height:56px;opacity:.5"><use href="#spark"/></svg>
+  </div>
+  <div class="wrap"><div class="proof">
+    <div class="card cert">
+      <div class="cert-top">
+        <div><span class="h4">${svg('spark','spark','width:14px;height:14px')}Proof of Work</span>
+          <h1>${esc(top.n)}</h1>
+          <div class="lvl"><span class="pill lime">${esc(d.badge)}</span><span class="pill">${d.level}</span><span class="pill ok">Verified</span></div></div>
+        <svg class="sealsvg" width="150" height="150"><use href="#seal"/></svg>
+      </div>
+      <div class="cert-meta">
+        <div><span>Issued</span><b>4 Nov 2026</b></div>
+        <div><span>Challenge</span><b>${esc(d.short)} · 45 min</b></div>
+        <div><span>Proof ID</span><b class="mono">POW-${d.id}</b></div>
+      </div>
+      <div class="cert-body">
+        <div><div class="h4">Skills</div>
+          <div class="sks">${p.skills.map(([n,v])=>`<div class="sk"><span>${esc(n)}</span><span class="b"><i style="width:${v}%"></i></span><b>${v}</b></div>`).join('')}</div>
+          <div class="overall"><b>${p.overall}</b><span>Overall. Higher than ${p.pct}% of people who took this challenge.</span></div></div>
+        <div class="short"><div class="h4">${svg('spark','spark','width:14px;height:14px')}In short</div><p>${esc(p.summary)}</p><small>Written from the scores and evidence, then checked by a reviewer.</small></div>
+      </div>
+    </div>
+
+    <div class="card psec"><div class="h4">From ${esc(fn)}'s work</div>
+      <div class="samples">${p.samples.map(([l,s,q])=>`<div class="sample"><div class="lab"><b>${esc(l)}</b>${esc(s)}</div><blockquote>${esc(q)}</blockquote></div>`).join('')}</div></div>
+
+    <div class="card psec"><div class="h4">How this was verified</div>
+      <ol class="tl">${ver.map(([t,s],i)=>`<li><span class="n">${i+1}</span><b>${t}</b>${esc(s)}</li>`).join('')}</ol></div>
+
+    <div class="card psec" id="shareSec"><div class="h4">Badge and LinkedIn</div>
+      <div class="share">
+        <div class="badge-card">
+          <svg class="bs spark" style="right:30px;bottom:70px;width:30px;height:30px"><use href="#spark"/></svg>
+          <div class="top"><span class="logo"><span class="lm">${svg('i-check')}</span>proofofwork</span><svg class="sealsvg" width="64" height="64" style="filter:none"><use href="#seal"/></svg></div>
+          <div class="mid"><b>${esc(d.badge)}</b><span>${d.level}</span></div>
+          <div class="bot"><span>${esc(top.n)}<br>Nov 2026</span><span class="mono">POW-${d.id}</span></div>
+        </div>
+        <div style="min-width:0">
+          <h3>Show it where recruiters look</h3>
+          <p>One click adds this to the Licenses &amp; certifications section of a LinkedIn profile, with a link back to this page so anyone can check it.</p>
+          <div class="acts"><button class="btn sm lime" id="liAdd">Add to LinkedIn</button><button class="btn sm" id="liPost">Share a post</button><button class="btn sm" id="dlBadge">Download badge</button></div>
+          <div class="li-entry"><div class="lg">${svg('i-check')}</div><div><b>${esc(d.badge)} – ${d.level}</b><small>Proof of Work</small><small>Issued Nov 2026 · Expires Nov 2028</small><small>Credential ID POW-${d.id}</small><span class="sc">Show credential</span></div></div>
+          <div class="urlbox" id="urlbox" hidden><code id="liUrl"></code><button id="copyLi">Copy</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card verify">
+      <div class="ok">${svg('i-check')}</div>
+      <div><b>This proof is genuine.</b><div style="font-size:14px;color:var(--on-forest-2)">Anyone can check it at <span class="mono" style="color:var(--lime)">proofofwork.app/p/${d.id}</span></div></div>
+      <div class="r"><button class="btn sm lime" id="copyProof">Copy link</button></div>
+    </div>
+    <p class="owner">${esc(fn)} chose to make this proof public and can hide it at any time.</p>
+  </div></div>`;
+}
+function showLi(){
+  const u=liUrl(D()); $('#liUrl').textContent=u; $('#urlbox').hidden=false;
+  toast('In the live app this opens LinkedIn with the form filled in. Here we show the link instead.');
+}
+async function copy(text,msg){ try{ await navigator.clipboard.writeText(text); toast(msg); }catch(e){ toast('Copy didn’t work here. Select the text and copy it instead.'); } }
+
+/* ======================================================================
+   Routing and events
+   ====================================================================== */
+function renderAll(){ renderHeader(); renderLanding(); renderChallenge(); renderEmployer(); renderProof(); }
+function show(view,{scroll=true}={}){
+  S.view=view; $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+view)); renderHeader();
+  const h=`${S.ind}-${view}`; if(location.hash.slice(1)!==h){ try{ history.replaceState(null,'','#'+h); }catch(e){ location.hash=h; } }
+  if(scroll) window.scrollTo(0,0);
+}
+function setInd(k){ if(!IND[k]) return; S.ind=k; S.sel=0; S.filt='all'; S.task=1; S.jt=0; S.done={}; S.finished=false; S.secs=38*60+12; renderAll(); show(S.view); }
+function fromHash(){
+  const [k,v]=location.hash.slice(1).split('-');
+  if(IND[k] && k!==S.ind){ S.ind=k; S.sel=0; S.task=1; S.jt=0; S.done={}; S.finished=false; renderAll(); }
+  show(VIEWS.includes(v)?v:S.view,{scroll:false});
+}
+
+$('#screens').addEventListener('click',e=>{const b=e.target.closest('[data-v]'); if(b) show(b.dataset.v);});
+$('#inds').addEventListener('click',e=>{const b=e.target.closest('[data-i]'); if(b) setInd(b.dataset.i);});
+document.addEventListener('click',e=>{
+  const g=e.target.closest('[data-go]'); if(g){ e.preventDefault(); show(g.dataset.go); if(g.dataset.li){ setTimeout(()=>{ $('#shareSec').scrollIntoView({block:'start'}); showLi(); },60); } return; }
+  const t=e.target.closest('[data-ind]'); if(t){ setInd(t.dataset.ind); show('challenge'); }
+});
+$('#theme').onclick=()=>{ const dark=isDark(); document.documentElement.dataset.theme=dark?'light':'dark'; syncTheme(); };
+function isDark(){const t=document.documentElement.dataset.theme; return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;}
+function syncTheme(){ $('#theme use').setAttribute('href',isDark()?'#i-sun':'#i-moon'); }
+
+$('#v-challenge').addEventListener('click',e=>{
+  const t=e.target.closest('.task'); if(t){ setTask(+t.dataset.t); return; }
+  if(e.target.closest('#toolBtn')){ toast(D().work.tool[1]); return; }
+  if(e.target.closest('#sendWork')){ markDone(1); toast(D().work.sent); setTimeout(()=>setTask(2),700); return; }
+  const h=e.target.closest('#hints button'); if(h){ sendChat(h.textContent); h.remove(); return; }
+  if(e.target.closest('#finish')){ S.finished=true; markDone(3); $('#t3 .fq').outerHTML=doneCard(); }
+});
+$('#v-challenge').addEventListener('input',e=>{ if(e.target.id==='answer') wc(); });
+$('#v-challenge').addEventListener('submit',e=>{ if(e.target.id==='compose'){ e.preventDefault(); sendChat($('#chatIn').value.trim()); } });
+
+$('#v-employer').addEventListener('click',e=>{
+  const c=e.target.closest('.cand'); if(c){ S.sel=+c.dataset.i; renderCands(); renderDetail(); if(innerWidth<1000) $('#detail').scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  const f=e.target.closest('#filters button'); if(f){ S.filt=f.dataset.f; $$('#filters button').forEach(x=>x.setAttribute('aria-pressed',x===f)); renderCands(); return; }
+  const a=e.target.closest('[data-act]'); if(a){ const n=first(D().cands[S.sel].n);
+    toast(a.dataset.act==='invite'?`Invite sent to ${n} with your calendar link.`:a.dataset.act==='read'?'Opens the full submission, the role-play transcript and the follow-up answers.':`${n} gets a kind note and keeps their proof.`); return; }
+  if(e.target.closest('#copyLink')) copy(`https://proofofwork.app/c/${D().company.split(' ')[0].toLowerCase()}`,'Challenge link copied.');
+  if(e.target.closest('#exportBtn')) toast('Exports a spreadsheet with scores, evidence and links to each submission.');
+});
+$('#v-proof').addEventListener('click',e=>{
+  if(e.target.closest('#liAdd')) showLi();
+  else if(e.target.closest('#copyLi')) copy($('#liUrl').textContent,'LinkedIn link copied.');
+  else if(e.target.closest('#liPost')) toast('Opens a LinkedIn post with this proof page and its badge image attached.');
+  else if(e.target.closest('#dlBadge')) toast('In the live app this saves the badge as a PNG for your profile or CV.');
+  else if(e.target.closest('#copyProof')) copy(`https://proofofwork.app/p/${D().id}`,'Proof link copied.');
+});
+window.addEventListener('hashchange',fromHash);
+
+renderAll(); syncTheme(); fromHash();
+</script>
