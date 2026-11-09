@@ -1,0 +1,828 @@
+<title>Glowbook</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Serif:ital@0;1&family=Geist:wght@400..600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky header splits Client side (phone-framed page + booking) from Owner side (today, inbox, clients, automations, setup).
+   Same system as Proof of Work: forest + lime, cream cards, chunky grotesk + italic serif, pills, bento, sparkles.
+   The client page takes the studio's own brand colour (--b*), which Setup can change. */
+:root{
+  --page:#F4F2EA; --surface:#FFFFFF; --sunk:#ECEADF; --line:#E0DDD0; --line-2:#CDC9B8;
+  --ink:#0C2418; --muted:#4D5E54; --faint:#7F8A82;
+  --forest:#0A2B1C; --forest-2:#11392A; --forest-3:#1A4A35; --on-forest:#F1F5EC; --on-forest-2:#A8BFAF;
+  --lime:#D6F53F; --lime-ink:#0A2B1C; --lime-soft:#F0FAC6;
+  --green:#4FC864; --green-soft:#DCF3E0; --seal:#1B8F45;
+  --warn:#C2410C; --warn-soft:#FCEBDD; --wa:#1FA855; --wa-bub:#DCF8C6; --wa-bg:#EFE9DF;
+  --shadow:0 1px 2px rgba(10,43,28,.06),0 18px 50px rgba(10,43,28,.14);
+  --f-display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --f-serif:"Instrument Serif",ui-serif,Georgia,serif;
+  --f-body:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --b:#D6F53F; --b-ink:#0A2B1C; --b-deep:#0A2B1C; --b-soft:#F0FAC6;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --page:#06150E; --surface:#0E2419; --sunk:#0A1C13; --line:#1D3828; --line-2:#2A4A37;
+  --ink:#EAF2E6; --muted:#A3B8A9; --faint:#7A9183;
+  --forest:#0C3121; --forest-2:#123E2B; --forest-3:#1B4D37;
+  --lime-soft:#25300A; --green-soft:#0F3320; --seal:#5BD978; --warn:#F2A36B; --warn-soft:#2E1C10;
+  --wa-bub:#1E4D33; --wa-bg:#0B1C14; --b-soft:#25300A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 18px 50px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page:#06150E; --surface:#0E2419; --sunk:#0A1C13; --line:#1D3828; --line-2:#2A4A37;
+  --ink:#EAF2E6; --muted:#A3B8A9; --faint:#7A9183;
+  --forest:#0C3121; --forest-2:#123E2B; --forest-3:#1B4D37;
+  --lime-soft:#25300A; --green-soft:#0F3320; --seal:#5BD978; --warn:#F2A36B; --warn-soft:#2E1C10;
+  --wa-bub:#1E4D33; --wa-bg:#0B1C14; --b-soft:#25300A;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 18px 50px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--page);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--forest)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px;border-radius:8px}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;letter-spacing:-.03em;margin:0;text-wrap:balance}
+em.it{font-family:var(--f-serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
+.mono{font-family:var(--f-mono);font-size:.86em}
+.muted{color:var(--muted)} .faint{color:var(--faint)}
+.ico{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:999px;font-weight:600;font-size:15px;border:1.5px solid var(--line-2);background:var(--surface);white-space:nowrap;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn.lime{background:var(--lime);color:var(--lime-ink);border-color:var(--lime)}
+.btn.forest{background:var(--forest);color:var(--on-forest);border-color:var(--forest)}
+.btn.wa{background:var(--wa);color:#fff;border-color:var(--wa)}
+.btn.sm{padding:7px 13px;font-size:13.5px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:var(--green-soft);color:var(--seal)}
+.pill.lime{background:var(--lime);color:var(--lime-ink)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.wa{background:var(--green-soft);color:var(--wa)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:24px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--seal)}
+.spark{fill:var(--lime);stroke:var(--forest);stroke-width:1.4}
+.logo{display:inline-flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.04em;white-space:nowrap;flex:none}
+.logo .lm{width:24px;height:24px;border-radius:8px;background:var(--lime);display:grid;place-items:center}
+.logo .lm svg{width:16px;height:16px;stroke:var(--forest);stroke-width:2.4}
+.av{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff;flex:none;font-size:14px;font-family:var(--f-display)}
+.tgl{width:42px;height:24px;border-radius:99px;background:var(--line-2);position:relative;transition:background .2s;flex:none}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .2s}
+.tgl[aria-checked="true"]{background:var(--green)}
+.tgl[aria-checked="true"]::after{transform:translateX(18px)}
+
+/* header */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:var(--forest);color:var(--on-forest);border-bottom:1px solid rgba(255,255,255,.08)}
+.hdr .r{display:flex;align-items:center;gap:14px;min-height:62px;flex-wrap:wrap;padding-block:8px}
+.navs{display:flex;gap:10px;margin-left:auto;align-items:center;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.grp{display:flex;align-items:center;gap:2px;padding:4px;border-radius:999px;background:rgba(255,255,255,.07)}
+.grp .gl{font-family:var(--f-mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--on-forest-2);padding:0 8px 0 10px;white-space:nowrap}
+.grp button{padding:7px 12px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--on-forest-2);white-space:nowrap;position:relative}
+.grp button[aria-current="page"]{background:var(--lime);color:var(--lime-ink)}
+.grp button .n{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:var(--lime);color:var(--forest);font-size:11px;margin-left:5px;padding:0 5px}
+.grp button[aria-current="page"] .n{background:var(--forest);color:var(--lime)}
+.theme{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:var(--on-forest-2);flex:none;border:1px solid rgba(255,255,255,.15)}
+.view{display:none}.view.on{display:block}
+.vhead{padding-block:34px 22px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.vhead h1{font-size:clamp(32px,4.4vw,50px);letter-spacing:-.045em;line-height:1}
+.vhead p{margin:8px 0 0;color:var(--muted);max-width:62ch}
+
+/* ===== phone stage (client side) ===== */
+.stage{display:grid;grid-template-columns:1fr 390px 1fr;gap:32px;align-items:start;padding-block:36px 72px}
+.notes{display:flex;flex-direction:column;gap:14px;padding-top:40px}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:16px 18px;position:relative}
+.note b{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-size:17px;letter-spacing:-.02em;margin-bottom:4px}
+.note b i{width:24px;height:24px;border-radius:50%;background:var(--lime);color:var(--forest);display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;flex:none}
+.note p{margin:0;font-size:14px;color:var(--muted)}
+.notes .intro h2{font-size:30px;letter-spacing:-.04em;line-height:1.02;margin-bottom:8px}
+.notes .intro p{color:var(--muted);margin:0;font-size:15px}
+.phone{width:390px;max-width:100%;height:800px;border-radius:46px;border:10px solid var(--forest);background:var(--surface);box-shadow:var(--shadow);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.phone .sb{height:30px;flex:none;background:var(--b-deep);color:#F1F5EC;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:12px;font-weight:600}
+.scr{flex:1;overflow:auto;position:relative;background:var(--page);scrollbar-width:thin}
+
+/* client page */
+.cp-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--b-deep);color:#F1F5EC;position:sticky;top:0;z-index:5}
+.cp-top .nm{display:flex;align-items:center;gap:8px;font-family:var(--f-display);font-weight:800;letter-spacing:-.03em;font-size:17px}
+.cp-top .mk{width:28px;height:28px;border-radius:50%;background:var(--b);color:var(--b-ink);display:grid;place-items:center}
+.cp-top .mk svg{width:18px;height:18px}
+.cp-top .ics{display:flex;gap:6px}
+.cp-top .ics span{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);display:grid;place-items:center}
+.cp-hero{background:radial-gradient(70% 60% at 80% 20%,color-mix(in srgb,var(--b) 30%,transparent),transparent 70%),var(--b-deep);color:#F1F5EC;padding:22px 18px 26px;position:relative;overflow:hidden}
+.cp-hero .art{position:absolute;right:-26px;bottom:-8px;width:150px;height:90px;color:var(--b);opacity:.35}
+.cp-hero .rt{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.1)}
+.cp-hero h1{font-size:38px;line-height:.98;letter-spacing:-.045em;margin:16px 0 10px;max-width:270px;color:#F1F5EC}
+.cp-hero h1 em.it{color:var(--b)}
+.cp-hero p{margin:0 0 18px;color:#C4D3C8;font-size:14.5px;max-width:280px}
+.cp-hero .acts{display:flex;gap:8px;flex-wrap:wrap}
+.bbtn{display:inline-flex;align-items:center;gap:8px;padding:12px 18px;border-radius:999px;font-weight:700;font-size:15px;background:var(--b);color:var(--b-ink)}
+.wbtn{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:999px;font-weight:600;font-size:15px;background:var(--wa);color:#fff}
+.cp-hero .next{margin-top:14px;font-size:13px;color:#C4D3C8;display:flex;align-items:center;gap:6px}
+.cp-hero .next i{width:8px;height:8px;border-radius:50%;background:var(--b)}
+.offer{margin:14px;padding:14px 16px;border-radius:18px;background:var(--b);color:var(--b-ink);display:flex;gap:12px;align-items:center}
+.offer b{font-family:var(--f-display);font-size:17px;letter-spacing:-.02em;display:block;line-height:1.15}
+.offer small{font-size:12.5px;opacity:.8}
+.offer svg{width:34px;height:34px;flex:none}
+.cp-sec{padding:16px}
+.cp-sec h3{font-size:22px;letter-spacing:-.035em;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.cp-sec h3 small{font-family:var(--f-body);font-size:13px;font-weight:500;color:var(--faint);letter-spacing:0}
+.sg{font-size:12px;font-family:var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:14px 0 6px}
+.svc{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;width:100%;text-align:left}
+.svc + .svc{margin-top:6px}
+.svc .t{flex:1;min-width:0}
+.svc .t b{display:block;font-size:15px}
+.svc .t small{color:var(--faint);font-size:12.5px}
+.svc .p{font-family:var(--f-display);font-weight:700;font-size:18px;letter-spacing:-.02em}
+.svc .go{width:30px;height:30px;border-radius:50%;background:var(--b-deep);color:var(--b);display:grid;place-items:center}
+.svc[aria-pressed="true"]{border-color:var(--b-deep);box-shadow:inset 0 0 0 1.5px var(--b-deep);background:var(--b-soft)}
+.gal{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gt{aspect-ratio:1/1;border-radius:18px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:10px;color:#F1F5EC;font-size:12.5px;font-weight:600}
+.gt svg.l{position:absolute;inset:18% 10% auto;width:80%;color:currentColor;opacity:.95}
+.gt span{position:relative;background:rgba(0,0,0,.25);padding:3px 8px;border-radius:999px}
+.rv{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.rv + .rv{margin-top:8px}
+.rv q{display:block;font-family:var(--f-serif);font-size:19px;line-height:1.3;quotes:"“" "”"}
+.rv small{display:block;color:var(--faint);font-size:12.5px;margin-top:6px}
+.shop{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.prod{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.prod .pi{height:84px;border-radius:12px;background:var(--b-soft);display:grid;place-items:center;color:var(--b-deep)}
+.prod b{font-size:14px;line-height:1.25}
+.prod .row{display:flex;justify-content:space-between;align-items:center;margin-top:auto}
+.prod .row span{font-family:var(--f-display);font-weight:700}
+.prod .row button{font-size:12.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--b-deep);color:var(--b)}
+.know{display:flex;flex-direction:column;gap:8px}
+.know div{display:flex;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:14px}
+.know div b{display:block}
+.know svg{color:var(--seal);margin-top:2px}
+.cp-foot{background:var(--b-deep);color:#C4D3C8;padding:18px 16px 90px;font-size:13px;margin-top:10px}
+.cp-foot b{color:#F1F5EC}
+.sticky-bar{position:sticky;bottom:0;z-index:6;display:flex;gap:8px;padding:10px 12px 14px;background:linear-gradient(transparent,var(--page) 30%)}
+.sticky-bar .bbtn{flex:1;justify-content:center}
+.sticky-bar .wbtn{padding:12px 14px}
+
+/* booking */
+.bk-top{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--b-deep);color:#F1F5EC;position:sticky;top:0;z-index:5}
+.bk-top button{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);display:grid;place-items:center;color:#F1F5EC}
+.bk-top b{font-family:var(--f-display);font-size:17px;letter-spacing:-.02em}
+.steps{display:flex;gap:4px;padding:12px 16px 0}
+.steps i{flex:1;height:5px;border-radius:5px;background:var(--line)}
+.steps i.on{background:var(--b-deep)}
+.bk{padding:16px;display:flex;flex-direction:column;gap:12px}
+.bk h2{font-size:26px;letter-spacing:-.04em;line-height:1.05}
+.bk .sub{color:var(--muted);font-size:14px;margin:-4px 0 4px}
+.seg2{display:flex;padding:4px;border-radius:999px;background:var(--sunk);gap:2px}
+.seg2 button{flex:1;padding:8px 10px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--muted)}
+.seg2 button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.days{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.day{min-width:56px;padding:9px 6px;border-radius:16px;border:1.5px solid var(--line);background:var(--surface);text-align:center;font-size:12px;color:var(--muted)}
+.day b{display:block;font-family:var(--f-display);font-size:20px;color:var(--ink);line-height:1.1}
+.day[aria-pressed="true"]{background:var(--b-deep);border-color:var(--b-deep);color:#C4D3C8}
+.day[aria-pressed="true"] b{color:var(--b)}
+.day:disabled{opacity:.4}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.slot{padding:10px 4px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+.slot:disabled{text-decoration:line-through;color:var(--faint);background:var(--sunk)}
+.slot[aria-pressed="true"]{background:var(--b);border-color:var(--b-deep);color:var(--b-ink)}
+.fld{display:flex;flex-direction:column;gap:5px}
+.fld label{font-size:13px;font-weight:600;color:var(--muted)}
+.fld input{padding:11px 13px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);min-width:0}
+.fld input:focus{outline:none;border-color:var(--b-deep)}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:14px}
+.q b{display:block;margin-bottom:8px;font-weight:600}
+.q .opts{display:flex;gap:6px;flex-wrap:wrap}
+.q .opts button{padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);font-size:13px;font-weight:600}
+.q .opts button[aria-pressed="true"]{background:var(--b-deep);color:var(--b);border-color:var(--b-deep)}
+.chk{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;padding:10px 12px;border-radius:14px;background:var(--sunk);text-align:left;width:100%}
+.chk .bx{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--line-2);display:grid;place-items:center;flex:none;background:var(--surface);margin-top:1px}
+.chk[aria-checked="true"] .bx{background:var(--b-deep);border-color:var(--b-deep);color:var(--b)}
+.chk .bx svg{width:14px;height:14px;stroke-width:3;opacity:0}
+.chk[aria-checked="true"] .bx svg{opacity:1}
+.sum{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px}
+.sum .r2{display:flex;justify-content:space-between;font-size:14px;padding:5px 0}
+.sum .r2.t{border-top:1px solid var(--line);margin-top:6px;padding-top:10px;font-weight:700}
+.pay{display:flex;flex-direction:column;gap:8px}
+.pay button{padding:13px;border-radius:14px;font-weight:700;font-size:15px}
+.pay .p1{background:var(--ink);color:var(--page)}
+.pay .p2{border:1.5px solid var(--line-2);background:var(--surface)}
+.bk-foot{position:sticky;bottom:0;padding:12px 16px 16px;background:linear-gradient(transparent,var(--page) 25%)}
+.bk-foot .bbtn{width:100%;justify-content:center}
+.bk-foot .bbtn:disabled{opacity:.45;cursor:default}
+.done{text-align:center;padding:26px 16px}
+.done .ok{width:72px;height:72px;border-radius:50%;background:var(--b);color:var(--b-ink);display:grid;place-items:center;margin:0 auto 14px;box-shadow:4px 4px 0 var(--b-deep)}
+.done .ok svg{width:34px;height:34px;stroke-width:3}
+.wa-prev{background:var(--wa-bg);border-radius:18px;padding:12px;text-align:left;margin-top:14px}
+.wa-prev .h{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.wa-msg{background:var(--wa-bub);border-radius:12px 12px 12px 4px;padding:9px 11px;font-size:13.5px;line-height:1.45;white-space:pre-line}
+.wa-msg small{display:block;text-align:right;font-size:11px;color:var(--faint)}
+
+/* ===== owner side ===== */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.tile{padding:18px 20px;border-radius:24px}
+.tile span{font-size:13.5px;color:var(--muted)}
+.tile b{display:block;font-family:var(--f-display);font-weight:800;font-size:38px;letter-spacing:-.05em;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile small{font-size:12.5px;color:var(--faint)}
+.tile.fo{background:var(--forest);color:var(--on-forest)} .tile.fo span,.tile.fo small{color:var(--on-forest-2)} .tile.fo b{color:var(--lime)}
+.tile.li{background:var(--lime);color:var(--lime-ink)} .tile.li span,.tile.li small{color:var(--lime-ink);opacity:.75}
+.two{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start;padding-bottom:64px}
+.sched{padding:10px}
+.slotrow{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 12px;border-radius:18px}
+.slotrow + .slotrow{margin-top:2px}
+.slotrow .tm{font-family:var(--f-mono);font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums}
+.slotrow .who{display:flex;gap:12px;align-items:center;min-width:0}
+.slotrow .who b{display:block;font-size:15px}
+.slotrow .who small{color:var(--faint);font-size:12.5px}
+.slotrow.now{background:var(--lime-soft)}
+.slotrow.gap{border:1.5px dashed var(--line-2)}
+.slotrow.gap .who b{color:var(--muted)}
+.slotrow.blk{opacity:.6}
+.need{padding:20px}
+.need h3{font-size:20px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.req{border-radius:18px;padding:14px 16px;background:var(--sunk)}
+.req + .req{margin-top:10px}
+.req .tp{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+.req b{font-size:15px}
+.req p{margin:0 0 10px;font-size:14px;color:var(--muted)}
+.req .acts{display:flex;gap:6px;flex-wrap:wrap}
+.req.match{background:var(--lime-soft)}
+.req.resolved{opacity:.55}
+
+/* inbox */
+.inbox{display:grid;grid-template-columns:320px minmax(0,1fr);overflow:hidden;margin-bottom:64px;min-height:620px}
+.chats{border-right:1px solid var(--line);padding:8px}
+.chat{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:16px;width:100%;text-align:left}
+.chat:hover{background:var(--sunk)}
+.chat[aria-selected="true"]{background:var(--lime-soft)}
+.chat .t{flex:1;min-width:0}
+.chat .t b{display:flex;justify-content:space-between;font-size:14.5px}
+.chat .t b span{font-weight:400;font-size:12px;color:var(--faint)}
+.chat .t small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chat .t .pill{margin-top:6px}
+.thread{display:flex;flex-direction:column;min-width:0}
+.th-h{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.th-h .r{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.msgs{flex:1;padding:18px;display:flex;flex-direction:column;gap:8px;background:var(--wa-bg);overflow:auto;min-height:300px}
+.m{max-width:75%;padding:9px 12px;border-radius:14px 14px 14px 4px;background:var(--surface);font-size:14.5px;white-space:pre-line}
+.m.me{align-self:flex-end;background:var(--wa-bub);border-radius:14px 14px 4px 14px}
+.m small{display:block;text-align:right;font-size:11px;color:var(--faint);margin-top:2px}
+.m.sys{align-self:center;background:var(--surface);font-size:12.5px;color:var(--muted);border-radius:999px;padding:5px 12px}
+.ai{margin:12px;padding:14px 16px;border-radius:18px;background:var(--lime-soft);border:1.5px solid var(--lime)}
+.ai .h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--seal);margin-bottom:6px}
+.ai p{margin:0 0 10px;font-size:14.5px;white-space:pre-line}
+.ai .acts{display:flex;gap:6px;flex-wrap:wrap}
+
+/* clients */
+.segs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.segs button{padding:8px 14px;border-radius:999px;border:1.5px solid var(--line-2);font-size:14px;font-weight:600;color:var(--muted);background:var(--surface);display:inline-flex;gap:8px;align-items:center}
+.segs button span{font-family:var(--f-mono);font-size:12px;opacity:.8}
+.segs button[aria-pressed="true"]{background:var(--forest);color:var(--lime);border-color:var(--forest)}
+.ctable{overflow:hidden}
+.ctable .tw{overflow-x:auto}
+.ctable table{width:100%;border-collapse:collapse;font-size:14px;min-width:680px}
+.ctable th{text-align:left;font-size:12.5px;font-weight:600;color:var(--faint);padding:12px 16px;border-bottom:1px solid var(--line)}
+.ctable td{padding:12px 16px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums;vertical-align:middle}
+.ctable tr:last-child td{border-bottom:0}
+.ctable .nm{display:flex;gap:10px;align-items:center}
+.ctable .nm .av{width:32px;height:32px;font-size:12px}
+.ctable .more{padding:12px 16px;font-size:13px;color:var(--faint);border-top:1px solid var(--line)}
+.camp{padding:22px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 80px)}
+.camp h3{font-size:22px;margin-bottom:4px}
+.camp .aud{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:16px;background:var(--sunk);margin:14px 0;font-size:14px}
+.camp .aud b{font-family:var(--f-display);font-size:26px;letter-spacing:-.04em}
+.camp textarea{width:100%;min-height:120px;border:1.5px solid var(--line-2);border-radius:16px;padding:12px 14px;background:var(--surface);resize:vertical;font-size:14.5px}
+.camp textarea:focus{outline:none;border-color:var(--forest)}
+.camp .vars{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+.camp .vars button{font-family:var(--f-mono);font-size:12px;padding:4px 9px;border-radius:8px;background:var(--sunk);color:var(--muted)}
+.camp .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.last{margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--forest);color:var(--on-forest);font-size:14px}
+.last b{color:var(--lime)}
+
+/* automations */
+.flows{display:flex;flex-direction:column;gap:10px}
+.fg{font-family:var(--f-mono);font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:10px 0 2px}
+.flow{display:grid;grid-template-columns:96px minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:14px 16px;border-radius:20px;background:var(--surface);border:1.5px solid var(--line);width:100%;text-align:left}
+.flow[aria-selected="true"]{border-color:var(--forest);box-shadow:4px 4px 0 var(--forest)}
+.flow .when{font-family:var(--f-mono);font-size:12.5px;color:var(--seal);font-weight:500}
+.flow b{display:block;font-size:15px}
+.flow small{color:var(--faint);font-size:12.5px}
+.flow .res{text-align:right;font-size:13px;color:var(--muted);white-space:nowrap}
+.flow .res b{font-family:var(--f-display);font-size:18px;color:var(--ink)}
+.prev{padding:22px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 80px)}
+.prev h3{font-size:22px}
+.prev .rules{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.prev .rules div{display:flex;gap:10px;font-size:14px;align-items:flex-start}
+.prev .rules svg{color:var(--seal);margin-top:2px}
+
+/* setup */
+.setup{max-width:880px;margin:0 auto;padding-bottom:64px}
+.sstep{padding:26px;margin-bottom:14px}
+.sstep .hd{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.sstep .hd .n{width:34px;height:34px;border-radius:50%;background:var(--forest);color:var(--lime);display:grid;place-items:center;font-weight:800;font-family:var(--f-display);flex:none}
+.sstep .hd.done .n{background:var(--green);color:var(--forest)}
+.sstep .hd h3{font-size:22px}
+.types{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.type{padding:16px 10px;border-radius:18px;border:1.5px solid var(--line);background:var(--surface);font-weight:600;font-size:14px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.type svg{width:30px;height:30px}
+.type[aria-pressed="true"]{background:var(--forest);color:var(--lime);border-color:var(--forest)}
+.tpl{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tpl div{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:14px;background:var(--sunk);font-size:14px;gap:8px}
+.tpl input{width:84px;padding:6px 8px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);text-align:right;font-variant-numeric:tabular-nums}
+.sw{display:flex;gap:10px;flex-wrap:wrap}
+.sw button{display:flex;align-items:center;gap:10px;padding:8px 14px 8px 8px;border-radius:999px;border:1.5px solid var(--line);font-weight:600;font-size:14px;background:var(--surface)}
+.sw button i{width:30px;height:30px;border-radius:50%;border:4px solid}
+.sw button[aria-pressed="true"]{border-color:var(--forest);box-shadow:3px 3px 0 var(--forest)}
+.conn{display:flex;gap:12px;flex-wrap:wrap}
+.conn .c{flex:1;min-width:220px;display:flex;gap:12px;align-items:center;padding:14px 16px;border-radius:18px;background:var(--sunk)}
+.conn .c .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff}
+.conn .c b{display:block;font-size:15px}
+.conn .c small{color:var(--faint);font-size:12.5px}
+.conn .c .btn{margin-left:auto}
+.live{background:var(--forest);color:var(--on-forest);border:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:center}
+.live .hd .n{background:var(--lime);color:var(--forest)}
+.live .url{font-family:var(--f-mono);font-size:clamp(16px,2.2vw,22px);color:var(--lime);word-break:break-all}
+.live p{color:var(--on-forest-2);margin:8px 0 14px;font-size:14.5px}
+.qr{width:120px;height:120px;border-radius:16px;background:var(--surface);padding:10px}
+.qr svg{width:100%;height:100%}
+.plans{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.plan{padding:20px;border-radius:22px}
+.plan b{font-family:var(--f-display);font-size:30px;letter-spacing:-.04em}
+.plan ul{margin:10px 0 0;padding-left:18px;font-size:14px}
+.plan.fr{background:var(--surface);border:1px solid var(--line)}
+.plan.pr{background:var(--lime);color:var(--lime-ink)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--forest);color:var(--on-forest);padding:12px 20px;border-radius:999px;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center;border:1.5px solid var(--lime)}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+@media (prefers-reduced-motion:reduce){.btn,.toast,.tgl::after{transition:none}}
+
+@media (max-width:1100px){
+  .stage{grid-template-columns:1fr;justify-items:center}
+  .notes{padding-top:0;width:100%;max-width:640px;display:grid;grid-template-columns:1fr 1fr}
+  .notes.left{order:-1;grid-template-columns:1fr}
+  .two{grid-template-columns:1fr}
+  .camp,.prev{position:static}
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .types{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:760px){
+  .inbox{grid-template-columns:1fr}
+  .chats{border-right:0;border-bottom:1px solid var(--line);display:flex;overflow-x:auto;gap:4px}
+  .chat{min-width:250px}
+  .flow{grid-template-columns:minmax(0,1fr) auto;gap:6px 12px}
+  .flow .when{grid-column:1/-1}
+  .flow .res{grid-column:1;text-align:left}
+  .tpl,.plans{grid-template-columns:1fr}
+  .live{grid-template-columns:1fr}
+  .grp .gl{display:none}
+  .navs{order:3;width:100%;margin-left:0}
+  .theme{margin-left:auto}
+}
+@media (max-width:520px){
+  .stage{padding-block:16px 48px}
+  .phone{border:0;border-radius:24px;height:760px;width:100%}
+  .phone .sb{display:none}
+  .notes{grid-template-columns:1fr}
+  .tiles{gap:8px}
+  .tile b{font-size:30px}
+  .types{grid-template-columns:repeat(2,1fr)}
+  .slotrow{grid-template-columns:52px minmax(0,1fr);}
+  .slotrow > :last-child{grid-column:2}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24"><path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.4L3.5 20.4l1.4-4.2a8.5 8.5 0 1 1 15.6-4.6z"/><path d="M9 8.5c0 3.5 2.6 6.5 6.4 6.6l1-1.6-2-1-1 .9c-1.3-.5-2.3-1.5-2.8-2.8l.9-1-1-2-1.5.9z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-ig" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-gift" viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="13" rx="2"/><path d="M12 8v13M3 12h18M12 8S10 3 7.5 4.5 9 8 12 8zM12 8s2-5 4.5-3.5S15 8 12 8z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></symbol>
+  <symbol id="i-bottle" viewBox="0 0 24 24"><path d="M10 2h4v3h-4zM9 5h6l1 3v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2V8z"/><path d="M8 12h8"/></symbol>
+  <symbol id="i-brush" viewBox="0 0 24 24"><path d="M14 4l6 6-9 9H5v-6z"/><path d="M12 6l6 6"/></symbol>
+  <symbol id="i-spark2" viewBox="0 0 24 24"><path d="M12 2l2 6.5L20 10l-6 1.5L12 18l-2-6.5L4 10l6-1.5z"/></symbol>
+  <symbol id="i-nail" viewBox="0 0 24 24"><path d="M8 21V10a4 4 0 0 1 8 0v11z"/><path d="M10 8a2 2 0 0 1 4 0"/></symbol>
+  <symbol id="i-scissors" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.1 15.9M14.5 14.5 20 20M8.1 8.1 12 12"/></symbol>
+  <symbol id="i-brow" viewBox="0 0 24 24"><path d="M3 13c4-5 11-6 18-3"/><path d="M5 17c3-2 7-2 10 0"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-9 6-14 15-14 0 9-5 15-14 15zM5 19 13 11"/></symbol>
+  <symbol id="spark" viewBox="0 0 48 48"><path d="M24 2c1.6 12.3 9.7 20.4 22 22-12.3 1.6-20.4 9.7-22 22-1.6-12.3-9.7-20.4-22-22C14.3 22.4 22.4 14.3 24 2z"/></symbol>
+  <!-- closed eye with lashes -->
+  <symbol id="lash" viewBox="0 0 120 70"><g fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"><path d="M10 22 Q60 62 110 22"/><path d="M22 33 L12 52M36 40 L30 62M50 44 L47 67M64 45 L65 68M78 42 L83 64M92 36 L100 56M104 28 L116 44"/></g></symbol>
+</svg>
+
+<header class="hdr"><div class="wrap"><div class="r">
+  <span class="logo"><span class="lm"><svg class="ico"><use href="#i-cal"/></svg></span><span class="w">glowbook</span></span>
+  <div class="navs" id="navs">
+    <div class="grp"><span class="gl">Client</span><button data-v="page">Studio page</button><button data-v="book">Booking</button></div>
+    <div class="grp"><span class="gl">Owner</span><button data-v="today">Today</button><button data-v="inbox">Inbox<span class="n" id="inN">3</span></button><button data-v="clients">Clients</button><button data-v="auto">Follow-ups</button><button data-v="setup">Setup</button></div>
+  </div>
+  <button class="theme" id="theme" aria-label="Switch light or dark"><svg class="ico"><use href="#i-moon"/></svg></button>
+</div></div></header>
+
+<main>
+  <section class="view" id="v-page"></section>
+  <section class="view" id="v-book"></section>
+  <section class="view" id="v-today"></section>
+  <section class="view" id="v-inbox"></section>
+  <section class="view" id="v-clients"></section>
+  <section class="view" id="v-auto"></section>
+  <section class="view" id="v-setup"></section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ============================== DATA (all fictional) ============================== */
+const STUDIO={name:'Luna Lash Studio',owner:'Nia',area:'Studio 4, 21 Rye Lane',wa:'+44 7700 900417',slug:'lunalash'};
+const BRANDS={
+  lime:{label:'Lime',b:'#D6F53F',ink:'#0A2B1C',deep:'#0A2B1C',soft:'#F0FAC6'},
+  pink:{label:'Rose',b:'#FF9CC2',ink:'#3A0B20',deep:'#3A0B20',soft:'#FFE6F0'},
+  lilac:{label:'Lilac',b:'#C9B8FF',ink:'#1E1440',deep:'#1E1440',soft:'#EEE8FF'},
+  gold:{label:'Gold',b:'#F2C75C',ink:'#2A1E08',deep:'#2A1E08',soft:'#FBF0D2'}};
+const SVC=[
+  ['Full sets',[['classic','Classic full set','2h',120,true],['hybrid','Hybrid full set','2h 15m',140,true],['volume','Volume full set','2h 30m',160,true]]],
+  ['Refills',[['fill2','Refill, up to 2 weeks','1h',65,false],['fill3','Refill, up to 3 weeks','1h 15m',80,false]]],
+  ['Lifts & brows',[['lift','Lash lift & tint','1h',75,true],['brow','Brow lamination','45m',55,false]]],
+  ['Other',[['removal','Removal','30m',25,false]]]];
+const SVCMAP={}; SVC.forEach(([,items])=>items.forEach(([k,n,d,p,patch])=>SVCMAP[k]={k,n,d,p,patch}));
+const DAYS=[['Mon',9],['Tue',10],['Wed',11],['Thu',12],['Fri',13],['Sat',14],['Sun',15]];
+const SLOTS=['9:30','10:00','11:30','12:00','13:30','14:30','15:30','16:30','18:00'];
+const TAKEN={0:[0,1,2,3,4,5,7,8],1:[0,2,5],2:[1,3,4,6],3:[0,1,6,8],4:[2,3,4,5,7],5:[0,1,2,3,4,5,6,7,8],6:[]};
+const CLOSED=[6];
+const PRODUCTS=[['Aftercare kit','Cleanser, brush and spoolie',28,'i-gift'],['Lash shampoo','Gentle, oil-free foam',16,'i-drop'],['Lash serum','Stronger natural lashes',45,'i-bottle'],['Cleansing brush','Soft, washable',6,'i-brush']];
+
+const TODAY=[
+  {tm:'9:30',n:'Amaka Eze',c:'#B4532A',s:'Volume full set',d:'2h 30m',tags:[['New client','lime'],['Patch test ✓','ok']],done:true},
+  {tm:'12:00',n:'Chloe Bennett',c:'#2E6B8A',s:'Refill, up to 2 weeks',d:'1h',tags:[['Confirmed','ok']],now:true},
+  {tm:'13:00',blk:'Lunch'},
+  {tm:'14:00',n:'Priya Shah',c:'#7A4E9E',s:'Lash lift & tint',d:'1h',tags:[['Confirmed','ok']]},
+  {tm:'15:00',gap:'1h 30m free',sub:'3 people on the waitlist want today'},
+  {tm:'16:30',n:'Jess Morgan',c:'#3E7D5A',s:'Hybrid full set',d:'2h 15m',tags:[['Not confirmed','warn']]},
+  {tm:'18:45',n:'Ruth Adeyemi',c:'#8A6B2E',s:'Removal',d:'30m',tags:[['Deposit paid','ok']]}];
+const REQS=[
+  {id:'r1',cls:'match',h:'Fill the 3pm gap',tag:['3 matches','lime'],p:'Tasha, Leah and Dee asked for any slot today. Send one message to all three and the first to tap gets it.',a:[['Send to all 3','lime','Offer sent to 3 people on WhatsApp. The first to tap gets 3pm.'],['Leave it','','Kept as a free slot.']]},
+  {id:'r2',h:'Zara wants Sat 11am',tag:['Fully booked','warn'],p:'Saturday is full. Offer her the nearest free times instead.',a:[['Offer Fri 2:30 or Sun 10am','lime','Zara got both options on WhatsApp with one-tap booking.'],['Add to Sat waitlist','','Zara is on the Saturday waitlist.']]},
+  {id:'r3',h:'Jess hasn’t confirmed 4:30pm',tag:['Reminder sent 9am',''],p:'Deposit is paid, but she hasn’t replied to the reminder.',a:[['Nudge on WhatsApp','lime','Sent: “Still good for 4:30 today? Reply 1 to confirm.”'],['Call her','','Number copied: +44 7700 900213']]},
+  {id:'r4',h:'9 clients are due a refill',tag:['Not booked',''],p:'Their last set was 2–3 weeks ago and nothing is booked yet.',a:[['Open the list','lime','go:clients:refill']]}];
+
+const CHATS=[
+  {n:'Tasha Green',c:'#A23E5C',src:'From Instagram ad · Volume promo',tag:['New lead','lime'],last:'Hi how much is volume? 😍',tm:'10:42',
+   msgs:[['sys','Came from your Instagram ad “Volume week”'],['in','Hi how much is volume? 😍'],['in','And do you have anything this week']],
+   ai:"Hi Tasha! A volume full set is $160 and takes about 2.5 hours. New clients get 15% off this month, so it’s $136.\n\nThis week I have Thu 11:30am or Fri 3:30pm. Since it’s your first set, there’s a quick 10-minute patch test first. You can pop in today or tomorrow evening.\n\nBook here and pick your time: lunalash.glowbook.app/b/volume",
+   after:'Tasha added to Clients as a lead. The link opens with Volume already picked.'},
+  {n:'Leah Okafor',c:'#2F5E9E',src:'Booked · Thu 2:30pm',tag:['Question',''],last:'Can I wear mascara before?',tm:'09:15',
+   msgs:[['in','Hi! Can I wear mascara before my appointment on Thursday?']],
+   ai:"Hi Leah! Please come with clean lashes: no mascara or eye makeup, and no oily cleansers that day. It helps the glue bond so your set lasts longer.\n\nSee you Thursday at 2:30 ✨",after:'Reply sent.'},
+  {n:'Bisi Johnson',c:'#3E7D5A',src:'Booked · Sat 11am',tag:['Reschedule','warn'],last:'Can I move Saturday?',tm:'Yesterday',
+   msgs:[['in','Hey Nia, something came up. Can I move Saturday?']],
+   ai:"No problem, Bisi. Free times that fit your refill:\n• Fri 13th, 2:30pm\n• Sun 15th, 10am\n\nTap one to switch. Your deposit moves with you.",after:'Options sent. Saturday 11am will open for the waitlist when she switches.'},
+  {n:'Grace Mensah',c:'#8A6B2E',src:'Last visit · 3 days ago',tag:['Aftercare',''],last:'One lash is sticking out',tm:'Yesterday',
+   msgs:[['in','Love them! One lash is sticking out a bit though, is that normal?']],
+   ai:"So glad you love them! One or two can twist in the first few days. Brush them gently with a clean spoolie each morning and they’ll settle.\n\nIf it’s still bothering you after 3 days, pop in and I’ll fix it for free. Our aftercare kit ($28) has the spoolie and cleanser if you need them.",after:'Reply sent with the aftercare kit link.'}];
+
+const SEGS=[['refill','Refill due',9],['lapsed','Lapsed 6+ weeks',31],['leads','Leads not booked',23],['new','New this month',18],['vip','VIP (5+ visits)',42],['kit','Bought aftercare',57],['all','All clients',248]];
+const CL=[
+  {n:'Chloe Bennett',c:'#2E6B8A',last:'26 Oct',st:'Hybrid',due:['Refill due','warn'],v:9,sp:1140,ok:true,g:['refill','vip','kit']},
+  {n:'Hana Ito',c:'#7A4E9E',last:'24 Oct',st:'Volume',due:['Refill due','warn'],v:3,sp:420,ok:true,g:['refill']},
+  {n:'Dee Campbell',c:'#B4532A',last:'22 Oct',st:'Classic',due:['Refill due','warn'],v:6,sp:690,ok:true,g:['refill','vip']},
+  {n:'Maya Ross',c:'#3E7D5A',last:'21 Oct',st:'Hybrid',due:['Refill due','warn'],v:2,sp:205,ok:false,g:['refill','new']},
+  {n:'Simone Hall',c:'#8A6B2E',last:'25 Sep',st:'Volume',due:['Lapsed','warn'],v:4,sp:560,ok:true,g:['lapsed','kit']},
+  {n:'Ola Bankole',c:'#A23E5C',last:'12 Sep',st:'Classic',due:['Lapsed','warn'],v:1,sp:120,ok:true,g:['lapsed']},
+  {n:'Tasha Green',c:'#A23E5C',last:'—',st:'—',due:['Lead','lime'],v:0,sp:0,ok:true,g:['leads','new']},
+  {n:'Kemi Ade',c:'#2F5E9E',last:'—',st:'—',due:['Lead','lime'],v:0,sp:0,ok:false,g:['leads']},
+  {n:'Amaka Eze',c:'#B4532A',last:'Today',st:'Volume',due:['Booked','ok'],v:1,sp:136,ok:true,g:['new']},
+  {n:'Priya Shah',c:'#7A4E9E',last:'19 Oct',st:'Lift',due:['Booked','ok'],v:12,sp:980,ok:true,g:['vip','kit']}];
+const CAMP={
+  refill:"Hi {first_name}! It’s been about 2 weeks since your {last_service}. Book your refill this week to keep the refill price ✨\n\nTap to pick a time: {booking_link}",
+  lapsed:"Hi {first_name}, it’s been a while! Your lashes have probably fully shed by now. Come back this month for 10% off a full set 💕\n\n{booking_link}",
+  leads:"Hi {first_name}! Still thinking about lashes? New clients get 15% off their first set this month. I’ve got times this week: {booking_link}",
+  new:"Hi {first_name}, thank you for coming in! Here’s 10% off your first refill if you book within 3 weeks: {booking_link}",
+  vip:"Hi {first_name}! You’re one of my favourite regulars, so you get first pick of December slots before they go public: {booking_link}",
+  kit:"Hi {first_name}! Running low on lash shampoo? Reply YES and I’ll put one aside for your next visit.",
+  all:"Hi {first_name}! December is filling up fast. Book your Christmas lashes now: {booking_link}"};
+
+const FLOWS=[
+  ['Before the appointment',[
+    {w:'Instantly',n:'Booking confirmation',s:'Date, time, address and deposit receipt',on:true,sent:142,res:'—',msg:"Hi {first_name}! You’re booked for a {service} on {date} at {time} ✨\n\nDeposit received: $20\n📍 Studio 4, 21 Rye Lane\n\nReply here if you need anything.",rules:['Sent to every booking','Includes a calendar link','Free WhatsApp reply window opens']},
+    {w:'48h before',n:'Patch test reminder',s:'New clients only, for full sets and lifts',on:true,sent:18,res:'0 reactions missed',msg:"Hi {first_name}, quick reminder: your patch test is on {patch_date}. It takes 10 minutes and has to be done at least 48 hours before your set.",rules:['Only for new clients','Only for services that need it','Stops if the patch test is done']},
+    {w:'24h before',n:'Appointment reminder',s:'Reply 1 to confirm, 2 to reschedule',on:true,sent:131,res:'2% no-shows',msg:"Hi {first_name}! See you tomorrow at {time} for your {service}.\n\nPlease come with clean lashes (no mascara).\n\nReply 1 to confirm or 2 to reschedule.",rules:['Replies update the booking automatically','Unconfirmed bookings show on Today']}]],
+  ['After the appointment',[
+    {w:'2h after',n:'Aftercare tips',s:'What to do in the first 48 hours',on:true,sent:126,res:'—',msg:"Hope you love your lashes, {first_name}! For the first 24 hours: keep them dry, no steam or sauna, and sleep on your back if you can. Brush gently each morning 💕",rules:['Different tips for lifts and for extensions']},
+    {w:'Day 2',n:'Review request',s:'Asks happy clients for a Google review',on:true,sent:119,res:'38 reviews',msg:"Hi {first_name}, how are your lashes settling in? If you’re happy, a quick Google review would mean the world: {review_link}",rules:['Only sent once per client','Skipped if they reported a problem']},
+    {w:'Day 3',n:'Aftercare kit offer',s:'Only if they haven’t bought one',on:true,sent:64,res:'$868 sold',msg:"Want your set to last longer? The aftercare kit ($28) has everything you need. Reply YES and I’ll have it ready at your next visit, or order here: {shop_link}",rules:['Skipped if they bought a kit','Marketing message: needs opt-in']},
+    {w:'Day 14',n:'Refill reminder',s:'Book while it still counts as a refill',on:true,sent:98,res:'61 rebooked',msg:"Hi {first_name}! It’s been 2 weeks since your {service}. Book your refill this week to keep the refill price ✨ {booking_link}",rules:['Skipped if a refill is already booked','Timed from the last set, not a fixed date']},
+    {w:'Week 6',n:'Win-back',s:'For clients who stopped coming',on:false,sent:0,res:'Off',msg:"Hi {first_name}, it’s been a while! Come back this month for 10% off a full set 💕 {booking_link}",rules:['Marketing message: needs opt-in','Only once every 3 months']}]]];
+
+/* ============================== STATE & HELPERS ============================== */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ico=(id,st='')=>`<svg class="ico" ${st?`style="${st}"`:''}><use href="#${id}"/></svg>`;
+const ini=n=>n.split(' ').map(w=>w[0]).join('');
+const money=v=>'$'+v.toLocaleString('en-US');
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
+const S={view:'page',brand:'lime',svc:'volume',newc:true,step:1,day:3,slot:null,patchDay:null,ans:{},consent:{svc:true,mk:false},chat:0,sent:{},seg:'refill',flow:'Refill reminder',flowOn:{},reqDone:{},biz:'lash',wa:false,ig:false};
+FLOWS.forEach(([,fs])=>fs.forEach(f=>S.flowOn[f.n]=f.on));
+function applyBrand(){const b=BRANDS[S.brand],r=document.documentElement.style;r.setProperty('--b',b.b);r.setProperty('--b-ink',b.ink);r.setProperty('--b-deep',b.deep);r.setProperty('--b-soft',b.soft);}
+
+/* ============================== CLIENT: STUDIO PAGE ============================== */
+function phone(inner){return `<div class="phone"><div class="sb"><span>9:41</span><span>●●● 5G</span></div><div class="scr" id="scr">${inner}</div></div>`;}
+function renderPage(){
+  const groups=SVC.map(([g,items])=>`<div class="sg">${g}</div>${items.map(([k,n,d,p])=>`<button class="svc" data-svc="${k}"><span class="t"><b>${esc(n)}</b><small>${d}</small></span><span class="p">${money(p)}</span><span class="go">${ico('i-arrow','width:15px;height:15px')}</span></button>`).join('')}`).join('');
+  const page=`
+    <div class="cp-top"><span class="nm"><span class="mk"><svg><use href="#lash"/></svg></span>Luna Lash</span><span class="ics"><span>${ico('i-ig','width:16px;height:16px')}</span><span>${ico('i-wa','width:16px;height:16px')}</span></span></div>
+    <div class="cp-hero">
+      <svg class="art"><use href="#lash"/></svg>
+      <span class="rt">★ 4.9 · 312 reviews</span>
+      <h1>Lashes that last to your <em class="it">next fill.</em></h1>
+      <p>Classic, hybrid and volume sets by Nia. ${esc(STUDIO.area)}.</p>
+      <div class="acts"><button class="bbtn" data-go="book">Book now ${ico('i-arrow','width:16px;height:16px')}</button><button class="wbtn" data-wa="1">${ico('i-wa')}WhatsApp</button></div>
+      <div class="next"><i></i>Next free: Tue 10am</div>
+    </div>
+    <div class="offer"><svg class="spark" style="fill:var(--b-deep);stroke:none"><use href="#spark"/></svg><div><b>New clients: 15% off your first full set</b><small>This month only. Applied automatically at booking.</small></div></div>
+    <div class="cp-sec"><h3>Services <small>Prices from</small></h3>${groups}</div>
+    <div class="cp-sec"><h3>Recent sets <small>@lunalash</small></h3><div class="gal">
+      ${[['Volume set','var(--b-deep)'],['Hybrid','#5B3A29'],['Classic','#2E3A4A'],['Lash lift','#4A2E3E']].map(([l,bg])=>`<div class="gt" style="background:linear-gradient(160deg,${bg},color-mix(in srgb,${bg} 60%,var(--b)))"><svg class="l"><use href="#lash"/></svg><span>${l}</span></div>`).join('')}
+    </div></div>
+    <div class="cp-sec"><h3>Reviews <small>Google · 4.9</small></h3>
+      <div class="rv"><q>My volume set lasted a full three weeks. Booking took a minute and the reminders are so handy.</q><small>Hana · Volume full set</small></div>
+      <div class="rv"><q>Nia is so gentle and I fell asleep. Already booked my refill.</q><small>Chloe · Hybrid</small></div></div>
+    <div class="cp-sec"><h3>Shop aftercare <small>Collect in studio</small></h3><div class="shop">
+      ${PRODUCTS.map(([n,d,p,ic])=>`<div class="prod"><div class="pi">${ico(ic,'width:34px;height:34px')}</div><b>${n}</b><small class="faint" style="font-size:12px">${d}</small><div class="row"><span>${money(p)}</span><button data-add="${n}">Add</button></div></div>`).join('')}</div></div>
+    <div class="cp-sec"><h3>Good to know</h3><div class="know">
+      <div>${ico('i-shield')}<span><b>Patch test for new clients</b>10 minutes, at least 48 hours before your first set. You can book it with your set.</span></div>
+      <div>${ico('i-clock')}<span><b>$20 deposit</b>Comes off your total. Moves with you if you reschedule 24h+ ahead.</span></div>
+      <div>${ico('i-drop')}<span><b>Come with clean lashes</b>No mascara or oily cleansers on the day.</span></div></div></div>
+    <div class="cp-foot"><b>Luna Lash Studio</b><br>${esc(STUDIO.area)}<br>Tue–Sat 9:30–19:00 · Sun by request<br>WhatsApp ${STUDIO.wa}</div>
+    <div class="sticky-bar"><button class="bbtn" data-go="book">Book now</button><button class="wbtn" data-wa="1" aria-label="Chat on WhatsApp">${ico('i-wa')}</button></div>`;
+  $('#v-page').innerHTML=`<div class="wrap"><div class="stage">
+    <div class="notes left">
+      <div class="intro"><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}Client side</span><h2>The page every Instagram and WhatsApp link points to.</h2><p>Built to turn a visitor into a booking in under a minute, on a phone.</p></div>
+      <div class="note"><b><i>1</i>One link in the bio</b><p>lunalash.glowbook.app. Ads, stories and WhatsApp all send people here.</p></div>
+      <div class="note"><b><i>2</i>Offer up front</b><p>A first-visit discount and the next free slot show before anyone scrolls.</p></div>
+      <div class="note"><b><i>3</i>Sticky Book button</b><p>Always one tap from booking, wherever they are on the page.</p></div>
+    </div>
+    ${phone(page)}
+    <div class="notes">
+      <div class="note"><b><i>4</i>WhatsApp stays in</b><p>People who prefer to chat land in your Glowbook inbox, already saved as a lead.</p></div>
+      <div class="note"><b><i>5</i>Sells aftercare</b><p>Products can be added to a booking and collected in the studio.</p></div>
+      <div class="note"><b><i>6</i>Tracks every visit</b><p>Your ad pixel is installed, so you can retarget people who looked but didn't book.</p></div>
+      <div class="note"><b><i>7</i>Your brand</b><p>Change the colour in Setup and this page updates. Try it.</p></div>
+    </div>
+  </div></div>`;
+}
+
+/* ============================== CLIENT: BOOKING ============================== */
+function needsPatch(){return S.newc && SVCMAP[S.svc].patch;}
+function patchOpts(){const o=[]; for(let i=0;i<=S.day-2&&o.length<3;i++){ if(!CLOSED.includes(i)) o.push(`${DAYS[i][0]} ${DAYS[i][1]}, ${i===0?'5pm':'6pm'}`);} return o;}
+function renderBook(){
+  const sv=SVCMAP[S.svc], total=Math.round(sv.p*(S.newc&&sv.patch?0.85:1));
+  const steps=['Service','Time','Details','Deposit','Done'];
+  let body='', foot='', canNext=true;
+  if(S.step===1){
+    body=`<h2>What are you booking?</h2>
+      <div class="seg2" role="group" aria-label="Have you been before"><button data-newc="1" aria-pressed="${S.newc}">First visit</button><button data-newc="0" aria-pressed="${!S.newc}">Been before</button></div>
+      ${SVC.map(([g,items])=>`<div class="sg" style="margin:4px 0 0">${g}</div>${items.map(([k,n,d,p])=>`<button class="svc" data-pick="${k}" aria-pressed="${k===S.svc}"><span class="t"><b>${esc(n)}</b><small>${d}</small></span><span class="p">${money(p)}</span></button>`).join('')}`).join('')}`;
+  } else if(S.step===2){
+    const tk=TAKEN[S.day]||[];
+    body=`<h2>Pick a time</h2><p class="sub">${esc(sv.n)} · ${sv.d}</p>
+      <div class="days">${DAYS.map(([d,n],i)=>`<button class="day" data-day="${i}" aria-pressed="${i===S.day}" ${CLOSED.includes(i)?'disabled':''}>${d}<b>${n}</b>${(TAKEN[i]||[]).length>=SLOTS.length?'Full':CLOSED.includes(i)?'Closed':'Nov'}</button>`).join('')}</div>
+      <div class="slots">${SLOTS.map((s,i)=>`<button class="slot" data-slot="${s}" aria-pressed="${S.slot===s}" ${tk.includes(i)?'disabled':''}>${s}</button>`).join('')}</div>
+      ${tk.length>=SLOTS.length?'<button class="chk" data-wait="1" aria-checked="false"><span class="bx">'+ico('i-check')+'</span><span>This day is full. <b>Join the waitlist</b> and get a WhatsApp message if a slot opens.</span></button>':''}
+      ${needsPatch()?`<div class="q"><b>Patch test (10 min, free)</b><span class="faint" style="font-size:13px">Needs to be at least 48 hours before your set.</span><div class="opts" style="margin-top:8px">${patchOpts().length?patchOpts().map(t=>`<button data-patch="${t}" aria-pressed="${S.patchDay===t}">${t}</button>`).join(''):'<span class="pill warn">Too soon for a first set. Pick Wed 11 or later.</span>'}</div></div>`:''}`;
+    canNext=!!S.slot && (!needsPatch()||!!S.patchDay);
+  } else if(S.step===3){
+    const Q=[['allergy','Any allergies (glue, latex, cosmetics)?',['No','Yes']],['lenses','Do you wear contact lenses?',['No','Yes']],['before','Had lash extensions before?',['Yes','No']]];
+    body=`<h2>Your details</h2>
+      <div class="fld"><label for="bName">Name</label><input id="bName" value="Tasha Green" autocomplete="off"></div>
+      <div class="fld"><label for="bPhone">WhatsApp number</label><input id="bPhone" value="+44 7700 900311" autocomplete="off"></div>
+      ${Q.map(([k,q,o])=>`<div class="q"><b>${q}</b><div class="opts">${o.map(x=>`<button data-q="${k}" data-a="${x}" aria-pressed="${(S.ans[k]||o[0])===x}">${x}</button>`).join('')}</div></div>`).join('')}
+      <button class="chk" data-c="svc" role="checkbox" aria-checked="${S.consent.svc}"><span class="bx">${ico('i-check')}</span><span>Send my confirmation and reminders on WhatsApp</span></button>
+      <button class="chk" data-c="mk" role="checkbox" aria-checked="${S.consent.mk}"><span class="bx">${ico('i-check')}</span><span>Send me refill reminders and offers (optional, stop anytime)</span></button>`;
+  } else if(S.step===4){
+    body=`<h2>Pay your deposit</h2><p class="sub">Secures your slot. The rest is paid in the studio.</p>
+      <div class="sum">
+        <div class="r2"><span>${esc(sv.n)}</span><span>${money(sv.p)}</span></div>
+        ${S.newc&&sv.patch?`<div class="r2"><span>First-visit 15% off</span><span>−${money(sv.p-total)}</span></div>`:''}
+        <div class="r2"><span>${DAYS[S.day][0]} ${DAYS[S.day][1]} Nov · ${S.slot}</span><span></span></div>
+        ${needsPatch()?`<div class="r2"><span>Patch test · ${esc(S.patchDay)}</span><span>Free</span></div>`:''}
+        <div class="r2 t"><span>Deposit today</span><span>$20</span></div>
+        <div class="r2"><span class="faint">Left to pay on the day</span><span class="faint">${money(total-20)}</span></div></div>
+      <button class="chk" aria-checked="false" data-addkit="1"><span class="bx">${ico('i-check')}</span><span>Add an aftercare kit for <b>$28</b>, ready at your appointment</span></button>
+      <div class="pay"><button class="p1" data-pay="1">Pay $20 with Apple Pay</button><button class="p2" data-pay="1">Pay with card</button></div>
+      <p class="faint" style="font-size:12.5px;margin:0">Prototype only: no payment is taken. In the live app, deposits go to the studio's own Stripe account.</p>`;
+    canNext=false;
+  } else {
+    body=`<div class="done"><div class="ok">${ico('i-check')}</div><h2>You're booked!</h2>
+      <p class="sub" style="margin-top:6px">${esc(sv.n)} · ${DAYS[S.day][0]} ${DAYS[S.day][1]} Nov at ${S.slot}</p>
+      <div class="wa-prev"><div class="h">${ico('i-wa','width:14px;height:14px;color:var(--wa)')}WhatsApp from Luna Lash Studio</div>
+        <div class="wa-msg">Hi Tasha! You’re booked for a ${esc(sv.n.toLowerCase())} on ${DAYS[S.day][0]} ${DAYS[S.day][1]} Nov at ${S.slot} ✨
+${needsPatch()?`\nPatch test: ${S.patchDay}\n`:''}
+Deposit received: $20
+📍 ${esc(STUDIO.area)}<small>${S.slot} ✓✓</small></div></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap"><button class="btn sm" data-cal="1">${ico('i-cal')}Add to calendar</button><button class="btn sm" data-restart="1">Book another</button></div></div>`;
+  }
+  if(S.step<4) foot=`<div class="bk-foot"><button class="bbtn" id="bkNext" ${canNext?'':'disabled'}>${S.step===3?'Continue to deposit':'Continue'} · ${money(total)}</button></div>`;
+  const inner=`<div class="bk-top">${S.step>1&&S.step<5?`<button data-back="1" aria-label="Back">${ico('i-back','width:16px;height:16px')}</button>`:`<button data-go="page" aria-label="Back to studio page">${ico('i-back','width:16px;height:16px')}</button>`}<b>Book with Luna Lash</b></div>
+    <div class="steps" aria-label="Step ${S.step} of 5">${steps.map((_,i)=>`<i class="${i<S.step?'on':''}"></i>`).join('')}</div>
+    <div class="bk">${body}</div>${foot}`;
+  $('#v-book').innerHTML=`<div class="wrap"><div class="stage">
+    <div class="notes left">
+      <div class="intro"><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}Booking flow · step ${S.step} of 5</span><h2>Five taps from Instagram to a paid deposit.</h2><p>Lash rules are built in, so Nia doesn't have to check each booking.</p></div>
+      <div class="note"><b><i>1</i>Patch test built in</b><p>Only asked of new clients booking a set or lift, and it must be 48h+ before.</p></div>
+      <div class="note"><b><i>2</i>Refill vs full set</b><p>Refills are only offered if the last set was within 3 weeks. Otherwise it books a full set.</p></div>
+    </div>
+    ${phone(inner)}
+    <div class="notes">
+      <div class="note"><b><i>3</i>Consultation form</b><p>Allergies and contact lenses are asked once, saved to her client card, and shown on Today.</p></div>
+      <div class="note"><b><i>4</i>Two kinds of consent</b><p>Reminders are part of the service. Offers need a separate opt-in, which keeps retargeting legal.</p></div>
+      <div class="note"><b><i>5</i>Deposits cut no-shows</b><p>Paid straight to her account. Full days offer the waitlist instead of a dead end.</p></div>
+    </div>
+  </div></div>`;
+}
+
+/* ============================== OWNER: TODAY ============================== */
+function renderToday(){
+  $('#v-today').innerHTML=`<div class="wrap">
+    <div class="vhead"><div><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}Monday 9 November</span><h1>Morning, <em class="it">Nia.</em></h1><p>5 clients today and one gap worth filling.</p></div>
+      <button class="btn forest" data-go="page">View my studio page ${ico('i-arrow','width:16px;height:16px')}</button></div>
+    <div class="tiles">
+      <div class="card tile fo"><span>Today</span><b>$626</b><small>5 bookings · 7h 15m</small></div>
+      <div class="card tile"><span>This week</span><b>$2,910</b><small>↑ 12% on last week</small></div>
+      <div class="card tile li"><span>No-shows, last 30 days</span><b>2%</b><small>was 11% before deposits</small></div>
+      <div class="card tile"><span>Rebooked before leaving</span><b>64%</b><small>refill booked at checkout</small></div>
+    </div>
+    <div class="two">
+      <div class="card sched">${TODAY.map(r=>r.blk?`<div class="slotrow blk"><span class="tm">${r.tm}</span><span class="who"><b>${r.blk}</b></span><span></span></div>`:
+        r.gap?`<div class="slotrow gap"><span class="tm">${r.tm}</span><span class="who"><span><b>${r.gap}</b><small>${r.sub}</small></span></span><button class="btn sm lime" data-req="r1:0">Fill it</button></div>`:
+        `<div class="slotrow ${r.now?'now':''}"><span class="tm">${r.tm}</span><span class="who"><span class="av" style="background:${r.c}">${ini(r.n)}</span><span style="min-width:0"><b>${esc(r.n)}</b><small>${esc(r.s)} · ${r.d}</small></span></span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">${r.now?'<span class="pill lime">In chair</span>':''}${r.done?'<span class="pill">Done</span>':''}${r.tags.map(([t,c])=>`<span class="pill ${c}">${t}</span>`).join('')}</span></div>`).join('')}</div>
+      <div class="card need"><h3>${ico('i-spark2')}Needs you</h3>${REQS.map(r=>`<div class="req ${r.cls||''} ${S.reqDone[r.id]?'resolved':''}" id="${r.id}"><div class="tp"><b>${esc(r.h)}</b><span class="pill ${r.tag[1]}">${esc(r.tag[0])}</span></div><p>${esc(r.p)}</p>
+        <div class="acts">${S.reqDone[r.id]?`<span class="pill ok">${ico('i-check','width:13px;height:13px')}Done</span>`:r.a.map(([t,c],i)=>`<button class="btn sm ${c}" data-req="${r.id}:${i}">${esc(t)}</button>`).join('')}</div></div>`).join('')}</div>
+    </div></div>`;
+}
+
+/* ============================== OWNER: INBOX ============================== */
+function renderInbox(){
+  const c=CHATS[S.chat], sent=S.sent[S.chat];
+  $('#v-inbox').innerHTML=`<div class="wrap">
+    <div class="vhead"><div><span class="eyebrow">${ico('i-wa','width:14px;height:14px')}WhatsApp inbox</span><h1>Every chat, <em class="it">one place.</em></h1><p>Messages to your WhatsApp Business number land here. Glowbook drafts a reply with a booking link, and you tap send.</p></div></div>
+    <div class="card inbox">
+      <div class="chats" role="listbox" aria-label="Conversations">${CHATS.map((x,i)=>`<button class="chat" role="option" data-chat="${i}" aria-selected="${i===S.chat}"><span class="av" style="background:${x.c}">${ini(x.n)}</span><span class="t"><b>${esc(x.n)}<span>${x.tm}</span></b><small>${esc(x.last)}</small><span class="pill ${S.sent[i]?'ok':x.tag[1]}">${S.sent[i]?'Replied':esc(x.tag[0])}</span></span></button>`).join('')}</div>
+      <div class="thread">
+        <div class="th-h"><span class="av" style="background:${c.c}">${ini(c.n)}</span><div><b>${esc(c.n)}</b><div class="faint" style="font-size:12.5px">${esc(c.src)}</div></div>
+          <div class="r"><button class="btn sm" data-act="client">Client card</button><button class="btn sm" data-act="book">Book for her</button></div></div>
+        <div class="msgs">${c.msgs.map(([w,t])=>w==='sys'?`<div class="m sys">${esc(t)}</div>`:`<div class="m">${esc(t)}<small>${c.tm}</small></div>`).join('')}${sent?`<div class="m me">${esc(c.ai)}<small>now ✓✓</small></div>`:''}</div>
+        ${sent?'':`<div class="ai"><div class="h">${ico('i-spark2','width:15px;height:15px')}Suggested reply · uses your prices, policies and free times</div><p>${esc(c.ai)}</p><div class="acts"><button class="btn sm forest" data-send="1">Send</button><button class="btn sm" data-act="edit">Edit first</button></div></div>`}
+      </div>
+    </div></div>`;
+}
+
+/* ============================== OWNER: CLIENTS ============================== */
+function renderClients(){
+  const seg=SEGS.find(s=>s[0]===S.seg), rows=CL.filter(c=>S.seg==='all'||c.g.includes(S.seg));
+  const okN=Math.round(seg[2]*(rows.filter(r=>r.ok).length/Math.max(rows.length,1)));
+  $('#v-clients').innerHTML=`<div class="wrap">
+    <div class="vhead"><div><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}Client list</span><h1>248 clients. <em class="it">Zero spreadsheets.</em></h1><p>Everyone who books, buys or messages is saved here with their visits, lash style and consent. Pick a group to message them or build an ad audience.</p></div></div>
+    <div class="segs" role="group" aria-label="Client groups">${SEGS.map(([k,l,n])=>`<button data-seg="${k}" aria-pressed="${k===S.seg}">${l}<span>${n}</span></button>`).join('')}</div>
+    <div class="two">
+      <div class="card ctable"><div class="tw"><table>
+        <thead><tr><th>Client</th><th>Last visit</th><th>Style</th><th>Status</th><th>Visits</th><th>Spent</th><th>Offers OK</th></tr></thead>
+        <tbody>${rows.map(r=>`<tr><td><span class="nm"><span class="av" style="background:${r.c}">${ini(r.n)}</span>${esc(r.n)}</span></td><td>${r.last}</td><td>${r.st}</td><td><span class="pill ${r.due[1]}">${r.due[0]}</span></td><td>${r.v}</td><td>${r.sp?money(r.sp):'—'}</td><td>${r.ok?`<span class="pill ok">${ico('i-check','width:12px;height:12px')}Yes</span>`:'<span class="faint">No</span>'}</td></tr>`).join('')}</tbody></table></div>
+        <div class="more">Showing ${rows.length} of ${seg[2]} · sample data</div></div>
+      <div class="card camp">
+        <h3>Message “${esc(seg[1])}”</h3>
+        <div class="aud"><b>${okN}</b><span>of ${seg[2]} said yes to offers. Only they get this message.</span></div>
+        <label class="faint" for="campMsg" style="font-size:13px;font-weight:600">WhatsApp message</label>
+        <textarea id="campMsg">${esc(CAMP[S.seg])}</textarea>
+        <div class="vars">${['{first_name}','{last_service}','{booking_link}'].map(v=>`<button data-var="${v}">${v}</button>`).join('')}</div>
+        <div class="wa-prev" style="margin-top:0"><div class="h">${ico('i-wa','width:14px;height:14px;color:var(--wa)')}Preview for Chloe</div><div class="wa-msg" id="campPrev"></div></div>
+        <div class="acts"><button class="btn forest" data-camp="send">Send to ${okN}</button><button class="btn" data-camp="meta">Make an ad audience</button></div>
+        <div class="last">Last campaign, <b>“Refill week”</b>: sent to 24, <b>9 booked</b>, $585 in bookings.</div>
+      </div>
+    </div></div>`;
+  prevCamp();
+}
+function prevCamp(){const t=$('#campMsg'); if(!t) return; $('#campPrev').textContent=t.value.replace(/\{first_name\}/g,'Chloe').replace(/\{last_service\}/g,'hybrid set').replace(/\{booking_link\}/g,'lunalash.glowbook.app/b');}
+
+/* ============================== OWNER: FOLLOW-UPS ============================== */
+function renderAuto(){
+  let sel; FLOWS.forEach(([,fs])=>fs.forEach(f=>{if(f.n===S.flow) sel=f;}));
+  $('#v-auto').innerHTML=`<div class="wrap">
+    <div class="vhead"><div><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}Automatic follow-ups</span><h1>Messages that <em class="it">send themselves.</em></h1><p>Each one is timed from the appointment and skips people it doesn't apply to. Turn them on once and forget about them.</p></div></div>
+    <div class="two">
+      <div class="flows">${FLOWS.map(([g,fs])=>`<div class="fg">${g}</div>${fs.map(f=>`<button class="flow" data-flow="${esc(f.n)}" aria-selected="${f.n===S.flow}"><span class="when">${f.w}</span><span style="min-width:0"><b>${esc(f.n)}</b><small>${esc(f.s)}</small></span><span class="res">${S.flowOn[f.n]?`<b>${f.res==='—'?f.sent:esc(f.res.split(' ')[0])}</b><br>${f.res==='—'?'sent':esc(f.res.split(' ').slice(1).join(' '))}`:'<span class="faint">Off</span>'}</span><span class="tgl" role="switch" aria-checked="${S.flowOn[f.n]}" aria-label="Turn ${esc(f.n)} on or off" data-tg="${esc(f.n)}"></span></button>`).join('')}`).join('')}</div>
+      <div class="card prev"><span class="pill ${S.flowOn[sel.n]?'ok':''}">${S.flowOn[sel.n]?'On':'Off'} · ${sel.w}</span><h3 style="margin-top:10px">${esc(sel.n)}</h3>
+        <div class="rules">${sel.rules.map(r=>`<div>${ico('i-check')}<span>${esc(r)}</span></div>`).join('')}</div>
+        <div class="wa-prev"><div class="h">${ico('i-wa','width:14px;height:14px;color:var(--wa)')}What the client sees</div><div class="wa-msg">${esc(sel.msg.replace(/\{first_name\}/g,'Chloe').replace(/\{service\}/g,'hybrid set').replace(/\{time\}/g,'12:00').replace(/\{date\}/g,'Mon 9 Nov').replace(/\{patch_date\}/g,'Sat 7 Nov').replace(/\{[a-z_]+\}/g,'lunalash.glowbook.app/b'))}<small>✓✓</small></div></div>
+        <p class="faint" style="font-size:13px;margin:14px 0 0">WhatsApp needs approved message templates for anything sent outside a 24-hour chat window. Glowbook submits these for you.</p></div>
+    </div></div>`;
+}
+
+/* ============================== OWNER: SETUP ============================== */
+const TYPES=[['lash','Lashes','lash'],['brow','Brows','i-brow'],['nails','Nails','i-nail'],['hair','Hair','i-scissors'],['barber','Barber','i-scissors'],['skin','Skin','i-leaf']];
+const TPL={lash:[['Classic full set',120],['Hybrid full set',140],['Volume full set',160],['Refill, 2 weeks',65],['Lash lift & tint',75],['Removal',25]],
+  brow:[['Brow lamination',55],['Brow tint',18],['Wax & shape',22],['Henna brows',35]],
+  nails:[['Gel manicure',35],['BIAB overlay',45],['Acrylic full set',50],['Infill',35],['Removal',10]],
+  hair:[['Cut & blow-dry',55],['Silk press',70],['Knotless braids',180],['Wash & treatment',35]],
+  barber:[['Haircut',25],['Skin fade',28],['Beard trim',12],['Cut & beard',35]],
+  skin:[['Express facial',45],['Hydrafacial',95],['Chemical peel',80],['Dermaplaning',50]]};
+function renderSetup(){
+  $('#v-setup').innerHTML=`<div class="wrap"><div class="setup">
+    <div class="vhead"><div><span class="eyebrow">${ico('i-spark2','width:14px;height:14px')}For any beauty business</span><h1>Set up in <em class="it">10 minutes.</em></h1><p>Pick your trade, check your prices, connect WhatsApp, share your link. No website or developer needed.</p></div></div>
+    <div class="card sstep"><div class="hd done"><span class="n">1</span><h3>What do you do?</h3></div>
+      <div class="types">${TYPES.map(([k,l,ic])=>`<button class="type" data-type="${k}" aria-pressed="${k===S.biz}">${k==='lash'?'<svg style="width:34px;height:24px"><use href="#lash"/></svg>':ico(ic,'width:30px;height:30px')}${l}</button>`).join('')}</div></div>
+    <div class="card sstep"><div class="hd done"><span class="n">2</span><h3>Your services and prices</h3></div>
+      <p class="muted" style="margin:-6px 0 14px;font-size:14px">Started from a ${TYPES.find(t=>t[0]===S.biz)[1].toLowerCase()} template. Change anything.</p>
+      <div class="tpl">${TPL[S.biz].map(([n,p])=>`<div><span>${esc(n)}</span><input type="number" value="${p}" aria-label="${esc(n)} price"></div>`).join('')}</div></div>
+    <div class="card sstep"><div class="hd done"><span class="n">3</span><h3>Your brand colour</h3></div>
+      <div class="sw">${Object.entries(BRANDS).map(([k,b])=>`<button data-brand="${k}" aria-pressed="${k===S.brand}"><i style="background:${b.b};border-color:${b.deep}"></i>${b.label}</button>`).join('')}</div>
+      <p class="faint" style="font-size:13px;margin:12px 0 0">Your studio page and booking flow use this colour. Open “Studio page” to see it.</p></div>
+    <div class="card sstep"><div class="hd ${S.wa?'done':''}"><span class="n">4</span><h3>Connect your channels</h3></div>
+      <div class="conn">
+        <div class="c"><span class="ic" style="background:var(--wa)">${ico('i-wa')}</span><span><b>WhatsApp Business</b><small>${S.wa?'Connected · '+STUDIO.wa:'Use your existing number'}</small></span>${S.wa?'<span class="pill ok">Connected</span>':'<button class="btn sm wa" data-conn="wa">Connect</button>'}</div>
+        <div class="c"><span class="ic" style="background:#8A3FB8">${ico('i-ig')}</span><span><b>Instagram</b><small>${S.ig?'“Book” button added':'Adds a Book button to your profile'}</small></span>${S.ig?'<span class="pill ok">Connected</span>':'<button class="btn sm" data-conn="ig">Connect</button>'}</div>
+      </div></div>
+    <div class="card sstep live"><div><div class="hd"><span class="n">5</span><h3 style="color:var(--on-forest)">Your page is live</h3></div>
+      <div class="url">${STUDIO.slug}.glowbook.app</div><p>Put it in your Instagram bio, your WhatsApp status and your ads. Print the QR code for the studio mirror.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn lime" data-copy="1">Copy link</button><button class="btn" style="background:transparent;color:var(--on-forest);border-color:rgba(241,245,236,.35)" data-go="page">Open page</button></div></div>
+      <div class="qr" aria-hidden="true"><svg viewBox="0 0 21 21" shape-rendering="crispEdges" id="qr"></svg></div></div>
+    <div class="plans">
+      <div class="plan fr"><span class="muted">Starter</span><br><b>Free</b><ul><li>Studio page and booking</li><li>Up to 40 bookings a month</li><li>Reminders by email</li></ul></div>
+      <div class="plan pr"><span>Pro</span><br><b>$29<span style="font-size:16px">/mo</span></b><ul><li>Unlimited bookings and deposits</li><li>WhatsApp inbox and follow-ups</li><li>Client groups, campaigns and ad audiences</li><li>Shop for aftercare products</li></ul></div>
+    </div>
+  </div></div>`;
+  drawQR();
+}
+function drawQR(){ // decorative QR-style pattern, not a scannable code
+  const g=$('#qr'); if(!g) return; let h=''; let seed=7;
+  const rnd=()=>(seed=(seed*9301+49297)%233280)/233280;
+  const finder=(x,y)=>`<rect x="${x}" y="${y}" width="7" height="7" fill="#0A2B1C"/><rect x="${x+1}" y="${y+1}" width="5" height="5" fill="#fff"/><rect x="${x+2}" y="${y+2}" width="3" height="3" fill="#0A2B1C"/>`;
+  for(let y=0;y<21;y++)for(let x=0;x<21;x++){ const inF=(x<8&&y<8)||(x>12&&y<8)||(x<8&&y>12); if(!inF&&rnd()>.52) h+=`<rect x="${x}" y="${y}" width="1" height="1" fill="#0A2B1C"/>`; }
+  g.innerHTML=h+finder(0,0)+finder(14,0)+finder(0,14);
+}
+
+/* ============================== ROUTING & EVENTS ============================== */
+const VIEWS=['page','book','today','inbox','clients','auto','setup'];
+const R={page:renderPage,book:renderBook,today:renderToday,inbox:renderInbox,clients:renderClients,auto:renderAuto,setup:renderSetup};
+function show(v,scroll=true){
+  if(!VIEWS.includes(v)) v='page'; S.view=v; R[v]();
+  $$('.view').forEach(x=>x.classList.toggle('on',x.id==='v-'+v));
+  $$('#navs button').forEach(b=>b.toggleAttribute('aria-current',b.dataset.v===v)); $$('#navs button').forEach(b=>{ if(b.dataset.v===v) b.setAttribute('aria-current','page'); });
+  if(location.hash.slice(1)!==v){ try{ history.replaceState(null,'','#'+v); }catch(e){} }
+  if(scroll) window.scrollTo(0,0);
+}
+function rerender(){ R[S.view](); }
+$('#navs').addEventListener('click',e=>{const b=e.target.closest('[data-v]'); if(b) show(b.dataset.v);});
+window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
+function isDark(){const t=document.documentElement.dataset.theme; return t?t==='dark':matchMedia('(prefers-color-scheme: dark)').matches;}
+function syncTheme(){$('#theme use').setAttribute('href',isDark()?'#i-sun':'#i-moon');}
+$('#theme').onclick=()=>{document.documentElement.dataset.theme=isDark()?'light':'dark'; syncTheme();};
+async function copy(t,m){try{await navigator.clipboard.writeText(t);toast(m);}catch(e){toast('Copy didn’t work here. The link is '+t);}}
+
+document.addEventListener('click',e=>{
+  const T=x=>e.target.closest(x);
+  let b;
+  if(b=T('[data-go]')){ S.step=1; show(b.dataset.go); return; }
+  if(b=T('[data-wa]')){ toast('Opens WhatsApp with “Hi Nia, I’d like to book…” typed in. The chat lands in the Glowbook inbox.'); return; }
+  if(b=T('[data-svc]')){ S.svc=b.dataset.svc; S.step=2; S.slot=null; show('book'); return; }
+  if(b=T('[data-add]')){ toast(`${b.dataset.add} added. Collect it at your appointment.`); return; }
+  // booking
+  if(b=T('[data-newc]')){ S.newc=b.dataset.newc==='1'; rerender(); return; }
+  if(b=T('[data-pick]')){ S.svc=b.dataset.pick; rerender(); return; }
+  if(b=T('[data-day]')){ S.day=+b.dataset.day; S.slot=null; if(!patchOpts().includes(S.patchDay)) S.patchDay=null; rerender(); return; }
+  if(b=T('[data-slot]')){ S.slot=b.dataset.slot; rerender(); return; }
+  if(b=T('[data-patch]')){ S.patchDay=b.dataset.patch; rerender(); return; }
+  if(b=T('[data-wait]')){ toast('You’re on the waitlist. We’ll message you on WhatsApp if a slot opens.'); b.setAttribute('aria-checked','true'); return; }
+  if(b=T('[data-q]')){ S.ans[b.dataset.q]=b.dataset.a; rerender(); return; }
+  if(b=T('[data-c]')){ S.consent[b.dataset.c]=!S.consent[b.dataset.c]; b.setAttribute('aria-checked',S.consent[b.dataset.c]); return; }
+  if(b=T('[data-addkit]')){ const on=b.getAttribute('aria-checked')!=='true'; b.setAttribute('aria-checked',on); toast(on?'Aftercare kit added: $28, paid on the day.':'Kit removed.'); return; }
+  if(b=T('#bkNext')){ if(S.step===2 && !S.slot) return; S.step++; rerender(); $('#scr').scrollTop=0; return; }
+  if(b=T('[data-back]')){ S.step=Math.max(1,S.step-1); rerender(); return; }
+  if(b=T('[data-pay]')){ S.step=5; rerender(); return; }
+  if(b=T('[data-cal]')){ toast('Adds the appointment to Apple or Google Calendar.'); return; }
+  if(b=T('[data-restart]')){ S.step=1; S.slot=null; S.patchDay=null; rerender(); return; }
+  // today
+  if(b=T('[data-req]')){ const [id,i]=b.dataset.req.split(':'); const r=REQS.find(x=>x.id===id), m=r.a[+i][2];
+    if(m.startsWith('go:')){ const [,v,seg]=m.split(':'); S.seg=seg; show(v); return; }
+    S.reqDone[id]=true; if(S.view==='today') rerender(); toast(m); return; }
+  // inbox
+  if(b=T('[data-chat]')){ S.chat=+b.dataset.chat; rerender(); return; }
+  if(b=T('[data-send]')){ S.sent[S.chat]=true; const left=CHATS.length-Object.keys(S.sent).length; $('#inN').textContent=left; $('#inN').hidden=!left; rerender(); toast(CHATS[S.chat].after); return; }
+  if(b=T('[data-act]')){ const a=b.dataset.act; toast(a==='edit'?'Opens the reply so you can change it before sending.':a==='client'?'Opens her client card: visits, lash style, allergies and consent.':'Books her in from the chat and sends the confirmation.'); return; }
+  // clients
+  if(b=T('[data-seg]')){ S.seg=b.dataset.seg; rerender(); return; }
+  if(b=T('[data-var]')){ const t=$('#campMsg'); t.value+=' '+b.dataset.var; prevCamp(); return; }
+  if(b=T('[data-camp]')){ toast(b.dataset.camp==='send'?'Scheduled. Messages go out over the next 10 minutes, and replies land in your inbox.':'Creates a Meta ad audience from opted-in clients only. Numbers are hashed before upload.'); return; }
+  // automations
+  if(b=T('[data-tg]')){ e.stopPropagation(); const n=b.dataset.tg; S.flowOn[n]=!S.flowOn[n]; S.flow=n; rerender(); toast(`${n} is ${S.flowOn[n]?'on':'off'}.`); return; }
+  if(b=T('[data-flow]')){ S.flow=b.dataset.flow; rerender(); return; }
+  // setup
+  if(b=T('[data-type]')){ S.biz=b.dataset.type; rerender(); return; }
+  if(b=T('[data-brand]')){ S.brand=b.dataset.brand; applyBrand(); rerender(); toast(`Studio page colour set to ${BRANDS[S.brand].label}.`); return; }
+  if(b=T('[data-conn]')){ S[b.dataset.conn]=true; rerender(); toast(b.dataset.conn==='wa'?'WhatsApp Business connected. Messages now come into your inbox.':'Instagram connected. A Book button now shows on your profile.'); return; }
+  if(b=T('[data-copy]')){ copy('https://lunalash.glowbook.app','Link copied.'); return; }
+});
+document.addEventListener('input',e=>{ if(e.target.id==='campMsg') prevCamp(); });
+
+applyBrand(); syncTheme(); show(location.hash.slice(1)||'page',false);
+</script>
