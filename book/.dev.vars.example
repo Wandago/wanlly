@@ -1,0 +1,6 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+APP_URL=http://localhost:8787
+# With this on and no RESEND_API_KEY, emails are printed to the terminal and
+# the sign-in link is shown on screen instead of being emailed.
+DEV_SHOW_LINKS=1
+# RESEND_API_KEY=re_xxx

@@ -1,0 +1,15 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "wanlly-book",
+  "main": "src/index.tsx",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public", "binding": "ASSETS" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "wanlly-book", "database_id": "REPLACE_WITH_YOUR_D1_ID", "migrations_dir": "migrations" }
+  ],
+  "triggers": { "crons": ["*/15 * * * *"] },
+  "vars": {
+    "APP_URL": "https://book.wanlly.africa",
+    "MAIL_FROM": "Wanlly Book <bookings@wanlly.africa>"
+  }
+}
