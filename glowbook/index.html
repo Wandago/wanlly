@@ -92,21 +92,30 @@ main{min-width:0;padding-block:28px 72px;padding-left:max(28px,env(safe-area-ins
 .vhead h1{font-size:clamp(24px,3vw,30px)}
 .vhead p{margin:6px 0 0;color:var(--muted);max-width:66ch}
 
-/* ---------- phone stage ---------- */
-.stage{display:grid;grid-template-columns:minmax(0,1fr) 380px minmax(0,1fr);gap:28px;align-items:start}
-.notes{display:flex;flex-direction:column;gap:10px}
-.notes .intro h2{font-size:24px;line-height:1.15;margin-bottom:6px}
-.notes .intro p{color:var(--muted);margin:0 0 6px}
+/* ---------- browser stage: the customer-facing website ---------- */
+.stage{display:flex;flex-direction:column;gap:16px}
+.stage-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.stage-top h2{font-size:24px;line-height:1.15}
+.stage-top p{color:var(--muted);margin:6px 0 0;max-width:68ch}
+.dev{display:flex;padding:3px;border-radius:10px;background:var(--sunk);gap:2px}
+.dev button{padding:6px 12px;border-radius:8px;font-size:13px;font-weight:550;color:var(--muted)}
+.dev button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.notes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .note{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px}
 .note b{display:flex;align-items:center;gap:8px;font-size:14.5px;margin-bottom:2px}
 .note b i{width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--on-ink);display:grid;place-items:center;font-style:normal;font-size:11px;font-weight:650;flex:none}
 .note p{margin:0;font-size:13.5px;color:var(--muted)}
-.phone{width:380px;max-width:100%;height:780px;border-radius:42px;border:9px solid #18181B;background:#fff;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;color:#18181B;
+.browser{width:100%;margin:0 auto;border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:var(--surface)}
+.browser.mob{width:390px;max-width:100%}
+.bbar{display:flex;align-items:center;gap:12px;padding:9px 14px;background:var(--sunk);border-bottom:1px solid var(--line)}
+.bbar .dots{display:flex;gap:6px}
+.bbar .dots i{width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+.bbar .url{flex:1;min-width:0;display:flex;align-items:center;gap:7px;padding:5px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line);font-family:var(--f-mono);font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scr{height:720px;overflow:auto;position:relative;scrollbar-width:thin;container-type:inline-size;color:#18181B;
   --page:#F7F6F3; --surface:#FFFFFF; --sunk:#EFEDE8; --line:#E4E1DA; --line-2:#CFCBC2; --ink:#18181B; --muted:#55524C; --faint:#8C8880; --on-ink:#FAFAFA;
-  --ok:#15803D; --ok-soft:#E7F6EC; --warn:#B45309; --warn-soft:#FEF3E2; --wa-bub:#DCF8C6; --wa-bg:#F1ECE4}
-.phone .sb{height:28px;flex:none;background:var(--b-deep);color:#fff;display:flex;justify-content:space-between;align-items:center;padding:0 22px;font-size:12px;font-weight:600}
-.scr{flex:1;overflow:auto;position:relative;background:var(--page);scrollbar-width:thin}
-.phone h1,.phone h2,.phone h3{font-family:var(--bf);color:inherit}
+  --ok:#15803D; --ok-soft:#E7F6EC; --warn:#B45309; --warn-soft:#FEF3E2; --wa-bub:#DCF8C6; --wa-bg:#F1ECE4;
+  background:var(--page)}
+.scr h1,.scr h2,.scr h3{font-family:var(--bf);color:inherit}
 
 /* booking page (business-styled) */
 .cp-top{display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:var(--b-deep);color:#fff;position:sticky;top:0;z-index:5}
@@ -145,7 +154,6 @@ main{min-width:0;padding-block:28px 72px;padding-left:max(28px,env(safe-area-ins
 .gt svg{position:absolute;right:8px;top:8px;width:44px;height:44px;opacity:.5;stroke-width:1.3}
 .gt span{position:relative;background:rgba(0,0,0,.28);padding:2px 8px;border-radius:var(--bp)}
 .rv{background:var(--surface);border:1px solid var(--line);border-radius:var(--br);padding:13px}
-.rv + .rv{margin-top:8px}
 .rv q{display:block;font-size:14.5px;line-height:1.45;quotes:"“" "”"}
 .rv small{display:block;color:var(--faint);font-size:12.5px;margin-top:6px}
 .shop{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -218,6 +226,54 @@ main{min-width:0;padding-block:28px 72px;padding-left:max(28px,env(safe-area-ins
 .wa-prev .h{font-size:12px;color:var(--faint);display:flex;align-items:center;gap:6px;margin-bottom:6px}
 .wa-msg{background:var(--wa-bub);border-radius:12px 12px 12px 4px;padding:9px 11px;font-size:13.5px;line-height:1.45;white-space:pre-line}
 .wa-msg small{display:block;text-align:right;font-size:11px;color:var(--faint)}
+
+.cp-top .tr{display:flex;align-items:center;gap:14px}
+.cp-top .links{display:none;gap:24px;font-size:14px;color:rgba(255,255,255,.8)}
+.cp-top .tb{display:none;padding:8px 15px;font-size:14px}
+.rvs{display:grid;gap:8px}
+.bk-side{display:none}
+@container (min-width:720px){
+  .cp-top{padding:14px 40px}
+  .cp-top .links{display:flex}
+  .cp-top .tb{display:inline-flex}
+  .cp-top .ics{display:none}
+  .cp-hero{padding:64px 40px 68px}
+  .cp-hero h1{font-size:60px;max-width:640px;margin:18px 0 14px}
+  .cp-hero p{font-size:17px;max-width:520px;margin-bottom:24px}
+  .cp-hero .art{width:320px;height:320px;right:48px;bottom:-40px;opacity:.26}
+  .cp-hero .bbtn,.cp-hero .wbtn{padding:14px 22px;font-size:16px}
+  .offer{margin:24px 40px 4px;padding:16px 20px}
+  .offer b{font-size:16px}
+  .cp-sec{padding:22px 40px}
+  .cp-sec h3{font-size:26px;margin-bottom:14px}
+  .cats{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:4px 28px;align-items:start}
+  .cats .sg{margin-top:4px}
+  .gal{grid-template-columns:repeat(4,1fr);gap:12px}
+  .rvs{grid-template-columns:1fr 1fr;gap:12px}
+  .rv{padding:18px}
+  .rv q{font-size:16px}
+  .shop{grid-template-columns:repeat(2,minmax(0,300px));gap:12px}
+  .know{flex-direction:row;gap:12px}
+  .know div{flex:1}
+  .cp-foot{padding:28px 40px;margin-top:20px;font-size:13.5px}
+  .sticky-bar{display:none}
+  .bk-top{padding:14px 40px}
+  .steps{max-width:980px;margin:0 auto;padding:24px 40px 0}
+  .bk-wrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:32px;max-width:980px;margin:0 auto;padding:24px 40px 40px;align-items:start}
+  .bk{padding:0}
+  .bk h2{font-size:28px}
+  .slots{grid-template-columns:repeat(5,1fr)}
+  .bk-foot{position:static;padding:16px 0 0;background:none}
+  .bk-foot .bbtn{width:auto;min-width:240px}
+  .pay{flex-direction:row}
+  .pay button{flex:1}
+  .done{max-width:520px;margin:0 auto}
+  .bk-side{display:block;position:sticky;top:76px;background:var(--surface);border:1px solid var(--line);border-radius:var(--br);padding:18px;font-size:14px}
+  .bk-side b.h{display:block;font-family:var(--bf);font-size:17px;margin-bottom:10px}
+  .bk-side .r2{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line)}
+  .bk-side .r2 span:last-child{font-weight:600;text-align:right}
+  .bk-side small{display:block;color:var(--faint);font-size:12.5px;margin-top:10px}
+}
 
 /* ---------- owner screens ---------- */
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
@@ -377,17 +433,13 @@ table.mx .lim{font-size:12px;color:var(--warn);font-weight:550}
 body.touring main{padding-bottom:230px}
 body.touring .toast{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
 .tfocus{outline:2px solid var(--ink)!important;outline-offset:3px;box-shadow:0 0 0 8px color-mix(in srgb,var(--acc) 40%,transparent)!important;border-radius:12px;position:relative;z-index:3}
-.phone .tfocus{outline-color:#18181B!important}
+.scr .tfocus{outline-color:#18181B!important}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:#18181B;color:#FAFAFA;padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:calc(100% - 32px);text-align:center;border:1px solid #3F3F46}
 .toast.on{opacity:1;transform:translate(-50%,0)}
 @media (prefers-reduced-motion:reduce){.toast,.tgl::after,.tour .tp i{transition:none}}
 
 /* ---------- responsive ---------- */
-@media (max-width:1240px){
-  .stage{grid-template-columns:1fr;justify-items:center}
-  .notes{width:100%;max-width:640px;display:grid;grid-template-columns:1fr 1fr}
-  .notes.left{order:-1;grid-template-columns:1fr}
-}
+@media (max-width:1040px){.notes{grid-template-columns:1fr 1fr}}
 @media (max-width:1040px){
   .two{grid-template-columns:1fr}
   .panel{position:static}
@@ -415,8 +467,8 @@ body.touring .toast{bottom:calc(200px + env(safe-area-inset-bottom,0px))}
   body.touring .toast{bottom:calc(260px + env(safe-area-inset-bottom,0px))}
 }
 @media (max-width:520px){
-  .phone{border:0;border-radius:18px;height:740px;width:100%}
-  .phone .sb{display:none}
+  .scr{height:700px}
+  .dev,.bbar .dots{display:none}
   .notes{grid-template-columns:1fr}
   .tiles{gap:8px}
   .tile b{font-size:24px}
@@ -696,7 +748,7 @@ const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',
 const ico=(id,st='',cls='ico')=>`<svg class="${cls}" ${st?`style="${st}"`:''}><use href="#${id}"/></svg>`;
 const ini=n=>n.replace(/^(Dr|The) /,'').split(' ').map(w=>w[0]).slice(0,2).join('');
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),2800);}
-const S={ed:'glow',view:'page',brand:'rose',font:'modern',corner:'round',item:'volume',newc:true,step:1,day:3,slot:null,extra:null,ans:{},consent:{svc:true,mk:false},chat:0,sent:{},seg:'refill',flow:'',flowOn:{},reqDone:{},wa:false,ig:false,roles:{}};
+const S={dev:'desktop',ed:'glow',view:'page',brand:'rose',font:'modern',corner:'round',item:'volume',newc:true,step:1,day:3,slot:null,extra:null,ans:{},consent:{svc:true,mk:false},chat:0,sent:{},seg:'refill',flow:'',flowOn:{},reqDone:{},wa:false,ig:false,roles:{}};
 let ti=-1;
 const D=()=>ED[S.ed];
 const ITEMS=()=>{const m={};D().cat.forEach(([,it])=>it.forEach(([k,n,d,p,fee,flag])=>m[k]={k,n,d,p,fee,flag}));return m;};
@@ -720,19 +772,20 @@ function renderChrome(){
   const d=D(); $('#edName').textContent=d.name;
   $('#eds').innerHTML=ORDER.map(k=>`<button data-ed="${k}" aria-pressed="${k===S.ed}"><i style="background:${ED[k].acc}"></i>${ED[k].ind}</button>`).join('');
   const left=d.chats.length-Object.keys(S.sent).length;
-  const nav=[['Booking page',[['page','Their page','i-page'],['book','Booking flow','i-flow']]],['Manage',[['today','Today','i-cal'],['inbox','Inbox','i-inbox',left],['clients',d.clients,'i-users'],['auto','Follow-ups','i-bolt'],['team','Team and roles','i-shield'],['setup','Setup','i-gear']]]];
+  const nav=[['Customer side',[['page','Booking website','i-page'],['book','Booking flow','i-flow']]],['Manage',[['today','Today','i-cal'],['inbox','Inbox','i-inbox',left],['clients',d.clients,'i-users'],['auto','Follow-ups','i-bolt'],['team','Team and roles','i-shield'],['setup','Setup','i-gear']]]];
   $('#side').innerHTML=nav.map(([g,items])=>`<span class="gl">${g}</span>${items.map(([v,l,ic,n])=>`<button data-v="${v}" ${v===S.view?'aria-current="page"':''}>${ico(ic)}${l}${n?`<span class="n">${n}</span>`:''}</button>`).join('')}`).join('')+
     `<div class="biz"><b>${esc(d.biz)}</b><small>Signed in as ${esc(d.owner)} · Owner</small></div>`;
 }
 
 /* ============================== BOOKING PAGE ============================== */
-const phone=inner=>`<div class="phone"><div class="sb"><span>9:41</span><span>5G</span></div><div class="scr" id="scr">${inner}</div></div>`;
+const frame=(inner,path='')=>`<div class="browser ${S.dev==='mobile'?'mob':''}"><div class="bbar"><span class="dots"><i></i><i></i><i></i></span><span class="url">${ico('i-lock','width:12px;height:12px')}${D().slug}${path}</span></div><div class="scr" id="scr">${inner}</div></div>`;
+const devToggle=()=>`<div class="dev" role="group" aria-label="Preview size">${[['desktop','Desktop'],['mobile','Phone']].map(([k,l])=>`<button data-dev="${k}" aria-pressed="${S.dev===k}">${l}</button>`).join('')}</div>`;
 const noteList=(arr,from)=>arr.map(([t,p],i)=>`<div class="note"><b><i>${from+i}</i>${esc(t)}</b><p>${esc(p)}</p></div>`).join('');
 function renderPage(){
   const d=D(), b=BRANDS[S.brand];
-  const groups=d.cat.map(([g,items])=>`<div class="sg">${g}</div>${items.map(([k,n,m,p])=>`<button class="svc" data-svc="${k}"><span class="t"><b>${esc(n)}</b><small>${esc(m)}</small></span><span class="p">${p}</span><span class="go">${ico('i-arrow','width:14px;height:14px')}</span></button>`).join('')}`).join('');
+  const groups='<div class="cats">'+d.cat.map(([g,items])=>`<div><div class="sg">${g}</div>${items.map(([k,n,m,p])=>`<button class="svc" data-svc="${k}"><span class="t"><b>${esc(n)}</b><small>${esc(m)}</small></span><span class="p">${p}</span><span class="go">${ico('i-arrow','width:14px;height:14px')}</span></button>`).join('')}</div>`).join('')+'</div>';
   const page=`
-    <div class="cp-top"><span class="nm"><span class="mk">${ico(d.glyph,'width:16px;height:16px')}</span>${esc(d.short)}</span><span class="ics"><span>${ico('i-ig','width:15px;height:15px')}</span><span>${ico('i-wa','width:15px;height:15px')}</span></span></div>
+    <div class="cp-top"><span class="nm"><span class="mk">${ico(d.glyph,'width:16px;height:16px')}</span>${esc(d.short)}</span><span class="tr"><span class="links"><span>${d.catTitle}</span><span>Reviews</span><span>Contact</span></span><span class="ics"><span>${ico('i-ig','width:15px;height:15px')}</span><span>${ico('i-wa','width:15px;height:15px')}</span></span><button class="bbtn tb" data-go="book">${d.cta}</button></span></div>
     <div class="cp-hero">${ico(d.glyph,'','ico art')}
       <span class="rt">${d.rating}</span>
       <h1>${esc(d.h1[0])}<em>${esc(d.h1[1])}</em></h1>
@@ -743,15 +796,15 @@ function renderPage(){
     <div class="offer">${ico('i-tag','width:24px;height:24px')}<div><b>${esc(d.offer[0])}</b><small>${esc(d.offer[1])}</small></div></div>
     <div class="cp-sec"><h3>${d.catTitle}</h3>${groups}</div>
     <div class="cp-sec"><h3>Gallery</h3><div class="gal">${d.gal.map((l,i)=>`<div class="gt" style="background:linear-gradient(150deg,${b.deep},color-mix(in srgb,${b.deep} ${55+i*8}%,${b.b==='#FFFFFF'?'#8B8B94':b.b}))">${ico(d.glyph)}<span>${esc(l)}</span></div>`).join('')}</div></div>
-    <div class="cp-sec"><h3>Reviews <small>${d.rating}</small></h3>${d.rev.map(([q,w])=>`<div class="rv"><q>${esc(q)}</q><small>${esc(w)}</small></div>`).join('')}</div>
+    <div class="cp-sec"><h3>Reviews <small>${d.rating}</small></h3><div class="rvs">${d.rev.map(([q,w])=>`<div class="rv"><q>${esc(q)}</q><small>${esc(w)}</small></div>`).join('')}</div></div>
     <div class="cp-sec"><h3>${esc(d.shop[0])} <small>${esc(d.shop[1])}</small></h3><div class="shop">${d.shop[2].map(([n,m,p])=>`<div class="prod"><b>${esc(n)}</b><small>${esc(m)}</small><div class="row"><span>${p}</span><button data-add="${esc(n)}">${p==='Free'?'Book':'Add'}</button></div></div>`).join('')}</div></div>
     <div class="cp-sec"><h3>Good to know</h3><div class="know">${d.know.map(([t,p])=>`<div>${ico('i-check')}<span><b>${esc(t)}</b><br>${esc(p)}</span></div>`).join('')}</div></div>
     <div class="cp-foot"><b>${esc(d.biz)}</b><br>${esc(d.area)}<br>${esc(d.hours)}</div>
     <div class="sticky-bar"><button class="bbtn" data-go="book">${d.cta}</button><button class="wbtn" data-wa="1" aria-label="Chat on WhatsApp">${ico('i-wa')}</button></div>`;
   $('#v-page').innerHTML=`<div class="stage">
-    <div class="notes left"><div class="intro"><h2>${esc(d.biz)}’s booking page</h2><p>This is what their ${d.client}s see. It carries the business’s own brand, not ${d.name}’s.</p></div>${noteList(d.notes.slice(0,3),1)}</div>
-    ${phone(page)}
-    <div class="notes">${noteList(d.notes.slice(3),4)}</div></div>`;
+    <div class="stage-top"><div><h2>${esc(d.biz)}’s booking website</h2><p>The web page their ${d.client}s open from a link, in any browser. Nothing to download. It carries the business’s own brand, not ${d.name}’s.</p></div>${devToggle()}</div>
+    ${frame(page)}
+    <div class="notes">${noteList(d.notes,1)}</div></div>`;
 }
 
 /* ============================== BOOKING FLOW ============================== */
@@ -812,11 +865,16 @@ function renderBook(){
   }
   if(S.step<4) foot=`<div class="bk-foot"><button class="bbtn" id="bkNext" ${can?'':'disabled'}>Continue${pay.mode==='deposit'&&total?` · $${total}`:''}</button></div>`;
   const inner=`<div class="bk-top"><button ${S.step>1&&S.step<5?'data-back="1"':'data-go="page"'} aria-label="Back">${ico('i-back','width:15px;height:15px')}</button><b>${esc(d.short)}</b></div>
-    <div class="steps" aria-label="Step ${S.step} of 5">${[1,2,3,4,5].map(i=>`<i class="${i<=S.step?'on':''}"></i>`).join('')}</div><div class="bk">${body}</div>${foot}`;
+    <div class="steps" aria-label="Step ${S.step} of 5">${[1,2,3,4,5].map(i=>`<i class="${i<=S.step?'on':''}"></i>`).join('')}</div>
+    <div class="bk-wrap"><div class="bk-main"><div class="bk">${body}</div>${foot}</div>${S.step<5?`<aside class="bk-side"><b class="h">Your booking</b>
+      <div class="r2"><span>${esc(it.n)}</span><span>${it.p}</span></div>
+      <div class="r2"><span>When</span><span>${S.slot?`${DAYS[S.day][0]} ${DAYS[S.day][1]} Nov, ${S.slot}`:'Not chosen yet'}</span></div>
+      ${extraOn()&&S.extra?`<div class="r2"><span>${esc(d.extra.t.split(' (')[0].replace('?',''))}</span><span>${esc(S.extra)}</span></div>`:''}
+      <small>${esc(d.biz)} · ${esc(d.area)}</small></aside>`:''}</div>`;
   $('#v-book').innerHTML=`<div class="stage">
-    <div class="notes left"><div class="intro"><h2>Booking flow · step ${S.step} of 5</h2><p>The same five steps for every industry. The rules in the middle change with the edition.</p></div>${noteList(d.rules,1)}</div>
-    ${phone(inner)}
-    <div class="notes">${noteList([['Questions that matter here',`${d.qs.length} questions chosen for ${d.ind.toLowerCase()}. Answers are saved to the ${d.client}’s record.`],['Two kinds of consent','Reminders are part of the service. Updates and offers need a separate opt-in.'],['Waitlist, not a dead end','Full days offer the waitlist and fill gaps automatically.']],4)}</div></div>`;
+    <div class="stage-top"><div><h2>Booking flow · step ${S.step} of 5</h2><p>The same five steps for every industry, all in the browser. The rules in the middle change with the edition.</p></div>${devToggle()}</div>
+    ${frame(inner,'/book')}
+    <div class="notes">${noteList(d.rules,1)}${noteList([['Questions that matter here',`${d.qs.length} questions chosen for ${d.ind.toLowerCase()}. Answers are saved to the ${d.client}’s record.`],['Two kinds of consent','Reminders are part of the service. Updates and offers need a separate opt-in.'],['Waitlist, not a dead end','Full days offer the waitlist and fill gaps automatically.']],4)}</div></div>`;
 }
 
 /* ============================== TODAY ============================== */
@@ -920,7 +978,7 @@ function renderSetup(){
         <label>Headings</label><div class="sw">${[['modern','Modern'],['classic','Classic serif']].map(([k,l])=>`<button class="tx" data-font="${k}" aria-pressed="${k===S.font}" style="font-family:${k==='classic'?'var(--f-serif)':'var(--f)'}">${l}</button>`).join('')}</div>
         <label>Corners</label><div class="sw">${[['round','Rounded'],['square','Square']].map(([k,l])=>`<button class="tx" data-corner="${k}" aria-pressed="${k===S.corner}" style="border-radius:${k==='square'?'5px':'999px'}">${l}</button>`).join('')}</div>
       </div>
-      <p class="faint" style="font-size:13px;margin:14px 0 0">Open “Their page” to see the change. The ${d.name} dashboard itself stays clean and white for every business.</p></div>
+      <p class="faint" style="font-size:13px;margin:14px 0 0">Open “Booking website” to see the change. The ${d.name} dashboard itself stays clean and white for every business.</p></div>
     <div class="card sstep"><div class="hd"><span class="n">4</span><h3>Connect your channels</h3></div>
       <div class="conn">
         <div class="c"><span class="ic" style="background:var(--wa)">${ico('i-wa')}</span><span><b>WhatsApp Business</b><small>${S.wa?'Connected':'Use your existing number'}</small></span>${S.wa?'<span class="pill ok">Connected</span>':'<button class="btn sm" data-conn="wa">Connect</button>'}</div>
@@ -957,6 +1015,7 @@ document.addEventListener('click',e=>{
   const T=x=>e.target.closest(x); let b; const d=D();
   if(b=T('[data-ed]')){ if(ti>=0) tourEnd(true); setEd(b.dataset.ed); toast(`${ED[b.dataset.ed].name}: the ${ED[b.dataset.ed].ind.toLowerCase()} edition.`); return; }
   if(b=T('#side [data-v]')){ show(b.dataset.v); return; }
+  if(b=T('[data-dev]')){ S.dev=b.dataset.dev; rerender(); return; }
   if(b=T('[data-go]')){ S.step=1; show(b.dataset.go); return; }
   if(b=T('[data-wa]')){ toast(`Opens WhatsApp with a message started. The chat lands in the ${d.name} inbox.`); return; }
   if(b=T('[data-svc]')){ S.item=b.dataset.svc; S.step=2; S.slot=null; S.extra=null; show('book'); return; }
@@ -1000,7 +1059,7 @@ function tourSteps(){
   const d=D(), t=d.tour, it=ITEMS()[d.pick], booked=()=>{S.slot='11:30'; S.extra=d.extra.opts==='patch'?'Mon 9, 5pm':d.extra.opts[0]; S.consent={svc:true,mk:true};};
   const c1=`1 · A new ${d.client} books`, c2=`2 · ${d.owner}’s day`, c3='3 · They keep coming back', c4='4 · One platform, any business';
   return [
-   {ch:c1,t:`${t.who} arrives from ${t.src}`,x:`The booking page shows the offer, the rating and the next free time before any scrolling. It wears ${d.biz}’s brand, not ours.`,v:'page',f:'.offer'},
+   {ch:c1,t:`${t.who} arrives from ${t.src}`,x:`The link opens ${d.biz}’s booking website in the browser. The offer, rating and next free time show before any scrolling.`,v:'page',f:'.offer'},
    {ch:c1,t:`${t.who} picks “${it.n}”`,x:'Everything bookable is listed with its details and price. Tapping one starts the booking with it already chosen.',v:'book',f:`.svc[data-pick="${d.pick}"]`,run(){S.step=1;}},
    {ch:c1,t:'A time, plus the rule for this industry',x:t.rule,v:'book',f:'.q',run(){S.step=2;booked();}},
    {ch:c1,t:'Details, questions and consent',x:`The questions are chosen for ${d.ind.toLowerCase()}. Ticking the second box is what allows follow-up offers later.`,v:'book',f:'.chk[data-c="mk"]',run(){S.step=3;booked();}},
